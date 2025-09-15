@@ -8,7 +8,9 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Index component - Auth state:', { user: user?.email, loading });
     if (!loading && !user) {
+      console.log('Redirecting to auth page');
       navigate('/auth');
     }
   }, [user, loading, navigate]);
