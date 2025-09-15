@@ -1,8 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -19,7 +17,7 @@ serve(async (req) => {
 
     console.log('Finding AI matches for:', { skills, budget, duration, type });
 
-    // Mock course database for AI matching
+    // Mock course database for AI matching (enhanced with more courses)
     const availableCourses = [
       {
         id: '1',
@@ -90,109 +88,85 @@ serve(async (req) => {
         participants: 22,
         location: 'Casablanca',
         type: 'hybrid'
+      },
+      {
+        id: '6',
+        title: 'Data Analytics Fundamentals',
+        description: 'Learn data analysis, visualization, and business intelligence.',
+        trainer: 'Youssef Alami',
+        rating: 4.5,
+        duration: '45 hours',
+        price: 2800,
+        category: 'analytics',
+        skills: ['data-analysis', 'visualization', 'python', 'business-intelligence'],
+        participants: 15,
+        location: 'Online',
+        type: 'online'
       }
     ];
 
-    const systemPrompt = `You are an AI training consultant that matches courses to user requirements. 
-    
-    Analyze the user's requirements and available courses to find the best matches based on:
-    1. Skills overlap (highest priority)
-    2. Budget constraints
-    3. Duration preferences
-    4. Delivery type preferences
-    5. Overall course quality (rating)
-    
-    Return a JSON response with the top 3 most relevant courses ranked by match score.
-    
-    IMPORTANT: You must respond with valid JSON in exactly this format:
-    {
-      "matches": [
-        {
-          "id": "course_id",
-          "title": "course title",
-          "description": "course description",
-          "trainer": "trainer name",
-          "rating": 4.8,
-          "duration": "40 hours",
-          "price": 2500,
-          "category": "category",
-          "skills": ["skill1", "skill2"],
-          "participants": 25,
-          "location": "location",
-          "type": "online|onsite|hybrid",
-          "matchScore": 0.95,
-          "matchReason": "explanation of why this is a good match"
+    // Enhanced matching logic without external API calls
+    const matches = availableCourses
+      .map(course => {
+        let matchScore = 0;
+        let matchReasons = [];
+
+        // Skills matching (highest weight: 40%)
+        const skillMatches = skills.filter(skill => 
+          course.skills.some(courseSkill => 
+            courseSkill.toLowerCase().includes(skill.toLowerCase()) ||
+            skill.toLowerCase().includes(courseSkill.toLowerCase())
+          )
+        );
+        
+        if (skillMatches.length > 0) {
+          matchScore += (skillMatches.length / skills.length) * 0.4;
+          matchReasons.push(`Matches ${skillMatches.length}/${skills.length} required skills`);
         }
-      ]
-    }`;
 
-    const userPrompt = `Find the best training courses for these requirements:
-    
-    Desired Skills: ${skills.join(', ')}
-    Budget: ${budget} MAD
-    Preferred Duration: ${duration}
-    Delivery Type: ${type}
-    
-    Available Courses:
-    ${JSON.stringify(availableCourses, null, 2)}
-    
-    Return the top 3 matches with match scores and explanations.`;
+        // Budget matching (25%)
+        if (budget && course.price <= budget * 0.4) { // Allow up to 40% of total budget per course
+          matchScore += 0.25;
+          matchReasons.push('Within budget range');
+        } else if (budget && course.price <= budget * 0.6) {
+          matchScore += 0.15;
+          matchReasons.push('Slightly above budget but high value');
+        }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: 2000,
-        temperature: 0.7,
-      }),
-    });
+        // Rating quality (15%)
+        matchScore += (course.rating / 5) * 0.15;
+        if (course.rating >= 4.5) {
+          matchReasons.push('Highly rated course');
+        }
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-    }
+        // Duration compatibility (10%)
+        const courseDurationHours = parseInt(course.duration);
+        const targetDurationHours = parseInt(duration) || 40;
+        const durationDiff = Math.abs(courseDurationHours - targetDurationHours) / targetDurationHours;
+        if (durationDiff <= 0.3) {
+          matchScore += 0.1;
+          matchReasons.push('Ideal duration match');
+        }
 
-    const data = await response.json();
-    console.log('OpenAI response received');
+        // Type matching (10%)
+        if (type === 'any' || course.type === type) {
+          matchScore += 0.1;
+          matchReasons.push(`${course.type} delivery format`);
+        }
 
-    let aiMatches;
-    try {
-      aiMatches = JSON.parse(data.choices[0].message.content);
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response as JSON:', parseError);
-      // Fallback: return filtered courses based on simple matching
-      const fallbackMatches = availableCourses
-        .filter(course => {
-          const skillsMatch = skills.some(skill => 
-            course.skills.some(courseSkill => 
-              courseSkill.toLowerCase().includes(skill.toLowerCase())
-            )
-          );
-          const budgetMatch = course.price <= budget * 1.2; // 20% budget flexibility
-          return skillsMatch && budgetMatch;
-        })
-        .slice(0, 3)
-        .map(course => ({
+        return {
           ...course,
-          matchScore: 0.8,
-          matchReason: "Matched based on skills and budget criteria"
-        }));
+          matchScore: Math.min(matchScore, 0.95), // Cap at 95%
+          matchReason: matchReasons.join(', ') || 'General recommendation'
+        };
+      })
+      .filter(course => course.matchScore > 0.3) // Only include courses with decent match
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 4); // Return top 4 matches
 
-      aiMatches = { matches: fallbackMatches };
-    }
+    console.log(`Found ${matches.length} matching courses`);
 
-    console.log('AI matches generated successfully');
-
-    return new Response(JSON.stringify(aiMatches), {
+    return new Response(JSON.stringify({ matches }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
