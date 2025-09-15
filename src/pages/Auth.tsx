@@ -12,16 +12,17 @@ import { supabase } from '@/integrations/supabase/client';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (!loading && user) {
+      console.log('Auth page - Redirecting authenticated user to home');
+      navigate('/', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
