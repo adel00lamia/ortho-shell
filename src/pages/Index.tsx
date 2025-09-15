@@ -37,8 +37,11 @@ const Index = () => {
           Hello, {user.user_metadata?.first_name || user.email}!
         </p>
         <div className="flex gap-4 justify-center">
-          <Button onClick={() => navigate('/')} variant="default">
-            🏠 Home
+          <Button onClick={() => navigate('/diagnostic')} variant="default">
+            🎯 Start Training Diagnostic
+          </Button>
+          <Button onClick={() => navigate('/pricing')} variant="outline">
+            💰 View Pricing
           </Button>
           <Button onClick={signOut} variant="outline">
             Sign Out
