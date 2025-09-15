@@ -10,6 +10,8 @@ import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Diagnostic from "./pages/Diagnostic";
 import TrainingPlan from "./pages/TrainingPlan";
+import ModuleStudio from "./pages/ModuleStudio";
+import CertificateGenerator from "./pages/CertificateGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,9 @@ const App = () => (
             <Route path="/billing" element={<Billing />} />
             <Route path="/diagnostic" element={<Diagnostic />} />
             <Route path="/training-plan/:id" element={<TrainingPlan />} />
+            <Route path="/module-studio/:planId" element={<ModuleStudio />} />
+            <Route path="/module-studio/:planId/:moduleId" element={<ModuleStudio />} />
+            <Route path="/certificate-generator" element={<CertificateGenerator />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

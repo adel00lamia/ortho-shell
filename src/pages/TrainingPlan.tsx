@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target } from "lucide-react";
+import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target, PlusCircle } from "lucide-react";
 
 export default function TrainingPlan() {
   const { id } = useParams();
@@ -275,6 +275,12 @@ export default function TrainingPlan() {
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-6">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => navigate(`/module-studio/${id}`)}>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Create New Module
+              </Button>
+            </div>
             <div className="grid gap-6">
               {modules.map((module: any, index: number) => (
                 <Card key={index}>
