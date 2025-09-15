@@ -21,25 +21,28 @@ serve(async (req) => {
 
     console.log('Advanced plan generation for user:', userId, 'with model:', requirements.aiModel);
 
-    const systemPrompt = `You are an expert training consultant and strategist. Create a comprehensive, actionable training plan based on the provided requirements.
+    const systemPrompt = `You are an expert training consultant and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan that demonstrates innovation and creativity.
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
   "plan": {
     "title": "Comprehensive Training Plan Title",
-    "description": "Detailed plan description",
-    "timeline": "Detailed timeline breakdown",
+    "description": "Detailed plan description with innovative approach",
+    "timeline": "Detailed timeline breakdown with phases and milestones",
     "modules": [
       {
         "title": "Module Title",
-        "description": "Module description",
-        "duration": "X hours/days",
-        "type": "internal/external/mixed",
-        "skills_covered": ["skill1", "skill2"],
-        "prerequisites": ["prereq1"],
-        "delivery_method": "online/onsite/hybrid",
-        "resources_needed": ["resource1"],
-        "estimated_cost": 5000
+        "description": "Module description with learning outcomes",
+        "duration": "X hours/days/weeks",
+        "type": "internal/external/mixed/virtual/hybrid",
+        "skills_covered": ["skill1", "skill2", "skill3"],
+        "prerequisites": ["prereq1", "prereq2"],
+        "delivery_method": "online/onsite/hybrid/mentorship/workshop/microlearning",
+        "resources_needed": ["resource1", "resource2"],
+        "estimated_cost": 5000,
+        "engagement_features": ["gamification", "social_learning", "ai_assistance"],
+        "assessment_methods": ["practical", "theoretical", "peer_review"],
+        "certification_level": "basic/intermediate/advanced/expert"
       }
     ],
     "budget_breakdown": {
@@ -48,41 +51,71 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "materials_resources": 5000,
       "technology_platform": 3000,
       "assessment_certification": 2000,
-      "contingency": 5000
+      "mentorship_coaching": 4000,
+      "gamification_tools": 2000,
+      "contingency": 4000
     },
     "kpis": [
       {
         "name": "KPI Name",
-        "description": "How to measure this KPI",
-        "target": "Specific target value",
-        "measurement_frequency": "Monthly/Quarterly"
+        "description": "How to measure this KPI with specific metrics",
+        "target": "Specific target value with timeline",
+        "measurement_frequency": "Monthly/Quarterly/Bi-annual",
+        "baseline": "Current state measurement",
+        "improvement_expected": "Expected improvement percentage"
       }
     ],
     "recommendations": [
-      "Strategic recommendation 1",
-      "Strategic recommendation 2"
+      "Strategic recommendation with innovation focus",
+      "Technology integration suggestion",
+      "ROI optimization strategy",
+      "Sustainability and scalability advice"
     ],
     "risk_assessment": {
-      "high_risks": ["Risk 1", "Risk 2"],
-      "mitigation_strategies": ["Strategy 1", "Strategy 2"]
+      "high_risks": ["Risk 1 with impact assessment", "Risk 2 with probability"],
+      "medium_risks": ["Medium risk 1", "Medium risk 2"],
+      "mitigation_strategies": ["Comprehensive strategy 1", "Proactive strategy 2"],
+      "contingency_plans": ["Backup plan 1", "Alternative approach 2"]
     },
     "success_metrics": [
-      "Metric 1",
-      "Metric 2"
-    ]
+      "Quantifiable success indicator 1",
+      "Behavioral change metric 2",
+      "Business impact measurement 3",
+      "ROI calculation method 4"
+    ],
+    "innovation_features": {
+      "ai_integration": "How AI will enhance the learning experience",
+      "personalization": "Adaptive learning paths and customization",
+      "social_learning": "Peer collaboration and knowledge sharing",
+      "microlearning": "Bite-sized content and just-in-time learning",
+      "gamification": "Points, badges, leaderboards, and challenges",
+      "virtual_reality": "Immersive learning experiences if applicable",
+      "mobile_learning": "On-the-go learning accessibility"
+    },
+    "sustainability_plan": {
+      "long_term_vision": "3-5 year learning and development roadmap",
+      "continuous_improvement": "Feedback loops and iterative enhancement",
+      "knowledge_retention": "Strategies to ensure lasting learning impact",
+      "culture_transformation": "Building a learning organization"
+    }
   }
 }
 
 Create a plan that is:
-1. Realistic and achievable within the budget and timeline
-2. Aligned with business objectives and industry best practices
-3. Includes both internal and external training options
-4. Has clear progression paths and prerequisites
-5. Includes measurable KPIs and success metrics
-6. Considers OFPPT compliance if applicable (Morocco context)
-7. Addresses modern training delivery methods (online, hybrid, etc.)`;
+1. Innovative and forward-thinking with modern learning approaches
+2. Realistic and achievable within the budget and timeline
+3. Aligned with business objectives and industry best practices
+4. Includes diverse learning modalities (online, hybrid, mentorship, microlearning)
+5. Has clear progression paths and skill development stages
+6. Includes measurable KPIs with baseline and target metrics
+7. Considers OFPPT compliance and Moroccan market context
+8. Addresses modern training delivery methods and technologies
+9. Incorporates engagement features like gamification and social learning
+10. Provides comprehensive risk assessment and mitigation strategies
+11. Focuses on ROI optimization and business impact
+12. Includes sustainability and long-term development planning`;
 
-    const userPrompt = `Create a comprehensive training plan for:
+    const userPrompt = `Create an innovative and comprehensive training plan for:
 
 Company: ${requirements.company}
 Industry: ${requirements.industry}
@@ -90,7 +123,7 @@ Company Size: ${requirements.companySize}
 Budget: ${requirements.budget} MAD
 Duration: ${requirements.duration} months
 
-Objectives:
+Training Objectives:
 ${requirements.objectives.map(obj => `- ${obj}`).join('\n')}
 
 Target Skills:
@@ -99,10 +132,34 @@ ${requirements.targetSkills.map(skill => `- ${skill}`).join('\n')}
 Constraints:
 ${requirements.constraints.map(constraint => `- ${constraint}`).join('\n')}
 
+Selected Delivery Methods:
+${requirements.customizations?.deliveryMethods?.map(method => `- ${method}`).join('\n') || '- online'}
+
+Engagement Features Requested:
+${requirements.customizations?.certification ? '- Certification Program' : ''}
+${requirements.customizations?.mentorship ? '- Mentorship Program' : ''}
+${requirements.customizations?.gamification ? '- Gamification' : ''}
+${requirements.customizations?.socialLearning ? '- Social Learning' : ''}
+${requirements.customizations?.microlearning ? '- Microlearning' : ''}
+
+Template/Pack Context:
+${requirements.template ? `Using template: ${requirements.template}` : ''}
+${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
+
 Additional Context:
 ${requirements.context}
 
-Generate a detailed training plan that maximizes ROI, ensures skill development, and aligns with modern training methodologies. Include specific recommendations for the ${requirements.industry} industry and consider the company size of ${requirements.companySize}.`;
+Generate a detailed, innovative training plan that:
+1. Maximizes ROI and ensures measurable skill development
+2. Aligns with modern training methodologies and best practices
+3. Includes specific recommendations for the ${requirements.industry} industry
+4. Considers the company size of ${requirements.companySize}
+5. Incorporates requested engagement features and delivery methods
+6. Provides creative and innovative learning approaches
+7. Addresses sustainability and long-term impact
+8. Includes comprehensive risk assessment and mitigation
+9. Focuses on business alignment and measurable outcomes
+10. Considers Moroccan market context and compliance requirements`;
 
     let planData;
 
