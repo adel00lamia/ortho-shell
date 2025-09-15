@@ -14,6 +14,9 @@ import ModuleStudio from "./pages/ModuleStudio";
 import CertificateGenerator from "./pages/CertificateGenerator";
 import Marketplace from "./pages/Marketplace";
 import AIPlanBuilder from "./pages/AIPlanBuilder";
+import Analytics from "./pages/Analytics";
+import UserManagement from "./pages/UserManagement";
+import TeamCollaboration from "./pages/TeamCollaboration";
 import Navigation from "./components/Navigation";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +44,9 @@ const App = () => (
                 <Route path="/certificate-generator" element={<CertificateGenerator />} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/ai-plan-builder" element={<AIPlanBuilder />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/user-management" element={<UserManagement />} />
+                <Route path="/team-collaboration" element={<TeamCollaboration />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

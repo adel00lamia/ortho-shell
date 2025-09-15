@@ -14,7 +14,9 @@ import {
   Calendar,
   Settings,
   Menu,
-  X
+  X,
+  Users,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -68,15 +70,28 @@ export default function Navigation() {
       label: 'Certificates',
       icon: <Award className="w-4 h-4" />,
       description: 'Generate certificates and badges'
+    },
+    {
+      path: '/analytics',
+      label: 'Analytics',
+      icon: <BarChart3 className="w-4 h-4" />,
+      description: 'Performance metrics and ROI'
+    },
+    {
+      path: '/user-management',
+      label: 'User Management',
+      icon: <Users className="w-4 h-4" />,
+      description: 'Manage users and permissions'
+    },
+    {
+      path: '/team-collaboration',
+      label: 'Team Collaboration',
+      icon: <MessageSquare className="w-4 h-4" />,
+      description: 'Projects and team communication'
     }
   ];
 
   const comingSoonItems = [
-    {
-      label: 'Analytics Dashboard',
-      icon: <BarChart3 className="w-4 h-4" />,
-      description: 'KPIs and ROI tracking'
-    },
     {
       label: 'Calendar & Bookings',
       icon: <Calendar className="w-4 h-4" />,
