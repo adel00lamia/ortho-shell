@@ -36,9 +36,12 @@ const Index = () => {
         <p className="text-xl text-muted-foreground">
           Hello, {user.user_metadata?.first_name || user.email}!
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center flex-wrap">
           <Button onClick={() => navigate('/diagnostic')} variant="default">
             🎯 Start Training Diagnostic
+          </Button>
+          <Button onClick={() => navigate('/marketplace')} variant="default">
+            🛒 Browse Marketplace
           </Button>
           <Button onClick={() => navigate('/pricing')} variant="outline">
             💰 View Pricing

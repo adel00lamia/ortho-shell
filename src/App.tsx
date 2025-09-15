@@ -12,6 +12,7 @@ import Diagnostic from "./pages/Diagnostic";
 import TrainingPlan from "./pages/TrainingPlan";
 import ModuleStudio from "./pages/ModuleStudio";
 import CertificateGenerator from "./pages/CertificateGenerator";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/module-studio/:planId" element={<ModuleStudio />} />
             <Route path="/module-studio/:planId/:moduleId" element={<ModuleStudio />} />
             <Route path="/certificate-generator" element={<CertificateGenerator />} />
+            <Route path="/marketplace" element={<Marketplace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
