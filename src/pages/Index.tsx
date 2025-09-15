@@ -37,6 +37,9 @@ const Index = () => {
           Hello, {user.user_metadata?.first_name || user.email}!
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
+          <Button onClick={() => navigate('/ai-plan-builder')} variant="default">
+            🧠 AI Plan Builder
+          </Button>
           <Button onClick={() => navigate('/diagnostic')} variant="default">
             🎯 Start Training Diagnostic
           </Button>
