@@ -85,6 +85,48 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string
+          id: string
+          interval: string
+          plan: string
+          seats: number
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end: string
+          id?: string
+          interval: string
+          plan: string
+          seats?: number
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string
+          id?: string
+          interval?: string
+          plan?: string
+          seats?: number
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       training_diagnostics: {
         Row: {
           ai_recommendations: Json | null
