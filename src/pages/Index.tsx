@@ -31,14 +31,19 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
         <h1 className="mb-4 text-4xl font-bold">Welcome to TrainPro Academy</h1>
         <p className="text-xl text-muted-foreground">
           Hello, {user.user_metadata?.first_name || user.email}!
         </p>
-        <Button onClick={signOut} variant="outline">
-          Sign Out
-        </Button>
+        <div className="flex gap-4 justify-center">
+          <Button onClick={() => navigate('/')} variant="default">
+            🏠 Home
+          </Button>
+          <Button onClick={signOut} variant="outline">
+            Sign Out
+          </Button>
+        </div>
       </div>
     </div>
   );
