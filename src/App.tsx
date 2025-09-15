@@ -14,6 +14,7 @@ import ModuleStudio from "./pages/ModuleStudio";
 import CertificateGenerator from "./pages/CertificateGenerator";
 import Marketplace from "./pages/Marketplace";
 import AIPlanBuilder from "./pages/AIPlanBuilder";
+import Navigation from "./components/Navigation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,21 +26,26 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/billing" element={<Billing />} />
-            <Route path="/diagnostic" element={<Diagnostic />} />
-            <Route path="/training-plan/:id" element={<TrainingPlan />} />
-            <Route path="/module-studio/:planId" element={<ModuleStudio />} />
-            <Route path="/module-studio/:planId/:moduleId" element={<ModuleStudio />} />
-            <Route path="/certificate-generator" element={<CertificateGenerator />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/ai-plan-builder" element={<AIPlanBuilder />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="flex min-h-screen">
+            <Navigation />
+            <main className="flex-1 main-content">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/billing" element={<Billing />} />
+                <Route path="/diagnostic" element={<Diagnostic />} />
+                <Route path="/training-plan/:id" element={<TrainingPlan />} />
+                <Route path="/module-studio/:planId" element={<ModuleStudio />} />
+                <Route path="/module-studio/:planId/:moduleId" element={<ModuleStudio />} />
+                <Route path="/certificate-generator" element={<CertificateGenerator />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/ai-plan-builder" element={<AIPlanBuilder />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target, PlusCircle } from "lucide-react";
+import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target, PlusCircle, ArrowLeft } from "lucide-react";
+import MarketplaceIntegration from "@/components/MarketplaceIntegration";
 
 export default function TrainingPlan() {
   const { id } = useParams();
@@ -123,6 +124,15 @@ export default function TrainingPlan() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex-1">
@@ -188,9 +198,10 @@ export default function TrainingPlan() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="modules">Modules</TabsTrigger>
+            <TabsTrigger value="marketplace">External Courses</TabsTrigger>
             <TabsTrigger value="kpis">KPIs & Progress</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
@@ -323,6 +334,17 @@ export default function TrainingPlan() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="marketplace" className="space-y-6">
+            <MarketplaceIntegration 
+              planSkills={plan.target_skills || []}
+              planBudget={plan.budget}
+              onCourseSelect={(course) => {
+                console.log('Course selected:', course);
+                // Here you could add the course to the plan or open a dialog
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="kpis" className="space-y-6">

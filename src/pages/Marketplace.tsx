@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Star, Clock, Users, MapPin, Search, Filter } from 'lucide-react';
+import { Star, Clock, Users, MapPin, Search, Filter, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -39,7 +40,9 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [aiMatches, setAiMatches] = useState<Course[]>([]);
+  const [savedCourses, setSavedCourses] = useState<string[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Mock data for demonstration
   const mockCourses: Course[] = [
@@ -157,8 +160,119 @@ export default function Marketplace() {
     }
   };
 
+  const toggleSaveCourse = (courseId: string) => {
+    setSavedCourses(prev => 
+      prev.includes(courseId) 
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+    
+    const action = savedCourses.includes(courseId) ? 'removed from' : 'added to';
+    toast({
+      title: `Course ${action} wishlist`,
+      description: `Course has been ${action} your saved courses.`,
+    });
+  };
+
+  const shareCourse = (course: Course) => {
+    if (navigator.share) {
+      navigator.share({
+        title: course.title,
+        text: course.description,
+        url: window.location.href
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Course link copied to clipboard.",
+      });
+    }
+  };
+
+  const CourseCard = ({ course, isAIMatch = false }: { course: Course; isAIMatch?: boolean }) => (
+    <Card className={`h-full ${isAIMatch ? 'ring-2 ring-primary' : ''}`}>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{course.title}</CardTitle>
+          {isAIMatch && <Badge variant="secondary">AI Match</Badge>}
+        </div>
+        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+          <span>{course.rating}</span>
+          <span>•</span>
+          <span>{course.trainer}</span>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{course.duration}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            <span>{course.participants}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <MapPin className="h-4 w-4" />
+            <span>{course.location}</span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-1">
+          {course.skills.slice(0, 3).map((skill) => (
+            <Badge key={skill} variant="outline" className="text-xs">
+              {skill}
+            </Badge>
+          ))}
+          {course.skills.length > 3 && (
+            <Badge variant="outline" className="text-xs">
+              +{course.skills.length - 3} more
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center pt-4">
+          <div className="text-2xl font-bold">{course.price.toLocaleString()} MAD</div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleSaveCourse(course.id)}
+            >
+              <Heart 
+                className={`h-4 w-4 ${savedCourses.includes(course.id) ? 'fill-red-500 text-red-500' : ''}`}
+              />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => shareCourse(course)}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button size="sm">View Details</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="container mx-auto py-8 space-y-8">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate(-1)}
+        className="mb-4"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
+
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold">Training Marketplace</h1>
         <p className="text-xl text-muted-foreground">
@@ -267,60 +381,5 @@ export default function Marketplace() {
         </div>
       </div>
     </div>
-  );
-}
-
-function CourseCard({ course, isAIMatch = false }: { course: Course; isAIMatch?: boolean }) {
-  return (
-    <Card className={`h-full ${isAIMatch ? 'ring-2 ring-primary' : ''}`}>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{course.title}</CardTitle>
-          {isAIMatch && <Badge variant="secondary">AI Match</Badge>}
-        </div>
-        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span>{course.rating}</span>
-          <span>•</span>
-          <span>{course.trainer}</span>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span>{course.duration}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            <span>{course.participants}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            <span>{course.location}</span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1">
-          {course.skills.slice(0, 3).map((skill) => (
-            <Badge key={skill} variant="outline" className="text-xs">
-              {skill}
-            </Badge>
-          ))}
-          {course.skills.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{course.skills.length - 3} more
-            </Badge>
-          )}
-        </div>
-
-        <div className="flex justify-between items-center pt-4">
-          <div className="text-2xl font-bold">{course.price.toLocaleString()} MAD</div>
-          <Button>View Details</Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
