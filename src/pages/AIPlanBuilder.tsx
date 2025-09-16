@@ -28,27 +28,38 @@ import {
   Code,
   TrendingUp,
   Heart,
+  Camera,
+  Edit,
+  Mic,
+  FileText,
+  Repeat,
+  Gamepad2,
+  MessageSquare,
+  Podcast,
+  Settings,
+  CheckCircle,
+  FileCheck,
+  Play,
+  ClipboardCheck,
+  Upload,
+  ClipboardList,
+  Award,
+  CheckCircle2,
+  AlertTriangle,
+  Bell,
+  RefreshCw as RefreshIcon,
+  Mail as MailIcon,
+  Calendar,
+  BarChart3,
   Building,
   Briefcase,
   Star,
   Download,
   Copy,
-  Play,
-  CheckCircle,
-  AlertTriangle,
   Video,
-  Mic,
   PenTool,
-  Calendar,
-  BarChart3,
-  Award,
-  Settings,
-  FileText,
-  Camera,
   Headphones,
-  MonitorPlay,
-  Gamepad2,
-  Upload
+  MonitorPlay
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -1384,7 +1395,7 @@ export default function AIPlanBuilder() {
                           {Object.entries(generatedPlan.budget_breakdown).map(([category, amount]) => (
                             <div key={category} className="flex justify-between">
                               <span className="capitalize">{category.replace(/_/g, ' ')}</span>
-                              <span className="font-medium">{amount} MAD</span>
+                              <span className="font-medium">{String(amount)} MAD</span>
                             </div>
                           ))}
                         </div>
