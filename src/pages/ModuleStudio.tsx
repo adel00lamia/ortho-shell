@@ -50,15 +50,18 @@ export default function ModuleStudio() {
   });
 
   useEffect(() => {
-    if (planId) {
-      fetchTrainingPlan();
+    if (!planId) {
+      navigate('/module-studio');
+      return;
     }
+    
+    fetchTrainingPlan();
     if (moduleId) {
       fetchModule();
     } else {
       setLoading(false);
     }
-  }, [planId, moduleId]);
+  }, [planId, moduleId, navigate]);
 
   const fetchTrainingPlan = async () => {
     if (!planId || !user) return;

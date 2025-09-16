@@ -11,6 +11,7 @@ import Billing from "./pages/Billing";
 import Diagnostic from "./pages/Diagnostic";
 import TrainingPlan from "./pages/TrainingPlan";
 import ModuleStudio from "./pages/ModuleStudio";
+import ModuleStudioLanding from "./pages/ModuleStudioLanding";
 import CertificateGenerator from "./pages/CertificateGenerator";
 import Marketplace from "./pages/Marketplace";
 import AIPlanBuilder from "./pages/AIPlanBuilder";
@@ -39,6 +40,7 @@ const App = () => (
                 <Route path="/billing" element={<Billing />} />
                 <Route path="/diagnostic" element={<Diagnostic />} />
                 <Route path="/training-plan/:id" element={<TrainingPlan />} />
+                <Route path="/module-studio" element={<ModuleStudioLanding />} />
                 <Route path="/module-studio/:planId" element={<ModuleStudio />} />
                 <Route path="/module-studio/:planId/:moduleId" element={<ModuleStudio />} />
                 <Route path="/certificate-generator" element={<CertificateGenerator />} />
