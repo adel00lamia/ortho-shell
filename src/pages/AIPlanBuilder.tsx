@@ -35,7 +35,20 @@ import {
   Copy,
   Play,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Video,
+  Mic,
+  PenTool,
+  Calendar,
+  BarChart3,
+  Award,
+  Settings,
+  FileText,
+  Camera,
+  Headphones,
+  MonitorPlay,
+  Gamepad2,
+  Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,6 +103,10 @@ interface PlanRequirements {
     gamification: boolean;
     microlearning: boolean;
     socialLearning: boolean;
+    videoProduction: boolean;
+    interactiveContent: boolean;
+    virtualReality: boolean;
+    mobileApp: boolean;
   };
 }
 
@@ -130,7 +147,11 @@ export default function AIPlanBuilder() {
       mentorship: false,
       gamification: false,
       microlearning: false,
-      socialLearning: false
+      socialLearning: false,
+      videoProduction: false,
+      interactiveContent: false,
+      virtualReality: false,
+      mobileApp: false
     }
   });
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
@@ -345,9 +366,65 @@ export default function AIPlanBuilder() {
     { value: 'perplexity', label: 'Perplexity AI', description: 'Real-time market insights' }
   ];
 
+  // Enhanced detailed industry list
   const industries = [
-    'Technology', 'Healthcare', 'Finance', 'Manufacturing', 'Education',
-    'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
+    // Technology & Digital
+    'Software Development', 'Information Technology', 'Cybersecurity', 'AI & Machine Learning', 
+    'Cloud Computing', 'Data Analytics', 'Digital Marketing', 'E-commerce', 'Fintech',
+    'Gaming & Entertainment', 'Telecommunications', 'EdTech',
+    
+    // Financial Services
+    'Banking', 'Insurance', 'Investment Management', 'Real Estate', 'Accounting & Finance',
+    'Credit & Lending', 'Wealth Management', 'Financial Planning',
+    
+    // Healthcare & Life Sciences
+    'Hospitals & Healthcare', 'Pharmaceuticals', 'Medical Devices', 'Biotechnology',
+    'Mental Health Services', 'Dental Care', 'Veterinary Services', 'Health Insurance',
+    
+    // Manufacturing & Industrial
+    'Automotive', 'Aerospace & Defense', 'Heavy Machinery', 'Electronics Manufacturing',
+    'Chemical & Petrochemical', 'Food & Beverage', 'Textiles & Apparel', 'Construction Materials',
+    'Renewable Energy', 'Oil & Gas', 'Mining & Metals',
+    
+    // Retail & Consumer
+    'Fashion & Luxury', 'Grocery & Supermarkets', 'Home & Garden', 'Sports & Recreation',
+    'Beauty & Personal Care', 'Consumer Electronics', 'Furniture & Home Decor',
+    
+    // Services & Professional
+    'Management Consulting', 'Legal Services', 'Human Resources', 'Marketing & Advertising',
+    'Public Relations', 'Architecture & Design', 'Engineering Services', 'Research & Development',
+    
+    // Transportation & Logistics
+    'Airlines', 'Shipping & Maritime', 'Trucking & Freight', 'Public Transportation',
+    'Logistics & Supply Chain', 'Ride Sharing', 'Delivery Services',
+    
+    // Education & Training
+    'K-12 Education', 'Higher Education', 'Vocational Training', 'Corporate Training',
+    'Online Learning', 'Language Learning', 'Professional Certification',
+    
+    // Government & Public Sector
+    'Federal Government', 'State & Local Government', 'Military & Defense',
+    'Public Safety', 'Social Services', 'Regulatory Agencies',
+    
+    // Non-Profit & Social
+    'Non-Profit Organizations', 'Charities', 'Religious Organizations', 'Foundations',
+    'Social Impact', 'Environmental Organizations', 'International Development',
+    
+    // Media & Entertainment
+    'Publishing', 'Broadcasting', 'Film & Television', 'Music Industry',
+    'Social Media', 'Content Creation', 'News Media', 'Event Management',
+    
+    // Hospitality & Tourism
+    'Hotels & Resorts', 'Restaurants', 'Travel & Tourism', 'Event Planning',
+    'Cruise Lines', 'Theme Parks', 'Conference Centers',
+    
+    // Agriculture & Food
+    'Farming & Agriculture', 'Food Production', 'Beverage Industry', 'Organic Products',
+    'Agricultural Technology', 'Livestock', 'Fisheries & Aquaculture',
+    
+    // Other Industries
+    'Waste Management', 'Security Services', 'Cleaning Services', 'Maintenance Services',
+    'Photography', 'Art & Culture', 'Sports Organizations', 'Fitness & Wellness'
   ];
 
   const companySizes = [
@@ -356,12 +433,22 @@ export default function AIPlanBuilder() {
   ];
 
   const deliveryMethods = [
-    { id: 'online', label: 'Online Learning', description: 'Virtual classrooms and e-learning' },
-    { id: 'onsite', label: 'On-site Training', description: 'In-person training at your location' },
-    { id: 'hybrid', label: 'Hybrid Learning', description: 'Combination of online and in-person' },
-    { id: 'mentorship', label: 'Mentorship Program', description: 'One-on-one expert guidance' },
-    { id: 'workshops', label: 'Interactive Workshops', description: 'Hands-on learning sessions' },
-    { id: 'microlearning', label: 'Micro-learning', description: 'Bite-sized learning modules' }
+    { id: 'online', label: 'Online Learning', description: 'Virtual classrooms and e-learning', icon: <MonitorPlay className="h-4 w-4" /> },
+    { id: 'onsite', label: 'On-site Training', description: 'In-person training at your location', icon: <Building className="h-4 w-4" /> },
+    { id: 'hybrid', label: 'Hybrid Learning', description: 'Combination of online and in-person', icon: <Globe className="h-4 w-4" /> },
+    { id: 'mentorship', label: 'Mentorship Program', description: 'One-on-one expert guidance', icon: <Users className="h-4 w-4" /> },
+    { id: 'workshops', label: 'Interactive Workshops', description: 'Hands-on learning sessions', icon: <PenTool className="h-4 w-4" /> },
+    { id: 'microlearning', label: 'Micro-learning', description: 'Bite-sized learning modules', icon: <BookOpen className="h-4 w-4" /> }
+  ];
+
+  // Enhanced Studio Features
+  const studioFeatures = [
+    { id: 'videoProduction', label: 'Video Production', description: 'Professional video creation & editing', icon: <Video className="h-4 w-4" /> },
+    { id: 'interactiveContent', label: 'Interactive Content', description: 'Quizzes, simulations & gamification', icon: <Gamepad2 className="h-4 w-4" /> },
+    { id: 'virtualReality', label: 'VR/AR Training', description: 'Immersive learning experiences', icon: <Camera className="h-4 w-4" /> },
+    { id: 'mobileApp', label: 'Mobile Learning App', description: 'Native mobile training app', icon: <MonitorPlay className="h-4 w-4" /> },
+    { id: 'aiNarration', label: 'AI Voice Narration', description: 'Text-to-speech with multiple voices', icon: <Mic className="h-4 w-4" /> },
+    { id: 'liveStreaming', label: 'Live Streaming', description: 'Real-time training sessions', icon: <Calendar className="h-4 w-4" /> }
   ];
 
   const categories = [...new Set(trainingTemplates.map(t => t.category))];
@@ -498,16 +585,15 @@ export default function AIPlanBuilder() {
         .insert({
           title: generatedPlan.title,
           description: generatedPlan.description,
-          modules: generatedPlan.modules,
-          budget: requirements.budget,
-          duration_months: requirements.duration,
           objectives: requirements.objectives,
           target_skills: requirements.targetSkills,
-          kpis: generatedPlan.kpis,
-          ai_generated: true,
+          duration_months: requirements.duration,
+          budget: requirements.budget,
           created_by: user.id,
-          company_id: profile?.company_id || null,
-          status: 'draft'
+          company_id: profile?.company_id,
+          ai_generated: true,
+          modules: generatedPlan.modules,
+          kpis: generatedPlan.kpis
         })
         .select()
         .single();
@@ -521,7 +607,7 @@ export default function AIPlanBuilder() {
 
       navigate(`/training-plan/${data.id}`);
     } catch (error) {
-      console.error('Save plan error:', error);
+      console.error('Save error:', error);
       toast({
         title: "Save Failed",
         description: "Could not save the training plan. Please try again.",
@@ -534,14 +620,9 @@ export default function AIPlanBuilder() {
     switch (step) {
       case 0:
         return (
-          <div className="space-y-8">
+          <div className="max-w-6xl mx-auto space-y-8">
             {/* Hero Section */}
             <div className="text-center space-y-4">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
-                  <Brain className="h-12 w-12 text-white" />
-                </div>
-              </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 AI Training Plan Builder
               </h1>
@@ -734,17 +815,6 @@ export default function AIPlanBuilder() {
                           </div>
                         </div>
 
-                        <div>
-                          <div className="text-sm font-medium mb-2">Best For:</div>
-                          <div className="flex flex-wrap gap-1">
-                            {pack.bestFor.map((audience, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {audience}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
                         <Button onClick={() => applyPack(pack.id)} className="w-full">
                           <Rocket className="h-4 w-4 mr-2" />
                           Select Pack
@@ -840,7 +910,7 @@ export default function AIPlanBuilder() {
                     <SelectTrigger>
                       <SelectValue placeholder="Select industry" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-60">
                       {industries.map(industry => (
                         <SelectItem key={industry} value={industry}>{industry}</SelectItem>
                       ))}
@@ -909,11 +979,11 @@ export default function AIPlanBuilder() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                Skills & Requirements
+                <BookOpen className="h-5 w-5" />
+                Skills & Constraints
               </CardTitle>
               <CardDescription>
-                Define the skills you want to develop and any constraints
+                Define target skills and any constraints or limitations
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -951,7 +1021,7 @@ export default function AIPlanBuilder() {
                   <Input
                     value={newConstraint}
                     onChange={(e) => setNewConstraint(e.target.value)}
-                    placeholder="Add constraint (e.g., remote only, budget limits)"
+                    placeholder="Add constraint (budget, time, location, etc.)"
                     onKeyPress={(e) => e.key === 'Enter' && 
                       addToList(requirements.constraints, (items) => 
                         setRequirements({...requirements, constraints: items}), newConstraint, setNewConstraint)}
@@ -975,21 +1045,23 @@ export default function AIPlanBuilder() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">Budget (MAD)</label>
-                  <Input
-                    type="number"
-                    value={requirements.budget}
-                    onChange={(e) => setRequirements({...requirements, budget: Number(e.target.value)})}
-                    placeholder="50000"
-                  />
-                </div>
-                <div>
                   <label className="text-sm font-medium">Duration (months)</label>
                   <Input
                     type="number"
                     value={requirements.duration}
-                    onChange={(e) => setRequirements({...requirements, duration: Number(e.target.value)})}
-                    placeholder="12"
+                    onChange={(e) => setRequirements({...requirements, duration: parseInt(e.target.value) || 0})}
+                    min="1"
+                    max="36"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Budget (MAD)</label>
+                  <Input
+                    type="number"
+                    value={requirements.budget}
+                    onChange={(e) => setRequirements({...requirements, budget: parseInt(e.target.value) || 0})}
+                    min="1000"
+                    step="1000"
                   />
                 </div>
               </div>
@@ -1002,19 +1074,39 @@ export default function AIPlanBuilder() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                Training Customizations
+                <Brain className="h-5 w-5" />
+                AI Model & Delivery
               </CardTitle>
               <CardDescription>
-                Customize your training delivery and engagement features
+                Choose your AI model and customize delivery methods
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
+                <label className="text-sm font-medium">AI Model</label>
+                <Select value={requirements.aiModel} onValueChange={(value) => 
+                  setRequirements({...requirements, aiModel: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {aiModels.map(model => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div>
+                          <div className="font-medium">{model.label}</div>
+                          <div className="text-xs text-muted-foreground">{model.description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <label className="text-sm font-medium mb-3 block">Delivery Methods</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {deliveryMethods.map((method) => (
-                    <div key={method.id} className="flex items-start space-x-3">
+                    <div key={method.id} className="flex items-start space-x-3 p-3 border rounded-lg">
                       <Checkbox
                         id={method.id}
                         checked={requirements.customizations.deliveryMethods.includes(method.id)}
@@ -1023,13 +1115,14 @@ export default function AIPlanBuilder() {
                             ? [...requirements.customizations.deliveryMethods, method.id]
                             : requirements.customizations.deliveryMethods.filter(m => m !== method.id);
                           setRequirements({
-                            ...requirements, 
+                            ...requirements,
                             customizations: {...requirements.customizations, deliveryMethods: methods}
                           });
                         }}
                       />
-                      <div className="space-y-1">
-                        <label htmlFor={method.id} className="text-sm font-medium cursor-pointer">
+                      <div className="grid gap-1.5 leading-none">
+                        <label htmlFor={method.id} className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                          {method.icon}
                           {method.label}
                         </label>
                         <p className="text-xs text-muted-foreground">{method.description}</p>
@@ -1041,65 +1134,62 @@ export default function AIPlanBuilder() {
 
               <div>
                 <label className="text-sm font-medium mb-3 block">Engagement Features</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Certification Program</div>
-                      <div className="text-xs text-muted-foreground">Issue verified certificates</div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="certification"
                       checked={requirements.customizations.certification}
                       onCheckedChange={(checked) => 
                         setRequirements({
-                          ...requirements, 
+                          ...requirements,
                           customizations: {...requirements.customizations, certification: !!checked}
                         })}
                     />
+                    <label htmlFor="certification" className="text-sm cursor-pointer">
+                      Professional Certification
+                    </label>
                   </div>
-
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Mentorship Program</div>
-                      <div className="text-xs text-muted-foreground">Expert guidance and support</div>
-                    </div>
+                  <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="mentorship"
                       checked={requirements.customizations.mentorship}
                       onCheckedChange={(checked) => 
                         setRequirements({
-                          ...requirements, 
+                          ...requirements,
                           customizations: {...requirements.customizations, mentorship: !!checked}
                         })}
                     />
+                    <label htmlFor="mentorship" className="text-sm cursor-pointer">
+                      Expert Mentorship
+                    </label>
                   </div>
-
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Gamification</div>
-                      <div className="text-xs text-muted-foreground">Points, badges, and leaderboards</div>
-                    </div>
+                  <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="gamification"
                       checked={requirements.customizations.gamification}
                       onCheckedChange={(checked) => 
                         setRequirements({
-                          ...requirements, 
+                          ...requirements,
                           customizations: {...requirements.customizations, gamification: !!checked}
                         })}
                     />
+                    <label htmlFor="gamification" className="text-sm cursor-pointer">
+                      Gamification & Badges
+                    </label>
                   </div>
-
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Social Learning</div>
-                      <div className="text-xs text-muted-foreground">Peer collaboration and forums</div>
-                    </div>
+                  <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="socialLearning"
                       checked={requirements.customizations.socialLearning}
                       onCheckedChange={(checked) => 
                         setRequirements({
-                          ...requirements, 
+                          ...requirements,
                           customizations: {...requirements.customizations, socialLearning: !!checked}
                         })}
                     />
+                    <label htmlFor="socialLearning" className="text-sm cursor-pointer">
+                      Social Learning Community
+                    </label>
                   </div>
                 </div>
               </div>
@@ -1112,347 +1202,515 @@ export default function AIPlanBuilder() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                AI Model Selection
+                <Video className="h-5 w-5" />
+                Training Design Studio
               </CardTitle>
               <CardDescription>
-                Choose the AI model that best fits your planning needs
+                Advanced content creation and delivery options
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {aiModels.map((model) => (
-                <div
-                  key={model.value}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    requirements.aiModel === model.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onClick={() => setRequirements({...requirements, aiModel: model.value})}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">{model.label}</h3>
-                      <p className="text-sm text-muted-foreground">{model.description}</p>
+            <CardContent className="space-y-6">
+              <div>
+                <label className="text-sm font-medium mb-3 block">Studio Features</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {studioFeatures.map((feature) => (
+                    <div key={feature.id} className="flex items-start space-x-3 p-3 border rounded-lg">
+                      <Checkbox
+                        id={feature.id}
+                        checked={requirements.customizations[feature.id as keyof typeof requirements.customizations] as boolean}
+                        onCheckedChange={(checked) => {
+                          setRequirements({
+                            ...requirements,
+                            customizations: {
+                              ...requirements.customizations,
+                              [feature.id]: !!checked
+                            }
+                          });
+                        }}
+                      />
+                      <div className="grid gap-1.5 leading-none">
+                        <label htmlFor={feature.id} className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                          {feature.icon}
+                          {feature.label}
+                        </label>
+                        <p className="text-xs text-muted-foreground">{feature.description}</p>
+                      </div>
                     </div>
-                    {requirements.aiModel === model.value && (
-                      <Badge variant="default">Selected</Badge>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
 
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-medium mb-2">Plan Preview</h4>
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  AI-Powered Content Generation
+                </h4>
                 <div className="text-sm text-muted-foreground space-y-1">
-                  <p>• Company: {requirements.company || 'Not specified'}</p>
-                  <p>• Objectives: {requirements.objectives.length} defined</p>
-                  <p>• Target Skills: {requirements.targetSkills.length} skills</p>
-                  <p>• Budget: {requirements.budget.toLocaleString()} MAD</p>
-                  <p>• Duration: {requirements.duration} months</p>
-                  <p>• Delivery Methods: {requirements.customizations.deliveryMethods.length} selected</p>
+                  <p>• Automatic video script generation and storyboarding</p>
+                  <p>• Interactive quiz and assessment creation</p>
+                  <p>• Multi-language content localization</p>
+                  <p>• Personalized learning paths based on learner progress</p>
+                  <p>• Real-time content optimization using learner analytics</p>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4 text-center">
+                  <Camera className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Video Studio</h4>
+                  <p className="text-xs text-muted-foreground">Professional video production with AI editing</p>
+                </Card>
+                <Card className="p-4 text-center">
+                  <Gamepad2 className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Interactive Modules</h4>
+                  <p className="text-xs text-muted-foreground">Gamified learning with simulations</p>
+                </Card>
+                <Card className="p-4 text-center">
+                  <Headphones className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Audio Production</h4>
+                  <p className="text-xs text-muted-foreground">AI voice narration and podcasts</p>
+                </Card>
               </div>
             </CardContent>
           </Card>
         );
 
       case 5:
-        return generatedPlan ? (
+        return (
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-primary" />
-                      {generatedPlan.title}
-                    </CardTitle>
-                    <CardDescription>{generatedPlan.description}</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Export
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="modules">Modules</TabsTrigger>
-                    <TabsTrigger value="budget">Budget</TabsTrigger>
-                    <TabsTrigger value="kpis">KPIs</TabsTrigger>
-                    <TabsTrigger value="risks">Risks</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="overview" className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Timeline</h4>
-                      <p className="text-sm text-muted-foreground">{generatedPlan.timeline}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-2">Key Recommendations</h4>
-                      <ul className="space-y-2">
-                        {generatedPlan.recommendations.map((rec, index) => (
-                          <li key={index} className="flex items-start gap-2 text-sm">
-                            <div className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" />
-                            {rec}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+            {generatedPlan ? (
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="modules">Modules</TabsTrigger>
+                  <TabsTrigger value="budget">Budget</TabsTrigger>
+                  <TabsTrigger value="kpis">KPIs</TabsTrigger>
+                  <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
+                </TabsList>
 
-                    {generatedPlan.success_metrics && (
-                      <div>
-                        <h4 className="font-medium mb-2">Success Metrics</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {generatedPlan.success_metrics.map((metric, index) => (
-                            <div key={index} className="flex items-center gap-2 p-2 bg-muted/50 rounded">
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                              <span className="text-sm">{metric}</span>
+                <TabsContent value="overview" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-2xl">{generatedPlan.title}</CardTitle>
+                          <CardDescription className="mt-2">{generatedPlan.description}</CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={savePlan}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Save Plan
+                          </Button>
+                          <Button variant="outline">
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="text-center p-4 bg-primary/5 rounded-lg">
+                          <div className="text-2xl font-bold text-primary">{generatedPlan.modules?.length || 0}</div>
+                          <div className="text-sm text-muted-foreground">Training Modules</div>
+                        </div>
+                        <div className="text-center p-4 bg-green-500/5 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">{requirements.duration}m</div>
+                          <div className="text-sm text-muted-foreground">Duration</div>
+                        </div>
+                        <div className="text-center p-4 bg-blue-500/5 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{requirements.budget.toLocaleString()}</div>
+                          <div className="text-sm text-muted-foreground">Budget (MAD)</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {generatedPlan.recommendations && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="h-5 w-5" />
+                          AI Recommendations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {generatedPlan.recommendations.map((rec, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+                              <p className="text-sm">{rec}</p>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="modules" className="space-y-4">
-                    <div className="grid gap-4">
-                      {generatedPlan.modules.map((module, index) => (
-                        <Card key={index} className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium">{module.title}</h4>
-                            <Badge variant="outline">{module.type}</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-3">{module.description}</p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                            <div>
-                              <span className="text-muted-foreground">Duration:</span>
-                              <div className="font-medium">{module.duration}</div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Method:</span>
-                              <div className="font-medium">{module.delivery_method}</div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Cost:</span>
-                              <div className="font-medium">{module.estimated_cost?.toLocaleString()} MAD</div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Skills:</span>
-                              <div className="font-medium">{module.skills_covered?.length || 0} skills</div>
-                            </div>
-                          </div>
-                          {module.skills_covered && (
-                            <div className="mt-3">
-                              <div className="flex flex-wrap gap-1">
-                                {module.skills_covered.map((skill: string, skillIndex: number) => (
-                                  <Badge key={skillIndex} variant="secondary" className="text-xs">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="budget" className="space-y-4">
-                    <div className="grid gap-4">
-                      {Object.entries(generatedPlan.budget_breakdown).map(([category, amount]) => (
-                        <div key={category} className="flex justify-between items-center p-3 border rounded">
-                          <span className="font-medium capitalize">{category.replace(/_/g, ' ')}</span>
-                          <span className="font-bold">{(amount as number).toLocaleString()} MAD</span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between items-center p-3 bg-primary/10 border border-primary/20 rounded font-bold">
-                        <span>Total Budget</span>
-                        <span>{Object.values(generatedPlan.budget_breakdown).reduce((a: number, b: any) => a + (b as number), 0).toLocaleString()} MAD</span>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="kpis" className="space-y-4">
-                    <div className="grid gap-4">
-                      {generatedPlan.kpis.map((kpi, index) => (
-                        <Card key={index} className="p-4">
-                          <h4 className="font-medium mb-2">{kpi.name}</h4>
-                          <p className="text-sm text-muted-foreground mb-3">{kpi.description}</p>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Target:</span>
-                              <div className="font-medium">{kpi.target}</div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Frequency:</span>
-                              <div className="font-medium">{kpi.measurement_frequency}</div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
 
-                  <TabsContent value="risks" className="space-y-4">
-                    {generatedPlan.risk_assessment && (
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-3 flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-orange-500" />
-                            High Risk Areas
-                          </h4>
+                <TabsContent value="modules" className="space-y-4">
+                  <div className="grid gap-4">
+                    {generatedPlan.modules?.map((module, index) => (
+                      <Card key={index}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{module.title || `Module ${index + 1}`}</CardTitle>
+                          <CardDescription>{module.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
                           <div className="space-y-2">
-                            {generatedPlan.risk_assessment.high_risks?.map((risk: string, index: number) => (
-                              <div key={index} className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded">
-                                <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                <span className="text-sm">{risk}</span>
-                              </div>
-                            ))}
+                            <div className="flex justify-between text-sm">
+                              <span>Duration:</span>
+                              <span>{module.duration || '2-4 weeks'}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Skills:</span>
+                              <span>{module.skills?.join(', ') || 'Various'}</span>
+                            </div>
                           </div>
-                        </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
 
-                        <div>
-                          <h4 className="font-medium mb-3 flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-green-500" />
-                            Mitigation Strategies
-                          </h4>
-                          <div className="space-y-2">
-                            {generatedPlan.risk_assessment.mitigation_strategies?.map((strategy: string, index: number) => (
-                              <div key={index} className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded">
-                                <Shield className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                <span className="text-sm">{strategy}</span>
-                              </div>
-                            ))}
-                          </div>
+                <TabsContent value="budget" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Budget Breakdown</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {generatedPlan.budget_breakdown ? (
+                        <div className="space-y-3">
+                          {Object.entries(generatedPlan.budget_breakdown).map(([category, amount]) => (
+                            <div key={category} className="flex justify-between">
+                              <span className="capitalize">{category.replace(/_/g, ' ')}</span>
+                              <span className="font-medium">{amount} MAD</span>
+                            </div>
+                          ))}
                         </div>
+                      ) : (
+                        <p className="text-muted-foreground">Budget breakdown will be generated with the plan.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="kpis" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Key Performance Indicators</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-3">
+                        {generatedPlan.kpis?.map((kpi, index) => (
+                          <div key={index} className="p-3 border rounded-lg">
+                            <div className="font-medium">{(kpi as any).name || `KPI ${index + 1}`}</div>
+                            <div className="text-sm text-muted-foreground">{(kpi as any).description}</div>
+                            <div className="text-sm font-medium text-primary">
+                              Target: {(kpi as any).target || 'To be defined'}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="risk" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Risk Assessment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {generatedPlan.risk_assessment ? (
+                        <div className="space-y-4">
+                          {Object.entries(generatedPlan.risk_assessment).map(([risk, details]) => (
+                            <div key={risk} className="p-3 border rounded-lg">
+                              <div className="font-medium capitalize">{risk.replace(/_/g, ' ')}</div>
+                              <div className="text-sm text-muted-foreground">{String(details)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground">Risk assessment will be generated with the plan.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generate Your Training Plan</CardTitle>
+                  <CardDescription>
+                    Review your configuration and generate an AI-powered training plan
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="text-center">
+                    <Button onClick={generatePlan} disabled={isGenerating} size="lg">
+                      {isGenerating ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Generating Plan...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generate AI Training Plan
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {isGenerating && (
+                    <div className="space-y-2">
+                      <Progress value={progress} className="w-full" />
+                      <p className="text-sm text-center text-muted-foreground">
+                        AI is analyzing your requirements and creating a customized training plan...
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
-        ) : null;
+        );
+
+      case 6:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Calendar & Bookings
+              </CardTitle>
+              <CardDescription>
+                Schedule sessions, manage attendees, and track completion
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4 text-center">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Session Scheduling</h4>
+                  <p className="text-xs text-muted-foreground">Automated calendar integration</p>
+                </Card>
+                <Card className="p-4 text-center">
+                  <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Attendee Management</h4>
+                  <p className="text-xs text-muted-foreground">Invites and check-in system</p>
+                </Card>
+                <Card className="p-4 text-center">
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Completion Tracking</h4>
+                  <p className="text-xs text-muted-foreground">Progress monitoring and certificates</p>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 7:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                KPI & ROI Dashboard
+              </CardTitle>
+              <CardDescription>
+                xAPI-ready events, completion analytics, and business ROI calculation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4 text-center">
+                  <BarChart3 className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Performance Analytics</h4>
+                  <p className="text-xs text-muted-foreground">Completion rates and scores</p>
+                </Card>
+                <Card className="p-4 text-center">
+                  <DollarSign className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">ROI Calculator</h4>
+                  <p className="text-xs text-muted-foreground">Training investment returns</p>
+                </Card>
+                <Card className="p-4 text-center">
+                  <Target className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <h4 className="font-medium">Business KPIs</h4>
+                  <p className="text-xs text-muted-foreground">Strategic goal alignment</p>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 8:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                OFPPT/GIAC Module
+              </CardTitle>
+              <CardDescription>
+                Step tracker for GIAC approval through submission with automated documentation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <div>
+                    <div className="font-medium">GIAC Approval</div>
+                    <div className="text-sm text-muted-foreground">Initial qualification review</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <Clock className="h-5 w-5 text-yellow-500" />
+                  <div>
+                    <div className="font-medium">Plan Approval</div>
+                    <div className="text-sm text-muted-foreground">Training plan validation</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <Play className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <div className="font-medium">Execution</div>
+                    <div className="text-sm text-muted-foreground">Training delivery phase</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-purple-500" />
+                  <div>
+                    <div className="font-medium">Evaluation</div>
+                    <div className="text-sm text-muted-foreground">Assessment and validation</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <FileText className="h-5 w-5 text-orange-500" />
+                  <div>
+                    <div className="font-medium">Dossier Generation</div>
+                    <div className="text-sm text-muted-foreground">Automated documentation</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <Upload className="h-5 w-5 text-green-600" />
+                  <div>
+                    <div className="font-medium">Submission</div>
+                    <div className="text-sm text-muted-foreground">Final submission and tracking</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 9:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Admin & Integrations
+              </CardTitle>
+              <CardDescription>
+                HRIS/LMS connectors, SSO setup, and security configurations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    HRIS Integration
+                  </h4>
+                  <p className="text-sm text-muted-foreground">Connect with HR systems for user management</p>
+                </Card>
+                <Card className="p-4">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    LMS Connector
+                  </h4>
+                  <p className="text-sm text-muted-foreground">Integrate with existing learning platforms</p>
+                </Card>
+                <Card className="p-4">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Single Sign-On
+                  </h4>
+                  <p className="text-sm text-muted-foreground">Secure authentication with SSO</p>
+                </Card>
+                <Card className="p-4">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Security Settings
+                  </h4>
+                  <p className="text-sm text-muted-foreground">Advanced security configurations</p>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        );
 
       default:
         return null;
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        {step > 0 && (
-          <div className="flex items-center justify-between mb-8">
-            <Button 
-              variant="ghost" 
-              onClick={() => step > 0 ? setStep(step - 1) : navigate('/')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {step === 1 ? 'Back to Templates' : 'Previous Step'}
-            </Button>
-            
-            {step < 5 && (
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-muted-foreground">
-                  Step {step} of 4
-                </div>
-                <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-300" 
-                    style={{ width: `${(step / 4) * 100}%` }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+  const nextStep = () => {
+    if (step < 9) setStep(step + 1);
+  };
 
-        {/* Progress Indicator */}
-        {isGenerating && (
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                <div className="flex-1">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Generating your training plan...</span>
-                    <span>{Math.round(progress)}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+  const prevStep = () => {
+    if (step > 0) setStep(step - 1);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Navigation */}
+        <div className="flex items-center justify-between mb-8">
+          <Button variant="ghost" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          
+          {step > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Step {step} of 9
+              </span>
+              <Progress value={(step / 9) * 100} className="w-32" />
+            </div>
+          )}
+        </div>
 
         {/* Step Content */}
         {renderStep()}
 
         {/* Navigation Buttons */}
-        {step > 0 && step < 4 && (
+        {step > 0 && step < 5 && (
           <div className="flex justify-between mt-8">
-            <Button 
-              variant="outline" 
-              onClick={() => setStep(step - 1)}
-            >
+            <Button variant="outline" onClick={prevStep} disabled={step === 0}>
               Previous
             </Button>
-            <Button 
-              onClick={() => setStep(step + 1)}
-              disabled={step === 1 && !requirements.company}
-            >
+            <Button onClick={nextStep} disabled={step === 9}>
               Next Step
             </Button>
           </div>
         )}
 
-        {step === 4 && (
+        {step >= 6 && step <= 9 && (
           <div className="flex justify-between mt-8">
-            <Button 
-              variant="outline" 
-              onClick={() => setStep(step - 1)}
-            >
+            <Button variant="outline" onClick={prevStep}>
               Previous
             </Button>
-            <Button 
-              onClick={generatePlan}
-              disabled={isGenerating || !requirements.company}
-              className="flex items-center gap-2"
-            >
-              <Sparkles className="h-4 w-4" />
-              {isGenerating ? 'Generating...' : 'Generate Plan'}
-            </Button>
-          </div>
-        )}
-
-        {step === 5 && generatedPlan && (
-          <div className="flex gap-4 mt-8">
-            <Button 
-              variant="outline" 
-              onClick={() => setStep(0)}
-            >
-              Create New Plan
-            </Button>
-            <Button 
-              onClick={savePlan}
-              className="flex items-center gap-2"
-            >
-              <BookOpen className="h-4 w-4" />
-              Save & Continue
+            <Button onClick={nextStep} disabled={step === 9}>
+              {step === 9 ? 'Complete Setup' : 'Next Step'}
             </Button>
           </div>
         )}
