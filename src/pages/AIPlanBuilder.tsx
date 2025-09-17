@@ -961,6 +961,41 @@ export default function AIPlanBuilder() {
                     Add
                   </Button>
                 </div>
+                
+                {/* Objective Suggestions */}
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Quick Suggestions:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      'Improve leadership skills',
+                      'Enhance technical capabilities',
+                      'Increase productivity',
+                      'Better customer service',
+                      'Digital transformation',
+                      'Team collaboration',
+                      'Innovation culture',
+                      'Compliance training',
+                      'Sales performance',
+                      'Employee retention',
+                      'Risk management',
+                      'Quality improvement',
+                      'Cost reduction',
+                      'Market expansion',
+                      'Communication skills'
+                    ].filter(suggestion => !requirements.objectives.includes(suggestion)).map((suggestion) => (
+                      <Badge 
+                        key={suggestion} 
+                        variant="outline" 
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
+                        onClick={() => addToList(requirements.objectives, (items) => 
+                          setRequirements({...requirements, objectives: items}), suggestion, () => {})}
+                      >
+                        + {suggestion}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.objectives.map((objective, index) => (
                     <Badge key={index} variant="secondary" className="cursor-pointer"
@@ -1015,6 +1050,50 @@ export default function AIPlanBuilder() {
                     Add
                   </Button>
                 </div>
+                
+                {/* Skills Suggestions */}
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Popular Skills:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      'Leadership',
+                      'Communication',
+                      'Project Management',
+                      'Data Analysis',
+                      'Programming',
+                      'Sales Techniques',
+                      'Customer Service',
+                      'Digital Marketing',
+                      'Problem Solving',
+                      'Team Building',
+                      'Strategic Thinking',
+                      'Time Management',
+                      'Negotiation',
+                      'Public Speaking',
+                      'Cybersecurity',
+                      'Cloud Computing',
+                      'Financial Analysis',
+                      'Risk Assessment',
+                      'Quality Management',
+                      'Process Improvement',
+                      'Design Thinking',
+                      'Agile Methodology',
+                      'Emotional Intelligence',
+                      'Change Management'
+                    ].filter(suggestion => !requirements.targetSkills.includes(suggestion)).map((suggestion) => (
+                      <Badge 
+                        key={suggestion} 
+                        variant="outline" 
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
+                        onClick={() => addToList(requirements.targetSkills, (items) => 
+                          setRequirements({...requirements, targetSkills: items}), suggestion, () => {})}
+                      >
+                        + {suggestion}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.targetSkills.map((skill, index) => (
                     <Badge key={index} variant="secondary" className="cursor-pointer"
@@ -1043,6 +1122,46 @@ export default function AIPlanBuilder() {
                     Add
                   </Button>
                 </div>
+                
+                {/* Constraint Suggestions */}
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Common Constraints:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      'Limited budget',
+                      'Time constraints',
+                      'Remote workforce',
+                      'Language barriers',
+                      'Scheduling conflicts',
+                      'Technical infrastructure',
+                      'Employee availability',
+                      'Geographic distribution',
+                      'Regulatory requirements',
+                      'Security restrictions',
+                      'Legacy systems',
+                      'Resistance to change',
+                      'Limited resources',
+                      'Skill level gaps',
+                      'Certification requirements',
+                      'Union restrictions',
+                      'Cultural differences',
+                      'Seasonal workforce',
+                      'High turnover',
+                      'Budget approval process'
+                    ].filter(suggestion => !requirements.constraints.includes(suggestion)).map((suggestion) => (
+                      <Badge 
+                        key={suggestion} 
+                        variant="outline" 
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
+                        onClick={() => addToList(requirements.constraints, (items) => 
+                          setRequirements({...requirements, constraints: items}), suggestion, () => {})}
+                      >
+                        + {suggestion}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.constraints.map((constraint, index) => (
                     <Badge key={index} variant="outline" className="cursor-pointer"
