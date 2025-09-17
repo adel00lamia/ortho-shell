@@ -163,27 +163,43 @@ Generate a detailed, innovative training plan that:
 
     let planData;
 
-    // Route to different AI services based on model selection
+    // Pick a safe default OpenAI model if needed
+    const fallbackOpenAIModel = (typeof requirements.aiModel === 'string' && requirements.aiModel.startsWith('gpt-'))
+      ? requirements.aiModel
+      : 'gpt-4o';
+
+    // Route to different AI services based on model selection, with safe fallbacks
     switch (requirements.aiModel) {
       case 'perplexity':
-        if (!perplexityApiKey) {
-          throw new Error('Perplexity API key not configured');
+        if (perplexityApiKey) {
+          planData = await generateWithPerplexity(systemPrompt, userPrompt);
+        } else {
+          console.warn('Perplexity API key missing, falling back to OpenAI');
+          if (!openAIApiKey) {
+            throw new Error('OpenAI API key not configured');
+          }
+          planData = await generateWithOpenAI(systemPrompt, userPrompt, fallbackOpenAIModel);
         }
-        planData = await generateWithPerplexity(systemPrompt, userPrompt);
         break;
       
       case 'claude-sonnet-4-20250514':
-        if (!anthropicApiKey) {
-          throw new Error('Anthropic API key not configured');
+        if (anthropicApiKey) {
+          planData = await generateWithClaude(systemPrompt, userPrompt);
+        } else {
+          console.warn('Anthropic API key missing, falling back to OpenAI');
+          if (!openAIApiKey) {
+            throw new Error('OpenAI API key not configured');
+          }
+          planData = await generateWithOpenAI(systemPrompt, userPrompt, fallbackOpenAIModel);
         }
-        planData = await generateWithClaude(systemPrompt, userPrompt);
         break;
       
       default:
         if (!openAIApiKey) {
           throw new Error('OpenAI API key not configured');
         }
-        planData = await generateWithOpenAI(systemPrompt, userPrompt, requirements.aiModel);
+        // If a non-OpenAI model was passed by mistake, fall back safely
+        planData = await generateWithOpenAI(systemPrompt, userPrompt, fallbackOpenAIModel);
     }
 
     console.log('Advanced plan generated successfully');
@@ -228,7 +244,33 @@ async function generateWithOpenAI(systemPrompt: string, userPrompt: string, mode
   }
 
   const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
+  const content = data.choices[0].message.content;
+  try {
+    return JSON.parse(content);
+  } catch (err) {
+    console.error('Failed to parse OpenAI response as JSON:', err);
+    console.log('Raw content:', content);
+    return {
+      plan: {
+        title: 'AI-Generated Training Plan',
+        description: 'Fallback plan generated due to parsing issues',
+        timeline: 'To be defined',
+        modules: [],
+        budget_breakdown: {
+          internal_training: 0,
+          external_courses: 0,
+          materials_resources: 0,
+          technology_platform: 0,
+          assessment_certification: 0,
+          mentorship_coaching: 0,
+          gamification_tools: 0,
+          contingency: 0
+        },
+        kpis: [],
+        recommendations: []
+      }
+    };
+  }
 }
 
 async function generateWithClaude(systemPrompt: string, userPrompt: string) {
