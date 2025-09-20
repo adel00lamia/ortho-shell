@@ -260,7 +260,7 @@ export default function SkillsWaveStyleHome() {
                 Transform Your Training Programs Today
               </h2>
               <p className="text-xl text-blue-100 leading-relaxed">
-                Join hundreds of organizations using TrainPro Academy to deliver 
+                Join hundreds of organizations using LMF Academy to deliver 
                 personalized, effective training that drives real business results.
               </p>
               
@@ -295,7 +295,7 @@ export default function SkillsWaveStyleHome() {
 
             <div className="relative">
               <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-8 text-white">
-                <h3 className="text-2xl font-bold mb-6">Why Choose TrainPro Academy?</h3>
+                <h3 className="text-2xl font-bold mb-6">Why Choose LMF Academy?</h3>
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4">
                     <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">

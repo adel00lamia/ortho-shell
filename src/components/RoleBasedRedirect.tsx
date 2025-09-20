@@ -11,8 +11,10 @@ export const RoleBasedRedirect = () => {
   useEffect(() => {
     if (!loading && user && !redirecting) {
       handleRedirect();
+    } else if (!loading && !user) {
+      navigate('/home');
     }
-  }, [user, loading, redirecting]);
+  }, [user, loading, redirecting, navigate]);
 
   const handleRedirect = async () => {
     if (!user) return;
@@ -35,6 +37,9 @@ export const RoleBasedRedirect = () => {
             break;
           case 'trainer':
             navigate('/dashboard/trainer');
+            break;
+          case 'hr_manager':
+            navigate('/dashboard/company');
             break;
           default:
             navigate('/dashboard/company');

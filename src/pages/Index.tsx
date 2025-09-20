@@ -38,7 +38,7 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-xl text-blue-600">Loading TrainPro Academy...</p>
+          <p className="text-xl text-blue-600">Loading LMF Academy...</p>
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ const Index = () => {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
               <Brain className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">TrainPro Academy</span>
+            <span className="text-xl font-bold text-gray-900">LMF Academy</span>
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
@@ -264,7 +264,7 @@ const Index = () => {
               Trusted by Leading Organizations
             </h3>
             <p className="text-gray-600">
-              Join thousands of companies using TrainPro Academy for their training needs
+              Join thousands of companies using LMF Academy for their training needs
             </p>
           </div>
           
