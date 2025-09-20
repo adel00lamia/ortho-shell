@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,16 @@ import {
   Menu,
   X,
   Users,
-  MessageSquare
+  MessageSquare,
+  FileCheck,
+  TrendingUp,
+  User,
+  Palette,
+  Shield,
+  Database
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NavigationItem {
   path: string;
@@ -30,66 +37,149 @@ interface NavigationItem {
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const location = useLocation();
   const { user, signOut } = useAuth();
 
-  const navigationItems: NavigationItem[] = [
-    {
-      path: '/',
-      label: 'Dashboard',
-      icon: <Home className="w-4 h-4" />,
-      description: 'Overview and quick access'
-    },
-    {
-      path: '/ai-plan-builder',
-      label: 'AI Plan Builder',
-      icon: <Brain className="w-4 h-4" />,
-      description: 'Create AI-powered training plans',
-      badge: 'New'
-    },
-    {
-      path: '/diagnostic',
-      label: 'Training Diagnostic',
-      icon: <Target className="w-4 h-4" />,
-      description: 'Assess training needs'
-    },
-    {
-      path: '/marketplace',
-      label: 'Course Marketplace',
-      icon: <ShoppingCart className="w-4 h-4" />,
-      description: 'Browse external courses'
-    },
-    {
-      path: '/module-studio',
-      label: 'Module Studio',
-      icon: <BookOpen className="w-4 h-4" />,
-      description: 'Create and edit modules'
-    },
-    {
-      path: '/certificate-generator',
-      label: 'Certificates',
-      icon: <Award className="w-4 h-4" />,
-      description: 'Generate certificates and badges'
-    },
-    {
-      path: '/analytics',
-      label: 'Analytics',
-      icon: <BarChart3 className="w-4 h-4" />,
-      description: 'Performance metrics and ROI'
-    },
-    {
-      path: '/user-management',
-      label: 'User Management',
-      icon: <Users className="w-4 h-4" />,
-      description: 'Manage users and permissions'
-    },
-    {
-      path: '/team-collaboration',
-      label: 'Team Collaboration',
-      icon: <MessageSquare className="w-4 h-4" />,
-      description: 'Projects and team communication'
+  useEffect(() => {
+    if (user) {
+      fetchUserRole();
     }
-  ];
+  }, [user]);
+
+  const fetchUserRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (data && !error) {
+        setUserRole(data.role || 'employee');
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
+  const getNavigationItems = (): NavigationItem[] => {
+    if (userRole === 'admin') {
+      return [
+        {
+          path: '/admin',
+          label: 'Admin Dashboard',
+          icon: <Home className="w-4 h-4" />,
+          description: 'Platform overview'
+        },
+        {
+          path: '/admin/users',
+          label: 'User Management',
+          icon: <Users className="w-4 h-4" />,
+          description: 'Manage companies & trainers'
+        },
+        {
+          path: '/admin/marketplace',
+          label: 'Marketplace Control',
+          icon: <ShoppingCart className="w-4 h-4" />,
+          description: 'Approve trainer profiles'
+        },
+        {
+          path: '/admin/analytics',
+          label: 'Platform Analytics',
+          icon: <BarChart3 className="w-4 h-4" />,
+          description: 'Usage & revenue metrics'
+        }
+      ];
+    }
+
+    if (userRole === 'trainer') {
+      return [
+        {
+          path: '/dashboard/trainer',
+          label: 'Trainer Dashboard',
+          icon: <Home className="w-4 h-4" />,
+          description: 'Overview and bookings'
+        },
+        {
+          path: '/dashboard/trainer/profile',
+          label: 'Profile Manager',
+          icon: <User className="w-4 h-4" />,
+          description: 'Edit public profile'
+        },
+        {
+          path: '/dashboard/trainer/catalog',
+          label: 'Training Catalog',
+          icon: <BookOpen className="w-4 h-4" />,
+          description: 'Manage offerings'
+        },
+        {
+          path: '/dashboard/trainer/studio',
+          label: 'AI Studio',
+          icon: <Palette className="w-4 h-4" />,
+          description: 'Digitize content & slides',
+          badge: 'AI'
+        },
+        {
+          path: '/dashboard/trainer/compliance',
+          label: 'Evaluation Forms',
+          icon: <FileCheck className="w-4 h-4" />,
+          description: 'Assessment helpers'
+        },
+        {
+          path: '/dashboard/trainer/certificates',
+          label: 'Badge Manager',
+          icon: <Award className="w-4 h-4" />,
+          description: 'Co-branded certificates'
+        }
+      ];
+    }
+
+    // Default: company role
+    return [
+      {
+        path: '/dashboard/company',
+        label: 'Company Dashboard',
+        icon: <Home className="w-4 h-4" />,
+        description: 'Overview & insights'
+      },
+      {
+        path: '/dashboard/company/diagnostic',
+        label: 'AI Diagnostic',
+        icon: <Brain className="w-4 h-4" />,
+        description: 'Skills assessment & plans',
+        badge: 'AI'
+      },
+      {
+        path: '/dashboard/company/compliance',
+        label: 'Compliance Tracker',
+        icon: <Shield className="w-4 h-4" />,
+        description: 'OFPPT/GIAC dossiers'
+      },
+      {
+        path: '/dashboard/company/kpi',
+        label: 'KPI Dashboard',
+        icon: <TrendingUp className="w-4 h-4" />,
+        description: 'ROI & performance metrics'
+      },
+      {
+        path: '/dashboard/company/certificates',
+        label: 'Certificate Manager',
+        icon: <Award className="w-4 h-4" />,
+        description: 'Issue digital badges'
+      },
+      {
+        path: '/marketplace',
+        label: 'Trainer Marketplace',
+        icon: <ShoppingCart className="w-4 h-4" />,
+        description: 'Find training providers'
+      }
+    ];
+  };
+
+  const navigationItems = getNavigationItems();
 
   const comingSoonItems = [
     {
@@ -140,7 +230,7 @@ export default function Navigation() {
         <div className="p-6 space-y-6 h-full overflow-y-auto">
           {/* Header */}
           <div className="space-y-2">
-            <h2 className="text-xl font-bold">TrainPro Academy</h2>
+            <h2 className="text-xl font-bold">LMF Academy</h2>
             {user && (
               <p className="text-sm text-muted-foreground">
                 Welcome, {user.user_metadata?.first_name || user.email}
@@ -260,7 +350,7 @@ export default function Navigation() {
               Sign Out
             </Button>
             <div className="text-xs text-center text-muted-foreground">
-              TrainPro Academy v1.0
+              LMF Academy v1.0
             </div>
           </div>
         </div>
