@@ -26,6 +26,9 @@ import UserManagement from "./pages/UserManagement";
 import TeamCollaboration from "./pages/TeamCollaboration";
 import Navigation from "./components/Navigation";
 import NotFound from "./pages/NotFound";
+import CompanyDashboard from "./pages/dashboard/CompanyDashboard";
+import TrainerDashboard from "./pages/dashboard/TrainerDashboard";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -73,14 +76,14 @@ const App = () => (
                     <Route path="/team-collaboration" element={<TeamCollaboration />} />
                     
                     {/* Company Dashboard Routes */}
-                    <Route path="/dashboard/company" element={<Index />} />
+                    <Route path="/dashboard/company" element={<CompanyDashboard />} />
                     <Route path="/dashboard/company/diagnostic" element={<Diagnostic />} />
                     <Route path="/dashboard/company/compliance" element={<div>Compliance Tracker - Coming Soon</div>} />
                     <Route path="/dashboard/company/kpi" element={<Analytics />} />
                     <Route path="/dashboard/company/certificates" element={<CertificateGenerator />} />
                     
                     {/* Trainer Dashboard Routes */}
-                    <Route path="/dashboard/trainer" element={<div>Trainer Dashboard - Coming Soon</div>} />
+                    <Route path="/dashboard/trainer" element={<TrainerDashboard />} />
                     <Route path="/dashboard/trainer/profile" element={<div>Profile Manager - Coming Soon</div>} />
                     <Route path="/dashboard/trainer/catalog" element={<div>Training Catalog - Coming Soon</div>} />
                     <Route path="/dashboard/trainer/studio" element={<ModuleStudio />} />
@@ -88,7 +91,7 @@ const App = () => (
                     <Route path="/dashboard/trainer/certificates" element={<CertificateGenerator />} />
                     
                     {/* Admin Dashboard Routes */}
-                    <Route path="/admin" element={<div>Admin Dashboard - Coming Soon</div>} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/users" element={<UserManagement />} />
                     <Route path="/admin/marketplace" element={<div>Marketplace Control - Coming Soon</div>} />
                     <Route path="/admin/analytics" element={<Analytics />} />
