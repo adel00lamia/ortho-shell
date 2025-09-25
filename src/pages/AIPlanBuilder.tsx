@@ -174,21 +174,6 @@ export default function AIPlanBuilder() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const stepLabels = [
-    'Templates', 'Requirements', 'Objectives', 'Customization', 'Review', 
-    'Generate', 'Calendar', 'Analytics', 'Compliance', 'Admin'
-  ];
-
-  const isStepAccessible = (stepIndex: number): boolean => {
-    // Allow navigation to any previous step or current step
-    if (stepIndex <= step) return true;
-    
-    // Allow skipping to generate plan if basic requirements are filled
-    if (stepIndex === 5 && requirements.company && requirements.industry) return true;
-    
-    return false;
-  };
-
   // Training Templates
   const trainingTemplates: TrainingTemplate[] = [
     {
@@ -976,41 +961,6 @@ export default function AIPlanBuilder() {
                     Add
                   </Button>
                 </div>
-                
-                {/* Objective Suggestions */}
-                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Quick Suggestions:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {[
-                      'Improve leadership skills',
-                      'Enhance technical capabilities',
-                      'Increase productivity',
-                      'Better customer service',
-                      'Digital transformation',
-                      'Team collaboration',
-                      'Innovation culture',
-                      'Compliance training',
-                      'Sales performance',
-                      'Employee retention',
-                      'Risk management',
-                      'Quality improvement',
-                      'Cost reduction',
-                      'Market expansion',
-                      'Communication skills'
-                    ].filter(suggestion => !requirements.objectives.includes(suggestion)).map((suggestion) => (
-                      <Badge 
-                        key={suggestion} 
-                        variant="outline" 
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
-                        onClick={() => addToList(requirements.objectives, (items) => 
-                          setRequirements({...requirements, objectives: items}), suggestion, () => {})}
-                      >
-                        + {suggestion}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.objectives.map((objective, index) => (
                     <Badge key={index} variant="secondary" className="cursor-pointer"
@@ -1065,50 +1015,6 @@ export default function AIPlanBuilder() {
                     Add
                   </Button>
                 </div>
-                
-                {/* Skills Suggestions */}
-                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Popular Skills:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {[
-                      'Leadership',
-                      'Communication',
-                      'Project Management',
-                      'Data Analysis',
-                      'Programming',
-                      'Sales Techniques',
-                      'Customer Service',
-                      'Digital Marketing',
-                      'Problem Solving',
-                      'Team Building',
-                      'Strategic Thinking',
-                      'Time Management',
-                      'Negotiation',
-                      'Public Speaking',
-                      'Cybersecurity',
-                      'Cloud Computing',
-                      'Financial Analysis',
-                      'Risk Assessment',
-                      'Quality Management',
-                      'Process Improvement',
-                      'Design Thinking',
-                      'Agile Methodology',
-                      'Emotional Intelligence',
-                      'Change Management'
-                    ].filter(suggestion => !requirements.targetSkills.includes(suggestion)).map((suggestion) => (
-                      <Badge 
-                        key={suggestion} 
-                        variant="outline" 
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
-                        onClick={() => addToList(requirements.targetSkills, (items) => 
-                          setRequirements({...requirements, targetSkills: items}), suggestion, () => {})}
-                      >
-                        + {suggestion}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.targetSkills.map((skill, index) => (
                     <Badge key={index} variant="secondary" className="cursor-pointer"
@@ -1137,46 +1043,6 @@ export default function AIPlanBuilder() {
                     Add
                   </Button>
                 </div>
-                
-                {/* Constraint Suggestions */}
-                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Common Constraints:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {[
-                      'Limited budget',
-                      'Time constraints',
-                      'Remote workforce',
-                      'Language barriers',
-                      'Scheduling conflicts',
-                      'Technical infrastructure',
-                      'Employee availability',
-                      'Geographic distribution',
-                      'Regulatory requirements',
-                      'Security restrictions',
-                      'Legacy systems',
-                      'Resistance to change',
-                      'Limited resources',
-                      'Skill level gaps',
-                      'Certification requirements',
-                      'Union restrictions',
-                      'Cultural differences',
-                      'Seasonal workforce',
-                      'High turnover',
-                      'Budget approval process'
-                    ].filter(suggestion => !requirements.constraints.includes(suggestion)).map((suggestion) => (
-                      <Badge 
-                        key={suggestion} 
-                        variant="outline" 
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs"
-                        onClick={() => addToList(requirements.constraints, (items) => 
-                          setRequirements({...requirements, constraints: items}), suggestion, () => {})}
-                      >
-                        + {suggestion}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.constraints.map((constraint, index) => (
                     <Badge key={index} variant="outline" className="cursor-pointer"
@@ -1817,140 +1683,46 @@ export default function AIPlanBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Enhanced Navigation */}
+        {/* Navigation */}
         <div className="flex items-center justify-between mb-8">
           <Button variant="ghost" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+            Back
           </Button>
           
-          <div className="flex items-center gap-4">
-            {step > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Step {step} of 9
-                </span>
-                <Progress value={(step / 9) * 100} className="w-32" />
-              </div>
-            )}
-          </div>
+          {step > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Step {step} of 9
+              </span>
+              <Progress value={(step / 9) * 100} className="w-32" />
+            </div>
+          )}
         </div>
-
-        {/* Enhanced Step Navigation */}
-        {step > 0 && (
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Training Plan Builder</h3>
-                <Badge variant="outline">{step} of {stepLabels.length}</Badge>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {stepLabels.map((label, index) => (
-                  <button
-                    key={index}
-                    onClick={() => isStepAccessible(index) && setStep(index)}
-                    className={`p-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      index === step 
-                        ? 'bg-primary text-primary-foreground shadow-md' 
-                        : index < step 
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer border border-green-200' 
-                        : isStepAccessible(index)
-                        ? 'bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer border border-blue-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-200'
-                    }`}
-                    disabled={!isStepAccessible(index)}
-                    title={!isStepAccessible(index) ? 'Complete previous steps first' : `Go to ${label}`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-xs">{index + 1}</span>
-                      {index < step && <CheckCircle className="h-3 w-3" />}
-                      {index === step && <span className="h-2 w-2 bg-current rounded-full animate-pulse" />}
-                    </div>
-                    <div className="mt-1 text-xs truncate">{label}</div>
-                  </button>
-                ))}
-              </div>
-              
-              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>✓ Completed</span>
-                <span>● Current</span>
-                <span>○ Available</span>
-                <span>✕ Locked</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Step Content */}
         {renderStep()}
 
-        {/* Enhanced Navigation Buttons */}
-        {step > 0 && (
-          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t gap-4">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                onClick={prevStep} 
-                disabled={step === 0}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              
-              {step > 1 && (
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setStep(0)}
-                  className="text-xs"
-                >
-                  Start Over
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {step < 5 && requirements.company && requirements.industry && (
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setStep(5)}
-                  className="flex items-center gap-2"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Generate Plan Now
-                </Button>
-              )}
-              
-              <Button 
-                onClick={step === 9 ? () => navigate('/training-plan') : nextStep} 
-                disabled={step === 5 && isGenerating}
-                className="flex items-center gap-2"
-              >
-                {step === 9 ? (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Complete Setup
-                  </>
-                ) : (
-                  <>
-                    Next Step
-                    <span className="ml-1">→</span>
-                  </>
-                )}
-              </Button>
-            </div>
+        {/* Navigation Buttons */}
+        {step > 0 && step < 5 && (
+          <div className="flex justify-between mt-8">
+            <Button variant="outline" onClick={prevStep} disabled={step === 0}>
+              Previous
+            </Button>
+            <Button onClick={nextStep} disabled={step === 9}>
+              Next Step
+            </Button>
           </div>
         )}
 
-        {/* Quick Navigation Shortcuts */}
-        {step > 0 && step < 5 && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <div className="flex items-center gap-2 text-sm text-blue-700">
-              <Brain className="h-4 w-4" />
-              <span className="font-medium">Quick tip:</span>
-              You can click on any completed step above to go back and make changes, or skip ahead once basic requirements are filled.
-            </div>
+        {step >= 6 && step <= 9 && (
+          <div className="flex justify-between mt-8">
+            <Button variant="outline" onClick={prevStep}>
+              Previous
+            </Button>
+            <Button onClick={nextStep} disabled={step === 9}>
+              {step === 9 ? 'Complete Setup' : 'Next Step'}
+            </Button>
           </div>
         )}
       </div>
