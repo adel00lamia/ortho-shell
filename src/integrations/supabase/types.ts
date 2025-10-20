@@ -44,6 +44,125 @@ export type Database = {
         }
         Relationships: []
       }
+      job_descriptions: {
+        Row: {
+          company_id: string
+          competencies: Json | null
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          description: string | null
+          id: string
+          level: string | null
+          preferred_skills: Json | null
+          required_skills: Json | null
+          responsibilities: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          competencies?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          level?: string | null
+          preferred_skills?: Json | null
+          required_skills?: Json | null
+          responsibilities?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          competencies?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          level?: string | null
+          preferred_skills?: Json | null
+          required_skills?: Json | null
+          responsibilities?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      performance_evaluations: {
+        Row: {
+          areas_for_improvement: string[] | null
+          career_goals: string | null
+          company_id: string
+          competency_scores: Json | null
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          employee_email: string | null
+          employee_name: string
+          evaluation_date: string | null
+          evaluation_period: string | null
+          id: string
+          job_description_id: string | null
+          notes: string | null
+          overall_rating: number | null
+          strengths: string[] | null
+          training_recommendations: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          areas_for_improvement?: string[] | null
+          career_goals?: string | null
+          company_id: string
+          competency_scores?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          employee_email?: string | null
+          employee_name: string
+          evaluation_date?: string | null
+          evaluation_period?: string | null
+          id?: string
+          job_description_id?: string | null
+          notes?: string | null
+          overall_rating?: number | null
+          strengths?: string[] | null
+          training_recommendations?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          areas_for_improvement?: string[] | null
+          career_goals?: string | null
+          company_id?: string
+          competency_scores?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          employee_email?: string | null
+          employee_name?: string
+          evaluation_date?: string | null
+          evaluation_period?: string | null
+          id?: string
+          job_description_id?: string | null
+          notes?: string | null
+          overall_rating?: number | null
+          strengths?: string[] | null
+          training_recommendations?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_evaluations_job_description_id_fkey"
+            columns: ["job_description_id"]
+            isOneToOne: false
+            referencedRelation: "job_descriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -126,6 +245,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      training_diagnostic_employees: {
+        Row: {
+          created_at: string | null
+          current_competencies: Json | null
+          diagnostic_id: string
+          employee_name: string
+          id: string
+          job_description_id: string | null
+          performance_evaluation_id: string | null
+          priority: string | null
+          target_competencies: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_competencies?: Json | null
+          diagnostic_id: string
+          employee_name: string
+          id?: string
+          job_description_id?: string | null
+          performance_evaluation_id?: string | null
+          priority?: string | null
+          target_competencies?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          current_competencies?: Json | null
+          diagnostic_id?: string
+          employee_name?: string
+          id?: string
+          job_description_id?: string | null
+          performance_evaluation_id?: string | null
+          priority?: string | null
+          target_competencies?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_diagnostic_employees_job_description_id_fkey"
+            columns: ["job_description_id"]
+            isOneToOne: false
+            referencedRelation: "job_descriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_diagnostic_employees_performance_evaluation_id_fkey"
+            columns: ["performance_evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "performance_evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       training_diagnostics: {
         Row: {
@@ -341,7 +511,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "hr_manager" | "employee"
+      app_role: "admin" | "hr_manager" | "employee" | "trainer"
       training_status: "draft" | "active" | "completed" | "cancelled"
       training_type: "internal" | "external" | "mixed"
     }
@@ -471,7 +641,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "hr_manager", "employee"],
+      app_role: ["admin", "hr_manager", "employee", "trainer"],
       training_status: ["draft", "active", "completed", "cancelled"],
       training_type: ["internal", "external", "mixed"],
     },
