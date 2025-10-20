@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Briefcase, Users, Target, Upload, Plus, X, FileText } from "lucide-react";
+import JobDescriptionForm from "@/components/JobDescriptionForm";
+import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 
 interface Employee {
   id: string;
@@ -28,6 +30,8 @@ interface JobDescription {
   id: string;
   title: string;
   department: string;
+  level: string;
+  description: string;
   competencies: any; // JSONB from database
 }
 
@@ -35,6 +39,8 @@ interface PerformanceEvaluation {
   id: string;
   employee_name: string;
   overall_rating: number;
+  department: string;
+  job_description_id: string | null;
   competency_scores: any; // JSONB from database
   areas_for_improvement: string[];
   training_recommendations: string[];
@@ -50,6 +56,10 @@ export default function Diagnostic() {
   // Job Descriptions & Evaluations
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [performanceEvaluations, setPerformanceEvaluations] = useState<PerformanceEvaluation[]>([]);
+  const [showJobForm, setShowJobForm] = useState(false);
+  const [showEvalForm, setShowEvalForm] = useState(false);
+  const [editingJob, setEditingJob] = useState<any>(null);
+  const [editingEval, setEditingEval] = useState<any>(null);
   
   // Employees for diagnostic
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -144,6 +154,125 @@ export default function Diagnostic() {
 
   const updateEmployee = (id: string, updates: Partial<Employee>) => {
     setEmployees(employees.map(e => e.id === id ? { ...e, ...updates } : e));
+  };
+
+  const handleSaveJobDescription = async (data: any) => {
+    try {
+      if (!companyId || !user) return;
+
+      const jobData = {
+        company_id: companyId,
+        created_by: user.id,
+        title: data.title,
+        department: data.department,
+        level: data.level,
+        description: data.description,
+        responsibilities: data.responsibilities,
+        required_skills: data.requiredSkills || [],
+        preferred_skills: data.preferredSkills || [],
+        competencies: data.competencies
+      };
+
+      if (editingJob) {
+        const { error } = await supabase
+          .from('job_descriptions')
+          .update(jobData)
+          .eq('id', editingJob.id);
+        
+        if (error) throw error;
+        toast.success("Job description updated");
+      } else {
+        const { error } = await supabase
+          .from('job_descriptions')
+          .insert(jobData);
+        
+        if (error) throw error;
+        toast.success("Job description created");
+      }
+
+      setShowJobForm(false);
+      setEditingJob(null);
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDeleteJobDescription = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('job_descriptions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success("Job description deleted");
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleSaveEvaluation = async (data: any) => {
+    try {
+      if (!companyId || !user) return;
+
+      const evalData = {
+        company_id: companyId,
+        created_by: user.id,
+        employee_name: data.employeeName,
+        employee_email: data.employeeEmail,
+        department: data.department,
+        job_description_id: data.jobDescriptionId,
+        evaluation_period: data.evaluationPeriod,
+        evaluation_date: data.evaluationDate,
+        overall_rating: data.overallRating,
+        competency_scores: data.competencyScores,
+        strengths: data.strengths,
+        areas_for_improvement: data.areasForImprovement,
+        training_recommendations: data.trainingRecommendations,
+        career_goals: data.careerGoals,
+        notes: data.notes
+      };
+
+      if (editingEval) {
+        const { error } = await supabase
+          .from('performance_evaluations')
+          .update(evalData)
+          .eq('id', editingEval.id);
+        
+        if (error) throw error;
+        toast.success("Evaluation updated");
+      } else {
+        const { error } = await supabase
+          .from('performance_evaluations')
+          .insert(evalData);
+        
+        if (error) throw error;
+        toast.success("Evaluation created");
+      }
+
+      setShowEvalForm(false);
+      setEditingEval(null);
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDeleteEvaluation = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('performance_evaluations')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success("Evaluation deleted");
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const handleArrayToggle = (item: string, field: 'languages' | 'priorities' | 'constraints') => {
@@ -378,48 +507,218 @@ export default function Diagnostic() {
 
           {/* Job Descriptions Tab */}
           <TabsContent value="jobs" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Descriptions</CardTitle>
-                <CardDescription>
-                  Define roles and required competencies for your organization
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Briefcase className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-4">
-                    Job description management coming soon
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    For now, you can define competencies directly in the diagnostic
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {showJobForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{editingJob ? "Edit" : "Create"} Job Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <JobDescriptionForm
+                    onSave={handleSaveJobDescription}
+                    onCancel={() => {
+                      setShowJobForm(false);
+                      setEditingJob(null);
+                    }}
+                    initialData={editingJob}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Job Descriptions</CardTitle>
+                      <CardDescription>
+                        Define roles and required competencies
+                      </CardDescription>
+                    </div>
+                    <Button onClick={() => setShowJobForm(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Job Description
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {jobDescriptions.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Briefcase className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">
+                        No job descriptions yet
+                      </p>
+                      <Button onClick={() => setShowJobForm(true)} variant="outline">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create First Job Description
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {jobDescriptions.map((job) => (
+                        <Card key={job.id}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div>
+                                <h3 className="font-semibold text-lg">{job.title}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {job.department} • {job.level}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingJob(job);
+                                    setShowJobForm(true);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteJobDescription(job.id)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            {job.description && (
+                              <p className="text-sm mb-4">{job.description}</p>
+                            )}
+                            {job.competencies && job.competencies.length > 0 && (
+                              <div>
+                                <Label className="text-xs mb-2 block">Required Competencies</Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {job.competencies.map((comp: any, idx: number) => (
+                                    <Badge key={idx} variant="secondary">
+                                      {comp.name} (Level {comp.requiredLevel})
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Performance Evaluations Tab */}
           <TabsContent value="evaluations" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Evaluations</CardTitle>
-                <CardDescription>
-                  Import or create employee performance evaluations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-4">
-                    Performance evaluation management coming soon
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    For now, you can assess competencies directly in the diagnostic
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {showEvalForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{editingEval ? "Edit" : "Create"} Performance Evaluation</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {companyId && (
+                    <PerformanceEvaluationForm
+                      companyId={companyId}
+                      onSave={handleSaveEvaluation}
+                      onCancel={() => {
+                        setShowEvalForm(false);
+                        setEditingEval(null);
+                      }}
+                      initialData={editingEval}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Performance Evaluations</CardTitle>
+                      <CardDescription>
+                        Track employee performance and skill levels
+                      </CardDescription>
+                    </div>
+                    <Button onClick={() => setShowEvalForm(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Evaluation
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {performanceEvaluations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">
+                        No performance evaluations yet
+                      </p>
+                      <Button onClick={() => setShowEvalForm(true)} variant="outline">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create First Evaluation
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {performanceEvaluations.map((evaluation) => (
+                        <Card key={evaluation.id}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div>
+                                <h3 className="font-semibold text-lg">{evaluation.employee_name}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {evaluation.department} • Overall Rating: {evaluation.overall_rating}/5
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingEval(evaluation);
+                                    setShowEvalForm(true);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteEvaluation(evaluation.id)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            {evaluation.competency_scores && evaluation.competency_scores.length > 0 && (
+                              <div className="mb-3">
+                                <Label className="text-xs mb-2 block">Competency Scores</Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {evaluation.competency_scores.map((score: any, idx: number) => (
+                                    <Badge key={idx} variant="outline">
+                                      {score.name}: {score.score}/5
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {evaluation.training_recommendations && evaluation.training_recommendations.length > 0 && (
+                              <div>
+                                <Label className="text-xs mb-2 block">Training Recommendations</Label>
+                                <div className="space-y-1">
+                                  {evaluation.training_recommendations.slice(0, 3).map((rec: string, idx: number) => (
+                                    <p key={idx} className="text-sm text-muted-foreground">• {rec}</p>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Diagnostic Tab */}
@@ -524,15 +823,57 @@ export default function Diagnostic() {
                             </Button>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <Label>Employee Name</Label>
-                              <Input
+                              <Select 
                                 value={emp.name}
-                                onChange={(e) => updateEmployee(emp.id, { name: e.target.value })}
-                                placeholder="Enter name"
-                                required
-                              />
+                                onValueChange={(value) => {
+                                  const perfEval = performanceEvaluations.find(e => e.employee_name === value);
+                                  if (perfEval) {
+                                    // Auto-populate from evaluation
+                                    const currentComp: Record<string, number> = {};
+                                    perfEval.competency_scores?.forEach((score: any) => {
+                                      currentComp[score.name] = score.score;
+                                    });
+                                    
+                                    const job = jobDescriptions.find(j => j.id === perfEval.job_description_id);
+                                    const targetComp: Record<string, number> = {};
+                                    job?.competencies?.forEach((comp: any) => {
+                                      targetComp[comp.name] = comp.requiredLevel;
+                                    });
+
+                                    updateEmployee(emp.id, { 
+                                      name: value,
+                                      performanceEvaluationId: perfEval.id,
+                                      jobDescriptionId: perfEval.job_description_id,
+                                      currentCompetencies: currentComp,
+                                      targetCompetencies: targetComp
+                                    });
+                                  } else {
+                                    updateEmployee(emp.id, { name: value });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select employee" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {performanceEvaluations.map(perfEval => (
+                                    <SelectItem key={perfEval.id} value={perfEval.employee_name}>
+                                      {perfEval.employee_name}
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value="custom">+ Manual Entry</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {emp.name === "custom" && (
+                                <Input
+                                  className="mt-2"
+                                  placeholder="Enter name"
+                                  onChange={(e) => updateEmployee(emp.id, { name: e.target.value })}
+                                />
+                              )}
                             </div>
                             <div>
                               <Label>Priority</Label>
@@ -544,13 +885,21 @@ export default function Diagnostic() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="low">Low</SelectItem>
-                                  <SelectItem value="medium">Medium</SelectItem>
-                                  <SelectItem value="high">High</SelectItem>
+                                  <SelectItem value="low">Low Priority</SelectItem>
+                                  <SelectItem value="medium">Medium Priority</SelectItem>
+                                  <SelectItem value="high">High Priority</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
                           </div>
+
+                          {emp.performanceEvaluationId && (
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
+                              <p className="text-green-800 dark:text-green-200">
+                                ✓ Skills auto-loaded from performance evaluation
+                              </p>
+                            </div>
+                          )}
 
                           <div>
                             <Label className="mb-2 block">Competency Assessment</Label>
