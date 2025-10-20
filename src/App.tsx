@@ -17,6 +17,9 @@ import AIPlanBuilder from "./pages/AIPlanBuilder";
 import Analytics from "./pages/Analytics";
 import UserManagement from "./pages/UserManagement";
 import TeamCollaboration from "./pages/TeamCollaboration";
+import CompanyDashboard from "./pages/dashboard/CompanyDashboard";
+import TrainerDashboard from "./pages/dashboard/TrainerDashboard";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import Navigation from "./components/Navigation";
 import NotFound from "./pages/NotFound";
 
@@ -37,8 +40,20 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/billing" element={<Billing />} />
+                
+                {/* Company Dashboard Routes */}
+                <Route path="/dashboard/company" element={<CompanyDashboard />} />
+                
+                {/* Trainer Dashboard Routes */}
+                <Route path="/dashboard/trainer" element={<TrainerDashboard />} />
+                
+                {/* Admin Dashboard Routes */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                
+                {/* Shared Routes */}
                 <Route path="/diagnostic" element={<Diagnostic />} />
                 <Route path="/training-plan/:id" element={<TrainingPlan />} />
+                <Route path="/module-studio" element={<ModuleStudio />} />
                 <Route path="/module-studio/:planId" element={<ModuleStudio />} />
                 <Route path="/module-studio/:planId/:moduleId" element={<ModuleStudio />} />
                 <Route path="/certificate-generator" element={<CertificateGenerator />} />
@@ -47,6 +62,7 @@ const App = () => (
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/user-management" element={<UserManagement />} />
                 <Route path="/team-collaboration" element={<TeamCollaboration />} />
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

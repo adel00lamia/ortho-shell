@@ -19,8 +19,9 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      console.log('Auth page - Redirecting authenticated user to home');
-      navigate('/', { replace: true });
+      console.log('Auth page - Redirecting authenticated user');
+      // Redirect to dashboard/company by default - role-based redirect will handle the rest
+      navigate('/dashboard/company', { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -145,7 +146,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">TrainPro Academy</CardTitle>
+          <CardTitle className="text-2xl text-center">LMF Academy</CardTitle>
           <CardDescription className="text-center">
             Sign in to your account or create a new one
           </CardDescription>
