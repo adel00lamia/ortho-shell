@@ -5,8 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Sparkles, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Competency {
   name: string;
@@ -46,6 +48,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
     category: skillCategories[0],
     requiredLevel: 3
   });
+  const [aiLoading, setAiLoading] = useState(false);
 
   const addResponsibility = () => {
     if (newResponsibility.trim()) {
@@ -73,6 +76,53 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
 
   const removeCompetency = (index: number) => {
     setCompetencies(competencies.filter((_, i) => i !== index));
+  };
+
+  const suggestWithAI = async (type: 'responsibilities' | 'competencies') => {
+    if (!formData.title) {
+      toast.error("Please enter a job title first");
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-suggest-diagnostic', {
+        body: {
+          type: type === 'responsibilities' ? 'job_responsibilities' : 'job_competencies',
+          context: {
+            title: formData.title,
+            department: formData.department,
+            level: formData.level
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (type === 'responsibilities' && data?.suggestions) {
+        setFormData(prev => ({
+          ...prev,
+          responsibilities: [...prev.responsibilities, ...data.suggestions]
+        }));
+        toast.success("AI suggestions added!");
+      } else if (type === 'competencies' && data?.suggestions) {
+        const newCompetencies = data.suggestions.map((suggestion: string) => {
+          const parts = suggestion.split(' - ');
+          return {
+            name: parts[0],
+            requiredLevel: 3,
+            category: skillCategories[0]
+          };
+        });
+        setCompetencies([...competencies, ...newCompetencies]);
+        toast.success("AI suggestions added!");
+      }
+    } catch (error: any) {
+      console.error('AI suggestion error:', error);
+      toast.error(error.message || "Failed to generate suggestions");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -134,7 +184,23 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
       </div>
 
       <div>
-        <Label className="mb-2 block">Key Responsibilities</Label>
+        <div className="flex items-center justify-between mb-2">
+          <Label>Key Responsibilities</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => suggestWithAI('responsibilities')}
+            disabled={aiLoading || !formData.title}
+          >
+            {aiLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            AI Suggest
+          </Button>
+        </div>
         <div className="space-y-2">
           {formData.responsibilities.map((resp, idx) => (
             <div key={idx} className="flex items-center gap-2">
@@ -165,7 +231,23 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
 
       <Card>
         <CardContent className="pt-6">
-          <Label className="mb-4 block text-base">Required Competencies</Label>
+          <div className="flex items-center justify-between mb-4">
+            <Label className="text-base">Required Competencies</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => suggestWithAI('competencies')}
+              disabled={aiLoading || !formData.title}
+            >
+              {aiLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-2" />
+              )}
+              AI Suggest
+            </Button>
+          </div>
           <div className="space-y-3 mb-4">
             {competencies.map((comp, idx) => (
               <div key={idx} className="flex items-center gap-3 p-3 bg-muted rounded">

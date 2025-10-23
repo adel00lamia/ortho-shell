@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Users, Target, Upload, Plus, X, FileText } from "lucide-react";
+import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2 } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 
@@ -74,6 +74,8 @@ export default function Diagnostic() {
     constraints: [] as string[]
   });
 
+  const [aiLoading, setAiLoading] = useState(false);
+
   const skillCategories = [
     "Leadership", "Communication", "Technical Skills", "Project Management",
     "Sales", "Marketing", "Data Analysis", "Cybersecurity", "AI/ML",
@@ -91,6 +93,29 @@ export default function Diagnostic() {
   const languages = ["Arabic", "French", "English", "Spanish"];
   const priorities = ["Quick ROI", "Skill Certification", "Team Building", "Compliance", "Innovation"];
   const constraints = ["Remote Only", "Limited Budget", "Time Constraints", "Location Specific"];
+
+  const trainingTemplates = [
+    {
+      name: "Digital Transformation",
+      objectives: "Upgrade team digital skills to modernize operations and improve efficiency through cloud, automation, and data analytics training.",
+      priorities: ["Innovation", "Quick ROI"]
+    },
+    {
+      name: "Leadership Development",
+      objectives: "Build strong management pipeline through leadership, strategic thinking, and team management training programs.",
+      priorities: ["Team Building", "Skill Certification"]
+    },
+    {
+      name: "Technical Skills Upskilling",
+      objectives: "Enhance technical capabilities in programming, cybersecurity, and AI/ML to stay competitive in the tech landscape.",
+      priorities: ["Innovation", "Skill Certification"]
+    },
+    {
+      name: "Customer Service Excellence",
+      objectives: "Improve customer satisfaction through communication, problem-solving, and service quality training.",
+      priorities: ["Quick ROI", "Team Building"]
+    }
+  ];
 
   useEffect(() => {
     if (user) {
@@ -154,6 +179,50 @@ export default function Diagnostic() {
 
   const updateEmployee = (id: string, updates: Partial<Employee>) => {
     setEmployees(employees.map(e => e.id === id ? { ...e, ...updates } : e));
+  };
+
+  const applyTemplate = (template: typeof trainingTemplates[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      objectives: template.objectives,
+      priorities: template.priorities
+    }));
+    toast.success(`Applied "${template.name}" template`);
+  };
+
+  const suggestObjectives = async () => {
+    if (!formData.industry || !formData.companySize) {
+      toast.error("Please select industry and company size first");
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-suggest-diagnostic', {
+        body: {
+          type: 'company_objectives',
+          context: {
+            industry: formData.industry,
+            size: formData.companySize
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.suggestions && data.suggestions.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          objectives: data.suggestions.join('\n• ')
+        }));
+        toast.success("AI suggestions added!");
+      }
+    } catch (error: any) {
+      console.error('AI suggestion error:', error);
+      toast.error(error.message || "Failed to generate suggestions");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSaveJobDescription = async (data: any) => {
@@ -728,53 +797,113 @@ export default function Diagnostic() {
               <Card>
                 <CardHeader>
                   <CardTitle>Company Overview</CardTitle>
+                  <CardDescription>
+                    Choose a template or let AI suggest objectives based on your company profile
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <Label>Training Objectives</Label>
-                    <Textarea
-                      placeholder="Describe your main training goals and expected outcomes..."
-                      value={formData.objectives}
-                      onChange={(e) => setFormData(prev => ({ ...prev, objectives: e.target.value }))}
-                      className="min-h-24"
-                      required
-                    />
-                  </div>
+                <CardContent className="space-y-6">
+                  {/* Quick Templates */}
                   <div>
-                    <Label>Industry</Label>
-                    <Input
-                      placeholder="e.g., Technology, Healthcare, Finance"
-                      value={formData.industry}
-                      onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-                    />
+                    <Label className="mb-3 block">Quick Start Templates</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {trainingTemplates.map((template) => (
+                        <Card 
+                          key={template.name}
+                          className="cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => applyTemplate(template)}
+                        >
+                          <CardContent className="pt-4">
+                            <h4 className="font-semibold mb-2">{template.name}</h4>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {template.objectives}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              {template.priorities.map(p => (
+                                <Badge key={p} variant="secondary" className="text-xs">
+                                  {p}
+                                </Badge>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <Label>Company Size</Label>
-                    <Select value={formData.companySize} onValueChange={(value) => setFormData(prev => ({ ...prev, companySize: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1-10">1-10 employees</SelectItem>
-                        <SelectItem value="11-50">11-50 employees</SelectItem>
-                        <SelectItem value="51-200">51-200 employees</SelectItem>
-                        <SelectItem value="201-1000">201-1000 employees</SelectItem>
-                        <SelectItem value="1000+">1000+ employees</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Label>Annual Training Budget</Label>
-                    <Select value={formData.budgetRange} onValueChange={(value) => setFormData(prev => ({ ...prev, budgetRange: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select budget range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {budgetRanges.map(range => (
-                          <SelectItem key={range} value={range}>{range}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Training Objectives *</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={suggestObjectives}
+                          disabled={aiLoading || !formData.industry || !formData.companySize}
+                        >
+                          {aiLoading ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-4 h-4 mr-2" />
+                          )}
+                          AI Suggest
+                        </Button>
+                      </div>
+                      <Textarea
+                        placeholder="Describe your main training goals and expected outcomes..."
+                        value={formData.objectives}
+                        onChange={(e) => setFormData(prev => ({ ...prev, objectives: e.target.value }))}
+                        className="min-h-24"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label>Industry *</Label>
+                      <Select value={formData.industry} onValueChange={(value) => setFormData(prev => ({ ...prev, industry: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Technology">Technology</SelectItem>
+                          <SelectItem value="Healthcare">Healthcare</SelectItem>
+                          <SelectItem value="Finance">Finance & Banking</SelectItem>
+                          <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                          <SelectItem value="Retail">Retail & E-commerce</SelectItem>
+                          <SelectItem value="Education">Education</SelectItem>
+                          <SelectItem value="Hospitality">Hospitality & Tourism</SelectItem>
+                          <SelectItem value="Construction">Construction</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Company Size *</Label>
+                      <Select value={formData.companySize} onValueChange={(value) => setFormData(prev => ({ ...prev, companySize: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1-10">1-10 employees</SelectItem>
+                          <SelectItem value="11-50">11-50 employees</SelectItem>
+                          <SelectItem value="51-200">51-200 employees</SelectItem>
+                          <SelectItem value="201-1000">201-1000 employees</SelectItem>
+                          <SelectItem value="1000+">1000+ employees</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Annual Training Budget</Label>
+                      <Select value={formData.budgetRange} onValueChange={(value) => setFormData(prev => ({ ...prev, budgetRange: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select budget range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {budgetRanges.map(range => (
+                            <SelectItem key={range} value={range}>{range}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

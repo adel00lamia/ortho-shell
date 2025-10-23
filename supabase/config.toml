@@ -1,1 +1,39 @@
 project_id = "yipqcfeobjtorgmacwxa"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[functions.ai-suggest-diagnostic]
+verify_jwt = false
+
+[functions.ai-advanced-planner]
+verify_jwt = false
+
+[functions.ai-match]
+verify_jwt = false
+
+[functions.ai-plan-generator]
+verify_jwt = false
+
+[functions.billing-checkout]
+verify_jwt = false
+
+[functions.billing-webhook]
+verify_jwt = false
+
+[functions.module-content-generator]
+verify_jwt = false

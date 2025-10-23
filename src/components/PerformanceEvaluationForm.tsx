@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CompetencyScore {
   name: string;
@@ -54,6 +55,7 @@ export default function PerformanceEvaluationForm({
   const [newStrength, setNewStrength] = useState("");
   const [newImprovement, setNewImprovement] = useState("");
   const [newRecommendation, setNewRecommendation] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     loadJobDescriptions();
@@ -103,6 +105,56 @@ export default function PerformanceEvaluationForm({
 
   const removeItem = (index: number, setter: (items: string[]) => void, currentItems: string[]) => {
     setter(currentItems.filter((_, i) => i !== index));
+  };
+
+  const suggestWithAI = async (type: 'strengths' | 'improvements' | 'recommendations') => {
+    if (!formData.employeeName || competencyScores.length === 0) {
+      toast.error("Please enter employee name and score competencies first");
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const selectedJob = jobDescriptions.find(j => j.id === selectedJobId);
+      
+      let requestType = '';
+      let context: any = {
+        employeeName: formData.employeeName,
+        jobTitle: selectedJob?.title || 'N/A',
+        scores: competencyScores
+      };
+
+      if (type === 'strengths') {
+        requestType = 'performance_strengths';
+      } else if (type === 'improvements') {
+        requestType = 'performance_improvements';
+      } else {
+        requestType = 'training_recommendations';
+        context.improvements = areasForImprovement;
+      }
+
+      const { data, error } = await supabase.functions.invoke('ai-suggest-diagnostic', {
+        body: { type: requestType, context }
+      });
+
+      if (error) throw error;
+
+      if (data?.suggestions) {
+        if (type === 'strengths') {
+          setStrengths([...strengths, ...data.suggestions]);
+        } else if (type === 'improvements') {
+          setAreasForImprovement([...areasForImprovement, ...data.suggestions]);
+        } else {
+          setTrainingRecommendations([...trainingRecommendations, ...data.suggestions]);
+        }
+        toast.success("AI suggestions added!");
+      }
+    } catch (error: any) {
+      console.error('AI suggestion error:', error);
+      toast.error(error.message || "Failed to generate suggestions");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -242,7 +294,23 @@ export default function PerformanceEvaluationForm({
       </Card>
 
       <div>
-        <Label className="mb-2 block">Strengths</Label>
+        <div className="flex items-center justify-between mb-2">
+          <Label>Strengths</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => suggestWithAI('strengths')}
+            disabled={aiLoading || !formData.employeeName || competencyScores.length === 0}
+          >
+            {aiLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            AI Suggest
+          </Button>
+        </div>
         <div className="space-y-2">
           {strengths.map((strength, idx) => (
             <div key={idx} className="flex items-center gap-2">
@@ -267,7 +335,23 @@ export default function PerformanceEvaluationForm({
       </div>
 
       <div>
-        <Label className="mb-2 block">Areas for Improvement</Label>
+        <div className="flex items-center justify-between mb-2">
+          <Label>Areas for Improvement</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => suggestWithAI('improvements')}
+            disabled={aiLoading || !formData.employeeName || competencyScores.length === 0}
+          >
+            {aiLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            AI Suggest
+          </Button>
+        </div>
         <div className="space-y-2">
           {areasForImprovement.map((area, idx) => (
             <div key={idx} className="flex items-center gap-2">
@@ -292,7 +376,23 @@ export default function PerformanceEvaluationForm({
       </div>
 
       <div>
-        <Label className="mb-2 block">Training Recommendations</Label>
+        <div className="flex items-center justify-between mb-2">
+          <Label>Training Recommendations</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => suggestWithAI('recommendations')}
+            disabled={aiLoading || areasForImprovement.length === 0}
+          >
+            {aiLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            AI Suggest
+          </Button>
+        </div>
         <div className="space-y-2">
           {trainingRecommendations.map((rec, idx) => (
             <div key={idx} className="flex items-center gap-2">
