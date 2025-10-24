@@ -17,6 +17,7 @@ import AIPlanBuilder from "./pages/AIPlanBuilder";
 import Analytics from "./pages/Analytics";
 import UserManagement from "./pages/UserManagement";
 import TeamCollaboration from "./pages/TeamCollaboration";
+import PerformanceEvaluation from "./pages/PerformanceEvaluation";
 import CompanyDashboard from "./pages/dashboard/CompanyDashboard";
 import TrainerDashboard from "./pages/dashboard/TrainerDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
@@ -52,6 +53,7 @@ const App = () => (
                 
                 {/* Shared Routes */}
                 <Route path="/diagnostic" element={<Diagnostic />} />
+                <Route path="/performance-evaluation" element={<PerformanceEvaluation />} />
                 <Route path="/training-plan/:id" element={<TrainingPlan />} />
                 <Route path="/module-studio" element={<ModuleStudio />} />
                 <Route path="/module-studio/:planId" element={<ModuleStudio />} />

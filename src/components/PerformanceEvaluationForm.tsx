@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, X, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import CompetencyScoreCard from "@/components/performance/CompetencyScoreCard";
+import EvaluationSection from "@/components/performance/EvaluationSection";
 
 interface CompetencyScore {
   name: string;
@@ -52,9 +52,6 @@ export default function PerformanceEvaluationForm({
     initialData?.training_recommendations || []
   );
 
-  const [newStrength, setNewStrength] = useState("");
-  const [newImprovement, setNewImprovement] = useState("");
-  const [newRecommendation, setNewRecommendation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
@@ -93,18 +90,6 @@ export default function PerformanceEvaluationForm({
     setCompetencyScores(prev => 
       prev.map((comp, i) => i === index ? { ...comp, score } : comp)
     );
-  };
-
-  const addItem = (value: string, setter: (items: string[]) => void, currentItems: string[]) => {
-    if (value.trim()) {
-      setter([...currentItems, value]);
-      return "";
-    }
-    return value;
-  };
-
-  const removeItem = (index: number, setter: (items: string[]) => void, currentItems: string[]) => {
-    setter(currentItems.filter((_, i) => i !== index));
   };
 
   const suggestWithAI = async (type: 'strengths' | 'improvements' | 'recommendations') => {
@@ -256,165 +241,49 @@ export default function PerformanceEvaluationForm({
         </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <Label className="text-base">Competency Scores</Label>
-          {competencyScores.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Select a job description to load competencies for evaluation
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {competencyScores.map((comp, idx) => (
-                <div key={idx} className="grid grid-cols-2 gap-4 items-center p-3 bg-muted rounded">
-                  <div>
-                    <div className="font-medium">{comp.name}</div>
-                    <div className="text-xs text-muted-foreground">{comp.category}</div>
-                  </div>
-                  <Select 
-                    value={comp.score.toString()} 
-                    onValueChange={(value) => updateCompetencyScore(idx, parseFloat(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5].map(score => (
-                        <SelectItem key={score} value={score.toString()}>
-                          {score} - {['Beginner', 'Basic', 'Intermediate', 'Advanced', 'Expert'][score - 1]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label>Strengths</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => suggestWithAI('strengths')}
-            disabled={aiLoading || !formData.employeeName || competencyScores.length === 0}
-          >
-            {aiLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-2" />
-            )}
-            AI Suggest
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {strengths.map((strength, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <div className="flex-1 text-sm p-2 bg-green-50 dark:bg-green-900/20 rounded">{strength}</div>
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx, setStrengths, strengths)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <Input
-              value={newStrength}
-              onChange={(e) => setNewStrength(e.target.value)}
-              placeholder="Add a strength..."
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), setNewStrength(addItem(newStrength, setStrengths, strengths)))}
-            />
-            <Button type="button" onClick={() => setNewStrength(addItem(newStrength, setStrengths, strengths))} variant="outline">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Label className="text-base mb-4 block">Competency Scores</Label>
+        <CompetencyScoreCard
+          competencies={competencyScores}
+          onScoreUpdate={updateCompetencyScore}
+        />
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label>Areas for Improvement</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => suggestWithAI('improvements')}
-            disabled={aiLoading || !formData.employeeName || competencyScores.length === 0}
-          >
-            {aiLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-2" />
-            )}
-            AI Suggest
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {areasForImprovement.map((area, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <div className="flex-1 text-sm p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">{area}</div>
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx, setAreasForImprovement, areasForImprovement)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <Input
-              value={newImprovement}
-              onChange={(e) => setNewImprovement(e.target.value)}
-              placeholder="Add an area for improvement..."
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), setNewImprovement(addItem(newImprovement, setAreasForImprovement, areasForImprovement)))}
-            />
-            <Button type="button" onClick={() => setNewImprovement(addItem(newImprovement, setAreasForImprovement, areasForImprovement))} variant="outline">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <EvaluationSection
+        title="Strengths"
+        items={strengths}
+        onAdd={(value) => setStrengths([...strengths, value])}
+        onRemove={(idx) => setStrengths(strengths.filter((_, i) => i !== idx))}
+        placeholder="Add a strength..."
+        bgColorClass="bg-green-50 dark:bg-green-900/20"
+        onAISuggest={() => suggestWithAI('strengths')}
+        aiLoading={aiLoading}
+        aiDisabled={!formData.employeeName || competencyScores.length === 0}
+      />
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label>Training Recommendations</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => suggestWithAI('recommendations')}
-            disabled={aiLoading || areasForImprovement.length === 0}
-          >
-            {aiLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-2" />
-            )}
-            AI Suggest
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {trainingRecommendations.map((rec, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <div className="flex-1 text-sm p-2 bg-blue-50 dark:bg-blue-900/20 rounded">{rec}</div>
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx, setTrainingRecommendations, trainingRecommendations)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <Input
-              value={newRecommendation}
-              onChange={(e) => setNewRecommendation(e.target.value)}
-              placeholder="Add a training recommendation..."
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), setNewRecommendation(addItem(newRecommendation, setTrainingRecommendations, trainingRecommendations)))}
-            />
-            <Button type="button" onClick={() => setNewRecommendation(addItem(newRecommendation, setTrainingRecommendations, trainingRecommendations))} variant="outline">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <EvaluationSection
+        title="Areas for Improvement"
+        items={areasForImprovement}
+        onAdd={(value) => setAreasForImprovement([...areasForImprovement, value])}
+        onRemove={(idx) => setAreasForImprovement(areasForImprovement.filter((_, i) => i !== idx))}
+        placeholder="Add an area for improvement..."
+        bgColorClass="bg-yellow-50 dark:bg-yellow-900/20"
+        onAISuggest={() => suggestWithAI('improvements')}
+        aiLoading={aiLoading}
+        aiDisabled={!formData.employeeName || competencyScores.length === 0}
+      />
+
+      <EvaluationSection
+        title="Training Recommendations"
+        items={trainingRecommendations}
+        onAdd={(value) => setTrainingRecommendations([...trainingRecommendations, value])}
+        onRemove={(idx) => setTrainingRecommendations(trainingRecommendations.filter((_, i) => i !== idx))}
+        placeholder="Add a training recommendation..."
+        bgColorClass="bg-blue-50 dark:bg-blue-900/20"
+        onAISuggest={() => suggestWithAI('recommendations')}
+        aiLoading={aiLoading}
+        aiDisabled={areasForImprovement.length === 0}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
