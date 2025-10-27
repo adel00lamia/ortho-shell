@@ -169,6 +169,19 @@ export default function AIPlanBuilder() {
   const [newObjective, setNewObjective] = useState('');
   const [newSkill, setNewSkill] = useState('');
   const [newConstraint, setNewConstraint] = useState('');
+
+  const predefinedObjectives = [
+    'Improve employee productivity and efficiency',
+    'Develop leadership and management skills',
+    'Enhance technical expertise and capabilities',
+    'Strengthen customer service excellence',
+    'Build effective communication skills',
+    'Foster innovation and creative thinking',
+    'Ensure regulatory compliance and risk management',
+    'Advance digital transformation initiatives',
+    'Develop sales and negotiation skills',
+    'Improve project management capabilities'
+  ];
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -946,30 +959,53 @@ export default function AIPlanBuilder() {
 
               <div>
                 <label className="text-sm font-medium">Training Objectives</label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={newObjective}
-                    onChange={(e) => setNewObjective(e.target.value)}
-                    placeholder="Add training objective"
-                    onKeyPress={(e) => e.key === 'Enter' && 
+                <div className="space-y-3 mt-2">
+                  <div className="flex gap-2">
+                    <Select onValueChange={(value) => {
+                      if (!requirements.objectives.includes(value)) {
+                        setRequirements({...requirements, objectives: [...requirements.objectives, value]});
+                      }
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select predefined objective" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {predefinedObjectives.map((obj, idx) => (
+                          <SelectItem key={idx} value={obj}>{obj}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newObjective}
+                      onChange={(e) => setNewObjective(e.target.value)}
+                      placeholder="Or add custom training objective"
+                      onKeyPress={(e) => e.key === 'Enter' && 
+                        addToList(requirements.objectives, (items) => 
+                          setRequirements({...requirements, objectives: items}), newObjective, setNewObjective)}
+                    />
+                    <Button onClick={() => 
                       addToList(requirements.objectives, (items) => 
-                        setRequirements({...requirements, objectives: items}), newObjective, setNewObjective)}
-                  />
-                  <Button onClick={() => 
-                    addToList(requirements.objectives, (items) => 
-                      setRequirements({...requirements, objectives: items}), newObjective, setNewObjective)}>
-                    Add
-                  </Button>
+                        setRequirements({...requirements, objectives: items}), newObjective, setNewObjective)}>
+                      Add
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {requirements.objectives.map((objective, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer"
+                    <Badge key={index} variant="secondary" className="cursor-pointer py-2 px-3"
                       onClick={() => removeFromList(requirements.objectives, (items) => 
                         setRequirements({...requirements, objectives: items}), objective)}>
                       {objective} ×
                     </Badge>
                   ))}
                 </div>
+                {requirements.objectives.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Select from predefined objectives or add your own custom objectives
+                  </p>
+                )}
               </div>
 
               <div>
