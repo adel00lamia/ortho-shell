@@ -24,9 +24,11 @@ export const RoleBasedRedirect = () => {
         case 'trainer':
           navigate('/dashboard/trainer', { replace: true });
           break;
-        case 'company':
         case 'hr_manager':
           navigate('/dashboard/company', { replace: true });
+          break;
+        case 'employee':
+          navigate('/', { replace: true });
           break;
         default:
           navigate('/', { replace: true });

@@ -54,16 +54,23 @@ export default function Navigation() {
       description: 'Assess training needs'
     },
     {
+      path: '/performance-evaluation',
+      label: 'Performance Reviews',
+      icon: <Target className="w-4 h-4" />,
+      description: 'Manage employee evaluations'
+    },
+    {
+      path: '/benchmark',
+      label: 'Industry Benchmark',
+      icon: <BarChart3 className="w-4 h-4" />,
+      description: 'Compare with industry standards',
+      badge: 'New'
+    },
+    {
       path: '/marketplace',
       label: 'Course Marketplace',
       icon: <ShoppingCart className="w-4 h-4" />,
       description: 'Browse external courses'
-    },
-    {
-      path: '/module-studio',
-      label: 'Module Studio',
-      icon: <BookOpen className="w-4 h-4" />,
-      description: 'Create and edit modules'
     },
     {
       path: '/certificate-generator',

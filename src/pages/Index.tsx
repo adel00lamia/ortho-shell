@@ -83,7 +83,7 @@ const Index = () => {
       icon: <BarChart3 className="h-6 w-6" />,
       title: "Analytics & ROI",
       description: "Track progress and measure training impact",
-      link: "#"
+      link: "/analytics"
     }
   ];
 

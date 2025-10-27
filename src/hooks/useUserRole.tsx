@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'admin' | 'company' | 'trainer' | 'hr_manager' | null;
+export type UserRole = 'admin' | 'hr_manager' | 'trainer' | 'employee' | null;
 
 export const useUserRole = () => {
   const { user } = useAuth();
@@ -16,10 +17,30 @@ export const useUserRole = () => {
         return;
       }
 
-      // TODO: Once the database migration completes, fetch actual role from user_roles table
-      // For now, default all authenticated users to 'company' role
-      setRole('company');
-      setLoading(false);
+      try {
+        // Fetch user role from profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching user role:', error);
+          // Default to employee role if there's an error
+          setRole('employee');
+        } else if (profile?.role) {
+          setRole(profile.role as UserRole);
+        } else {
+          // Default to employee role if no role is found
+          setRole('employee');
+        }
+      } catch (error) {
+        console.error('Error in fetchUserRole:', error);
+        setRole('employee');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUserRole();

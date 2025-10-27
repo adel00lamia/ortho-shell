@@ -237,6 +237,40 @@ export default function ModuleStudio() {
     );
   }
 
+  if (!planId) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>No Training Plan Selected</CardTitle>
+            <CardDescription>
+              Module Studio needs to be opened from a training plan.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              To create or edit training modules, please:
+            </p>
+            <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+              <li>Go to the Training Diagnostic page</li>
+              <li>Create a new training plan</li>
+              <li>Open the training plan</li>
+              <li>Click "Create New Module" to access Module Studio</li>
+            </ol>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate('/diagnostic')}>
+                Go to Training Diagnostic
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/')}>
+                Return to Dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const slides = formData.content.slides || [];
   const quiz = formData.content.quiz || [];
 
