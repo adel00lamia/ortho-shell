@@ -960,16 +960,16 @@ export default function AIPlanBuilder() {
               <div>
                 <label className="text-sm font-medium">Training Objectives</label>
                 <div className="space-y-3 mt-2">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full">
                     <Select onValueChange={(value) => {
                       if (!requirements.objectives.includes(value)) {
                         setRequirements({...requirements, objectives: [...requirements.objectives, value]});
                       }
                     }}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select predefined objective" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-[300px]">
                         {predefinedObjectives.map((obj, idx) => (
                           <SelectItem key={idx} value={obj}>{obj}</SelectItem>
                         ))}
