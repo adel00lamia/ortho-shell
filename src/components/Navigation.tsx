@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Users,
-  MessageSquare
+  MessageSquare,
+  ClipboardCheck
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -33,68 +34,81 @@ export default function Navigation() {
   const location = useLocation();
   const { user, signOut } = useAuth();
 
-  const navigationItems: NavigationItem[] = [
-    {
-      path: '/',
-      label: 'Dashboard',
-      icon: <Home className="w-4 h-4" />,
-      description: 'Overview and quick access'
-    },
-    {
-      path: '/ai-plan-builder',
-      label: 'AI Plan Builder',
-      icon: <Brain className="w-4 h-4" />,
-      description: 'Create AI-powered training plans',
-      badge: 'New'
-    },
+  // Organized by workflow stages
+  const assessmentItems: NavigationItem[] = [
     {
       path: '/diagnostic',
-      label: 'Training Diagnostic',
+      label: 'Skills Diagnostic',
       icon: <Target className="w-4 h-4" />,
-      description: 'Assess training needs'
+      description: 'Identify skill gaps & training needs',
+      badge: 'Start Here'
     },
     {
       path: '/performance-evaluation',
       label: 'Performance Reviews',
-      icon: <Target className="w-4 h-4" />,
-      description: 'Manage employee evaluations'
+      icon: <ClipboardCheck className="w-4 h-4" />,
+      description: 'Evaluate employee performance'
     },
     {
       path: '/benchmark',
       label: 'Industry Benchmark',
       icon: <BarChart3 className="w-4 h-4" />,
-      description: 'Compare with industry standards',
-      badge: 'New'
+      description: 'Compare with market standards'
+    }
+  ];
+
+  const planningItems: NavigationItem[] = [
+    {
+      path: '/ai-plan-builder',
+      label: 'AI Plan Builder',
+      icon: <Brain className="w-4 h-4" />,
+      description: 'Generate smart training plans',
+      badge: 'AI'
+    }
+  ];
+
+  const executionItems: NavigationItem[] = [
+    {
+      path: '/module-studio',
+      label: 'Module Studio',
+      icon: <BookOpen className="w-4 h-4" />,
+      description: 'Create training content'
     },
     {
       path: '/marketplace',
       label: 'Course Marketplace',
       icon: <ShoppingCart className="w-4 h-4" />,
       description: 'Browse external courses'
+    }
+  ];
+
+  const trackingItems: NavigationItem[] = [
+    {
+      path: '/analytics',
+      label: 'Analytics & ROI',
+      icon: <BarChart3 className="w-4 h-4" />,
+      description: 'Track progress & measure impact'
     },
     {
       path: '/certificate-generator',
       label: 'Certificates',
       icon: <Award className="w-4 h-4" />,
-      description: 'Generate certificates and badges'
-    },
-    {
-      path: '/analytics',
-      label: 'Analytics',
-      icon: <BarChart3 className="w-4 h-4" />,
-      description: 'Performance metrics and ROI'
-    },
+      description: 'Issue digital credentials'
+    }
+  ];
+
+  const managementItems: NavigationItem[] = [
     {
       path: '/user-management',
       label: 'User Management',
       icon: <Users className="w-4 h-4" />,
-      description: 'Manage users and permissions'
+      description: 'Manage users & permissions'
     },
     {
       path: '/team-collaboration',
       label: 'Team Collaboration',
       icon: <MessageSquare className="w-4 h-4" />,
-      description: 'Projects and team communication'
+      description: 'Projects & communication'
     }
   ];
 
@@ -180,48 +194,233 @@ export default function Navigation() {
             </CardContent>
           </Card>
 
-          {/* Navigation Items */}
-          <div className="space-y-2">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
-              Navigation
-            </h3>
-            {navigationItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className={`
-                  block p-3 rounded-lg transition-colors hover:bg-muted
-                  ${isCurrentPage(item.path) ? 'bg-primary/10 border border-primary/20' : ''}
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`
-                    ${isCurrentPage(item.path) ? 'text-primary' : 'text-muted-foreground'}
-                  `}>
-                    {item.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`
-                        font-medium text-sm
-                        ${isCurrentPage(item.path) ? 'text-primary' : ''}
-                      `}>
-                        {item.label}
-                      </span>
-                      {item.badge && (
-                        <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                          {item.badge}
-                        </Badge>
-                      )}
+          {/* Home */}
+          <Link
+            to="/"
+            onClick={() => setIsOpen(false)}
+            className={`
+              block p-3 rounded-lg transition-colors hover:bg-muted mb-4
+              ${isCurrentPage('/') ? 'bg-primary/10 border border-primary/20' : ''}
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`${isCurrentPage('/') ? 'text-primary' : 'text-muted-foreground'}`}>
+                <Home className="w-4 h-4" />
+              </div>
+              <span className={`font-medium text-sm ${isCurrentPage('/') ? 'text-primary' : ''}`}>
+                Home Dashboard
+              </span>
+            </div>
+          </Link>
+
+          {/* Navigation Items - Organized by Workflow */}
+          <div className="space-y-4">
+            {/* Step 1: Assess */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-2">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">1</div>
+                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+                  Assess
+                </h3>
+              </div>
+              {assessmentItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`
+                    block p-2.5 rounded-lg transition-colors hover:bg-muted
+                    ${isCurrentPage(item.path) ? 'bg-primary/10 border border-primary/20' : ''}
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`${isCurrentPage(item.path) ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {item.icon}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                      {item.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium text-xs ${isCurrentPage(item.path) ? 'text-primary' : ''}`}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
+
+            {/* Step 2: Plan */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-2">
+                <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">2</div>
+                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+                  Plan
+                </h3>
+              </div>
+              {planningItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`
+                    block p-2.5 rounded-lg transition-colors hover:bg-muted
+                    ${isCurrentPage(item.path) ? 'bg-primary/10 border border-primary/20' : ''}
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`${isCurrentPage(item.path) ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium text-xs ${isCurrentPage(item.path) ? 'text-primary' : ''}`}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Step 3: Execute */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-2">
+                <div className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold">3</div>
+                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+                  Execute
+                </h3>
+              </div>
+              {executionItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`
+                    block p-2.5 rounded-lg transition-colors hover:bg-muted
+                    ${isCurrentPage(item.path) ? 'bg-primary/10 border border-primary/20' : ''}
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`${isCurrentPage(item.path) ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium text-xs ${isCurrentPage(item.path) ? 'text-primary' : ''}`}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Step 4: Track */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-2">
+                <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-bold">4</div>
+                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+                  Track & Certify
+                </h3>
+              </div>
+              {trackingItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`
+                    block p-2.5 rounded-lg transition-colors hover:bg-muted
+                    ${isCurrentPage(item.path) ? 'bg-primary/10 border border-primary/20' : ''}
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`${isCurrentPage(item.path) ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium text-xs ${isCurrentPage(item.path) ? 'text-primary' : ''}`}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Management */}
+            <div className="space-y-2">
+              <h3 className="font-medium text-xs text-muted-foreground uppercase tracking-wider px-2">
+                Management
+              </h3>
+              {managementItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`
+                    block p-2.5 rounded-lg transition-colors hover:bg-muted
+                    ${isCurrentPage(item.path) ? 'bg-primary/10 border border-primary/20' : ''}
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`${isCurrentPage(item.path) ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium text-xs ${isCurrentPage(item.path) ? 'text-primary' : ''}`}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Coming Soon */}

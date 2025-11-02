@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2 } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
+import { WorkflowIndicator } from "@/components/WorkflowIndicator";
+import { ContextualActions } from "@/components/ContextualActions";
 
 interface Employee {
   id: string;
@@ -487,6 +489,8 @@ export default function Diagnostic() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
+        <WorkflowIndicator />
+        
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Training Diagnostic & AI Plan Builder</h1>
           <p className="text-muted-foreground">
@@ -1152,6 +1156,12 @@ export default function Diagnostic() {
             </form>
           </TabsContent>
         </Tabs>
+
+        {activeTab === 'diagnostic' && employees.length > 0 && (
+          <div className="mt-6">
+            <ContextualActions currentPage="diagnostic" data={formData} />
+          </div>
+        )}
       </div>
     </div>
   );

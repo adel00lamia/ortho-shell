@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 import PerformanceAnalytics from "@/components/performance/PerformanceAnalytics";
 import { Badge } from "@/components/ui/badge";
+import { WorkflowIndicator } from "@/components/WorkflowIndicator";
+import { ContextualActions } from "@/components/ContextualActions";
 
 export default function PerformanceEvaluation() {
   const { user } = useAuth();
@@ -156,6 +158,8 @@ export default function PerformanceEvaluation() {
 
   return (
     <div className="container mx-auto p-6">
+      <WorkflowIndicator />
+      
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Performance Evaluations</h1>
@@ -294,6 +298,12 @@ export default function PerformanceEvaluation() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {evaluations.length > 0 && (
+        <div className="mt-6">
+          <ContextualActions currentPage="performance" data={evaluations} />
+        </div>
+      )}
     </div>
   );
 }

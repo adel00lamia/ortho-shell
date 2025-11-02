@@ -65,6 +65,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { WorkflowIndicator } from '@/components/WorkflowIndicator';
+import { ContextualActions } from '@/components/ContextualActions';
 
 interface TrainingTemplate {
   id: string;
@@ -1738,6 +1740,8 @@ export default function AIPlanBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto">
+        <WorkflowIndicator />
+        
         {/* Navigation */}
         <div className="flex items-center justify-between mb-8">
           <Button variant="ghost" onClick={() => navigate(-1)}>
@@ -1778,6 +1782,13 @@ export default function AIPlanBuilder() {
             <Button onClick={nextStep} disabled={step === 9}>
               {step === 9 ? 'Complete Setup' : 'Next Step'}
             </Button>
+          </div>
+        )}
+
+        {/* Contextual Actions - Show after requirements are filled */}
+        {step === 5 && requirements.industry && requirements.companySize && (
+          <div className="mt-8">
+            <ContextualActions currentPage="plan-builder" data={requirements} />
           </div>
         )}
       </div>

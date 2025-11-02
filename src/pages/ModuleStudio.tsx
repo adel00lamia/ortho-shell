@@ -22,6 +22,8 @@ import {
   Edit3,
   Trash2
 } from "lucide-react";
+import { WorkflowIndicator } from "@/components/WorkflowIndicator";
+import { ContextualActions } from "@/components/ContextualActions";
 
 interface ModuleContent {
   slides?: { title: string; content: string; }[];
@@ -277,6 +279,8 @@ export default function ModuleStudio() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
+        <WorkflowIndicator />
+        
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -631,6 +635,12 @@ export default function ModuleStudio() {
             Back to Training Plan
           </Button>
         </div>
+
+        {formData.title && formData.description && (
+          <div className="mt-6">
+            <ContextualActions currentPage="module-studio" data={formData} />
+          </div>
+        )}
       </div>
     </div>
   );
