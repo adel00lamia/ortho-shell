@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WorkflowProvider } from "@/contexts/WorkflowContext";
@@ -24,13 +23,10 @@ import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar
 import NotFound from "./pages/NotFound";
 import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <WorkflowProvider>
-        <TooltipProvider>
+  <AuthProvider>
+    <WorkflowProvider>
+      <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -246,7 +242,6 @@ const App = () => (
         </TooltipProvider>
       </WorkflowProvider>
     </AuthProvider>
-  </QueryClientProvider>
 );
 
 export default App;
