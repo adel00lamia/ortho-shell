@@ -1,10 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import * as ReactNS from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-
-// Debug: verify React import at runtime
-console.debug('[useAuth] React namespace keys:', Object.keys(ReactNS || {}));
 
 interface AuthContextType {
   user: User | null;
