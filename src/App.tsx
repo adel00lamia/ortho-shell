@@ -26,6 +26,62 @@ import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
 
 const queryClient = new QueryClient();
 
+const MainLayout = () => (
+  <div className="flex w-full min-h-screen">
+    <HierarchicalSidebar />
+    <main className="flex-1 overflow-auto">
+      <Routes>
+        <Route path="/" element={<RoleBasedRedirect />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Workflow Routes - Assess */}
+        <Route path="/workflow/assess/diagnostic" element={<Diagnostic />} />
+        <Route path="/workflow/assess/performance" element={<PerformanceEvaluation />} />
+        <Route path="/workflow/assess/benchmark" element={<Benchmark />} />
+        
+        {/* Workflow Routes - Plan */}
+        <Route path="/workflow/plan/builder" element={<AIPlanBuilder />} />
+        <Route path="/workflow/plan/plans" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/workflow/plan/plans/:id" element={<TrainingPlan />} />
+        
+        {/* Workflow Routes - Execute */}
+        <Route path="/workflow/execute/modules" element={<ModuleStudio />} />
+        <Route path="/workflow/execute/modules/:planId" element={<ModuleStudio />} />
+        <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ModuleStudio />} />
+        <Route path="/workflow/execute/marketplace" element={<Marketplace />} />
+        
+        {/* Workflow Routes - Track */}
+        <Route path="/workflow/track/analytics" element={<Analytics />} />
+        <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
+        <Route path="/workflow/track/certificates" element={<CertificateGenerator />} />
+        
+        {/* Management Routes */}
+        <Route path="/manage/users" element={<UserManagement />} />
+        <Route path="/manage/team" element={<TeamCollaboration />} />
+        <Route path="/manage/settings" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Legacy route redirects */}
+        <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />
+        <Route path="/performance-evaluation" element={<Navigate to="/workflow/assess/performance" replace />} />
+        <Route path="/benchmark" element={<Navigate to="/workflow/assess/benchmark" replace />} />
+        <Route path="/ai-plan-builder" element={<Navigate to="/workflow/plan/builder" replace />} />
+        <Route path="/module-studio" element={<Navigate to="/workflow/execute/modules" replace />} />
+        <Route path="/marketplace" element={<Navigate to="/workflow/execute/marketplace" replace />} />
+        <Route path="/analytics" element={<Navigate to="/workflow/track/analytics" replace />} />
+        <Route path="/certificate-generator" element={<Navigate to="/workflow/track/certificates" replace />} />
+        <Route path="/user-management" element={<Navigate to="/manage/users" replace />} />
+        <Route path="/team-collaboration" element={<Navigate to="/manage/team" replace />} />
+        <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard/company" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard/trainer" element={<Navigate to="/dashboard" replace />} />
+        
+        <Route path="/billing" element={<Billing />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </main>
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -34,79 +90,11 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <div className="flex min-h-screen w-full">
-              <Routes>
-                {/* Auth routes without sidebar */}
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/pricing" element={<Pricing />} />
-                
-                {/* All other routes with sidebar */}
-                <Route
-                  path="/*"
-                  element={
-                    <div className="flex w-full min-h-screen">
-                      <HierarchicalSidebar />
-                      <main className="flex-1 overflow-auto">
-                        <Routes>
-                          {/* Root redirects to dashboard */}
-                          <Route path="/" element={<RoleBasedRedirect />} />
-                          
-                          {/* Unified Dashboard */}
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          
-                          {/* Workflow Routes - Assess */}
-                          <Route path="/workflow/assess/diagnostic" element={<Diagnostic />} />
-                          <Route path="/workflow/assess/performance" element={<PerformanceEvaluation />} />
-                          <Route path="/workflow/assess/benchmark" element={<Benchmark />} />
-                          
-                          {/* Workflow Routes - Plan */}
-                          <Route path="/workflow/plan/builder" element={<AIPlanBuilder />} />
-                          <Route path="/workflow/plan/plans" element={<Navigate to="/dashboard" replace />} />
-                          <Route path="/workflow/plan/plans/:id" element={<TrainingPlan />} />
-                          
-                          {/* Workflow Routes - Execute */}
-                          <Route path="/workflow/execute/modules" element={<ModuleStudio />} />
-                          <Route path="/workflow/execute/modules/:planId" element={<ModuleStudio />} />
-                          <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ModuleStudio />} />
-                          <Route path="/workflow/execute/marketplace" element={<Marketplace />} />
-                          
-                          {/* Workflow Routes - Track */}
-                          <Route path="/workflow/track/analytics" element={<Analytics />} />
-                          <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
-                          <Route path="/workflow/track/certificates" element={<CertificateGenerator />} />
-                          
-                          {/* Management Routes */}
-                          <Route path="/manage/users" element={<UserManagement />} />
-                          <Route path="/manage/team" element={<TeamCollaboration />} />
-                          <Route path="/manage/settings" element={<Navigate to="/dashboard" replace />} />
-                          
-                          {/* Legacy route redirects */}
-                          <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />
-                          <Route path="/performance-evaluation" element={<Navigate to="/workflow/assess/performance" replace />} />
-                          <Route path="/benchmark" element={<Navigate to="/workflow/assess/benchmark" replace />} />
-                          <Route path="/ai-plan-builder" element={<Navigate to="/workflow/plan/builder" replace />} />
-                          <Route path="/module-studio" element={<Navigate to="/workflow/execute/modules" replace />} />
-                          <Route path="/marketplace" element={<Navigate to="/workflow/execute/marketplace" replace />} />
-                          <Route path="/analytics" element={<Navigate to="/workflow/track/analytics" replace />} />
-                          <Route path="/certificate-generator" element={<Navigate to="/workflow/track/certificates" replace />} />
-                          <Route path="/user-management" element={<Navigate to="/manage/users" replace />} />
-                          <Route path="/team-collaboration" element={<Navigate to="/manage/team" replace />} />
-                          <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
-                          <Route path="/dashboard/company" element={<Navigate to="/dashboard" replace />} />
-                          <Route path="/dashboard/trainer" element={<Navigate to="/dashboard" replace />} />
-                          
-                          {/* Billing */}
-                          <Route path="/billing" element={<Billing />} />
-                          
-                          {/* 404 */}
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </main>
-                    </div>
-                  }
-                />
-              </Routes>
-            </div>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/*" element={<MainLayout />} />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </WorkflowProvider>
