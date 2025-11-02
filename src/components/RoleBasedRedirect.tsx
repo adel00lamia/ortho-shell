@@ -17,22 +17,8 @@ export const RoleBasedRedirect = () => {
     }
 
     if (role) {
-      switch (role) {
-        case 'admin':
-          navigate('/admin', { replace: true });
-          break;
-        case 'trainer':
-          navigate('/dashboard/trainer', { replace: true });
-          break;
-        case 'hr_manager':
-          navigate('/dashboard/company', { replace: true });
-          break;
-        case 'employee':
-          navigate('/', { replace: true });
-          break;
-        default:
-          navigate('/', { replace: true });
-      }
+      // All roles now go to unified dashboard
+      navigate('/dashboard', { replace: true });
     }
   }, [user, role, authLoading, roleLoading, navigate]);
 

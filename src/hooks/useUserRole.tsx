@@ -18,19 +18,20 @@ export const useUserRole = () => {
       }
 
       try {
-        // Fetch user role from profiles table
-        const { data: profile, error } = await supabase
-          .from('profiles')
+        // Fetch user role from user_roles table (security best practice)
+        const { data: userRoles, error } = await supabase
+          .from('user_roles')
           .select('role')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
+          .limit(1)
           .single();
 
         if (error) {
           console.error('Error fetching user role:', error);
           // Default to employee role if there's an error
           setRole('employee');
-        } else if (profile?.role) {
-          setRole(profile.role as UserRole);
+        } else if (userRoles?.role) {
+          setRole(userRoles.role as UserRole);
         } else {
           // Default to employee role if no role is found
           setRole('employee');
