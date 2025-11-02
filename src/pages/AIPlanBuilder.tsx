@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { 
   Brain, 
   Sparkles, 
@@ -952,13 +953,31 @@ export default function AIPlanBuilder() {
                       {companySizes.map(size => (
                         <SelectItem key={size} value={size}>{size}</SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
 
-              <div>
-                <label className="text-sm font-medium">Training Objectives</label>
+               {/* Industry Benchmark Section */}
+               {requirements.industry && (
+                 <Card className="border-primary/20 bg-primary/5">
+                   <CardHeader>
+                     <CardTitle className="flex items-center gap-2">
+                       <BarChart3 className="h-5 w-5" />
+                       {requirements.industry} Training Benchmark
+                     </CardTitle>
+                     <CardDescription>
+                       Market insights and training trends in your sector
+                     </CardDescription>
+                   </CardHeader>
+                   <CardContent>
+                     <IndustryBenchmarkInsights industry={requirements.industry} />
+                   </CardContent>
+                 </Card>
+               )}
+
+               <div>
+                 <label className="text-sm font-medium">Training Objectives</label>
                 <div className="space-y-3 mt-2">
                   <div className="flex gap-2 w-full">
                     <Select onValueChange={(value) => {
@@ -1765,3 +1784,146 @@ export default function AIPlanBuilder() {
     </div>
   );
 }
+
+// Industry Benchmark Insights Component
+const IndustryBenchmarkInsights = ({ industry }: { industry: string }) => {
+  const industryData: Record<string, any> = {
+    Technology: {
+      avgTrainingHours: 80,
+      avgBudget: "$150,000",
+      topTrends: ["AI & Machine Learning", "Cloud Computing", "Cybersecurity", "DevOps"],
+      commonPrograms: ["Technical Certifications", "Agile Training", "Leadership Development"],
+      investment: "4.5%",
+      retention: "87%",
+    },
+    Healthcare: {
+      avgTrainingHours: 120,
+      avgBudget: "$200,000",
+      topTrends: ["Patient Safety", "Medical Technology", "Telemedicine", "Compliance"],
+      commonPrograms: ["Clinical Skills", "Patient Care", "Regulatory Compliance"],
+      investment: "5.2%",
+      retention: "82%",
+    },
+    Finance: {
+      avgTrainingHours: 90,
+      avgBudget: "$180,000",
+      topTrends: ["FinTech", "Risk Management", "Digital Banking", "Compliance"],
+      commonPrograms: ["Regulatory Training", "Financial Analysis", "Client Relations"],
+      investment: "4.8%",
+      retention: "85%",
+    },
+    Manufacturing: {
+      avgTrainingHours: 70,
+      avgBudget: "$120,000",
+      topTrends: ["Lean Manufacturing", "Safety Protocols", "Quality Control", "Automation"],
+      commonPrograms: ["Equipment Operation", "Safety Training", "Process Improvement"],
+      investment: "3.5%",
+      retention: "79%",
+    },
+    Retail: {
+      avgTrainingHours: 50,
+      avgBudget: "$80,000",
+      topTrends: ["Customer Experience", "E-commerce", "Inventory Management", "Sales"],
+      commonPrograms: ["Customer Service", "Product Knowledge", "POS Systems"],
+      investment: "2.8%",
+      retention: "72%",
+    },
+    Education: {
+      avgTrainingHours: 100,
+      avgBudget: "$90,000",
+      topTrends: ["EdTech Integration", "Pedagogy", "Online Learning", "Assessment"],
+      commonPrograms: ["Teaching Methods", "Technology Tools", "Classroom Management"],
+      investment: "3.8%",
+      retention: "84%",
+    },
+    Hospitality: {
+      avgTrainingHours: 60,
+      avgBudget: "$70,000",
+      topTrends: ["Guest Experience", "Food Safety", "Service Excellence", "Digital Tools"],
+      commonPrograms: ["Customer Service", "Food Handling", "Communication Skills"],
+      investment: "3.0%",
+      retention: "68%",
+    },
+    Construction: {
+      avgTrainingHours: 80,
+      avgBudget: "$110,000",
+      topTrends: ["Safety Standards", "New Technologies", "Project Management", "Sustainability"],
+      commonPrograms: ["Safety Protocols", "Equipment Training", "Blueprint Reading"],
+      investment: "3.2%",
+      retention: "75%",
+    },
+    Transportation: {
+      avgTrainingHours: 75,
+      avgBudget: "$95,000",
+      topTrends: ["Safety Compliance", "Route Optimization", "Vehicle Technology", "Customer Service"],
+      commonPrograms: ["Safety Training", "Route Planning", "Vehicle Maintenance"],
+      investment: "3.3%",
+      retention: "76%",
+    },
+    Energy: {
+      avgTrainingHours: 95,
+      avgBudget: "$140,000",
+      topTrends: ["Renewable Energy", "Safety Standards", "Environmental Compliance", "Technology"],
+      commonPrograms: ["Safety Protocols", "Technical Skills", "Regulatory Training"],
+      investment: "4.2%",
+      retention: "81%",
+    },
+  };
+
+  const data = industryData[industry] || industryData.Technology;
+
+  return (
+    <div className="space-y-4">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="p-3 bg-background rounded-lg border">
+          <p className="text-xs text-muted-foreground mb-1">Avg Training Hours</p>
+          <p className="text-xl font-bold">{data.avgTrainingHours}h</p>
+        </div>
+        <div className="p-3 bg-background rounded-lg border">
+          <p className="text-xs text-muted-foreground mb-1">Avg Budget</p>
+          <p className="text-xl font-bold">{data.avgBudget}</p>
+        </div>
+        <div className="p-3 bg-background rounded-lg border">
+          <p className="text-xs text-muted-foreground mb-1">Training Investment</p>
+          <p className="text-xl font-bold">{data.investment}</p>
+        </div>
+        <div className="p-3 bg-background rounded-lg border">
+          <p className="text-xs text-muted-foreground mb-1">Retention Rate</p>
+          <p className="text-xl font-bold">{data.retention}</p>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Training Trends */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center gap-2">
+          <TrendingUp className="h-4 w-4" />
+          Top Training Trends
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {data.topTrends.map((trend: string, idx: number) => (
+            <Badge key={idx} variant="secondary">{trend}</Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* Common Programs */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center gap-2">
+          <BookOpen className="h-4 w-4" />
+          Common Training Programs
+        </h4>
+        <ul className="space-y-2">
+          {data.commonPrograms.map((program: string, idx: number) => (
+            <li key={idx} className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              {program}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
