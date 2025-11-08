@@ -22,9 +22,14 @@ import {
 } from 'lucide-react';
 
 const Index = () => {
-  const { user, loading, signOut } = useAuth();
+  // AUTHENTICATION TEMPORARILY DISABLED FOR DEVELOPMENT
+  // const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  // Mock user for development
+  const user = { email: 'demo@trainpro.com', user_metadata: { first_name: 'Demo User' } };
 
+  /* ORIGINAL AUTH CODE - UNCOMMENT TO RE-ENABLE:
   useEffect(() => {
     console.log('Index component - Auth state:', { user: user?.email, loading });
     if (!loading && !user) {
@@ -47,6 +52,7 @@ const Index = () => {
   if (!user) {
     return null;
   }
+  */
 
   const features = [
     {
@@ -109,8 +115,8 @@ const Index = () => {
             <span className="text-sm text-gray-600">
               Welcome, {user.user_metadata?.first_name || user.email}
             </span>
-            <Button variant="ghost" onClick={signOut}>
-              Sign Out
+            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+              Dashboard
             </Button>
           </div>
         </div>

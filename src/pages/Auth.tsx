@@ -1,3 +1,44 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+
+// AUTHENTICATION TEMPORARILY DISABLED FOR DEVELOPMENT
+const Auth = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Skip to dashboard when page loads
+  useEffect(() => {
+    toast({
+      title: "Authentication Disabled",
+      description: "Authentication is currently disabled for development. Redirecting to dashboard...",
+    });
+    setTimeout(() => navigate('/dashboard', { replace: true }), 2000);
+  }, [navigate, toast]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Authentication Disabled</CardTitle>
+          <CardDescription className="text-center">
+            Authentication is temporarily disabled for development. Redirecting to dashboard...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Auth;
+
+/* ORIGINAL AUTH CODE - UNCOMMENT TO RE-ENABLE:
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -309,3 +350,4 @@ const Auth = () => {
 };
 
 export default Auth;
+*/
