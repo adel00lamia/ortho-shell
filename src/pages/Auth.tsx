@@ -10,12 +10,8 @@ const Auth = () => {
 
   // Skip to dashboard when page loads
   useEffect(() => {
-    toast({
-      title: "Authentication Disabled",
-      description: "Authentication is currently disabled for development. Redirecting to dashboard...",
-    });
-    setTimeout(() => navigate('/dashboard', { replace: true }), 2000);
-  }, [navigate, toast]);
+    navigate('/dashboard', { replace: true });
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
