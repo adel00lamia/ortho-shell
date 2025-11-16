@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '@/integrations/supabase/client';
 
 export type UserRole = 'admin' | 'hr_manager' | 'trainer' | 'employee' | null;
 
+// AUTHENTICATION TEMPORARILY DISABLED FOR DEVELOPMENT
 export const useUserRole = () => {
+  // const { user } = useAuth();
+  const [role] = useState<UserRole>('admin'); // Mock role for development
+  const [loading] = useState(false);
+
+  /* ORIGINAL CODE - UNCOMMENT TO RE-ENABLE:
   const { user } = useAuth();
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +51,7 @@ export const useUserRole = () => {
 
     fetchUserRole();
   }, [user]);
+  */
 
   return { role, loading };
 };
