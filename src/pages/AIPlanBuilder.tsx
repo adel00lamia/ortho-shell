@@ -185,6 +185,49 @@ export default function AIPlanBuilder() {
     'Develop sales and negotiation skills',
     'Improve project management capabilities'
   ];
+
+  const predefinedSkills = [
+    // Leadership & Management
+    'Leadership', 'Team Management', 'Strategic Planning', 'Decision Making', 'Conflict Resolution',
+    'Change Management', 'Delegation', 'Performance Management', 'Coaching & Mentoring',
+    // Communication
+    'Communication', 'Public Speaking', 'Presentation Skills', 'Written Communication', 'Negotiation',
+    'Active Listening', 'Cross-cultural Communication', 'Stakeholder Management',
+    // Technical
+    'Programming', 'Data Analysis', 'Cloud Computing', 'Cybersecurity', 'AI & Machine Learning',
+    'Software Development', 'Database Management', 'DevOps', 'Web Development', 'Mobile Development',
+    // Business
+    'Project Management', 'Agile/Scrum', 'Business Analysis', 'Financial Analysis', 'Risk Management',
+    'Process Improvement', 'Quality Assurance', 'Supply Chain Management', 'Operations Management',
+    // Digital
+    'Digital Marketing', 'SEO/SEM', 'Social Media Marketing', 'Content Creation', 'E-commerce',
+    'UX/UI Design', 'Data Visualization', 'CRM Systems', 'Marketing Automation',
+    // Soft Skills
+    'Problem Solving', 'Critical Thinking', 'Creativity', 'Emotional Intelligence', 'Time Management',
+    'Adaptability', 'Teamwork', 'Customer Service', 'Sales Techniques'
+  ];
+
+  const predefinedConstraints = [
+    // Budget
+    'Limited training budget', 'No external trainer budget', 'Cost-per-employee cap',
+    // Time
+    'Maximum 2 hours per week for training', 'Training only during work hours',
+    'No training during peak business periods', 'Must complete within 3 months',
+    'Employees cannot be absent for full-day sessions',
+    // Location
+    'Remote employees only', 'Multiple geographic locations', 'No travel allowed',
+    'Limited physical training space', 'Distributed workforce across time zones',
+    // Technology
+    'Limited internet connectivity', 'No access to external platforms',
+    'Mobile-only access for some employees', 'Legacy systems constraints',
+    // Organizational
+    'High employee turnover', 'Multilingual workforce', 'Shift workers availability',
+    'Union regulations on training time', 'Regulatory certification requirements',
+    'Accessibility requirements for disabled employees',
+    // Resources
+    'No dedicated training department', 'Limited internal subject matter experts',
+    'Seasonal workforce variations', 'Part-time employee inclusion required'
+  ];
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -1065,58 +1108,104 @@ export default function AIPlanBuilder() {
             <CardContent className="space-y-6">
               <div>
                 <label className="text-sm font-medium">Target Skills</label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    placeholder="Add target skill"
-                    onKeyPress={(e) => e.key === 'Enter' && 
+                <div className="space-y-2 mt-2">
+                  <div>
+                    <Select onValueChange={(value) => {
+                      if (value && !requirements.targetSkills.includes(value)) {
+                        setRequirements({...requirements, targetSkills: [...requirements.targetSkills, value]});
+                      }
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select from common skills..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {predefinedSkills.map((skill, idx) => (
+                          <SelectItem key={idx} value={skill}>{skill}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      placeholder="Or add custom skill"
+                      onKeyPress={(e) => e.key === 'Enter' && 
+                        addToList(requirements.targetSkills, (items) => 
+                          setRequirements({...requirements, targetSkills: items}), newSkill, setNewSkill)}
+                    />
+                    <Button onClick={() => 
                       addToList(requirements.targetSkills, (items) => 
-                        setRequirements({...requirements, targetSkills: items}), newSkill, setNewSkill)}
-                  />
-                  <Button onClick={() => 
-                    addToList(requirements.targetSkills, (items) => 
-                      setRequirements({...requirements, targetSkills: items}), newSkill, setNewSkill)}>
-                    Add
-                  </Button>
+                        setRequirements({...requirements, targetSkills: items}), newSkill, setNewSkill)}>
+                      Add
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {requirements.targetSkills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer"
+                    <Badge key={index} variant="secondary" className="cursor-pointer py-2 px-3"
                       onClick={() => removeFromList(requirements.targetSkills, (items) => 
                         setRequirements({...requirements, targetSkills: items}), skill)}>
                       {skill} ×
                     </Badge>
                   ))}
                 </div>
+                {requirements.targetSkills.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Select from predefined skills or add your own custom skills
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="text-sm font-medium">Constraints & Limitations</label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={newConstraint}
-                    onChange={(e) => setNewConstraint(e.target.value)}
-                    placeholder="Add constraint (budget, time, location, etc.)"
-                    onKeyPress={(e) => e.key === 'Enter' && 
+                <div className="space-y-2 mt-2">
+                  <div>
+                    <Select onValueChange={(value) => {
+                      if (value && !requirements.constraints.includes(value)) {
+                        setRequirements({...requirements, constraints: [...requirements.constraints, value]});
+                      }
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select from common constraints..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {predefinedConstraints.map((constraint, idx) => (
+                          <SelectItem key={idx} value={constraint}>{constraint}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newConstraint}
+                      onChange={(e) => setNewConstraint(e.target.value)}
+                      placeholder="Or add custom constraint"
+                      onKeyPress={(e) => e.key === 'Enter' && 
+                        addToList(requirements.constraints, (items) => 
+                          setRequirements({...requirements, constraints: items}), newConstraint, setNewConstraint)}
+                    />
+                    <Button onClick={() => 
                       addToList(requirements.constraints, (items) => 
-                        setRequirements({...requirements, constraints: items}), newConstraint, setNewConstraint)}
-                  />
-                  <Button onClick={() => 
-                    addToList(requirements.constraints, (items) => 
-                      setRequirements({...requirements, constraints: items}), newConstraint, setNewConstraint)}>
-                    Add
-                  </Button>
+                        setRequirements({...requirements, constraints: items}), newConstraint, setNewConstraint)}>
+                      Add
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {requirements.constraints.map((constraint, index) => (
-                    <Badge key={index} variant="outline" className="cursor-pointer"
+                    <Badge key={index} variant="outline" className="cursor-pointer py-2 px-3"
                       onClick={() => removeFromList(requirements.constraints, (items) => 
                         setRequirements({...requirements, constraints: items}), constraint)}>
                       {constraint} ×
                     </Badge>
                   ))}
                 </div>
+                {requirements.constraints.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Select from common constraints or add your own specific limitations
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
