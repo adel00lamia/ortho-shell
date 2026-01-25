@@ -554,14 +554,7 @@ export default function AIPlanBuilder() {
   };
 
   const generatePlan = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to generate training plans.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Allow plan generation even without authentication for demo purposes
 
     setIsGenerating(true);
     setProgress(10);
@@ -598,7 +591,22 @@ export default function AIPlanBuilder() {
   };
 
   const savePlan = async () => {
-    if (!generatedPlan || !user) return;
+    if (!generatedPlan) {
+      toast({
+        title: "No Plan to Save",
+        description: "Please generate a plan first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Plan Generated Successfully",
+        description: "Sign in to save your training plan for later access.",
+      });
+      return;
+    }
 
     try {
       const { data: profile } = await supabase
@@ -632,7 +640,7 @@ export default function AIPlanBuilder() {
         description: "Your training plan has been saved successfully.",
       });
 
-      navigate(`/training-plan/${data.id}`);
+      navigate(`/workflow/plan/plans/${data.id}`);
     } catch (error) {
       console.error('Save error:', error);
       toast({

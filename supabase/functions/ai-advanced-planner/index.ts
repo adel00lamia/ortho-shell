@@ -1,9 +1,6 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
-const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +16,11 @@ serve(async (req) => {
   try {
     const { requirements, userId } = await req.json();
 
-    console.log('Advanced plan generation for user:', userId, 'with model:', requirements.aiModel);
+    console.log('Advanced plan generation for user:', userId);
+
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
     const systemPrompt = `You are an expert training consultant and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan that demonstrates innovation and creativity.
 
@@ -117,23 +118,23 @@ Create a plan that is:
 
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
-Company: ${requirements.company}
-Industry: ${requirements.industry}
-Company Size: ${requirements.companySize}
-Budget: ${requirements.budget} MAD
-Duration: ${requirements.duration} months
+Company: ${requirements.company || 'Not specified'}
+Industry: ${requirements.industry || 'General'}
+Company Size: ${requirements.companySize || 'Medium'}
+Budget: ${requirements.budget || 50000} MAD
+Duration: ${requirements.duration || 12} months
 
 Training Objectives:
-${requirements.objectives.map(obj => `- ${obj}`).join('\n')}
+${requirements.objectives?.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}
 
 Target Skills:
-${requirements.targetSkills.map(skill => `- ${skill}`).join('\n')}
+${requirements.targetSkills?.map((skill: string) => `- ${skill}`).join('\n') || '- General skills development'}
 
 Constraints:
-${requirements.constraints.map(constraint => `- ${constraint}`).join('\n')}
+${requirements.constraints?.map((constraint: string) => `- ${constraint}`).join('\n') || '- None specified'}
 
 Selected Delivery Methods:
-${requirements.customizations?.deliveryMethods?.map(method => `- ${method}`).join('\n') || '- online'}
+${requirements.customizations?.deliveryMethods?.map((method: string) => `- ${method}`).join('\n') || '- online'}
 
 Engagement Features Requested:
 ${requirements.customizations?.certification ? '- Certification Program' : ''}
@@ -147,13 +148,13 @@ ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
 
 Additional Context:
-${requirements.context}
+${requirements.context || 'No additional context provided'}
 
 Generate a detailed, innovative training plan that:
 1. Maximizes ROI and ensures measurable skill development
 2. Aligns with modern training methodologies and best practices
-3. Includes specific recommendations for the ${requirements.industry} industry
-4. Considers the company size of ${requirements.companySize}
+3. Includes specific recommendations for the ${requirements.industry || 'general'} industry
+4. Considers the company size of ${requirements.companySize || 'medium-sized organization'}
 5. Incorporates requested engagement features and delivery methods
 6. Provides creative and innovative learning approaches
 7. Addresses sustainability and long-term impact
@@ -161,29 +162,153 @@ Generate a detailed, innovative training plan that:
 9. Focuses on business alignment and measurable outcomes
 10. Considers Moroccan market context and compliance requirements`;
 
-    let planData;
+    console.log('Calling Lovable AI Gateway...');
 
-    // Route to different AI services based on model selection
-    switch (requirements.aiModel) {
-      case 'perplexity':
-        if (!perplexityApiKey) {
-          throw new Error('Perplexity API key not configured');
-        }
-        planData = await generateWithPerplexity(systemPrompt, userPrompt);
-        break;
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI Gateway error:', response.status, errorText);
       
-      case 'claude-sonnet-4-20250514':
-        if (!anthropicApiKey) {
-          throw new Error('Anthropic API key not configured');
-        }
-        planData = await generateWithClaude(systemPrompt, userPrompt);
-        break;
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again in a few moments.',
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       
-      default:
-        if (!openAIApiKey) {
-          throw new Error('OpenAI API key not configured');
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ 
+          error: 'Payment required. Please add credits to continue.',
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('AI response received successfully');
+
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content in AI response');
+    }
+
+    // Parse the JSON response
+    let planData;
+    try {
+      // Try to extract JSON from the response (it might be wrapped in markdown code blocks)
+      let jsonContent = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonContent = jsonMatch[1].trim();
+      }
+      planData = JSON.parse(jsonContent);
+    } catch (parseError) {
+      console.error('Failed to parse AI response as JSON:', parseError);
+      console.log('Raw response:', content);
+      
+      // Create a fallback plan structure
+      planData = {
+        plan: {
+          title: `Training Plan for ${requirements.company || 'Your Organization'}`,
+          description: "AI-generated comprehensive training plan based on your requirements.",
+          timeline: `${requirements.duration || 12} months implementation period`,
+          modules: [
+            {
+              title: "Foundation Skills Development",
+              description: "Building core competencies aligned with organizational objectives",
+              duration: "4 weeks",
+              type: "mixed",
+              skills_covered: requirements.targetSkills?.slice(0, 3) || ["Communication", "Leadership", "Problem Solving"],
+              prerequisites: [],
+              delivery_method: "hybrid",
+              resources_needed: ["Training materials", "Online platform access"],
+              estimated_cost: Math.round((requirements.budget || 50000) * 0.3),
+              engagement_features: ["gamification", "peer_learning"],
+              assessment_methods: ["practical", "peer_review"],
+              certification_level: "intermediate"
+            },
+            {
+              title: "Advanced Skill Mastery",
+              description: "Deep dive into specialized competencies",
+              duration: "6 weeks",
+              type: "mixed",
+              skills_covered: requirements.targetSkills?.slice(3, 6) || ["Technical Skills", "Project Management"],
+              prerequisites: ["Foundation Skills Development"],
+              delivery_method: "workshop",
+              resources_needed: ["Expert trainers", "Case studies"],
+              estimated_cost: Math.round((requirements.budget || 50000) * 0.4),
+              engagement_features: ["mentorship", "real_projects"],
+              assessment_methods: ["practical", "presentation"],
+              certification_level: "advanced"
+            }
+          ],
+          budget_breakdown: {
+            internal_training: Math.round((requirements.budget || 50000) * 0.3),
+            external_courses: Math.round((requirements.budget || 50000) * 0.25),
+            materials_resources: Math.round((requirements.budget || 50000) * 0.15),
+            technology_platform: Math.round((requirements.budget || 50000) * 0.1),
+            assessment_certification: Math.round((requirements.budget || 50000) * 0.1),
+            contingency: Math.round((requirements.budget || 50000) * 0.1)
+          },
+          kpis: [
+            {
+              name: "Training Completion Rate",
+              description: "Percentage of enrolled participants completing the program",
+              target: "90%",
+              measurement_frequency: "Monthly",
+              baseline: "Current completion rates",
+              improvement_expected: "20% improvement"
+            },
+            {
+              name: "Skill Improvement Score",
+              description: "Average improvement in assessed skill levels",
+              target: "40% improvement",
+              measurement_frequency: "Quarterly",
+              baseline: "Pre-training assessment",
+              improvement_expected: "40% improvement"
+            }
+          ],
+          recommendations: [
+            "Start with a pilot group to refine the program",
+            "Integrate regular feedback loops for continuous improvement",
+            "Consider blended learning approaches for maximum engagement",
+            "Establish clear success metrics from the beginning"
+          ],
+          risk_assessment: {
+            high_risks: ["Low participation rates", "Budget overruns"],
+            medium_risks: ["Technology adoption challenges", "Scheduling conflicts"],
+            mitigation_strategies: ["Mandatory participation with manager support", "Phased implementation approach"],
+            contingency_plans: ["Virtual alternatives for in-person sessions", "Modular content for flexibility"]
+          },
+          success_metrics: [
+            "90% training completion rate",
+            "40% improvement in assessed skills",
+            "85% participant satisfaction score",
+            "Measurable ROI within 12 months"
+          ]
         }
-        planData = await generateWithOpenAI(systemPrompt, userPrompt, requirements.aiModel);
+      };
     }
 
     console.log('Advanced plan generated successfully');
@@ -202,95 +327,3 @@ Generate a detailed, innovative training plan that:
     });
   }
 });
-
-async function generateWithOpenAI(systemPrompt: string, userPrompt: string, model: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      max_tokens: 4000,
-      temperature: 0.7,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('OpenAI API error:', errorData);
-    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
-}
-
-async function generateWithClaude(systemPrompt: string, userPrompt: string) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${anthropicApiKey}`,
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4000,
-      messages: [
-        {
-          role: 'user',
-          content: `${systemPrompt}\n\n${userPrompt}`
-        }
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Claude API error:', errorData);
-    throw new Error(`Claude API error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return JSON.parse(data.content[0].text);
-}
-
-async function generateWithPerplexity(systemPrompt: string, userPrompt: string) {
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${perplexityApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-sonar-large-128k-online',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.2,
-      top_p: 0.9,
-      max_tokens: 4000,
-      return_images: false,
-      return_related_questions: false,
-      search_recency_filter: 'month',
-      frequency_penalty: 1,
-      presence_penalty: 0
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Perplexity API error:', errorData);
-    throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
-}
