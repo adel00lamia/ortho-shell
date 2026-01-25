@@ -26,17 +26,18 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  // AUTHENTICATION TEMPORARILY DISABLED FOR DEVELOPMENT
+  // const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth', { replace: true });
-    }
-  }, [user, authLoading, navigate]);
+  // useEffect(() => {
+  //   if (!authLoading && !user) {
+  //     navigate('/auth', { replace: true });
+  //   }
+  // }, [user, authLoading, navigate]);
 
-  if (authLoading || roleLoading) {
+  if (roleLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-12 w-64" />
