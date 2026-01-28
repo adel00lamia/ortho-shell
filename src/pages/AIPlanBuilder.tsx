@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -186,26 +186,41 @@ export default function AIPlanBuilder() {
     'Improve project management capabilities'
   ];
 
-  const predefinedSkills = [
-    // Leadership & Management
-    'Leadership', 'Team Management', 'Strategic Planning', 'Decision Making', 'Conflict Resolution',
-    'Change Management', 'Delegation', 'Performance Management', 'Coaching & Mentoring',
-    // Communication
-    'Communication', 'Public Speaking', 'Presentation Skills', 'Written Communication', 'Negotiation',
-    'Active Listening', 'Cross-cultural Communication', 'Stakeholder Management',
-    // Technical
-    'Programming', 'Data Analysis', 'Cloud Computing', 'Cybersecurity', 'AI & Machine Learning',
-    'Software Development', 'Database Management', 'DevOps', 'Web Development', 'Mobile Development',
-    // Business
-    'Project Management', 'Agile/Scrum', 'Business Analysis', 'Financial Analysis', 'Risk Management',
-    'Process Improvement', 'Quality Assurance', 'Supply Chain Management', 'Operations Management',
-    // Digital
-    'Digital Marketing', 'SEO/SEM', 'Social Media Marketing', 'Content Creation', 'E-commerce',
-    'UX/UI Design', 'Data Visualization', 'CRM Systems', 'Marketing Automation',
-    // Soft Skills
-    'Problem Solving', 'Critical Thinking', 'Creativity', 'Emotional Intelligence', 'Time Management',
-    'Adaptability', 'Teamwork', 'Customer Service', 'Sales Techniques'
+  const skillCategories = [
+    {
+      name: 'Leadership & Management',
+      skills: ['Leadership', 'Team Management', 'Strategic Planning', 'Decision Making', 'Conflict Resolution',
+        'Change Management', 'Delegation', 'Performance Management', 'Coaching & Mentoring']
+    },
+    {
+      name: 'Communication',
+      skills: ['Communication', 'Public Speaking', 'Presentation Skills', 'Written Communication', 'Negotiation',
+        'Active Listening', 'Cross-cultural Communication', 'Stakeholder Management']
+    },
+    {
+      name: 'Technical',
+      skills: ['Programming', 'Data Analysis', 'Cloud Computing', 'Cybersecurity', 'AI & Machine Learning',
+        'Software Development', 'Database Management', 'DevOps', 'Web Development', 'Mobile Development']
+    },
+    {
+      name: 'Business',
+      skills: ['Project Management', 'Agile/Scrum', 'Business Analysis', 'Financial Analysis', 'Risk Management',
+        'Process Improvement', 'Quality Assurance', 'Supply Chain Management', 'Operations Management']
+    },
+    {
+      name: 'Digital',
+      skills: ['Digital Marketing', 'SEO/SEM', 'Social Media Marketing', 'Content Creation', 'E-commerce',
+        'UX/UI Design', 'Data Visualization', 'CRM Systems', 'Marketing Automation']
+    },
+    {
+      name: 'Soft Skills',
+      skills: ['Problem Solving', 'Critical Thinking', 'Creativity', 'Emotional Intelligence', 'Time Management',
+        'Adaptability', 'Teamwork', 'Customer Service', 'Sales Techniques']
+    }
   ];
+  
+  // Flatten for backwards compatibility
+  const predefinedSkills = skillCategories.flatMap(cat => cat.skills);
 
   const predefinedConstraints = [
     // Budget
@@ -1116,11 +1131,25 @@ export default function AIPlanBuilder() {
                       }
                     }}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select from common skills..." />
+                        <SelectValue placeholder="Select from skills by category..." />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px]">
-                        {predefinedSkills.map((skill, idx) => (
-                          <SelectItem key={idx} value={skill}>{skill}</SelectItem>
+                      <SelectContent className="max-h-[400px]">
+                        {skillCategories.map((category) => (
+                          <SelectGroup key={category.name}>
+                            <SelectLabel className="font-semibold text-primary py-2">
+                              {category.name}
+                            </SelectLabel>
+                            {category.skills.map((skill) => (
+                              <SelectItem 
+                                key={skill} 
+                                value={skill}
+                                disabled={requirements.targetSkills.includes(skill)}
+                                className="pl-6"
+                              >
+                                {skill}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
                         ))}
                       </SelectContent>
                     </Select>
