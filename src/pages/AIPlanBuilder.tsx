@@ -60,13 +60,28 @@ import {
   Video,
   PenTool,
   Headphones,
-  MonitorPlay
+  MonitorPlay,
+  FileDown,
+  ArrowLeftRight,
+  Calculator,
+  History,
+  Save,
+  Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { WorkflowIndicator } from '@/components/WorkflowIndicator';
 import { ContextualActions } from '@/components/ContextualActions';
+import { 
+  exportPlanToPDF, 
+  PlanGanttChart, 
+  PlanROICalculator, 
+  PlanComparison,
+  PlanComments,
+  PlanTemplateSaver,
+  PlanVersionHistory
+} from '@/components/plan';
 
 interface TrainingTemplate {
   id: string;
@@ -169,6 +184,10 @@ export default function AIPlanBuilder() {
     }
   });
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
+  const [generatedPlans, setGeneratedPlans] = useState<Array<{plan: GeneratedPlan; requirements: PlanRequirements; generatedAt: Date}>>([]);
+  const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
+  const [planVersions, setPlanVersions] = useState<any[]>([]);
+  const [planComments, setPlanComments] = useState<any[]>([]);
   const [newObjective, setNewObjective] = useState('');
   const [newSkill, setNewSkill] = useState('');
   const [newConstraint, setNewConstraint] = useState('');
@@ -1503,168 +1522,372 @@ export default function AIPlanBuilder() {
         return (
           <div className="space-y-6">
             {generatedPlan ? (
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="modules">Modules</TabsTrigger>
-                  <TabsTrigger value="budget">Budget</TabsTrigger>
-                  <TabsTrigger value="kpis">KPIs</TabsTrigger>
-                  <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
-                </TabsList>
+              <>
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => exportPlanToPDF(generatedPlan, requirements)}
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </Button>
+                  <Button variant="outline" onClick={savePlan}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Plan
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const newPlanEntry = {
+                        plan: generatedPlan,
+                        requirements: { ...requirements },
+                        generatedAt: new Date()
+                      };
+                      setGeneratedPlans(prev => [...prev, newPlanEntry]);
+                      toast({
+                        title: "Plan Added to Comparison",
+                        description: "Generate another plan to compare them.",
+                      });
+                    }}
+                  >
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    Add to Compare
+                  </Button>
+                </div>
 
-                <TabsContent value="overview" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-2xl">{generatedPlan.title}</CardTitle>
-                          <CardDescription className="mt-2">{generatedPlan.description}</CardDescription>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button onClick={savePlan}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Save Plan
-                          </Button>
-                          <Button variant="outline">
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center p-4 bg-primary/5 rounded-lg">
-                          <div className="text-2xl font-bold text-primary">{generatedPlan.modules?.length || 0}</div>
-                          <div className="text-sm text-muted-foreground">Training Modules</div>
-                        </div>
-                        <div className="text-center p-4 bg-green-500/5 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600">{requirements.duration}m</div>
-                          <div className="text-sm text-muted-foreground">Duration</div>
-                        </div>
-                        <div className="text-center p-4 bg-blue-500/5 rounded-lg">
-                          <div className="text-2xl font-bold text-blue-600">{requirements.budget.toLocaleString()}</div>
-                          <div className="text-sm text-muted-foreground">Budget (MAD)</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="modules">Modules</TabsTrigger>
+                    <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                    <TabsTrigger value="budget">Budget</TabsTrigger>
+                    <TabsTrigger value="roi">ROI</TabsTrigger>
+                    <TabsTrigger value="kpis">KPIs</TabsTrigger>
+                    <TabsTrigger value="risk">Risk</TabsTrigger>
+                    <TabsTrigger value="collaborate">Collaborate</TabsTrigger>
+                  </TabsList>
 
-                  {generatedPlan.recommendations && (
+                  <TabsContent value="overview" className="space-y-4">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Sparkles className="h-5 w-5" />
-                          AI Recommendations
-                        </CardTitle>
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                          <div>
+                            <CardTitle className="text-2xl">{generatedPlan.title}</CardTitle>
+                            <CardDescription className="mt-2">{generatedPlan.description}</CardDescription>
+                          </div>
+                        </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2">
-                          {generatedPlan.recommendations.map((rec, index) => (
-                            <div key={index} className="flex items-start gap-2">
-                              <div className="w-2 h-2 bg-primary rounded-full mt-2" />
-                              <p className="text-sm">{rec}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="text-center p-4 bg-primary/5 rounded-lg">
+                            <div className="text-2xl font-bold text-primary">{generatedPlan.modules?.length || 0}</div>
+                            <div className="text-sm text-muted-foreground">Training Modules</div>
+                          </div>
+                          <div className="text-center p-4 bg-green-500/5 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600">{requirements.duration}m</div>
+                            <div className="text-sm text-muted-foreground">Duration</div>
+                          </div>
+                          <div className="text-center p-4 bg-blue-500/5 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">{requirements.budget.toLocaleString()}</div>
+                            <div className="text-sm text-muted-foreground">Budget (MAD)</div>
+                          </div>
+                          <div className="text-center p-4 bg-purple-500/5 rounded-lg">
+                            <div className="text-2xl font-bold text-purple-600">{generatedPlan.kpis?.length || 0}</div>
+                            <div className="text-sm text-muted-foreground">KPIs Defined</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {generatedPlan.recommendations && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5" />
+                            AI Recommendations
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {generatedPlan.recommendations.map((rec, index) => (
+                              <div key={index} className="flex items-start gap-2">
+                                <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+                                <p className="text-sm">{rec}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="modules" className="space-y-4">
+                    <div className="grid gap-4">
+                      {generatedPlan.modules?.map((module, index) => (
+                        <Card key={index}>
+                          <CardHeader>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg">{module.title || `Module ${index + 1}`}</CardTitle>
+                                <CardDescription>{module.description}</CardDescription>
+                              </div>
+                              <Badge variant="outline">{module.certification_level || 'Standard'}</Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Duration:</span>
+                                <p className="font-medium">{module.duration || '2-4 weeks'}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Type:</span>
+                                <p className="font-medium">{module.type || module.delivery_method || 'Mixed'}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Est. Cost:</span>
+                                <p className="font-medium">{module.estimated_cost ? `${module.estimated_cost.toLocaleString()} MAD` : 'TBD'}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Skills:</span>
+                                <p className="font-medium">{module.skills_covered?.slice(0, 2).join(', ') || 'Various'}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="timeline" className="space-y-4">
+                    {generatedPlan.modules && generatedPlan.modules.length > 0 && (
+                      <PlanGanttChart 
+                        modules={generatedPlan.modules} 
+                        totalDuration={requirements.duration} 
+                      />
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="budget" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Budget Breakdown</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {generatedPlan.budget_breakdown ? (
+                          <div className="space-y-3">
+                            {Object.entries(generatedPlan.budget_breakdown).map(([category, amount]) => (
+                              <div key={category} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded">
+                                <span className="capitalize">{category.replace(/_/g, ' ')}</span>
+                                <span className="font-medium">{typeof amount === 'number' ? `${amount.toLocaleString()} MAD` : String(amount)}</span>
+                              </div>
+                            ))}
+                            <Separator />
+                            <div className="flex justify-between items-center p-2 font-bold">
+                              <span>Total</span>
+                              <span className="text-primary">
+                                {Object.values(generatedPlan.budget_breakdown).reduce<number>((sum, val) => sum + (typeof val === 'number' ? val : 0), 0).toLocaleString()} MAD
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">Budget breakdown will be generated with the plan.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="roi" className="space-y-4">
+                    <PlanROICalculator 
+                      budget={requirements.budget}
+                      duration={requirements.duration}
+                      modules={generatedPlan.modules || []}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="kpis" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Key Performance Indicators</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid gap-3">
+                          {generatedPlan.kpis?.map((kpi, index) => (
+                            <div key={index} className="p-4 border rounded-lg">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <div className="font-medium">{(kpi as any).name || `KPI ${index + 1}`}</div>
+                                  <div className="text-sm text-muted-foreground mt-1">{(kpi as any).description}</div>
+                                </div>
+                                <Badge variant="secondary">{(kpi as any).measurement_frequency || 'Quarterly'}</Badge>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Target:</span>
+                                  <p className="font-medium text-primary">{(kpi as any).target || 'To be defined'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Baseline:</span>
+                                  <p className="font-medium">{(kpi as any).baseline || 'To be measured'}</p>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </CardContent>
                     </Card>
-                  )}
-                </TabsContent>
+                  </TabsContent>
 
-                <TabsContent value="modules" className="space-y-4">
-                  <div className="grid gap-4">
-                    {generatedPlan.modules?.map((module, index) => (
-                      <Card key={index}>
-                        <CardHeader>
-                          <CardTitle className="text-lg">{module.title || `Module ${index + 1}`}</CardTitle>
-                          <CardDescription>{module.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Duration:</span>
-                              <span>{module.duration || '2-4 weeks'}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Skills:</span>
-                              <span>{module.skills?.join(', ') || 'Various'}</span>
-                            </div>
+                  <TabsContent value="risk" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5" />
+                          Risk Assessment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {generatedPlan.risk_assessment ? (
+                          <div className="space-y-4">
+                            {generatedPlan.risk_assessment.high_risks && (
+                              <div>
+                                <h4 className="font-semibold text-red-600 mb-2">High Risks</h4>
+                                <div className="space-y-2">
+                                  {generatedPlan.risk_assessment.high_risks.map((risk: string, idx: number) => (
+                                    <div key={idx} className="p-3 border border-red-200 bg-red-50 rounded-lg text-sm">
+                                      {risk}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {generatedPlan.risk_assessment.medium_risks && (
+                              <div>
+                                <h4 className="font-semibold text-yellow-600 mb-2">Medium Risks</h4>
+                                <div className="space-y-2">
+                                  {generatedPlan.risk_assessment.medium_risks.map((risk: string, idx: number) => (
+                                    <div key={idx} className="p-3 border border-yellow-200 bg-yellow-50 rounded-lg text-sm">
+                                      {risk}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {generatedPlan.risk_assessment.mitigation_strategies && (
+                              <div>
+                                <h4 className="font-semibold text-green-600 mb-2">Mitigation Strategies</h4>
+                                <div className="space-y-2">
+                                  {generatedPlan.risk_assessment.mitigation_strategies.map((strategy: string, idx: number) => (
+                                    <div key={idx} className="p-3 border border-green-200 bg-green-50 rounded-lg text-sm">
+                                      {strategy}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
+                        ) : (
+                          <p className="text-muted-foreground">Risk assessment will be generated with the plan.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
 
-                <TabsContent value="budget" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Budget Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {generatedPlan.budget_breakdown ? (
-                        <div className="space-y-3">
-                          {Object.entries(generatedPlan.budget_breakdown).map(([category, amount]) => (
-                            <div key={category} className="flex justify-between">
-                              <span className="capitalize">{category.replace(/_/g, ' ')}</span>
-                              <span className="font-medium">{String(amount)} MAD</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">Budget breakdown will be generated with the plan.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                  <TabsContent value="collaborate" className="space-y-4">
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <PlanTemplateSaver
+                        currentRequirements={requirements}
+                        templates={savedTemplates}
+                        onSaveTemplate={async (name, description, isPublic, configuration) => {
+                          if (!user) {
+                            toast({
+                              title: "Sign In Required",
+                              description: "Please sign in to save templates.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          const { error } = await supabase
+                            .from('plan_templates')
+                            .insert({
+                              user_id: user.id,
+                              name,
+                              description,
+                              is_public: isPublic,
+                              configuration,
+                            });
+                          if (!error) {
+                            // Refresh templates
+                            const { data } = await supabase
+                              .from('plan_templates')
+                              .select('*')
+                              .order('created_at', { ascending: false });
+                            setSavedTemplates(data || []);
+                          }
+                        }}
+                        onLoadTemplate={(template) => {
+                          setRequirements(template.configuration);
+                          toast({
+                            title: "Template Loaded",
+                            description: "Configuration applied from template.",
+                          });
+                        }}
+                        onDeleteTemplate={async (templateId) => {
+                          await supabase.from('plan_templates').delete().eq('id', templateId);
+                          setSavedTemplates(prev => prev.filter(t => t.id !== templateId));
+                        }}
+                      />
+                      
+                      <PlanVersionHistory
+                        versions={planVersions}
+                        onRestoreVersion={(version) => {
+                          setGeneratedPlan(version.plan_data);
+                          toast({
+                            title: "Version Restored",
+                            description: `Restored to version ${version.version_number}`,
+                          });
+                        }}
+                      />
+                    </div>
 
-                <TabsContent value="kpis" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Key Performance Indicators</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-3">
-                        {generatedPlan.kpis?.map((kpi, index) => (
-                          <div key={index} className="p-3 border rounded-lg">
-                            <div className="font-medium">{(kpi as any).name || `KPI ${index + 1}`}</div>
-                            <div className="text-sm text-muted-foreground">{(kpi as any).description}</div>
-                            <div className="text-sm font-medium text-primary">
-                              Target: {(kpi as any).target || 'To be defined'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                    <PlanComments
+                      comments={planComments}
+                      currentUserId={user?.id}
+                      onAddComment={async (content, parentId) => {
+                        // Demo mode: just add to local state
+                        const newComment = {
+                          id: crypto.randomUUID(),
+                          content,
+                          user_id: user?.id || 'anonymous',
+                          user_name: 'You',
+                          parent_id: parentId,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                        };
+                        setPlanComments(prev => [...prev, newComment]);
+                      }}
+                      onDeleteComment={async (commentId) => {
+                        setPlanComments(prev => prev.filter(c => c.id !== commentId));
+                      }}
+                    />
 
-                <TabsContent value="risk" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5" />
-                        Risk Assessment
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {generatedPlan.risk_assessment ? (
-                        <div className="space-y-4">
-                          {Object.entries(generatedPlan.risk_assessment).map(([risk, details]) => (
-                            <div key={risk} className="p-3 border rounded-lg">
-                              <div className="font-medium capitalize">{risk.replace(/_/g, ' ')}</div>
-                              <div className="text-sm text-muted-foreground">{String(details)}</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">Risk assessment will be generated with the plan.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+                    {generatedPlans.length >= 2 && (
+                      <PlanComparison 
+                        plans={generatedPlans}
+                        onSelectPlan={(index) => {
+                          setGeneratedPlan(generatedPlans[index].plan);
+                          setRequirements(generatedPlans[index].requirements);
+                          toast({
+                            title: "Plan Selected",
+                            description: `Now viewing: ${generatedPlans[index].plan.title}`,
+                          });
+                        }}
+                      />
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </>
             ) : (
               <Card>
                 <CardHeader>
