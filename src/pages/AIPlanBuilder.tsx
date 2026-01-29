@@ -222,27 +222,50 @@ export default function AIPlanBuilder() {
   // Flatten for backwards compatibility
   const predefinedSkills = skillCategories.flatMap(cat => cat.skills);
 
-  const predefinedConstraints = [
-    // Budget
-    'Limited training budget', 'No external trainer budget', 'Cost-per-employee cap',
-    // Time
-    'Maximum 2 hours per week for training', 'Training only during work hours',
-    'No training during peak business periods', 'Must complete within 3 months',
-    'Employees cannot be absent for full-day sessions',
-    // Location
-    'Remote employees only', 'Multiple geographic locations', 'No travel allowed',
-    'Limited physical training space', 'Distributed workforce across time zones',
-    // Technology
-    'Limited internet connectivity', 'No access to external platforms',
-    'Mobile-only access for some employees', 'Legacy systems constraints',
-    // Organizational
-    'High employee turnover', 'Multilingual workforce', 'Shift workers availability',
-    'Union regulations on training time', 'Regulatory certification requirements',
-    'Accessibility requirements for disabled employees',
-    // Resources
-    'No dedicated training department', 'Limited internal subject matter experts',
-    'Seasonal workforce variations', 'Part-time employee inclusion required'
+  const constraintCategories = [
+    {
+      name: 'Budget',
+      constraints: ['Limited training budget', 'No external trainer budget', 'Cost-per-employee cap',
+        'Fixed annual training allocation', 'No budget for travel expenses', 'Shared budget with other departments']
+    },
+    {
+      name: 'Time',
+      constraints: ['Maximum 2 hours per week for training', 'Training only during work hours',
+        'No training during peak business periods', 'Must complete within 3 months',
+        'Employees cannot be absent for full-day sessions', 'Limited to after-hours training',
+        'Seasonal availability restrictions', 'Project deadline conflicts']
+    },
+    {
+      name: 'Location',
+      constraints: ['Remote employees only', 'Multiple geographic locations', 'No travel allowed',
+        'Limited physical training space', 'Distributed workforce across time zones',
+        'Field workers with no fixed location', 'International offices coordination']
+    },
+    {
+      name: 'Technology',
+      constraints: ['Limited internet connectivity', 'No access to external platforms',
+        'Mobile-only access for some employees', 'Legacy systems constraints',
+        'No video conferencing capabilities', 'Restricted software installation',
+        'BYOD (Bring Your Own Device) policy', 'No cloud storage access']
+    },
+    {
+      name: 'Organizational',
+      constraints: ['High employee turnover', 'Multilingual workforce', 'Shift workers availability',
+        'Union regulations on training time', 'Regulatory certification requirements',
+        'Accessibility requirements for disabled employees', 'Hierarchical approval processes',
+        'Cross-departmental coordination needed', 'Management buy-in required']
+    },
+    {
+      name: 'Resources',
+      constraints: ['No dedicated training department', 'Limited internal subject matter experts',
+        'Seasonal workforce variations', 'Part-time employee inclusion required',
+        'Contractors and temporary staff inclusion', 'No dedicated L&D team',
+        'Shared HR resources across locations', 'Limited administrative support']
+    }
   ];
+
+  // Flatten for backwards compatibility
+  const predefinedConstraints = constraintCategories.flatMap(cat => cat.constraints);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -1199,8 +1222,15 @@ export default function AIPlanBuilder() {
                         <SelectValue placeholder="Select from common constraints..." />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
-                        {predefinedConstraints.map((constraint, idx) => (
-                          <SelectItem key={idx} value={constraint}>{constraint}</SelectItem>
+                        {constraintCategories.map((category) => (
+                          <SelectGroup key={category.name}>
+                            <SelectLabel className="font-semibold text-primary">{category.name}</SelectLabel>
+                            {category.constraints.map((constraint, idx) => (
+                              <SelectItem key={`${category.name}-${idx}`} value={constraint}>
+                                {constraint}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
                         ))}
                       </SelectContent>
                     </Select>
