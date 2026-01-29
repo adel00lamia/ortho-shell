@@ -644,7 +644,7 @@ export default function AIPlanBuilder() {
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
         body: {
           requirements,
-          userId: user.id
+          userId: user?.id || 'anonymous'
         }
       });
 
