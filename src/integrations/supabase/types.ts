@@ -92,6 +92,44 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_evaluation_access_logs: {
+        Row: {
+          accessed_at: string
+          accessed_by: string
+          action: string
+          evaluation_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          accessed_by: string
+          action: string
+          evaluation_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          accessed_by?: string
+          action?: string
+          evaluation_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_evaluation_access_logs_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "performance_evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_evaluations: {
         Row: {
           areas_for_improvement: string[] | null
