@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -9,15 +10,37 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authenticate the request
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {
     const { objectives, diagnosticData } = await req.json();
 
-    console.log('Generating training plan with data:', { objectives, diagnosticData });
+    console.log('Generating training plan for user:', user.id);
 
     const prompt = `You are an expert training consultant. Based on the following diagnostic data, generate a comprehensive annual training plan in JSON format.
 
@@ -73,17 +96,7 @@ Generate a JSON response with this exact structure:
       "modules": ["module1", "module2"]
     }
   ]
-}
-
-Important guidelines:
-1. Ensure OFPPT compliance for Moroccan companies
-2. Consider GIAC certification for cybersecurity modules
-3. Balance internal/external training based on budget and constraints
-4. Include measurable KPIs
-5. Suggest realistic timeframes
-6. Factor in the specified budget range
-7. Align with the stated objectives and skill gaps
-8. Consider language preferences for training delivery`;
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -107,19 +120,13 @@ Important guidelines:
     }
 
     const data = await response.json();
-    console.log('OpenAI response:', data);
-
     const generatedContent = data.choices[0].message.content;
     
-    // Parse the JSON response
     let trainingPlan;
     try {
       trainingPlan = JSON.parse(generatedContent);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      console.log('Raw response:', generatedContent);
-      
-      // Fallback plan if JSON parsing fails
       trainingPlan = {
         title: "Custom Annual Training Plan",
         description: "AI-generated training plan based on your diagnostic assessment",
@@ -141,26 +148,12 @@ Important guidelines:
         estimatedBudget: 50000,
         type: "mixed",
         internalExternalSplit: { internal: 60, external: 40 },
-        kpis: {
-          completionRate: 80,
-          satisfactionScore: 4.0,
-          skillImprovement: 35,
-          roiTarget: 250
-        },
+        kpis: { completionRate: 80, satisfactionScore: 4.0, skillImprovement: 35, roiTarget: 250 },
         giacApproved: false,
         ofpptCompliant: true,
-        implementationPhases: [
-          {
-            phase: "Phase 1",
-            months: "1-6",
-            focus: "Foundation Building",
-            modules: ["Foundation Skills Development"]
-          }
-        ]
+        implementationPhases: [{ phase: "Phase 1", months: "1-6", focus: "Foundation Building", modules: ["Foundation Skills Development"] }]
       };
     }
-
-    console.log('Generated training plan:', trainingPlan);
 
     return new Response(JSON.stringify(trainingPlan), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -168,10 +161,7 @@ Important guidelines:
 
   } catch (error) {
     console.error('Error in ai-plan-generator function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      details: 'Failed to generate training plan'
-    }), {
+    return new Response(JSON.stringify({ error: 'Failed to generate training plan' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

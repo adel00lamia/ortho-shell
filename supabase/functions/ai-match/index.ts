@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,17 +8,39 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authenticate the request
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {
     const { skills, budget, duration, type } = await req.json();
 
-    console.log('Finding AI matches for:', { skills, budget, duration, type });
+    console.log('Finding AI matches for user:', user.id, { skills, budget, duration, type });
 
-    // Mock course database for AI matching (enhanced with more courses)
+    // Mock course database for AI matching
     const availableCourses = [
       {
         id: '1',
@@ -105,14 +128,12 @@ serve(async (req) => {
       }
     ];
 
-    // Enhanced matching logic without external API calls
     const matches = availableCourses
       .map(course => {
         let matchScore = 0;
-        let matchReasons = [];
+        const matchReasons: string[] = [];
 
-        // Skills matching (highest weight: 40%)
-        const skillMatches = skills.filter(skill => 
+        const skillMatches = (skills || []).filter((skill: string) => 
           course.skills.some(courseSkill => 
             courseSkill.toLowerCase().includes(skill.toLowerCase()) ||
             skill.toLowerCase().includes(courseSkill.toLowerCase())
@@ -120,12 +141,11 @@ serve(async (req) => {
         );
         
         if (skillMatches.length > 0) {
-          matchScore += (skillMatches.length / skills.length) * 0.4;
-          matchReasons.push(`Matches ${skillMatches.length}/${skills.length} required skills`);
+          matchScore += (skillMatches.length / Math.max(skills?.length || 1, 1)) * 0.4;
+          matchReasons.push(`Matches ${skillMatches.length}/${skills?.length || 0} required skills`);
         }
 
-        // Budget matching (25%)
-        if (budget && course.price <= budget * 0.4) { // Allow up to 40% of total budget per course
+        if (budget && course.price <= budget * 0.4) {
           matchScore += 0.25;
           matchReasons.push('Within budget range');
         } else if (budget && course.price <= budget * 0.6) {
@@ -133,13 +153,9 @@ serve(async (req) => {
           matchReasons.push('Slightly above budget but high value');
         }
 
-        // Rating quality (15%)
         matchScore += (course.rating / 5) * 0.15;
-        if (course.rating >= 4.5) {
-          matchReasons.push('Highly rated course');
-        }
+        if (course.rating >= 4.5) matchReasons.push('Highly rated course');
 
-        // Duration compatibility (10%)
         const courseDurationHours = parseInt(course.duration);
         const targetDurationHours = parseInt(duration) || 40;
         const durationDiff = Math.abs(courseDurationHours - targetDurationHours) / targetDurationHours;
@@ -148,7 +164,6 @@ serve(async (req) => {
           matchReasons.push('Ideal duration match');
         }
 
-        // Type matching (10%)
         if (type === 'any' || course.type === type) {
           matchScore += 0.1;
           matchReasons.push(`${course.type} delivery format`);
@@ -156,25 +171,22 @@ serve(async (req) => {
 
         return {
           ...course,
-          matchScore: Math.min(matchScore, 0.95), // Cap at 95%
+          matchScore: Math.min(matchScore, 0.95),
           matchReason: matchReasons.join(', ') || 'General recommendation'
         };
       })
-      .filter(course => course.matchScore > 0.3) // Only include courses with decent match
+      .filter(course => course.matchScore > 0.3)
       .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 4); // Return top 4 matches
+      .slice(0, 4);
 
-    console.log(`Found ${matches.length} matching courses`);
+    console.log(`Found ${matches.length} matching courses for user:`, user.id);
 
     return new Response(JSON.stringify({ matches }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in ai-match function:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to find course matches',
-      details: error.message 
-    }), {
+    return new Response(JSON.stringify({ error: 'Failed to find course matches' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

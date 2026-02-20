@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -8,15 +9,37 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { requirements, userId } = await req.json();
+  // Authenticate the request
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
-    console.log('Advanced plan generation for user:', userId);
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const { requirements } = await req.json();
+
+    console.log('Advanced plan generation for user:', user.id);
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
@@ -100,21 +123,7 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "culture_transformation": "Building a learning organization"
     }
   }
-}
-
-Create a plan that is:
-1. Innovative and forward-thinking with modern learning approaches
-2. Realistic and achievable within the budget and timeline
-3. Aligned with business objectives and industry best practices
-4. Includes diverse learning modalities (online, hybrid, mentorship, microlearning)
-5. Has clear progression paths and skill development stages
-6. Includes measurable KPIs with baseline and target metrics
-7. Considers OFPPT compliance and Moroccan market context
-8. Addresses modern training delivery methods and technologies
-9. Incorporates engagement features like gamification and social learning
-10. Provides comprehensive risk assessment and mitigation strategies
-11. Focuses on ROI optimization and business impact
-12. Includes sustainability and long-term development planning`;
+}`;
 
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
@@ -148,19 +157,7 @@ ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
 
 Additional Context:
-${requirements.context || 'No additional context provided'}
-
-Generate a detailed, innovative training plan that:
-1. Maximizes ROI and ensures measurable skill development
-2. Aligns with modern training methodologies and best practices
-3. Includes specific recommendations for the ${requirements.industry || 'general'} industry
-4. Considers the company size of ${requirements.companySize || 'medium-sized organization'}
-5. Incorporates requested engagement features and delivery methods
-6. Provides creative and innovative learning approaches
-7. Addresses sustainability and long-term impact
-8. Includes comprehensive risk assessment and mitigation
-9. Focuses on business alignment and measurable outcomes
-10. Considers Moroccan market context and compliance requirements`;
+${requirements.context || 'No additional context provided'}`;
 
     console.log('Calling Lovable AI Gateway...');
 
@@ -185,49 +182,32 @@ Generate a detailed, innovative training plan that:
       console.error('AI Gateway error:', response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          error: 'Rate limit exceeded. Please try again in a few moments.',
-        }), {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a few moments.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      
       if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: 'Payment required. Please add credits to continue.',
-        }), {
+        return new Response(JSON.stringify({ error: 'Payment required. Please add credits to continue.' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      
       throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('AI response received successfully');
-
     const content = data.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error('No content in AI response');
-    }
+    if (!content) throw new Error('No content in AI response');
 
-    // Parse the JSON response
     let planData;
     try {
-      // Try to extract JSON from the response (it might be wrapped in markdown code blocks)
       let jsonContent = content;
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonContent = jsonMatch[1].trim();
-      }
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
       planData = JSON.parse(jsonContent);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      console.log('Raw response:', content);
-      
-      // Create a fallback plan structure
       planData = {
         plan: {
           title: `Training Plan for ${requirements.company || 'Your Organization'}`,
@@ -247,20 +227,6 @@ Generate a detailed, innovative training plan that:
               engagement_features: ["gamification", "peer_learning"],
               assessment_methods: ["practical", "peer_review"],
               certification_level: "intermediate"
-            },
-            {
-              title: "Advanced Skill Mastery",
-              description: "Deep dive into specialized competencies",
-              duration: "6 weeks",
-              type: "mixed",
-              skills_covered: requirements.targetSkills?.slice(3, 6) || ["Technical Skills", "Project Management"],
-              prerequisites: ["Foundation Skills Development"],
-              delivery_method: "workshop",
-              resources_needed: ["Expert trainers", "Case studies"],
-              estimated_cost: Math.round((requirements.budget || 50000) * 0.4),
-              engagement_features: ["mentorship", "real_projects"],
-              assessment_methods: ["practical", "presentation"],
-              certification_level: "advanced"
             }
           ],
           budget_breakdown: {
@@ -271,57 +237,20 @@ Generate a detailed, innovative training plan that:
             assessment_certification: Math.round((requirements.budget || 50000) * 0.1),
             contingency: Math.round((requirements.budget || 50000) * 0.1)
           },
-          kpis: [
-            {
-              name: "Training Completion Rate",
-              description: "Percentage of enrolled participants completing the program",
-              target: "90%",
-              measurement_frequency: "Monthly",
-              baseline: "Current completion rates",
-              improvement_expected: "20% improvement"
-            },
-            {
-              name: "Skill Improvement Score",
-              description: "Average improvement in assessed skill levels",
-              target: "40% improvement",
-              measurement_frequency: "Quarterly",
-              baseline: "Pre-training assessment",
-              improvement_expected: "40% improvement"
-            }
-          ],
-          recommendations: [
-            "Start with a pilot group to refine the program",
-            "Integrate regular feedback loops for continuous improvement",
-            "Consider blended learning approaches for maximum engagement",
-            "Establish clear success metrics from the beginning"
-          ],
-          risk_assessment: {
-            high_risks: ["Low participation rates", "Budget overruns"],
-            medium_risks: ["Technology adoption challenges", "Scheduling conflicts"],
-            mitigation_strategies: ["Mandatory participation with manager support", "Phased implementation approach"],
-            contingency_plans: ["Virtual alternatives for in-person sessions", "Modular content for flexibility"]
-          },
-          success_metrics: [
-            "90% training completion rate",
-            "40% improvement in assessed skills",
-            "85% participant satisfaction score",
-            "Measurable ROI within 12 months"
-          ]
+          kpis: [{ name: "Training Completion Rate", description: "Percentage of enrolled participants completing the program", target: "90%", measurement_frequency: "Monthly", baseline: "Current completion rates", improvement_expected: "20% improvement" }],
+          recommendations: ["Start with a pilot group to refine the program", "Integrate regular feedback loops"],
+          risk_assessment: { high_risks: ["Low participation rates"], medium_risks: ["Technology adoption challenges"], mitigation_strategies: ["Mandatory participation with manager support"], contingency_plans: ["Virtual alternatives for in-person sessions"] },
+          success_metrics: ["90% training completion rate", "40% improvement in assessed skills"]
         }
       };
     }
-
-    console.log('Advanced plan generated successfully');
 
     return new Response(JSON.stringify(planData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in ai-advanced-planner function:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to generate advanced training plan',
-      details: error.message 
-    }), {
+    return new Response(JSON.stringify({ error: 'Failed to generate advanced training plan' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
