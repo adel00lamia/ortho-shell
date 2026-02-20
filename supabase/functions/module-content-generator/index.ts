@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -9,15 +10,37 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authenticate the request
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {
     const { title, description, skills, audience, duration } = await req.json();
 
-    console.log('Generating content for module:', { title, description, skills, audience, duration });
+    console.log('Generating content for module for user:', user.id, { title });
 
     const systemPrompt = `You are an expert training content creator. Generate comprehensive training module content including slides, script, and quiz questions.
 
@@ -52,8 +75,8 @@ Make content engaging, practical, and aligned with the learning objectives.`;
 
 Title: ${title}
 Description: ${description}
-Skills to cover: ${skills.join(', ')}
-Target audience: ${audience.join(', ')}
+Skills to cover: ${(skills || []).join(', ')}
+Target audience: ${(audience || []).join(', ')}
 Duration: ${duration} hours
 
 Generate comprehensive content including slides, instructor script, and assessment quiz. 
@@ -83,46 +106,28 @@ Ensure content is practical, engaging, and includes real-world examples.`;
     }
 
     const data = await response.json();
-    console.log('OpenAI response received');
 
     let generatedContent;
     try {
       generatedContent = JSON.parse(data.choices[0].message.content);
     } catch (parseError) {
       console.error('Failed to parse OpenAI response as JSON:', parseError);
-      // Fallback: create structured content from the raw response
       const rawContent = data.choices[0].message.content;
       generatedContent = {
         content: {
-          slides: [
-            {
-              title: "Generated Content",
-              content: rawContent
-            }
-          ],
+          slides: [{ title: "Generated Content", content: rawContent }],
           script: rawContent,
-          quiz: [
-            {
-              question: "What is the main topic of this module?",
-              options: [title, "General knowledge", "Other topic", "Not specified"],
-              correct: 0
-            }
-          ]
+          quiz: [{ question: "What is the main topic of this module?", options: [title, "General knowledge", "Other topic", "Not specified"], correct: 0 }]
         }
       };
     }
-
-    console.log('Content generated successfully');
 
     return new Response(JSON.stringify(generatedContent), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in module-content-generator function:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to generate content',
-      details: error.message 
-    }), {
+    return new Response(JSON.stringify({ error: 'Failed to generate content' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
