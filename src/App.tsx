@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WorkflowProvider } from "@/contexts/WorkflowContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
@@ -23,6 +24,17 @@ import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar
 import NotFound from "./pages/NotFound";
 import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
 
+const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <div className="flex w-full min-h-screen">
+      <HierarchicalSidebar />
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
+    </div>
+  </ProtectedRoute>
+);
+
 const App = () => (
   <AuthProvider>
     <WorkflowProvider>
@@ -31,194 +43,44 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Auth routes without sidebar */}
+              {/* Public routes */}
               <Route path="/auth" element={<Auth />} />
               <Route path="/pricing" element={<Pricing />} />
               
               {/* Root redirect */}
               <Route path="/" element={<RoleBasedRedirect />} />
               
-              {/* All dashboard routes with sidebar */}
-              <Route
-                path="/dashboard"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Dashboard />
-                    </main>
-                  </div>
-                }
-              />
+              {/* Protected routes with sidebar */}
+              <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
               
               {/* Workflow Routes - Assess */}
-              <Route
-                path="/workflow/assess/diagnostic"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Diagnostic />
-                    </main>
-                  </div>
-                }
-              />
-              <Route
-                path="/workflow/assess/performance"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <PerformanceEvaluation />
-                    </main>
-                  </div>
-                }
-              />
-              <Route
-                path="/workflow/assess/benchmark"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Benchmark />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/workflow/assess/diagnostic" element={<ProtectedLayout><Diagnostic /></ProtectedLayout>} />
+              <Route path="/workflow/assess/performance" element={<ProtectedLayout><PerformanceEvaluation /></ProtectedLayout>} />
+              <Route path="/workflow/assess/benchmark" element={<ProtectedLayout><Benchmark /></ProtectedLayout>} />
               
               {/* Workflow Routes - Plan */}
-              <Route
-                path="/workflow/plan/builder"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <AIPlanBuilder />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/workflow/plan/builder" element={<ProtectedLayout><AIPlanBuilder /></ProtectedLayout>} />
               <Route path="/workflow/plan/plans" element={<Navigate to="/dashboard" replace />} />
-              <Route
-                path="/workflow/plan/plans/:id"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <TrainingPlan />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/workflow/plan/plans/:id" element={<ProtectedLayout><TrainingPlan /></ProtectedLayout>} />
               
               {/* Workflow Routes - Execute */}
-              <Route
-                path="/workflow/execute/modules"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <ModuleStudio />
-                    </main>
-                  </div>
-                }
-              />
-              <Route
-                path="/workflow/execute/modules/:planId"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <ModuleStudio />
-                    </main>
-                  </div>
-                }
-              />
-              <Route
-                path="/workflow/execute/modules/:planId/:moduleId"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <ModuleStudio />
-                    </main>
-                  </div>
-                }
-              />
-              <Route
-                path="/workflow/execute/marketplace"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Marketplace />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/workflow/execute/modules" element={<ProtectedLayout><ModuleStudio /></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules/:planId" element={<ProtectedLayout><ModuleStudio /></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ProtectedLayout><ModuleStudio /></ProtectedLayout>} />
+              <Route path="/workflow/execute/marketplace" element={<ProtectedLayout><Marketplace /></ProtectedLayout>} />
               
               {/* Workflow Routes - Track */}
-              <Route
-                path="/workflow/track/analytics"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Analytics />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/workflow/track/analytics" element={<ProtectedLayout><Analytics /></ProtectedLayout>} />
               <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
-              <Route
-                path="/workflow/track/certificates"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <CertificateGenerator />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/workflow/track/certificates" element={<ProtectedLayout><CertificateGenerator /></ProtectedLayout>} />
               
               {/* Management Routes */}
-              <Route
-                path="/manage/users"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <UserManagement />
-                    </main>
-                  </div>
-                }
-              />
-              <Route
-                path="/manage/team"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <TeamCollaboration />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/manage/users" element={<ProtectedLayout><UserManagement /></ProtectedLayout>} />
+              <Route path="/manage/team" element={<ProtectedLayout><TeamCollaboration /></ProtectedLayout>} />
               <Route path="/manage/settings" element={<Navigate to="/dashboard" replace />} />
               
               {/* Billing */}
-              <Route
-                path="/billing"
-                element={
-                  <div className="flex w-full min-h-screen">
-                    <HierarchicalSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Billing />
-                    </main>
-                  </div>
-                }
-              />
+              <Route path="/billing" element={<ProtectedLayout><Billing /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
               <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />
