@@ -7,6 +7,7 @@ import { WorkflowProvider } from "@/contexts/WorkflowContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Diagnostic from "./pages/Diagnostic";
@@ -45,6 +46,7 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Pricing />} />
               
               {/* Root redirect */}
