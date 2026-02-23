@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -9,17 +10,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const requestSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().max(5000).optional().default(''),
+  skills: z.array(z.string().max(200)).max(50).optional().default([]),
+  audience: z.array(z.string().max(200)).max(20).optional().default([]),
+  duration: z.number().min(0.5).max(500).optional().default(8),
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Authenticate the request
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -32,13 +39,20 @@ serve(async (req) => {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
   try {
-    const { title, description, skills, audience, duration } = await req.json();
+    const rawBody = await req.json();
+    const parsed = requestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: 'Invalid input', details: parsed.error.flatten() }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { title, description, skills, audience, duration } = parsed.data;
 
     console.log('Generating content for module for user:', user.id, { title });
 
@@ -47,20 +61,9 @@ serve(async (req) => {
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
   "content": {
-    "slides": [
-      {
-        "title": "slide title",
-        "content": "detailed slide content with key points, examples, and explanations"
-      }
-    ],
+    "slides": [{ "title": "slide title", "content": "detailed slide content" }],
     "script": "complete training script for instructor",
-    "quiz": [
-      {
-        "question": "question text",
-        "options": ["option1", "option2", "option3", "option4"],
-        "correct": 0
-      }
-    ]
+    "quiz": [{ "question": "question text", "options": ["option1", "option2", "option3", "option4"], "correct": 0 }]
   }
 }
 
@@ -75,11 +78,11 @@ Make content engaging, practical, and aligned with the learning objectives.`;
 
 Title: ${title}
 Description: ${description}
-Skills to cover: ${(skills || []).join(', ')}
-Target audience: ${(audience || []).join(', ')}
+Skills to cover: ${skills.join(', ')}
+Target audience: ${audience.join(', ')}
 Duration: ${duration} hours
 
-Generate comprehensive content including slides, instructor script, and assessment quiz. 
+Generate comprehensive content including slides, instructor script, and assessment quiz.
 Ensure content is practical, engaging, and includes real-world examples.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -128,8 +131,7 @@ Ensure content is practical, engaging, and includes real-world examples.`;
   } catch (error) {
     console.error('Error in module-content-generator function:', error);
     return new Response(JSON.stringify({ error: 'Failed to generate content' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
