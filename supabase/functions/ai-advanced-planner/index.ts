@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -8,17 +9,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const requirementsSchema = z.object({
+  requirements: z.object({
+    company: z.string().max(200).optional().default(''),
+    industry: z.string().max(100).optional().default('General'),
+    companySize: z.string().max(50).optional().default('Medium'),
+    budget: z.number().min(0).max(100_000_000).optional().default(50000),
+    duration: z.number().int().min(1).max(60).optional().default(12),
+    objectives: z.array(z.string().max(500)).max(20).optional().default([]),
+    targetSkills: z.array(z.string().max(200)).max(50).optional().default([]),
+    constraints: z.array(z.string().max(500)).max(20).optional().default([]),
+    context: z.string().max(5000).optional().default(''),
+    template: z.string().max(200).optional().default(''),
+    pack: z.string().max(200).optional().default(''),
+    customizations: z.object({
+      deliveryMethods: z.array(z.string().max(50)).max(10).optional().default([]),
+      certification: z.boolean().optional().default(false),
+      mentorship: z.boolean().optional().default(false),
+      gamification: z.boolean().optional().default(false),
+      socialLearning: z.boolean().optional().default(false),
+      microlearning: z.boolean().optional().default(false),
+    }).optional().default({}),
+  }),
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Authenticate the request
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -31,13 +54,19 @@ serve(async (req) => {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
   try {
-    const { requirements } = await req.json();
+    const rawBody = await req.json();
+    const parsed = requirementsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: 'Invalid input', details: parsed.error.flatten() }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { requirements } = parsed.data;
 
     console.log('Advanced plan generation for user:', user.id);
 
@@ -90,36 +119,28 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       }
     ],
     "recommendations": [
-      "Strategic recommendation with innovation focus",
-      "Technology integration suggestion",
-      "ROI optimization strategy",
-      "Sustainability and scalability advice"
+      "Strategic recommendation with innovation focus"
     ],
     "risk_assessment": {
-      "high_risks": ["Risk 1 with impact assessment", "Risk 2 with probability"],
-      "medium_risks": ["Medium risk 1", "Medium risk 2"],
-      "mitigation_strategies": ["Comprehensive strategy 1", "Proactive strategy 2"],
-      "contingency_plans": ["Backup plan 1", "Alternative approach 2"]
+      "high_risks": ["Risk 1"],
+      "medium_risks": ["Medium risk 1"],
+      "mitigation_strategies": ["Strategy 1"],
+      "contingency_plans": ["Backup plan 1"]
     },
-    "success_metrics": [
-      "Quantifiable success indicator 1",
-      "Behavioral change metric 2",
-      "Business impact measurement 3",
-      "ROI calculation method 4"
-    ],
+    "success_metrics": ["Metric 1"],
     "innovation_features": {
       "ai_integration": "How AI will enhance the learning experience",
-      "personalization": "Adaptive learning paths and customization",
-      "social_learning": "Peer collaboration and knowledge sharing",
-      "microlearning": "Bite-sized content and just-in-time learning",
-      "gamification": "Points, badges, leaderboards, and challenges",
-      "virtual_reality": "Immersive learning experiences if applicable",
-      "mobile_learning": "On-the-go learning accessibility"
+      "personalization": "Adaptive learning paths",
+      "social_learning": "Peer collaboration",
+      "microlearning": "Bite-sized content",
+      "gamification": "Points, badges, leaderboards",
+      "virtual_reality": "Immersive learning if applicable",
+      "mobile_learning": "On-the-go accessibility"
     },
     "sustainability_plan": {
-      "long_term_vision": "3-5 year learning and development roadmap",
-      "continuous_improvement": "Feedback loops and iterative enhancement",
-      "knowledge_retention": "Strategies to ensure lasting learning impact",
+      "long_term_vision": "3-5 year roadmap",
+      "continuous_improvement": "Feedback loops",
+      "knowledge_retention": "Retention strategies",
       "culture_transformation": "Building a learning organization"
     }
   }
@@ -128,22 +149,22 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
 Company: ${requirements.company || 'Not specified'}
-Industry: ${requirements.industry || 'General'}
-Company Size: ${requirements.companySize || 'Medium'}
-Budget: ${requirements.budget || 50000} MAD
-Duration: ${requirements.duration || 12} months
+Industry: ${requirements.industry}
+Company Size: ${requirements.companySize}
+Budget: ${requirements.budget} MAD
+Duration: ${requirements.duration} months
 
 Training Objectives:
-${requirements.objectives?.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}
+${requirements.objectives.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}
 
 Target Skills:
-${requirements.targetSkills?.map((skill: string) => `- ${skill}`).join('\n') || '- General skills development'}
+${requirements.targetSkills.map((skill: string) => `- ${skill}`).join('\n') || '- General skills development'}
 
 Constraints:
-${requirements.constraints?.map((constraint: string) => `- ${constraint}`).join('\n') || '- None specified'}
+${requirements.constraints.map((c: string) => `- ${c}`).join('\n') || '- None specified'}
 
 Selected Delivery Methods:
-${requirements.customizations?.deliveryMethods?.map((method: string) => `- ${method}`).join('\n') || '- online'}
+${requirements.customizations?.deliveryMethods?.map((m: string) => `- ${m}`).join('\n') || '- online'}
 
 Engagement Features Requested:
 ${requirements.customizations?.certification ? '- Certification Program' : ''}
@@ -180,17 +201,14 @@ ${requirements.context || 'No additional context provided'}`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI Gateway error:', response.status, errorText);
-      
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a few moments.' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: 'Payment required. Please add credits to continue.' }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       throw new Error(`AI Gateway error: ${response.status}`);
@@ -212,30 +230,28 @@ ${requirements.context || 'No additional context provided'}`;
         plan: {
           title: `Training Plan for ${requirements.company || 'Your Organization'}`,
           description: "AI-generated comprehensive training plan based on your requirements.",
-          timeline: `${requirements.duration || 12} months implementation period`,
-          modules: [
-            {
-              title: "Foundation Skills Development",
-              description: "Building core competencies aligned with organizational objectives",
-              duration: "4 weeks",
-              type: "mixed",
-              skills_covered: requirements.targetSkills?.slice(0, 3) || ["Communication", "Leadership", "Problem Solving"],
-              prerequisites: [],
-              delivery_method: "hybrid",
-              resources_needed: ["Training materials", "Online platform access"],
-              estimated_cost: Math.round((requirements.budget || 50000) * 0.3),
-              engagement_features: ["gamification", "peer_learning"],
-              assessment_methods: ["practical", "peer_review"],
-              certification_level: "intermediate"
-            }
-          ],
+          timeline: `${requirements.duration} months implementation period`,
+          modules: [{
+            title: "Foundation Skills Development",
+            description: "Building core competencies aligned with organizational objectives",
+            duration: "4 weeks",
+            type: "mixed",
+            skills_covered: requirements.targetSkills.slice(0, 3),
+            prerequisites: [],
+            delivery_method: "hybrid",
+            resources_needed: ["Training materials", "Online platform access"],
+            estimated_cost: Math.round(requirements.budget * 0.3),
+            engagement_features: ["gamification", "peer_learning"],
+            assessment_methods: ["practical", "peer_review"],
+            certification_level: "intermediate"
+          }],
           budget_breakdown: {
-            internal_training: Math.round((requirements.budget || 50000) * 0.3),
-            external_courses: Math.round((requirements.budget || 50000) * 0.25),
-            materials_resources: Math.round((requirements.budget || 50000) * 0.15),
-            technology_platform: Math.round((requirements.budget || 50000) * 0.1),
-            assessment_certification: Math.round((requirements.budget || 50000) * 0.1),
-            contingency: Math.round((requirements.budget || 50000) * 0.1)
+            internal_training: Math.round(requirements.budget * 0.3),
+            external_courses: Math.round(requirements.budget * 0.25),
+            materials_resources: Math.round(requirements.budget * 0.15),
+            technology_platform: Math.round(requirements.budget * 0.1),
+            assessment_certification: Math.round(requirements.budget * 0.1),
+            contingency: Math.round(requirements.budget * 0.1)
           },
           kpis: [{ name: "Training Completion Rate", description: "Percentage of enrolled participants completing the program", target: "90%", measurement_frequency: "Monthly", baseline: "Current completion rates", improvement_expected: "20% improvement" }],
           recommendations: ["Start with a pilot group to refine the program", "Integrate regular feedback loops"],
@@ -251,8 +267,7 @@ ${requirements.context || 'No additional context provided'}`;
   } catch (error) {
     console.error('Error in ai-advanced-planner function:', error);
     return new Response(JSON.stringify({ error: 'Failed to generate advanced training plan' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
