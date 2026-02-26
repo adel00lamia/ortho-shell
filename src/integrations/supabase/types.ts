@@ -140,6 +140,7 @@ export type Database = {
         Row: {
           approval_date: string | null
           company_id: string
+          cost_per_hour_per_person: number | null
           created_at: string
           created_by: string
           exercise_year: number
@@ -151,12 +152,15 @@ export type Database = {
           submission_date: string | null
           title: string
           total_amount: number | null
+          total_hours: number | null
+          total_participants: number | null
           training_plan_id: string | null
           updated_at: string
         }
         Insert: {
           approval_date?: string | null
           company_id: string
+          cost_per_hour_per_person?: number | null
           created_at?: string
           created_by: string
           exercise_year?: number
@@ -168,12 +172,15 @@ export type Database = {
           submission_date?: string | null
           title: string
           total_amount?: number | null
+          total_hours?: number | null
+          total_participants?: number | null
           training_plan_id?: string | null
           updated_at?: string
         }
         Update: {
           approval_date?: string | null
           company_id?: string
+          cost_per_hour_per_person?: number | null
           created_at?: string
           created_by?: string
           exercise_year?: number
@@ -185,6 +192,8 @@ export type Database = {
           submission_date?: string | null
           title?: string
           total_amount?: number | null
+          total_hours?: number | null
+          total_participants?: number | null
           training_plan_id?: string | null
           updated_at?: string
         }
