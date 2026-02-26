@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import {
   Plus, Upload, FileText, CheckCircle2, Clock, AlertCircle, 
-  Trash2, Eye, Download, FolderOpen, Send, XCircle, DollarSign
+  Trash2, Eye, Download, FolderOpen, Send, XCircle, DollarSign, Calculator
 } from 'lucide-react';
 
 const DOCUMENT_TYPES = [
@@ -49,6 +49,9 @@ interface Dossier {
   status: string;
   total_amount: number;
   reimbursement_amount: number;
+  total_hours: number;
+  total_participants: number;
+  cost_per_hour_per_person: number;
   submission_date: string | null;
   approval_date: string | null;
   reimbursement_date: string | null;
@@ -85,7 +88,27 @@ export default function OFPPTReimbursement() {
   const [newTitle, setNewTitle] = useState('');
   const [newYear, setNewYear] = useState(new Date().getFullYear().toString());
   const [newTotalAmount, setNewTotalAmount] = useState('');
+  const [newHours, setNewHours] = useState('');
+  const [newParticipants, setNewParticipants] = useState('');
+  const [newCostPerHourPerson, setNewCostPerHourPerson] = useState('');
   const [newNotes, setNewNotes] = useState('');
+
+  // CSF calculation constants
+  const CSF_RATE = 0.7; // 70% reimbursement
+  const CSF_CAP_PER_HOUR_PERSON = 40; // 40 DH/hour/person cap
+
+  const calculateReimbursement = (hours: number, participants: number, costPerHourPerson: number) => {
+    const cappedCost = Math.min(costPerHourPerson, CSF_CAP_PER_HOUR_PERSON);
+    const totalEligible = cappedCost * hours * participants;
+    const reimbursement = totalEligible * CSF_RATE;
+    return { cappedCost, totalEligible, reimbursement };
+  };
+
+  const newCalc = calculateReimbursement(
+    parseFloat(newHours) || 0,
+    parseInt(newParticipants) || 0,
+    parseFloat(newCostPerHourPerson) || 0,
+  );
 
   // Upload form
   const [uploadDocType, setUploadDocType] = useState('');
@@ -144,10 +167,19 @@ export default function OFPPTReimbursement() {
       return;
     }
 
+    const hours = parseFloat(newHours) || 0;
+    const participants = parseInt(newParticipants) || 0;
+    const costPerHourPerson = parseFloat(newCostPerHourPerson) || 0;
+    const calc = calculateReimbursement(hours, participants, costPerHourPerson);
+
     const { error } = await supabase.from('ofppt_reimbursement_dossiers').insert({
       title: newTitle,
       exercise_year: parseInt(newYear),
-      total_amount: parseFloat(newTotalAmount) || 0,
+      total_amount: parseFloat(newTotalAmount) || calc.totalEligible,
+      reimbursement_amount: calc.reimbursement,
+      total_hours: hours,
+      total_participants: participants,
+      cost_per_hour_per_person: costPerHourPerson,
       notes: newNotes || null,
       company_id: profile.company_id,
       created_by: user?.id,
@@ -160,6 +192,9 @@ export default function OFPPTReimbursement() {
       setShowNewDossier(false);
       setNewTitle('');
       setNewTotalAmount('');
+      setNewHours('');
+      setNewParticipants('');
+      setNewCostPerHourPerson('');
       setNewNotes('');
       fetchDossiers();
     }
@@ -264,7 +299,7 @@ export default function OFPPTReimbursement() {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />{r.newDossier}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{r.createDossier}</DialogTitle>
               <DialogDescription>{r.createDossierDesc}</DialogDescription>
@@ -278,9 +313,51 @@ export default function OFPPTReimbursement() {
                 <Label>{r.exerciseYear}</Label>
                 <Input type="number" value={newYear} onChange={e => setNewYear(e.target.value)} />
               </div>
+
+              {/* CSF Calculator */}
+              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                <h4 className="font-medium flex items-center gap-2 text-sm">
+                  <Calculator className="h-4 w-4" />{r.calculator}
+                </h4>
+                <p className="text-xs text-muted-foreground">{r.calculatorDesc}</p>
+                <div className="grid gap-3 grid-cols-3">
+                  <div>
+                    <Label className="text-xs">{r.totalHours}</Label>
+                    <Input type="number" value={newHours} onChange={e => setNewHours(e.target.value)} placeholder="0" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">{r.participants}</Label>
+                    <Input type="number" value={newParticipants} onChange={e => setNewParticipants(e.target.value)} placeholder="0" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">{r.costPerHourPerson} (MAD)</Label>
+                    <Input type="number" value={newCostPerHourPerson} onChange={e => setNewCostPerHourPerson(e.target.value)} placeholder="0" />
+                  </div>
+                </div>
+                {(parseFloat(newHours) > 0 && parseInt(newParticipants) > 0) && (
+                  <div className="border-t pt-3 space-y-1.5 text-sm">
+                    {parseFloat(newCostPerHourPerson) > CSF_CAP_PER_HOUR_PERSON && (
+                      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        <span className="text-xs">{r.capApplied} ({CSF_CAP_PER_HOUR_PERSON} MAD/h/{r.person})</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{r.eligibleAmount}:</span>
+                      <span className="font-medium">{newCalc.totalEligible.toLocaleString()} MAD</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{r.reimbursementRate} (70%):</span>
+                      <span className="font-bold text-primary">{newCalc.reimbursement.toLocaleString()} MAD</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <Label>{r.totalAmount} (MAD)</Label>
-                <Input type="number" value={newTotalAmount} onChange={e => setNewTotalAmount(e.target.value)} placeholder="0.00" />
+                <Input type="number" value={newTotalAmount} onChange={e => setNewTotalAmount(e.target.value)} placeholder={newCalc.totalEligible > 0 ? newCalc.totalEligible.toString() : '0.00'} />
+                <p className="text-xs text-muted-foreground mt-1">{r.totalAmountHint}</p>
               </div>
               <div>
                 <Label>{r.notes}</Label>
@@ -433,14 +510,26 @@ export default function OFPPTReimbursement() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{r.totalHours}</p>
+                      <p className="text-lg font-semibold">{selectedDossier.total_hours || 0}h</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">{r.participants}</p>
+                      <p className="text-lg font-semibold">{selectedDossier.total_participants || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">{r.costPerHourPerson}</p>
+                      <p className="text-lg font-semibold">{(selectedDossier.cost_per_hour_per_person || 0).toLocaleString()} MAD</p>
+                    </div>
                     <div>
                       <p className="text-sm text-muted-foreground">{r.totalAmount}</p>
                       <p className="text-lg font-semibold">{(selectedDossier.total_amount || 0).toLocaleString()} MAD</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">{r.reimbursementAmount}</p>
-                      <p className="text-lg font-semibold">{(selectedDossier.reimbursement_amount || 0).toLocaleString()} MAD</p>
+                      <p className="text-sm text-muted-foreground">{r.reimbursementAmount} (70%)</p>
+                      <p className="text-lg font-bold text-primary">{(selectedDossier.reimbursement_amount || 0).toLocaleString()} MAD</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">{r.status}</p>
@@ -449,6 +538,12 @@ export default function OFPPTReimbursement() {
                       </Badge>
                     </div>
                   </div>
+                  {selectedDossier.cost_per_hour_per_person > CSF_CAP_PER_HOUR_PERSON && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{r.capApplied} — {r.costPerHourPerson} {selectedDossier.cost_per_hour_per_person} MAD → {CSF_CAP_PER_HOUR_PERSON} MAD</span>
+                    </div>
+                  )}
                   {selectedDossier.notes && (
                     <div className="mt-4">
                       <p className="text-sm text-muted-foreground">{r.notes}</p>
