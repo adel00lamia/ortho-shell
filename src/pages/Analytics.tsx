@@ -17,10 +17,13 @@ import {
   BookOpen,
   Trophy
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
+  const a = t.analytics;
 
   // Mock analytics data
   const analyticsData = {
@@ -54,10 +57,8 @@ const Analytics = () => {
 
   const exportReport = () => {
     setLoading(true);
-    // Simulate export
     setTimeout(() => {
       setLoading(false);
-      // In real implementation, trigger download
     }, 2000);
   };
 
@@ -65,8 +66,8 @@ const Analytics = () => {
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-          <p className="text-muted-foreground">Track learning progress and performance metrics</p>
+          <h1 className="text-3xl font-bold">{a.title}</h1>
+          <p className="text-muted-foreground">{a.subtitle}</p>
         </div>
         <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -74,15 +75,15 @@ const Analytics = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 3 months</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
+              <SelectItem value="7d">{a.last7Days}</SelectItem>
+              <SelectItem value="30d">{a.last30Days}</SelectItem>
+              <SelectItem value="90d">{a.last3Months}</SelectItem>
+              <SelectItem value="1y">{a.lastYear}</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={exportReport} disabled={loading}>
             <Download className="h-4 w-4 mr-2" />
-            {loading ? 'Exporting...' : 'Export Report'}
+            {loading ? a.exporting : a.exportReport}
           </Button>
         </div>
       </div>
@@ -92,7 +93,7 @@ const Analytics = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Total Learners</CardTitle>
+              <CardTitle className="text-sm font-medium">{a.totalLearners}</CardTitle>
               <Users className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
@@ -100,7 +101,7 @@ const Analytics = () => {
             <div className="text-2xl font-bold">{analyticsData.overview.totalLearners.toLocaleString()}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +12% from last month
+              {a.fromLastMonth('12%')}
             </div>
           </CardContent>
         </Card>
@@ -108,7 +109,7 @@ const Analytics = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
+              <CardTitle className="text-sm font-medium">{a.activeCourses}</CardTitle>
               <BookOpen className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
@@ -116,7 +117,7 @@ const Analytics = () => {
             <div className="text-2xl font-bold">{analyticsData.overview.activeCourses}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +5 new this month
+              {a.newThisMonth(5)}
             </div>
           </CardContent>
         </Card>
@@ -124,7 +125,7 @@ const Analytics = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">{a.completionRate}</CardTitle>
               <Target className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
@@ -132,7 +133,7 @@ const Analytics = () => {
             <div className="text-2xl font-bold">{analyticsData.overview.completionRate}%</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +3% improvement
+              {a.improvement('3%')}
             </div>
           </CardContent>
         </Card>
@@ -140,7 +141,7 @@ const Analytics = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+              <CardTitle className="text-sm font-medium">{a.averageScore}</CardTitle>
               <Trophy className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
@@ -148,7 +149,7 @@ const Analytics = () => {
             <div className="text-2xl font-bold">{analyticsData.overview.averageScore}%</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +2% increase
+              {a.increase('2%')}
             </div>
           </CardContent>
         </Card>
@@ -156,7 +157,7 @@ const Analytics = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Learning Hours</CardTitle>
+              <CardTitle className="text-sm font-medium">{a.learningHours}</CardTitle>
               <Clock className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
@@ -164,7 +165,7 @@ const Analytics = () => {
             <div className="text-2xl font-bold">{analyticsData.overview.totalHours.toLocaleString()}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +890h this month
+              {a.thisMonth('890h')}
             </div>
           </CardContent>
         </Card>
@@ -172,7 +173,7 @@ const Analytics = () => {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Certificates</CardTitle>
+              <CardTitle className="text-sm font-medium">{a.certificates}</CardTitle>
               <Award className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
@@ -180,7 +181,7 @@ const Analytics = () => {
             <div className="text-2xl font-bold">{analyticsData.overview.certificatesIssued}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1" />
-              +47 this month
+              {a.thisMonth('47')}
             </div>
           </CardContent>
         </Card>
@@ -188,30 +189,30 @@ const Analytics = () => {
 
       <Tabs defaultValue="performance" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="engagement">Engagement</TabsTrigger>
-          <TabsTrigger value="skills">Skills Progress</TabsTrigger>
-          <TabsTrigger value="roi">ROI Analysis</TabsTrigger>
+          <TabsTrigger value="performance">{a.performance}</TabsTrigger>
+          <TabsTrigger value="engagement">{a.engagement}</TabsTrigger>
+          <TabsTrigger value="skills">{a.skillsProgress}</TabsTrigger>
+          <TabsTrigger value="roi">{a.roiAnalysis}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="performance" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Top Performing Courses</CardTitle>
-                <CardDescription>Courses with highest completion rates</CardDescription>
+                <CardTitle>{a.topPerformingCourses}</CardTitle>
+                <CardDescription>{a.coursesHighestCompletion}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {analyticsData.topCourses.map((course, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{course.name}</span>
-                      <Badge variant="secondary">{course.completion}% completion</Badge>
+                      <Badge variant="secondary">{course.completion}% {a.completion}</Badge>
                     </div>
                     <Progress value={course.completion} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{course.enrollments} enrollments</span>
-                      <span>Avg score: {course.avgScore}%</span>
+                      <span>{course.enrollments} {a.enrollments}</span>
+                      <span>{a.avgScore}: {course.avgScore}%</span>
                     </div>
                   </div>
                 ))}
@@ -220,8 +221,8 @@ const Analytics = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Learning Trends</CardTitle>
-                <CardDescription>Weekly engagement and completion metrics</CardDescription>
+                <CardTitle>{a.learningTrends}</CardTitle>
+                <CardDescription>{a.weeklyEngagement}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -229,7 +230,7 @@ const Analytics = () => {
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>{week.name}</span>
-                        <span>{week.completed}/{week.active} completed</span>
+                        <span>{week.completed}/{week.active} {a.completedOf}</span>
                       </div>
                       <Progress value={(week.completed / week.active) * 100} className="h-2" />
                     </div>
@@ -243,22 +244,22 @@ const Analytics = () => {
         <TabsContent value="engagement" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>User Engagement Metrics</CardTitle>
-              <CardDescription>Daily and weekly activity patterns</CardDescription>
+              <CardTitle>{a.userEngagementMetrics}</CardTitle>
+              <CardDescription>{a.dailyWeeklyPatterns}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">85%</div>
-                  <div className="text-sm text-muted-foreground">Daily Active Users</div>
+                  <div className="text-sm text-muted-foreground">{a.dailyActiveUsers}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">42min</div>
-                  <div className="text-sm text-muted-foreground">Avg Session Duration</div>
+                  <div className="text-sm text-muted-foreground">{a.avgSessionDuration}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">7.2</div>
-                  <div className="text-sm text-muted-foreground">Pages per Session</div>
+                  <div className="text-sm text-muted-foreground">{a.pagesPerSession}</div>
                 </div>
               </div>
             </CardContent>
@@ -268,19 +269,19 @@ const Analytics = () => {
         <TabsContent value="skills" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Skills Development Progress</CardTitle>
-              <CardDescription>Track skill acquisition across your organization</CardDescription>
+              <CardTitle>{a.skillsDevelopmentProgress}</CardTitle>
+              <CardDescription>{a.trackSkillAcquisition}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {analyticsData.skillsProgress.map((skill, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between">
                     <span className="font-medium">{skill.skill}</span>
-                    <span className="text-sm text-muted-foreground">{skill.learners} learners</span>
+                    <span className="text-sm text-muted-foreground">{skill.learners} {a.learners}</span>
                   </div>
                   <Progress value={skill.progress} className="h-3" />
                   <div className="text-xs text-muted-foreground">
-                    {skill.progress}% proficiency achieved
+                    {skill.progress}% {a.proficiencyAchieved}
                   </div>
                 </div>
               ))}
@@ -292,20 +293,20 @@ const Analytics = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Training ROI</CardTitle>
-                <CardDescription>Return on investment metrics</CardDescription>
+                <CardTitle>{a.trainingROI}</CardTitle>
+                <CardDescription>{a.returnOnInvestment}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>Training Investment</span>
+                  <span>{a.trainingInvestment}</span>
                   <span className="font-bold">MAD 45,000</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Productivity Gains</span>
+                  <span>{a.productivityGains}</span>
                   <span className="font-bold text-primary">MAD 135,000</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Net ROI</span>
+                  <span>{a.netROI}</span>
                   <Badge className="bg-primary">300%</Badge>
                 </div>
               </CardContent>
@@ -313,20 +314,20 @@ const Analytics = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Cost Savings</CardTitle>
-                <CardDescription>Savings through digital training</CardDescription>
+                <CardTitle>{a.costSavings}</CardTitle>
+                <CardDescription>{a.savingsDigitalTraining}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>Reduced Travel Costs</span>
+                  <span>{a.reducedTravelCosts}</span>
                   <span className="font-bold">MAD 25,000</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Time Efficiency</span>
+                  <span>{a.timeEfficiency}</span>
                   <span className="font-bold">MAD 38,000</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Material Costs</span>
+                  <span>{a.materialCosts}</span>
                   <span className="font-bold">MAD 12,000</span>
                 </div>
               </CardContent>

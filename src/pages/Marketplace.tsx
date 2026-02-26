@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star, Clock, Users, MapPin, Search, Filter, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Course {
   id: string;
@@ -43,6 +44,8 @@ export default function Marketplace() {
   const [savedCourses, setSavedCourses] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const m = t.marketplace;
 
   // Mock data for demonstration
   const mockCourses: Course[] = [
@@ -97,7 +100,6 @@ export default function Marketplace() {
 
   useEffect(() => {
     let filtered = courses;
-
     if (searchTerm) {
       filtered = filtered.filter(course =>
         course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,25 +107,19 @@ export default function Marketplace() {
         course.trainer.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(course => course.category === categoryFilter);
     }
-
     if (typeFilter !== 'all') {
       filtered = filtered.filter(course => course.type === typeFilter);
     }
-
     if (priceRange !== 'all') {
       const [min, max] = priceRange.split('-').map(Number);
       filtered = filtered.filter(course => {
-        if (max) {
-          return course.price >= min && course.price <= max;
-        }
+        if (max) return course.price >= min && course.price <= max;
         return course.price >= min;
       });
     }
-
     setFilteredCourses(filtered);
   }, [searchTerm, categoryFilter, typeFilter, priceRange, courses]);
 
@@ -136,57 +132,30 @@ export default function Marketplace() {
         duration: '40 hours',
         type: 'hybrid'
       };
-
-      const { data, error } = await supabase.functions.invoke('ai-match', {
-        body: matchRequest
-      });
-
+      const { data, error } = await supabase.functions.invoke('ai-match', { body: matchRequest });
       if (error) throw error;
-
       setAiMatches(data.matches || []);
-      toast({
-        title: "AI Matches Found",
-        description: `Found ${data.matches?.length || 0} courses matching your criteria.`,
-      });
+      toast({ title: "AI Matches Found", description: `Found ${data.matches?.length || 0} courses matching your criteria.` });
     } catch (error) {
       console.error('AI matching error:', error);
-      toast({
-        title: "AI Matching Failed",
-        description: "Could not find AI matches. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "AI Matching Failed", description: "Could not find AI matches. Please try again.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
   const toggleSaveCourse = (courseId: string) => {
-    setSavedCourses(prev => 
-      prev.includes(courseId) 
-        ? prev.filter(id => id !== courseId)
-        : [...prev, courseId]
-    );
-    
-    const action = savedCourses.includes(courseId) ? 'removed from' : 'added to';
-    toast({
-      title: `Course ${action} wishlist`,
-      description: `Course has been ${action} your saved courses.`,
-    });
+    setSavedCourses(prev => prev.includes(courseId) ? prev.filter(id => id !== courseId) : [...prev, courseId]);
+    const action = savedCourses.includes(courseId) ? m.courseRemovedWishlist : m.courseAddedWishlist;
+    toast({ title: action });
   };
 
   const shareCourse = (course: Course) => {
     if (navigator.share) {
-      navigator.share({
-        title: course.title,
-        text: course.description,
-        url: window.location.href
-      });
+      navigator.share({ title: course.title, text: course.description, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link Copied",
-        description: "Course link copied to clipboard.",
-      });
+      toast({ title: m.linkCopied, description: m.linkCopiedDesc });
     }
   };
 
@@ -195,7 +164,7 @@ export default function Marketplace() {
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{course.title}</CardTitle>
-          {isAIMatch && <Badge variant="secondary">AI Match</Badge>}
+          {isAIMatch && <Badge variant="secondary">{m.aiMatch}</Badge>}
         </div>
         <CardDescription className="line-clamp-2">{course.description}</CardDescription>
       </CardHeader>
@@ -206,55 +175,29 @@ export default function Marketplace() {
           <span>•</span>
           <span>{course.trainer}</span>
         </div>
-
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span>{course.duration}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            <span>{course.participants}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            <span>{course.location}</span>
-          </div>
+          <div className="flex items-center gap-1"><Clock className="h-4 w-4" /><span>{course.duration}</span></div>
+          <div className="flex items-center gap-1"><Users className="h-4 w-4" /><span>{course.participants}</span></div>
+          <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /><span>{course.location}</span></div>
         </div>
-
         <div className="flex flex-wrap gap-1">
           {course.skills.slice(0, 3).map((skill) => (
-            <Badge key={skill} variant="outline" className="text-xs">
-              {skill}
-            </Badge>
+            <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
           ))}
           {course.skills.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{course.skills.length - 3} more
-            </Badge>
+            <Badge variant="outline" className="text-xs">+{course.skills.length - 3} {t.common.more}</Badge>
           )}
         </div>
-
         <div className="flex justify-between items-center pt-4">
           <div className="text-2xl font-bold">{course.price.toLocaleString()} MAD</div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toggleSaveCourse(course.id)}
-            >
-              <Heart 
-                className={`h-4 w-4 ${savedCourses.includes(course.id) ? 'fill-red-500 text-red-500' : ''}`}
-              />
+            <Button variant="outline" size="sm" onClick={() => toggleSaveCourse(course.id)}>
+              <Heart className={`h-4 w-4 ${savedCourses.includes(course.id) ? 'fill-red-500 text-red-500' : ''}`} />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => shareCourse(course)}
-            >
+            <Button variant="outline" size="sm" onClick={() => shareCourse(course)}>
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button size="sm">View Details</Button>
+            <Button size="sm">{t.common.viewDetails}</Button>
           </div>
         </div>
       </CardContent>
@@ -263,21 +206,14 @@ export default function Marketplace() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => navigate(-1)}
-        className="mb-4"
-      >
+      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
+        {t.common.back}
       </Button>
 
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold">Training Marketplace</h1>
-        <p className="text-xl text-muted-foreground">
-          Discover expert trainers and courses tailored to your organization's needs
-        </p>
+        <h1 className="text-4xl font-bold">{m.title}</h1>
+        <p className="text-xl text-muted-foreground">{m.subtitle}</p>
       </div>
 
       {/* AI Match Section */}
@@ -285,15 +221,13 @@ export default function Marketplace() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Star className="h-5 w-5" />
-            AI-Powered Course Matching
+            {m.aiCourseMatching}
           </CardTitle>
-          <CardDescription>
-            Get personalized course recommendations based on your training needs
-          </CardDescription>
+          <CardDescription>{m.aiCourseMatchingDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={handleAIMatch} disabled={isLoading} className="w-full sm:w-auto">
-            {isLoading ? 'Finding Matches...' : 'Find Best Matches'}
+            {isLoading ? m.findingMatches : m.findBestMatches}
           </Button>
         </CardContent>
       </Card>
@@ -303,52 +237,38 @@ export default function Marketplace() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filters
+            {t.common.filters}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search courses..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder={m.searchCourses} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
-            
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={m.category} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{m.allCategories}</SelectItem>
                 <SelectItem value="cybersecurity">Cybersecurity</SelectItem>
                 <SelectItem value="marketing">Marketing</SelectItem>
                 <SelectItem value="management">Management</SelectItem>
                 <SelectItem value="technology">Technology</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Delivery Type" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={m.deliveryType} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="onsite">On-site</SelectItem>
-                <SelectItem value="hybrid">Hybrid</SelectItem>
+                <SelectItem value="all">{m.allTypes}</SelectItem>
+                <SelectItem value="online">{m.online}</SelectItem>
+                <SelectItem value="onsite">{m.onsite}</SelectItem>
+                <SelectItem value="hybrid">{m.hybrid}</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={priceRange} onValueChange={setPriceRange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Price Range" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={m.priceRange} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Prices</SelectItem>
+                <SelectItem value="all">{m.allPrices}</SelectItem>
                 <SelectItem value="0-1000">0 - 1,000 MAD</SelectItem>
                 <SelectItem value="1000-2500">1,000 - 2,500 MAD</SelectItem>
                 <SelectItem value="2500-5000">2,500 - 5,000 MAD</SelectItem>
@@ -359,25 +279,19 @@ export default function Marketplace() {
         </CardContent>
       </Card>
 
-      {/* AI Matches Results */}
       {aiMatches.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">AI Recommended Matches</h2>
+          <h2 className="text-2xl font-semibold">{m.aiRecommendedMatches}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aiMatches.map((course) => (
-              <CourseCard key={`ai-${course.id}`} course={course} isAIMatch />
-            ))}
+            {aiMatches.map((course) => <CourseCard key={`ai-${course.id}`} course={course} isAIMatch />)}
           </div>
         </div>
       )}
 
-      {/* Course Catalog */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Available Courses ({filteredCourses.length})</h2>
+        <h2 className="text-2xl font-semibold">{m.availableCourses} ({filteredCourses.length})</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
+          {filteredCourses.map((course) => <CourseCard key={course.id} course={course} />)}
         </div>
       </div>
     </div>
