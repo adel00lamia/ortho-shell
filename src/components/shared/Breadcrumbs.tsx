@@ -1,4 +1,5 @@
 import { useLocation, Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,30 +10,9 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Home } from 'lucide-react';
 
-const routeLabels: Record<string, string> = {
-  dashboard: 'Dashboard',
-  workflow: 'Workflow',
-  assess: 'Assess',
-  plan: 'Plan',
-  execute: 'Execute',
-  track: 'Track',
-  diagnostic: 'Skills Diagnostic',
-  'performance-evaluation': 'Performance Review',
-  benchmark: 'Industry Benchmark',
-  'ai-plan-builder': 'AI Plan Builder',
-  'module-studio': 'Module Studio',
-  marketplace: 'Course Marketplace',
-  analytics: 'Analytics',
-  'certificate-generator': 'Certificates',
-  'user-management': 'User Management',
-  'team-collaboration': 'Team Collaboration',
-  manage: 'Management',
-  settings: 'Settings',
-  profile: 'Profile',
-};
-
 export const Breadcrumbs = () => {
   const location = useLocation();
+  const { t } = useLanguage();
   const pathSegments = location.pathname.split('/').filter(Boolean);
 
   if (pathSegments.length === 0) {
@@ -55,7 +35,7 @@ export const Breadcrumbs = () => {
             {pathSegments.map((segment, index) => {
               const path = `/${pathSegments.slice(0, index + 1).join('/')}`;
               const isLast = index === pathSegments.length - 1;
-              const label = routeLabels[segment] || segment.replace(/-/g, ' ');
+              const label = (t.breadcrumbs as any)[segment] || segment.replace(/-/g, ' ');
 
               return (
                 <div key={path} className="flex items-center gap-2">
