@@ -17,6 +17,7 @@ import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
+import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
 
 interface Employee {
   id: string;
@@ -508,6 +509,18 @@ export default function Diagnostic() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Company Research */}
+            <CompanyResearch
+              onResearchComplete={(data: CompanyResearchData) => {
+                setFormData(prev => ({
+                  ...prev,
+                  objectives: data.recommendations.suggestedObjectives.join('. '),
+                  industry: data.company.industry,
+                  companySize: data.company.companySize,
+                }));
+              }}
+            />
+
             <Card>
               <CardHeader>
                 <CardTitle>Get Started</CardTitle>
