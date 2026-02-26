@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -82,6 +82,7 @@ import {
   PlanTemplateSaver,
   PlanVersionHistory
 } from '@/components/plan';
+import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
 
 interface TrainingTemplate {
   id: string;
@@ -1028,6 +1029,32 @@ export default function AIPlanBuilder() {
                   </div>
                 </div>
               )}
+
+              {/* Company Research */}
+              <CompanyResearch 
+                initialCompanyName={requirements.company}
+                onResearchComplete={(data: CompanyResearchData) => {
+                  setRequirements(prev => ({
+                    ...prev,
+                    company: data.company.name,
+                    industry: data.company.industry,
+                    companySize: data.company.companySize,
+                    objectives: [...new Set([...prev.objectives, ...data.recommendations.suggestedObjectives])],
+                    targetSkills: [...new Set([...prev.targetSkills, ...data.recommendations.prioritySkills])],
+                    budget: parseInt(data.recommendations.suggestedBudget.replace(/[^\d]/g, '')) || prev.budget,
+                    duration: parseInt(data.recommendations.suggestedDuration) || prev.duration,
+                    context: `${data.company.description}\n\nIndustry: ${data.industryAnalysis.overview}`,
+                    customizations: {
+                      ...prev.customizations,
+                      deliveryMethods: data.recommendations.deliveryMethods.length > 0 
+                        ? data.recommendations.deliveryMethods 
+                        : prev.customizations.deliveryMethods,
+                    }
+                  }));
+                }}
+              />
+
+              <Separator />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
