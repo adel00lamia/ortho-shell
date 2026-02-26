@@ -1,9 +1,8 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://esm.sh/zod@3.23.8';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,23 +29,17 @@ serve(async (req) => {
   }
 
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  let userId = 'anonymous';
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
+  if (authHeader?.startsWith('Bearer ')) {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) userId = user.id;
   }
 
   try {
@@ -60,7 +53,7 @@ serve(async (req) => {
 
     const { objectives, diagnosticData } = parsed.data;
 
-    console.log('Generating training plan for user:', user.id);
+    console.log('Generating training plan for user:', userId);
 
     const prompt = `You are an expert training consultant. Based on the following diagnostic data, generate a comprehensive annual training plan in JSON format.
 
@@ -92,20 +85,19 @@ Generate a JSON response with this exact structure:
   "implementationPhases": [{ "phase": "Phase 1", "months": "1-3", "focus": "Foundation Skills", "modules": ["module1"] }]
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: 'You are an expert training consultant specializing in creating comprehensive annual training plans. Always respond with valid JSON format.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
       }),
     });
 
@@ -118,7 +110,10 @@ Generate a JSON response with this exact structure:
 
     let trainingPlan;
     try {
-      trainingPlan = JSON.parse(generatedContent);
+      let jsonContent = generatedContent;
+      const jsonMatch = generatedContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      trainingPlan = JSON.parse(jsonContent);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
       trainingPlan = {

@@ -476,7 +476,7 @@ export default function Diagnostic() {
       if (planError) throw planError;
 
       toast.success("Training plan generated successfully!");
-      navigate(`/training-plan/${trainingPlan.id}`);
+      navigate(`/workflow/plan/plans/${trainingPlan.id}`);
 
     } catch (error: any) {
       console.error('Error generating training plan:', error);
