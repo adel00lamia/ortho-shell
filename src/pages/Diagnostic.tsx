@@ -18,6 +18,7 @@ import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
 import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Employee {
   id: string;
@@ -52,6 +53,8 @@ interface PerformanceEvaluation {
 export default function Diagnostic() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const d = t.diagnostic;
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -493,18 +496,16 @@ export default function Diagnostic() {
         <WorkflowIndicator />
         
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Training Diagnostic & AI Plan Builder</h1>
-          <p className="text-muted-foreground">
-            Create data-driven training plans based on job descriptions and performance evaluations
-          </p>
+          <h1 className="text-3xl font-bold mb-2">{d.title}</h1>
+          <p className="text-muted-foreground">{d.subtitle}</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="jobs">Job Descriptions</TabsTrigger>
-            <TabsTrigger value="evaluations">Performance Evaluations</TabsTrigger>
-            <TabsTrigger value="diagnostic">Diagnostic</TabsTrigger>
+            <TabsTrigger value="overview">{d.overview}</TabsTrigger>
+            <TabsTrigger value="jobs">{d.jobDescriptions}</TabsTrigger>
+            <TabsTrigger value="evaluations">{d.performanceEvaluations}</TabsTrigger>
+            <TabsTrigger value="diagnostic">{d.diagnostic}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -523,10 +524,8 @@ export default function Diagnostic() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Get Started</CardTitle>
-                <CardDescription>
-                  Follow these steps to create a comprehensive training plan
-                </CardDescription>
+                <CardTitle>{d.getStarted}</CardTitle>
+                <CardDescription>{d.followSteps}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4 p-4 border rounded-lg">
@@ -534,19 +533,13 @@ export default function Diagnostic() {
                     <Briefcase className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold">1. Add Job Descriptions</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Define roles, required skills, and competency levels
-                    </p>
-                    <Button 
-                      variant="link" 
-                      className="p-0 h-auto mt-2"
-                      onClick={() => setActiveTab("jobs")}
-                    >
-                      Manage Job Descriptions →
+                    <h3 className="font-semibold">{d.addJobDescriptions}</h3>
+                    <p className="text-sm text-muted-foreground">{d.addJobDescriptionsDesc}</p>
+                    <Button variant="link" className="p-0 h-auto mt-2" onClick={() => setActiveTab("jobs")}>
+                      {d.manageJobDescriptions}
                     </Button>
                   </div>
-                  <Badge variant="secondary">{jobDescriptions.length} added</Badge>
+                  <Badge variant="secondary">{jobDescriptions.length} {t.common.added}</Badge>
                 </div>
 
                 <div className="flex items-start gap-4 p-4 border rounded-lg">
@@ -554,19 +547,13 @@ export default function Diagnostic() {
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold">2. Add Performance Evaluations</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Upload evaluation data to identify skill gaps
-                    </p>
-                    <Button 
-                      variant="link" 
-                      className="p-0 h-auto mt-2"
-                      onClick={() => setActiveTab("evaluations")}
-                    >
-                      Manage Evaluations →
+                    <h3 className="font-semibold">{d.addPerformanceEvaluations}</h3>
+                    <p className="text-sm text-muted-foreground">{d.addPerformanceEvaluationsDesc}</p>
+                    <Button variant="link" className="p-0 h-auto mt-2" onClick={() => setActiveTab("evaluations")}>
+                      {d.manageEvaluations}
                     </Button>
                   </div>
-                  <Badge variant="secondary">{performanceEvaluations.length} added</Badge>
+                  <Badge variant="secondary">{performanceEvaluations.length} {t.common.added}</Badge>
                 </div>
 
                 <div className="flex items-start gap-4 p-4 border rounded-lg">
@@ -574,16 +561,10 @@ export default function Diagnostic() {
                     <Target className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold">3. Run Diagnostic</h3>
-                    <p className="text-sm text-muted-foreground">
-                      AI analyzes data and generates personalized training plan
-                    </p>
-                    <Button 
-                      variant="link" 
-                      className="p-0 h-auto mt-2"
-                      onClick={() => setActiveTab("diagnostic")}
-                    >
-                      Start Diagnostic →
+                    <h3 className="font-semibold">{d.runDiagnostic}</h3>
+                    <p className="text-sm text-muted-foreground">{d.runDiagnosticDesc}</p>
+                    <Button variant="link" className="p-0 h-auto mt-2" onClick={() => setActiveTab("diagnostic")}>
+                      {d.startDiagnostic}
                     </Button>
                   </div>
                 </div>
