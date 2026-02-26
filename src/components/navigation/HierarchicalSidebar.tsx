@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,20 +22,21 @@ import {
   FileText,
   Building2,
   UserCog,
+  Languages,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface NavItem {
   path: string;
-  label: string;
+  labelKey: string;
   icon: any;
   badge?: string;
   roles?: string[];
 }
 
 interface NavSection {
-  title: string;
+  titleKey: string;
   items: NavItem[];
   roles?: string[];
 }
@@ -42,6 +44,7 @@ interface NavSection {
 export const HierarchicalSidebar = () => {
   const { signOut } = useAuth();
   const { role } = useUserRole();
+  const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const [openSections, setOpenSections] = useState<string[]>(['workflow', 'assess']);
 
@@ -53,50 +56,63 @@ export const HierarchicalSidebar = () => {
 
   const navSections: NavSection[] = [
     {
-      title: 'Assess',
+      titleKey: 'assess',
       roles: ['admin', 'hr_manager'],
       items: [
-        { path: '/workflow/assess/diagnostic', label: 'Skills Diagnostic', icon: ClipboardCheck },
-        { path: '/workflow/assess/performance', label: 'Performance Review', icon: FileText },
-        { path: '/workflow/assess/benchmark', label: 'Industry Benchmark', icon: TrendingUp },
+        { path: '/workflow/assess/diagnostic', labelKey: 'skillsDiagnostic', icon: ClipboardCheck },
+        { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
+        { path: '/workflow/assess/benchmark', labelKey: 'industryBenchmark', icon: TrendingUp },
       ],
     },
     {
-      title: 'Plan',
+      titleKey: 'plan',
       roles: ['admin', 'hr_manager'],
       items: [
-        { path: '/workflow/plan/builder', label: 'AI Plan Builder', icon: Lightbulb, badge: 'AI' },
-        { path: '/workflow/plan/plans', label: 'My Plans', icon: Target },
+        { path: '/workflow/plan/builder', labelKey: 'aiPlanBuilder', icon: Lightbulb, badge: 'AI' },
+        { path: '/workflow/plan/plans', labelKey: 'myPlans', icon: Target },
       ],
     },
     {
-      title: 'Execute',
+      titleKey: 'execute',
       items: [
-        { path: '/workflow/execute/modules', label: 'Module Studio', icon: BookOpen },
-        { path: '/workflow/execute/marketplace', label: 'Course Marketplace', icon: ShoppingBag },
+        { path: '/workflow/execute/modules', labelKey: 'moduleStudio', icon: BookOpen },
+        { path: '/workflow/execute/marketplace', labelKey: 'courseMarketplace', icon: ShoppingBag },
       ],
     },
     {
-      title: 'Track & Certify',
+      titleKey: 'trackCertify',
       items: [
-        { path: '/workflow/track/analytics', label: 'Analytics & ROI', icon: BarChart3 },
-        { path: '/workflow/track/progress', label: 'Progress Tracking', icon: TrendingUp },
-        { path: '/workflow/track/certificates', label: 'Certificates', icon: Award },
+        { path: '/workflow/track/analytics', labelKey: 'analyticsROI', icon: BarChart3 },
+        { path: '/workflow/track/progress', labelKey: 'progressTracking', icon: TrendingUp },
+        { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },
       ],
     },
   ];
 
   const managementSection: NavSection = {
-    title: 'Management',
+    titleKey: 'management',
     roles: ['admin', 'hr_manager'],
     items: [
-      { path: '/manage/users', label: 'User Management', icon: Users, roles: ['admin', 'hr_manager'] },
-      { path: '/manage/team', label: 'Team Collaboration', icon: Building2 },
-      { path: '/manage/settings', label: 'Settings', icon: Settings },
+      { path: '/manage/users', labelKey: 'userManagement', icon: Users, roles: ['admin', 'hr_manager'] },
+      { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
+      { path: '/manage/settings', labelKey: 'settings', icon: Settings },
     ],
   };
 
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+  const getSectionTitle = (key: string) => {
+    const map: Record<string, string> = {
+      assess: t.nav.assess,
+      plan: t.nav.plan,
+      execute: t.nav.execute,
+      trackCertify: t.nav.trackCertify,
+      management: t.nav.management,
+    };
+    return map[key] || key;
+  };
+
+  const getItemLabel = (key: string) => {
+    return (t.nav as any)[key] || key;
+  };
 
   const canViewSection = (section: NavSection) => {
     if (!section.roles) return true;
@@ -137,27 +153,27 @@ export const HierarchicalSidebar = () => {
           }
         >
           <LayoutDashboard className="h-4 w-4" />
-          <span className="text-sm font-medium">Dashboard</span>
+          <span className="text-sm font-medium">{t.nav.dashboard}</span>
         </NavLink>
 
         <div className="pt-4">
-          <p className="px-3 text-xs font-semibold text-sidebar-foreground/60 mb-2">WORKFLOW</p>
+          <p className="px-3 text-xs font-semibold text-sidebar-foreground/60 mb-2">{t.nav.workflow}</p>
           
-          {/* Workflow Sections */}
           {navSections.map((section) => {
             if (!canViewSection(section)) return null;
+            const sectionId = section.titleKey.toLowerCase();
             
             return (
               <Collapsible
-                key={section.title}
-                open={openSections.includes(section.title.toLowerCase())}
-                onOpenChange={() => toggleSection(section.title.toLowerCase())}
+                key={section.titleKey}
+                open={openSections.includes(sectionId)}
+                onOpenChange={() => toggleSection(sectionId)}
               >
                 <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg transition-colors">
-                  <span>{section.title}</span>
+                  <span>{getSectionTitle(section.titleKey)}</span>
                   <ChevronDown
                     className={`h-4 w-4 transition-transform ${
-                      openSections.includes(section.title.toLowerCase()) ? 'rotate-180' : ''
+                      openSections.includes(sectionId) ? 'rotate-180' : ''
                     }`}
                   />
                 </CollapsibleTrigger>
@@ -179,7 +195,7 @@ export const HierarchicalSidebar = () => {
                       >
                         <div className="flex items-center gap-3">
                           <Icon className="h-4 w-4" />
-                          <span>{item.label}</span>
+                          <span>{getItemLabel(item.labelKey)}</span>
                         </div>
                         {item.badge && (
                           <Badge variant="secondary" className="text-xs">
@@ -198,7 +214,7 @@ export const HierarchicalSidebar = () => {
         {/* Management Section */}
         {canViewSection(managementSection) && (
           <div className="pt-4">
-            <p className="px-3 text-xs font-semibold text-sidebar-foreground/60 mb-2">MANAGEMENT</p>
+            <p className="px-3 text-xs font-semibold text-sidebar-foreground/60 mb-2">{getSectionTitle('management')}</p>
             {managementSection.items.map((item) => {
               if (!canViewItem(item)) return null;
               const Icon = item.icon;
@@ -215,7 +231,7 @@ export const HierarchicalSidebar = () => {
                   }
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <span>{getItemLabel(item.labelKey)}</span>
                 </NavLink>
               );
             })}
@@ -225,12 +241,39 @@ export const HierarchicalSidebar = () => {
 
       {/* Footer */}
       <div className="p-4 border-t border-sidebar-border space-y-2">
+        {/* Language Selector */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <Languages className="h-4 w-4 text-sidebar-foreground/60" />
+          <div className="flex gap-1">
+            <button
+              onClick={() => setLanguage('fr')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                language === 'fr'
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+              }`}
+            >
+              FR
+            </button>
+            <button
+              onClick={() => setLanguage('en')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                language === 'en'
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+              }`}
+            >
+              EN
+            </button>
+          </div>
+        </div>
+
         <NavLink
           to="/profile"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
         >
           <UserCog className="h-4 w-4" />
-          <span>Profile</span>
+          <span>{t.common.profile}</span>
         </NavLink>
         <Button
           variant="ghost"
@@ -239,9 +282,9 @@ export const HierarchicalSidebar = () => {
           onClick={signOut}
         >
           <LogOut className="h-4 w-4 mr-3" />
-          Sign Out
+          {t.common.signOut}
         </Button>
-        <p className="text-xs text-sidebar-foreground/40 text-center pt-2">v2.0.0</p>
+        <p className="text-xs text-sidebar-foreground/40 text-center pt-2">{t.common.version}</p>
       </div>
     </aside>
   );

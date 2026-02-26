@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WorkflowProvider } from "@/contexts/WorkflowContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -37,9 +38,10 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => (
-  <AuthProvider>
-    <WorkflowProvider>
-      <TooltipProvider>
+  <LanguageProvider>
+    <AuthProvider>
+      <WorkflowProvider>
+        <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -103,9 +105,10 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
-      </WorkflowProvider>
-    </AuthProvider>
+          </TooltipProvider>
+        </WorkflowProvider>
+      </AuthProvider>
+    </LanguageProvider>
 );
 
 export default App;
