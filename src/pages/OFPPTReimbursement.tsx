@@ -16,8 +16,9 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import {
   Plus, Upload, FileText, CheckCircle2, Clock, AlertCircle, 
-  Trash2, Eye, Download, FolderOpen, Send, XCircle, DollarSign, Calculator
+  Trash2, Eye, Download, FolderOpen, Send, XCircle, DollarSign, Calculator, BarChart3
 } from 'lucide-react';
+import ReimbursementDashboard from '@/components/ofppt/ReimbursementDashboard';
 
 const DOCUMENT_TYPES = [
   { value: 'modele_1_recap_actions', label: 'Modèle 1 - Récapitulatif des actions' },
@@ -82,7 +83,7 @@ export default function OFPPTReimbursement() {
   const [loading, setLoading] = useState(true);
   const [showNewDossier, setShowNewDossier] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState('dossiers');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // New dossier form
   const [newTitle, setNewTitle] = useState('');
@@ -396,9 +397,14 @@ export default function OFPPTReimbursement() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />{(r as any).dashboardTab || 'Dashboard'}</TabsTrigger>
           <TabsTrigger value="dossiers">{r.allDossiers}</TabsTrigger>
           {selectedDossier && <TabsTrigger value="details">{r.dossierDetails}</TabsTrigger>}
         </TabsList>
+
+        <TabsContent value="dashboard">
+          <ReimbursementDashboard dossiers={dossiers} />
+        </TabsContent>
 
         {/* Dossier List */}
         <TabsContent value="dossiers">

@@ -503,6 +503,13 @@ export const en = {
       rejected: 'Rejected',
       reimbursed: 'Reimbursed',
     },
+    dashboardTab: 'Dashboard',
+    statusDistribution: 'Status Distribution',
+    amountsByYear: 'Amounts by Year',
+    dossiersByYearStatus: 'Dossiers by Year & Status',
+    recentDossiers: 'Recent Dossiers',
+    pendingAmount: 'Pending Amount',
+    approvalRate: 'Approval Rate',
   },
 
   // Language

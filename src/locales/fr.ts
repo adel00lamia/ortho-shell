@@ -493,6 +493,13 @@ export const fr: Translations = {
       rejected: 'Rejeté',
       reimbursed: 'Remboursé',
     },
+    dashboardTab: 'Tableau de bord',
+    statusDistribution: 'Répartition par statut',
+    amountsByYear: 'Montants par année',
+    dossiersByYearStatus: 'Dossiers par année et statut',
+    recentDossiers: 'Dossiers récents',
+    pendingAmount: 'Montant en attente',
+    approvalRate: 'Taux d\'approbation',
   },
 
   language: {
