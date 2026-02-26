@@ -22,6 +22,7 @@ import UserManagement from "./pages/UserManagement";
 import TeamCollaboration from "./pages/TeamCollaboration";
 import PerformanceEvaluation from "./pages/PerformanceEvaluation";
 import Benchmark from "./pages/Benchmark";
+import OFPPTReimbursement from "./pages/OFPPTReimbursement";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import NotFound from "./pages/NotFound";
 import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/workflow/track/analytics" element={<ProtectedLayout><Analytics /></ProtectedLayout>} />
               <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
               <Route path="/workflow/track/certificates" element={<ProtectedLayout><CertificateGenerator /></ProtectedLayout>} />
+              <Route path="/workflow/track/reimbursement" element={<ProtectedLayout><OFPPTReimbursement /></ProtectedLayout>} />
               
               {/* Management Routes */}
               <Route path="/manage/users" element={<ProtectedLayout><UserManagement /></ProtectedLayout>} />

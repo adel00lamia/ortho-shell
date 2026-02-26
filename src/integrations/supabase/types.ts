@@ -92,6 +92,119 @@ export type Database = {
         }
         Relationships: []
       }
+      ofppt_dossier_documents: {
+        Row: {
+          document_type: Database["public"]["Enums"]["ofppt_document_type"]
+          dossier_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          notes: string | null
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          document_type: Database["public"]["Enums"]["ofppt_document_type"]
+          dossier_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          notes?: string | null
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          document_type?: Database["public"]["Enums"]["ofppt_document_type"]
+          dossier_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          notes?: string | null
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ofppt_dossier_documents_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "ofppt_reimbursement_dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ofppt_reimbursement_dossiers: {
+        Row: {
+          approval_date: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          exercise_year: number
+          id: string
+          notes: string | null
+          reimbursement_amount: number | null
+          reimbursement_date: string | null
+          status: Database["public"]["Enums"]["ofppt_dossier_status"]
+          submission_date: string | null
+          title: string
+          total_amount: number | null
+          training_plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_date?: string | null
+          company_id: string
+          created_at?: string
+          created_by: string
+          exercise_year?: number
+          id?: string
+          notes?: string | null
+          reimbursement_amount?: number | null
+          reimbursement_date?: string | null
+          status?: Database["public"]["Enums"]["ofppt_dossier_status"]
+          submission_date?: string | null
+          title: string
+          total_amount?: number | null
+          training_plan_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_date?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          exercise_year?: number
+          id?: string
+          notes?: string | null
+          reimbursement_amount?: number | null
+          reimbursement_date?: string | null
+          status?: Database["public"]["Enums"]["ofppt_dossier_status"]
+          submission_date?: string | null
+          title?: string
+          total_amount?: number | null
+          training_plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ofppt_reimbursement_dossiers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofppt_reimbursement_dossiers_training_plan_id_fkey"
+            columns: ["training_plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_evaluation_access_logs: {
         Row: {
           accessed_at: string
@@ -738,6 +851,25 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "hr_manager" | "employee" | "trainer"
+      ofppt_document_type:
+        | "modele_1_recap_actions"
+        | "modele_2_contrat_csf"
+        | "modele_3_avis_annulation"
+        | "modele_4_facture"
+        | "modele_5_liste_presence"
+        | "modele_6_attestation_realisation"
+        | "modele_7_synthese_besoins"
+        | "modele_8_delegation_pouvoirs"
+        | "modele_9_contrat_formation_groupee"
+        | "modele_10_liste_presence_fg"
+        | "other"
+      ofppt_dossier_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "reimbursed"
       training_status: "draft" | "active" | "completed" | "cancelled"
       training_type: "internal" | "external" | "mixed"
     }
@@ -868,6 +1000,27 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "hr_manager", "employee", "trainer"],
+      ofppt_document_type: [
+        "modele_1_recap_actions",
+        "modele_2_contrat_csf",
+        "modele_3_avis_annulation",
+        "modele_4_facture",
+        "modele_5_liste_presence",
+        "modele_6_attestation_realisation",
+        "modele_7_synthese_besoins",
+        "modele_8_delegation_pouvoirs",
+        "modele_9_contrat_formation_groupee",
+        "modele_10_liste_presence_fg",
+        "other",
+      ],
+      ofppt_dossier_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "reimbursed",
+      ],
       training_status: ["draft", "active", "completed", "cancelled"],
       training_type: ["internal", "external", "mixed"],
     },
