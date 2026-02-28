@@ -15,6 +15,12 @@ const requestSchema = z.object({
   skills: z.array(z.string().max(200)).max(50).optional().default([]),
   audience: z.array(z.string().max(200)).max(20).optional().default([]),
   duration: z.number().min(0.5).max(500).optional().default(8),
+  regenerateSection: z.enum(['slides', 'quiz', 'script', 'all']).optional().default('all'),
+  existingContent: z.object({
+    slides: z.array(z.any()).optional(),
+    quiz: z.array(z.any()).optional(),
+    script: z.string().optional(),
+  }).optional(),
 });
 
 serve(async (req) => {
@@ -45,38 +51,48 @@ serve(async (req) => {
       });
     }
 
-    const { title, description, skills, audience, duration } = parsed.data;
+    const { title, description, skills, audience, duration, regenerateSection, existingContent } = parsed.data;
 
-    console.log('Generating content for module for user:', userId, { title });
+    console.log('Generating content for module for user:', userId, { title, regenerateSection });
 
-    const systemPrompt = `You are an expert training content creator. Generate comprehensive training module content including slides, script, and quiz questions.
+    let systemPrompt: string;
+    let userPrompt: string;
+
+    if (regenerateSection === 'slides') {
+      systemPrompt = `You are an expert training content creator. Generate only training slides content.
+IMPORTANT: Respond with valid JSON: { "slides": [{ "title": "slide title", "content": "detailed slide content", "type": "text" }] }
+Generate 8-12 slides with comprehensive, engaging content. Include different slide types: "text", "video", "exercise", "resource".`;
+      userPrompt = `Regenerate slides for training module:\nTitle: ${title}\nDescription: ${description}\nSkills: ${skills.join(', ')}\nDuration: ${duration} hours\nMake content practical and engaging with real-world examples.`;
+    } else if (regenerateSection === 'quiz') {
+      systemPrompt = `You are an expert assessment designer. Generate quiz questions for a training module.
+IMPORTANT: Respond with valid JSON: { "quiz": [{ "question": "question text", "options": ["opt1", "opt2", "opt3", "opt4"], "correct": 0 }] }
+Generate 5-8 questions with 4 options each. Mix difficulty levels.`;
+      userPrompt = `Regenerate quiz for training module:\nTitle: ${title}\nDescription: ${description}\nSkills: ${skills.join(', ')}\nEnsure questions test practical understanding.`;
+    } else if (regenerateSection === 'script') {
+      systemPrompt = `You are an expert training facilitator. Generate an instructor script for a training module.
+IMPORTANT: Respond with valid JSON: { "script": "complete training script..." }
+Include introduction, key talking points, transitions, activities, and conclusion.`;
+      userPrompt = `Regenerate instructor script for training module:\nTitle: ${title}\nDescription: ${description}\nSkills: ${skills.join(', ')}\nDuration: ${duration} hours\nMake it conversational and engaging.`;
+    } else {
+      systemPrompt = `You are an expert training content creator. Generate comprehensive training module content including slides, script, and quiz questions.
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
   "content": {
-    "slides": [{ "title": "slide title", "content": "detailed slide content" }],
+    "slides": [{ "title": "slide title", "content": "detailed slide content", "type": "text" }],
     "script": "complete training script for instructor",
     "quiz": [{ "question": "question text", "options": ["option1", "option2", "option3", "option4"], "correct": 0 }]
   }
 }
 
 Generate content for:
-- 8-12 slides with comprehensive content
+- 8-12 slides with comprehensive content (use types: "text", "video", "exercise", "resource")
 - A detailed instructor script
 - 5-8 quiz questions with 4 options each
 
 Make content engaging, practical, and aligned with the learning objectives.`;
-
-    const userPrompt = `Create training module content for:
-
-Title: ${title}
-Description: ${description}
-Skills to cover: ${skills.join(', ')}
-Target audience: ${audience.join(', ')}
-Duration: ${duration} hours
-
-Generate comprehensive content including slides, instructor script, and assessment quiz.
-Ensure content is practical, engaging, and includes real-world examples.`;
+      userPrompt = `Create training module content for:\n\nTitle: ${title}\nDescription: ${description}\nSkills to cover: ${skills.join(', ')}\nTarget audience: ${audience.join(', ')}\nDuration: ${duration} hours\n\nGenerate comprehensive content including slides, instructor script, and assessment quiz.\nEnsure content is practical, engaging, and includes real-world examples.`;
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -104,17 +120,28 @@ Ensure content is practical, engaging, and includes real-world examples.`;
 
     let generatedContent;
     try {
-      generatedContent = JSON.parse(data.choices[0].message.content);
+      let rawContent = data.choices[0].message.content;
+      const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) rawContent = jsonMatch[1].trim();
+      generatedContent = JSON.parse(rawContent);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response as JSON:', parseError);
+      console.error('Failed to parse AI response as JSON:', parseError);
       const rawContent = data.choices[0].message.content;
-      generatedContent = {
-        content: {
-          slides: [{ title: "Generated Content", content: rawContent }],
-          script: rawContent,
-          quiz: [{ question: "What is the main topic of this module?", options: [title, "General knowledge", "Other topic", "Not specified"], correct: 0 }]
-        }
-      };
+      if (regenerateSection === 'slides') {
+        generatedContent = { slides: [{ title: "Generated Content", content: rawContent, type: "text" }] };
+      } else if (regenerateSection === 'quiz') {
+        generatedContent = { quiz: [{ question: "What is the main topic?", options: [title, "Other", "N/A", "None"], correct: 0 }] };
+      } else if (regenerateSection === 'script') {
+        generatedContent = { script: rawContent };
+      } else {
+        generatedContent = {
+          content: {
+            slides: [{ title: "Generated Content", content: rawContent, type: "text" }],
+            script: rawContent,
+            quiz: [{ question: "What is the main topic of this module?", options: [title, "General knowledge", "Other topic", "Not specified"], correct: 0 }]
+          }
+        };
+      }
     }
 
     return new Response(JSON.stringify(generatedContent), {
