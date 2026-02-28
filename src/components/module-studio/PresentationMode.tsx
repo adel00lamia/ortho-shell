@@ -21,15 +21,39 @@ interface PresentationModeProps {
 export function PresentationMode({ slides, moduleTitle, onClose }: PresentationModeProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [direction, setDirection] = useState<"next" | "prev">("next");
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const goNext = useCallback(() => {
-    setCurrentSlide(prev => Math.min(prev + 1, slides.length - 1));
-  }, [slides.length]);
+    if (isTransitioning || currentSlide >= slides.length - 1) return;
+    setDirection("next");
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(prev => prev + 1);
+      setIsTransitioning(false);
+    }, 300);
+  }, [slides.length, currentSlide, isTransitioning]);
 
   const goPrev = useCallback(() => {
-    setCurrentSlide(prev => Math.max(prev - 1, 0));
-  }, []);
+    if (isTransitioning || currentSlide <= 0) return;
+    setDirection("prev");
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(prev => prev - 1);
+      setIsTransitioning(false);
+    }, 300);
+  }, [currentSlide, isTransitioning]);
+
+  const goToSlide = useCallback((index: number) => {
+    if (isTransitioning || index === currentSlide) return;
+    setDirection(index > currentSlide ? "next" : "prev");
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(index);
+      setIsTransitioning(false);
+    }, 300);
+  }, [currentSlide, isTransitioning]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -59,11 +83,22 @@ export function PresentationMode({ slides, moduleTitle, onClose }: PresentationM
 
   if (slides.length === 0) return null;
   const slide = slides[currentSlide];
+  const progress = ((currentSlide + 1) / slides.length) * 100;
+
+  const exitClass = isTransitioning
+    ? direction === "next"
+      ? "opacity-0 -translate-x-12 scale-[0.97]"
+      : "opacity-0 translate-x-12 scale-[0.97]"
+    : "";
+
+  const enterClass = !isTransitioning
+    ? "opacity-100 translate-x-0 scale-100"
+    : "";
 
   return (
-    <div ref={containerRef} className="fixed inset-0 z-50 bg-black flex flex-col">
+    <div ref={containerRef} className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity">
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
         <div className="flex items-center gap-3">
           <span className="text-white/70 text-sm font-medium">{moduleTitle}</span>
           <Badge variant="secondary" className="bg-white/20 text-white">{currentSlide + 1} / {slides.length}</Badge>
@@ -78,9 +113,12 @@ export function PresentationMode({ slides, moduleTitle, onClose }: PresentationM
         </div>
       </div>
 
-      {/* Slide content */}
+      {/* Slide content with transition */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16">
-        <div className="max-w-4xl w-full text-center space-y-8">
+        <div
+          key={currentSlide}
+          className={`max-w-4xl w-full text-center space-y-8 transition-all duration-300 ease-out ${exitClass} ${enterClass}`}
+        >
           {slide.type === "video" && slide.videoUrl ? (
             <div className="space-y-6">
               <h2 className="text-3xl md:text-5xl font-bold text-white">{slide.title}</h2>
@@ -114,9 +152,17 @@ export function PresentationMode({ slides, moduleTitle, onClose }: PresentationM
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity">
-        <Button variant="ghost" onClick={goPrev} disabled={currentSlide === 0} className="text-white hover:bg-white/20 disabled:opacity-30">
+      {/* Progress bar - always visible */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+        <div
+          className="h-full bg-primary transition-all duration-500 ease-out rounded-r-full"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      {/* Navigation - hover to reveal */}
+      <div className="absolute bottom-1 left-0 right-0 flex items-center justify-between p-4 pb-5 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
+        <Button variant="ghost" onClick={goPrev} disabled={currentSlide === 0 || isTransitioning} className="text-white hover:bg-white/20 disabled:opacity-30">
           <ChevronLeft className="w-5 h-5 mr-1" /> Previous
         </Button>
         {/* Progress dots */}
@@ -124,12 +170,12 @@ export function PresentationMode({ slides, moduleTitle, onClose }: PresentationM
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => setCurrentSlide(i)}
-              className={`w-2 h-2 rounded-full transition-all ${i === currentSlide ? "bg-white w-6" : "bg-white/30 hover:bg-white/50"}`}
+              onClick={() => goToSlide(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-white w-6" : "bg-white/30 hover:bg-white/50 w-2"}`}
             />
           ))}
         </div>
-        <Button variant="ghost" onClick={goNext} disabled={currentSlide === slides.length - 1} className="text-white hover:bg-white/20 disabled:opacity-30">
+        <Button variant="ghost" onClick={goNext} disabled={currentSlide === slides.length - 1 || isTransitioning} className="text-white hover:bg-white/20 disabled:opacity-30">
           Next <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
       </div>
