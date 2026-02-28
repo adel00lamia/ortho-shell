@@ -92,6 +92,50 @@ export type Database = {
         }
         Relationships: []
       }
+      learner_module_progress: {
+        Row: {
+          completed_at: string | null
+          completed_slides: number[]
+          id: string
+          last_activity_at: string
+          module_id: string
+          quiz_answers: Json
+          quiz_score: number | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_slides?: number[]
+          id?: string
+          last_activity_at?: string
+          module_id: string
+          quiz_answers?: Json
+          quiz_score?: number | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_slides?: number[]
+          id?: string
+          last_activity_at?: string
+          module_id?: string
+          quiz_answers?: Json
+          quiz_score?: number | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learner_module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "training_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ofppt_dossier_documents: {
         Row: {
           document_type: Database["public"]["Enums"]["ofppt_document_type"]
