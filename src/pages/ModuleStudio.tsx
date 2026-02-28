@@ -13,13 +13,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   Wand2, Save, Play, FileText, Award, QrCode,
-  PlusCircle, Trash2, Presentation, MonitorPlay
+  PlusCircle, Trash2, Presentation, MonitorPlay, Download
 } from "lucide-react";
 import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
 import { SlideEditor } from "@/components/module-studio/SlideEditor";
 import { QuizEditor } from "@/components/module-studio/QuizEditor";
 import { PresentationMode } from "@/components/module-studio/PresentationMode";
+import { exportModuleToPDF } from "@/components/module-studio/ModulePDFExport";
 
 interface ModuleContent {
   slides?: { title: string; content: string; type?: string; videoUrl?: string; exerciseInstructions?: string; resourceLinks?: string[] }[];
@@ -261,10 +262,27 @@ export default function ModuleStudio() {
             </div>
             <div className="flex gap-2">
               {slides.length > 0 && (
-                <Button variant="outline" onClick={() => setShowPresentation(true)}>
-                  <Presentation className="w-4 h-4 mr-2" />
-                  Present
-                </Button>
+                <>
+                  <Button variant="outline" onClick={() => {
+                    const fileName = exportModuleToPDF({
+                      title: formData.title,
+                      description: formData.description,
+                      duration_hours: formData.duration_hours,
+                      skills_covered: formData.skills_covered,
+                      slides,
+                      quiz,
+                      script: formData.content.script,
+                    });
+                    toast.success(`PDF exported: ${fileName}`);
+                  }}>
+                    <Download className="w-4 h-4 mr-2" />
+                    PDF
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowPresentation(true)}>
+                    <Presentation className="w-4 h-4 mr-2" />
+                    Present
+                  </Button>
+                </>
               )}
               <Button onClick={saveModule} variant="outline">
                 <Save className="w-4 h-4 mr-2" />
