@@ -23,6 +23,7 @@ const requirementsSchema = z.object({
     context: z.string().max(5000).optional().default(''),
     template: z.string().max(200).optional().default(''),
     pack: z.string().max(200).optional().default(''),
+    aiModel: z.string().max(100).optional().default('google/gemini-3-flash-preview'),
     customizations: z.object({
       deliveryMethods: z.array(z.string().max(50)).max(10).optional().default([]),
       certification: z.boolean().optional().default(false),
@@ -201,6 +202,19 @@ ${requirements.context || 'No additional context provided'}`;
 
     console.log('Calling Lovable AI Gateway...');
 
+    // Validate and use the selected AI model
+    const allowedModels = [
+      'google/gemini-3-flash-preview',
+      'google/gemini-2.5-flash',
+      'google/gemini-2.5-pro',
+      'openai/gpt-5-mini',
+    ];
+    const selectedModel = allowedModels.includes(requirements.aiModel || '')
+      ? requirements.aiModel!
+      : 'google/gemini-3-flash-preview';
+
+    console.log('Using AI model:', selectedModel);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -208,7 +222,7 @@ ${requirements.context || 'No additional context provided'}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: selectedModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
