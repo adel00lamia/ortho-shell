@@ -151,6 +151,15 @@ interface GeneratedPlan {
   recommendations: string[];
   risk_assessment?: any;
   success_metrics?: string[];
+  regulatory_framework?: {
+    country?: string;
+    governing_bodies?: string[];
+    key_regulations?: string[];
+    funding_programs?: string[];
+    mandatory_training?: string[];
+    certification_standards?: string[];
+    compliance_checklist?: string[];
+  };
 }
 
 export default function AIPlanBuilder() {
@@ -1739,6 +1748,120 @@ export default function AIPlanBuilder() {
                               </div>
                             ))}
                           </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {generatedPlan.regulatory_framework && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5" />
+                            Regulatory Framework — {generatedPlan.regulatory_framework.country || requirements.country}
+                          </CardTitle>
+                          <CardDescription>
+                            Country-specific training regulations, funding programs, and compliance requirements
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          {generatedPlan.regulatory_framework.governing_bodies && generatedPlan.regulatory_framework.governing_bodies.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <Building className="h-4 w-4 text-primary" />
+                                Governing Bodies
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {generatedPlan.regulatory_framework.governing_bodies.map((body, i) => (
+                                  <Badge key={i} variant="secondary">{body}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {generatedPlan.regulatory_framework.key_regulations && generatedPlan.regulatory_framework.key_regulations.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-primary" />
+                                Key Regulations
+                              </h4>
+                              <div className="space-y-1">
+                                {generatedPlan.regulatory_framework.key_regulations.map((reg, i) => (
+                                  <div key={i} className="flex items-start gap-2">
+                                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 shrink-0" />
+                                    <p className="text-sm">{reg}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {generatedPlan.regulatory_framework.funding_programs && generatedPlan.regulatory_framework.funding_programs.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-green-600" />
+                                Funding Programs & Incentives
+                              </h4>
+                              <div className="space-y-1">
+                                {generatedPlan.regulatory_framework.funding_programs.map((prog, i) => (
+                                  <div key={i} className="flex items-start gap-2 p-2 bg-green-500/5 rounded-md">
+                                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                                    <p className="text-sm">{prog}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {generatedPlan.regulatory_framework.mandatory_training && generatedPlan.regulatory_framework.mandatory_training.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                Mandatory Training Requirements
+                              </h4>
+                              <div className="space-y-1">
+                                {generatedPlan.regulatory_framework.mandatory_training.map((req, i) => (
+                                  <div key={i} className="flex items-start gap-2 p-2 bg-orange-500/5 rounded-md">
+                                    <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                                    <p className="text-sm">{req}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {generatedPlan.regulatory_framework.certification_standards && generatedPlan.regulatory_framework.certification_standards.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <Award className="h-4 w-4 text-primary" />
+                                Certification Standards
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {generatedPlan.regulatory_framework.certification_standards.map((cert, i) => (
+                                  <Badge key={i} variant="outline" className="gap-1">
+                                    <Award className="h-3 w-3" />
+                                    {cert}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {generatedPlan.regulatory_framework.compliance_checklist && generatedPlan.regulatory_framework.compliance_checklist.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <ClipboardCheck className="h-4 w-4 text-primary" />
+                                Compliance Checklist
+                              </h4>
+                              <div className="space-y-1">
+                                {generatedPlan.regulatory_framework.compliance_checklist.map((item, i) => (
+                                  <div key={i} className="flex items-start gap-2">
+                                    <Checkbox className="mt-0.5" />
+                                    <p className="text-sm">{item}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     )}

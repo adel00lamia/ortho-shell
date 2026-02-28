@@ -139,6 +139,15 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "continuous_improvement": "Feedback loops",
       "knowledge_retention": "Retention strategies",
       "culture_transformation": "Building a learning organization"
+    },
+    "regulatory_framework": {
+      "country": "Country name",
+      "governing_bodies": ["List of relevant training/labor regulatory bodies"],
+      "key_regulations": ["Specific training regulations and labor laws applicable"],
+      "funding_programs": ["Available government funding, tax incentives, or reimbursement programs for training"],
+      "mandatory_training": ["Any legally required training topics"],
+      "certification_standards": ["Recognized certifications and standards in this market"],
+      "compliance_checklist": ["Steps to ensure the training plan meets local regulations"]
     }
   }
 }`;
@@ -153,6 +162,16 @@ Budget: ${requirements.budget} ${requirements.country === 'Morocco' || !requirem
 Duration: ${requirements.duration} months
 
 IMPORTANT: Tailor this plan to the ${requirements.country || 'global'} market context. Consider local labor regulations, training standards, available certifications, local training providers, language considerations, and regional industry benchmarks for ${requirements.country || 'the target market'}.
+
+REGULATORY FRAMEWORK REQUIREMENTS:
+You MUST include a detailed "regulatory_framework" section specific to ${requirements.country || 'the target market'}. For example:
+- Morocco: OFPPT (Office de la Formation Professionnelle), GIAC (Groupements Interprofessionnels d'Aide au Conseil), CSF contributions, TFP tax
+- France: OPCO (Opérateurs de Compétences), CPF (Compte Personnel de Formation), Qualiopi certification, Plan de développement des compétences
+- United States: EEOC compliance, OSHA training requirements, Section 127 tax exclusion, state-specific regulations
+- Germany: Betriebsverfassungsgesetz (Works Constitution Act), IHK certifications, Bildungsurlaub
+- UAE: MOHRE regulations, Emiratisation training requirements, KHDA standards
+- United Kingdom: Apprenticeship Levy, CIPD standards, Health & Safety at Work Act training
+Include ALL relevant governing bodies, funding programs, mandatory training, and compliance steps for the selected country.
 
 Training Objectives:
 ${requirements.objectives.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}
