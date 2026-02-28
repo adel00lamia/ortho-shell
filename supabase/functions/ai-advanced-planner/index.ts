@@ -12,6 +12,7 @@ const corsHeaders = {
 const requirementsSchema = z.object({
   requirements: z.object({
     company: z.string().max(200).optional().default(''),
+    country: z.string().max(100).optional().default(''),
     industry: z.string().max(100).optional().default('General'),
     companySize: z.string().max(50).optional().default('Medium'),
     budget: z.number().min(0).max(100_000_000).optional().default(50000),
@@ -145,10 +146,13 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
 Company: ${requirements.company || 'Not specified'}
+Country/Market: ${requirements.country || 'Not specified'}
 Industry: ${requirements.industry}
 Company Size: ${requirements.companySize}
-Budget: ${requirements.budget} MAD
+Budget: ${requirements.budget} ${requirements.country === 'Morocco' || !requirements.country ? 'MAD' : 'local currency'}
 Duration: ${requirements.duration} months
+
+IMPORTANT: Tailor this plan to the ${requirements.country || 'global'} market context. Consider local labor regulations, training standards, available certifications, local training providers, language considerations, and regional industry benchmarks for ${requirements.country || 'the target market'}.
 
 Training Objectives:
 ${requirements.objectives.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}

@@ -60,9 +60,10 @@ export interface CompanyResearchData {
 interface CompanyResearchProps {
   onResearchComplete: (data: CompanyResearchData) => void;
   initialCompanyName?: string;
+  country?: string;
 }
 
-export function CompanyResearch({ onResearchComplete, initialCompanyName = '' }: CompanyResearchProps) {
+export function CompanyResearch({ onResearchComplete, initialCompanyName = '', country }: CompanyResearchProps) {
   const [companyName, setCompanyName] = useState(initialCompanyName);
   const [isResearching, setIsResearching] = useState(false);
   const [research, setResearch] = useState<CompanyResearchData | null>(null);
@@ -77,7 +78,7 @@ export function CompanyResearch({ onResearchComplete, initialCompanyName = '' }:
     setIsResearching(true);
     try {
       const { data, error } = await supabase.functions.invoke('company-research', {
-        body: { companyName: companyName.trim() }
+        body: { companyName: companyName.trim(), country: country || undefined }
       });
 
       if (error) throw error;
