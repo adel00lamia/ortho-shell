@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   Wand2, Save, Play, FileText, Award, QrCode,
-  PlusCircle, Trash2, Presentation, MonitorPlay, Download
+  PlusCircle, Trash2, Presentation, MonitorPlay, Download, Link2, Unlink
 } from "lucide-react";
 import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
@@ -36,11 +36,16 @@ export default function ModuleStudio() {
   const navigate = useNavigate();
   const [module, setModule] = useState<any>(null);
   const [trainingPlan, setTrainingPlan] = useState<any>(null);
+  const [trainingPlans, setTrainingPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("details");
   const [showPresentation, setShowPresentation] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(planId || "");
+  const [showPlanSelector, setShowPlanSelector] = useState(false);
+
+  const isStandalone = !planId;
 
   const [formData, setFormData] = useState({
     title: "",
@@ -53,9 +58,13 @@ export default function ModuleStudio() {
   });
 
   useEffect(() => {
-    if (planId) fetchTrainingPlan();
-    if (moduleId) fetchModule();
-    else setLoading(false);
+    const init = async () => {
+      if (planId) await fetchTrainingPlan();
+      if (moduleId) await fetchModule();
+      if (!planId) await fetchAvailablePlans();
+      setLoading(false);
+    };
+    init();
   }, [planId, moduleId]);
 
   const fetchTrainingPlan = async () => {
@@ -67,6 +76,17 @@ export default function ModuleStudio() {
     } catch (error: any) {
       console.error('Error fetching training plan:', error);
       toast.error('Failed to load training plan');
+    }
+  };
+
+  const fetchAvailablePlans = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.from('training_plans').select('id, title, status').order('created_at', { ascending: false });
+      if (error) throw error;
+      setTrainingPlans(data || []);
+    } catch (error: any) {
+      console.error('Error fetching plans:', error);
     }
   };
 
@@ -88,9 +108,6 @@ export default function ModuleStudio() {
     } catch (error: any) {
       console.error('Error fetching module:', error);
       toast.error('Failed to load module');
-      navigate(`/training-plan/${planId}`);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -140,8 +157,21 @@ export default function ModuleStudio() {
   };
 
   const saveModule = async () => {
-    if (!formData.title || !planId || !user) {
-      toast.error('Please provide required information');
+    if (!formData.title) {
+      toast.error('Please provide a module title');
+      return;
+    }
+
+    const targetPlanId = planId || selectedPlanId;
+
+    if (!targetPlanId) {
+      setShowPlanSelector(true);
+      toast.error('Please select a training plan to link the module to, or create one first');
+      return;
+    }
+
+    if (!user) {
+      toast.error('You must be logged in');
       return;
     }
 
@@ -154,7 +184,7 @@ export default function ModuleStudio() {
         skills_covered: formData.skills_covered,
         target_audience: formData.target_audience,
         content: formData.content as any,
-        training_plan_id: planId,
+        training_plan_id: targetPlanId,
         ai_generated: formData.content_type === 'ai_generated'
       };
 
@@ -165,7 +195,7 @@ export default function ModuleStudio() {
       } else {
         const { data, error } = await supabase.from('training_modules').insert([moduleData]).select().single();
         if (error) throw error;
-        navigate(`/module-studio/${planId}/${data.id}`);
+        navigate(`/workflow/execute/modules/${targetPlanId}/${data.id}`);
         toast.success('Module created successfully!');
       }
     } catch (error: any) {
@@ -180,7 +210,8 @@ export default function ModuleStudio() {
       const { error } = await supabase.from('training_modules').update({ completed: false, completion_rate: 0 }).eq('id', moduleId);
       if (error) throw error;
       toast.success('Module published successfully!');
-      navigate(`/training-plan/${planId}`);
+      if (planId) navigate(`/workflow/plan/plans/${planId}`);
+      else navigate('/workflow/execute/modules');
     } catch (error: any) {
       console.error('Error publishing module:', error);
       toast.error('Failed to publish module');
@@ -203,34 +234,6 @@ export default function ModuleStudio() {
         <div className="flex items-center justify-center min-h-64">
           <div className="text-center">Loading module studio...</div>
         </div>
-      </div>
-    );
-  }
-
-  if (!planId) {
-    return (
-      <div className="container mx-auto py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>No Training Plan Selected</CardTitle>
-            <CardDescription>Module Studio needs to be opened from a training plan.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              To create or edit training modules, please:
-            </p>
-            <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-              <li>Go to the Training Diagnostic page</li>
-              <li>Create a new training plan</li>
-              <li>Open the training plan</li>
-              <li>Click "Create New Module" to access Module Studio</li>
-            </ol>
-            <div className="flex gap-2">
-              <Button onClick={() => navigate('/diagnostic')}>Go to Training Diagnostic</Button>
-              <Button variant="outline" onClick={() => navigate('/')}>Return to Dashboard</Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -270,7 +273,11 @@ export default function ModuleStudio() {
                 {moduleId ? 'Edit Module' : 'Create New Module'}
               </h1>
               <p className="text-muted-foreground">
-                {trainingPlan && `For training plan: ${trainingPlan.title}`}
+                {trainingPlan
+                  ? `Linked to plan: ${trainingPlan.title}`
+                  : isStandalone
+                  ? 'Standalone module — link to a plan when saving'
+                  : ''}
               </p>
             </div>
             <div className="flex gap-2">
@@ -307,6 +314,55 @@ export default function ModuleStudio() {
               </Button>
             </div>
           </div>
+
+          {/* Plan Selector for standalone mode */}
+          {(isStandalone || showPlanSelector) && (
+            <Card className="mb-6 border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Link2 className="w-4 h-4" />
+                  Link to Training Plan
+                </CardTitle>
+                <CardDescription>
+                  Select a training plan to associate this module with. This is required to save.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor="plan-select" className="text-sm">Training Plan</Label>
+                    <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                      <SelectTrigger id="plan-select">
+                        <SelectValue placeholder="Select a training plan..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {trainingPlans.map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{plan.title}</span>
+                              <Badge variant="outline" className="text-[10px]">{plan.status}</Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/workflow/plan/builder')}
+                  >
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    New Plan
+                  </Button>
+                </div>
+                {trainingPlans.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-3">
+                    No training plans found. Create one first to link your module.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
@@ -592,9 +648,15 @@ export default function ModuleStudio() {
           </Tabs>
 
           <div className="mt-8 flex gap-4">
-            <Button variant="outline" onClick={() => navigate(`/training-plan/${planId}`)}>
-              Back to Training Plan
-            </Button>
+            {planId ? (
+              <Button variant="outline" onClick={() => navigate(`/workflow/plan/plans/${planId}`)}>
+                Back to Training Plan
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                Back to Dashboard
+              </Button>
+            )}
           </div>
 
           {formData.title && formData.description && (
