@@ -180,7 +180,7 @@ export default function AIPlanBuilder() {
     objectives: [],
     targetSkills: [],
     constraints: [],
-    aiModel: 'gpt-4o',
+    aiModel: 'google/gemini-3-flash-preview',
     context: '',
     customizations: {
       deliveryMethods: ['online'],
@@ -499,10 +499,10 @@ export default function AIPlanBuilder() {
   ];
 
   const aiModels = [
-    { value: 'gpt-4o', label: 'GPT-4o (Balanced)', description: 'Best for comprehensive planning' },
-    { value: 'gpt-5-2025-08-07', label: 'GPT-5 (Advanced)', description: 'Most sophisticated reasoning' },
-    { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', description: 'Exceptional efficiency' },
-    { value: 'perplexity', label: 'Perplexity AI', description: 'Real-time market insights' }
+    { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Fast)', description: 'Fast and efficient — best for most plans' },
+    { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash (Balanced)', description: 'Good balance of speed and quality' },
+    { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro (Advanced)', description: 'Most sophisticated reasoning' },
+    { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini (Quality)', description: 'Strong reasoning at lower cost' }
   ];
 
   // Enhanced detailed industry list
@@ -677,6 +677,24 @@ export default function AIPlanBuilder() {
     return matchesSearch && matchesCategory;
   });
 
+  // Load saved templates from database
+  useEffect(() => {
+    const loadTemplates = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('plan_templates')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        setSavedTemplates(data || []);
+      } catch (err) {
+        console.error('Error loading templates:', err);
+      }
+    };
+    loadTemplates();
+  }, [user]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       if (isGenerating && progress < 90) {
@@ -696,6 +714,40 @@ export default function AIPlanBuilder() {
 
   const removeFromList = (list: string[], setList: (items: string[]) => void, item: string) => {
     setList(list.filter(i => i !== item));
+  };
+
+  const handleSaveTemplate = async (name: string, description: string, isPublic: boolean, configuration: any) => {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to save templates.', variant: 'destructive' });
+      return;
+    }
+    const { data, error } = await supabase.from('plan_templates').insert({
+      name,
+      description,
+      is_public: isPublic,
+      configuration,
+      user_id: user.id,
+    }).select().single();
+    if (error) throw error;
+    setSavedTemplates(prev => [data, ...prev]);
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    const { error } = await supabase.from('plan_templates').delete().eq('id', templateId);
+    if (error) throw error;
+    setSavedTemplates(prev => prev.filter(t => t.id !== templateId));
+  };
+
+  const handleLoadTemplate = (template: any) => {
+    const config = template.configuration;
+    if (config) {
+      setRequirements(prev => ({
+        ...prev,
+        ...config,
+        customizations: { ...prev.customizations, ...(config.customizations || {}) }
+      }));
+      toast({ title: 'Template Loaded', description: `Configuration from "${template.name}" applied.` });
+    }
   };
 
   const applyTemplate = (templateId: string) => {
@@ -744,8 +796,6 @@ export default function AIPlanBuilder() {
   };
 
   const generatePlan = async () => {
-    // Allow plan generation even without authentication for demo purposes
-
     setIsGenerating(true);
     setProgress(10);
 
@@ -760,7 +810,15 @@ export default function AIPlanBuilder() {
       if (error) throw error;
 
       setProgress(100);
+      
+      // Store previous plan for comparison
+      if (generatedPlan) {
+        setGeneratedPlans(prev => [...prev, { plan: generatedPlan, requirements: { ...requirements }, generatedAt: new Date() }]);
+      }
+      
       setGeneratedPlan(data.plan);
+      // Also store the new plan
+      setGeneratedPlans(prev => [...prev, { plan: data.plan, requirements: { ...requirements }, generatedAt: new Date() }]);
       setStep(5);
       
       toast({
@@ -1669,23 +1727,22 @@ export default function AIPlanBuilder() {
                   </Button>
                   <Button 
                     variant="outline"
-                    onClick={() => {
-                      const newPlanEntry = {
-                        plan: generatedPlan,
-                        requirements: { ...requirements },
-                        generatedAt: new Date()
-                      };
-                      setGeneratedPlans(prev => [...prev, newPlanEntry]);
-                      toast({
-                        title: "Plan Added to Comparison",
-                        description: "Generate another plan to compare them.",
-                      });
-                    }}
+                    onClick={generatePlan}
+                    disabled={isGenerating}
                   >
-                    <ArrowLeftRight className="h-4 w-4 mr-2" />
-                    Add to Compare
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+                    Regenerate
                   </Button>
                 </div>
+                
+                {isGenerating && (
+                  <div className="space-y-2">
+                    <Progress value={progress} className="w-full" />
+                    <p className="text-sm text-center text-muted-foreground">
+                      Regenerating plan with your configuration...
+                    </p>
+                  </div>
+                )}
 
                 <Tabs defaultValue="overview" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
@@ -2044,44 +2101,9 @@ export default function AIPlanBuilder() {
                       <PlanTemplateSaver
                         currentRequirements={requirements}
                         templates={savedTemplates}
-                        onSaveTemplate={async (name, description, isPublic, configuration) => {
-                          if (!user) {
-                            toast({
-                              title: "Sign In Required",
-                              description: "Please sign in to save templates.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          const { error } = await supabase
-                            .from('plan_templates')
-                            .insert({
-                              user_id: user.id,
-                              name,
-                              description,
-                              is_public: isPublic,
-                              configuration,
-                            });
-                          if (!error) {
-                            // Refresh templates
-                            const { data } = await supabase
-                              .from('plan_templates')
-                              .select('*')
-                              .order('created_at', { ascending: false });
-                            setSavedTemplates(data || []);
-                          }
-                        }}
-                        onLoadTemplate={(template) => {
-                          setRequirements(template.configuration);
-                          toast({
-                            title: "Template Loaded",
-                            description: "Configuration applied from template.",
-                          });
-                        }}
-                        onDeleteTemplate={async (templateId) => {
-                          await supabase.from('plan_templates').delete().eq('id', templateId);
-                          setSavedTemplates(prev => prev.filter(t => t.id !== templateId));
-                        }}
+                        onSaveTemplate={handleSaveTemplate}
+                        onLoadTemplate={handleLoadTemplate}
+                        onDeleteTemplate={handleDeleteTemplate}
                       />
                       
                       <PlanVersionHistory
@@ -2100,7 +2122,6 @@ export default function AIPlanBuilder() {
                       comments={planComments}
                       currentUserId={user?.id}
                       onAddComment={async (content, parentId) => {
-                        // Demo mode: just add to local state
                         const newComment = {
                           id: crypto.randomUUID(),
                           content,
@@ -2172,189 +2193,15 @@ export default function AIPlanBuilder() {
           </div>
         );
 
-      case 6:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Calendar & Bookings
-              </CardTitle>
-              <CardDescription>
-                Schedule sessions, manage attendees, and track completion
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-4 text-center">
-                  <Calendar className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Session Scheduling</h4>
-                  <p className="text-xs text-muted-foreground">Automated calendar integration</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Attendee Management</h4>
-                  <p className="text-xs text-muted-foreground">Invites and check-in system</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Completion Tracking</h4>
-                  <p className="text-xs text-muted-foreground">Progress monitoring and certificates</p>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 7:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                KPI & ROI Dashboard
-              </CardTitle>
-              <CardDescription>
-                xAPI-ready events, completion analytics, and business ROI calculation
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-4 text-center">
-                  <BarChart3 className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Performance Analytics</h4>
-                  <p className="text-xs text-muted-foreground">Completion rates and scores</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <DollarSign className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">ROI Calculator</h4>
-                  <p className="text-xs text-muted-foreground">Training investment returns</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <Target className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Business KPIs</h4>
-                  <p className="text-xs text-muted-foreground">Strategic goal alignment</p>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 8:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                OFPPT/GIAC Module
-              </CardTitle>
-              <CardDescription>
-                Step tracker for GIAC approval through submission with automated documentation
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <div>
-                    <div className="font-medium">GIAC Approval</div>
-                    <div className="text-sm text-muted-foreground">Initial qualification review</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Clock className="h-5 w-5 text-yellow-500" />
-                  <div>
-                    <div className="font-medium">Plan Approval</div>
-                    <div className="text-sm text-muted-foreground">Training plan validation</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Play className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <div className="font-medium">Execution</div>
-                    <div className="text-sm text-muted-foreground">Training delivery phase</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-purple-500" />
-                  <div>
-                    <div className="font-medium">Evaluation</div>
-                    <div className="text-sm text-muted-foreground">Assessment and validation</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <FileText className="h-5 w-5 text-orange-500" />
-                  <div>
-                    <div className="font-medium">Dossier Generation</div>
-                    <div className="text-sm text-muted-foreground">Automated documentation</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Upload className="h-5 w-5 text-green-600" />
-                  <div>
-                    <div className="font-medium">Submission</div>
-                    <div className="text-sm text-muted-foreground">Final submission and tracking</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 9:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Admin & Integrations
-              </CardTitle>
-              <CardDescription>
-                HRIS/LMS connectors, SSO setup, and security configurations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-4">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    HRIS Integration
-                  </h4>
-                  <p className="text-sm text-muted-foreground">Connect with HR systems for user management</p>
-                </Card>
-                <Card className="p-4">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    LMS Connector
-                  </h4>
-                  <p className="text-sm text-muted-foreground">Integrate with existing learning platforms</p>
-                </Card>
-                <Card className="p-4">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Single Sign-On
-                  </h4>
-                  <p className="text-sm text-muted-foreground">Secure authentication with SSO</p>
-                </Card>
-                <Card className="p-4">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    Security Settings
-                  </h4>
-                  <p className="text-sm text-muted-foreground">Advanced security configurations</p>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
       default:
         return null;
     }
   };
 
+  const totalSteps = 5;
+
   const nextStep = () => {
-    if (step < 9) setStep(step + 1);
+    if (step < totalSteps) setStep(step + 1);
   };
 
   const prevStep = () => {
@@ -2362,7 +2209,7 @@ export default function AIPlanBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 via-background to-muted/30 p-6">
       <div className="max-w-4xl mx-auto">
         <WorkflowIndicator />
         
@@ -2373,12 +2220,12 @@ export default function AIPlanBuilder() {
             Back
           </Button>
           
-          {step > 0 && (
+          {step > 0 && step < 5 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Step {step} of 9
+                Step {step} of 4
               </span>
-              <Progress value={(step / 9) * 100} className="w-32" />
+              <Progress value={(step / 4) * 100} className="w-32" />
             </div>
           )}
         </div>
@@ -2389,27 +2236,44 @@ export default function AIPlanBuilder() {
         {/* Navigation Buttons */}
         {step > 0 && step < 5 && (
           <div className="flex justify-between mt-8">
-            <Button variant="outline" onClick={prevStep} disabled={step === 0}>
-              Previous
-            </Button>
-            <Button onClick={nextStep} disabled={step === 9}>
-              Next Step
-            </Button>
-          </div>
-        )}
-
-        {step >= 6 && step <= 9 && (
-          <div className="flex justify-between mt-8">
             <Button variant="outline" onClick={prevStep}>
               Previous
             </Button>
-            <Button onClick={nextStep} disabled={step === 9}>
-              {step === 9 ? 'Complete Setup' : 'Next Step'}
+            {step < 4 ? (
+              <Button onClick={nextStep}>
+                Next Step
+              </Button>
+            ) : (
+              <Button onClick={generatePlan} disabled={isGenerating}>
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate Plan
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="flex justify-between mt-8">
+            <Button variant="outline" onClick={() => setStep(4)}>
+              Back to Configuration
+            </Button>
+            <Button variant="outline" onClick={generatePlan} disabled={isGenerating}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Regenerate Plan
             </Button>
           </div>
         )}
 
-        {/* Contextual Actions - Show after requirements are filled */}
+        {/* Contextual Actions */}
         {step === 5 && requirements.industry && requirements.companySize && (
           <div className="mt-8">
             <ContextualActions currentPage="plan-builder" data={requirements} />
@@ -2419,7 +2283,6 @@ export default function AIPlanBuilder() {
     </div>
   );
 }
-
 // Industry Benchmark Insights Component
 const IndustryBenchmarkInsights = ({ industry }: { industry: string }) => {
   const industryData: Record<string, any> = {
