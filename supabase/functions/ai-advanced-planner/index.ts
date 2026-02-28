@@ -149,7 +149,7 @@ Company: ${requirements.company || 'Not specified'}
 Country/Market: ${requirements.country || 'Not specified'}
 Industry: ${requirements.industry}
 Company Size: ${requirements.companySize}
-Budget: ${requirements.budget} ${requirements.country === 'Morocco' || !requirements.country ? 'MAD' : 'local currency'}
+Budget: ${requirements.budget} ${requirements.country === 'Morocco' || !requirements.country ? 'MAD' : requirements.country === 'United States' ? 'USD' : requirements.country === 'United Kingdom' ? 'GBP' : ['France','Germany','Spain','Italy','Netherlands','Belgium','Portugal','Austria','Ireland'].includes(requirements.country) ? 'EUR' : 'local currency'}
 Duration: ${requirements.duration} months
 
 IMPORTANT: Tailor this plan to the ${requirements.country || 'global'} market context. Consider local labor regulations, training standards, available certifications, local training providers, language considerations, and regional industry benchmarks for ${requirements.country || 'the target market'}.

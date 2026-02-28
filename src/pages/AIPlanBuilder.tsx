@@ -572,6 +572,69 @@ export default function AIPlanBuilder() {
     'Turkey', 'Russia', 'Pakistan', 'Bangladesh'
   ];
 
+  const currencyMap: Record<string, { code: string; symbol: string }> = {
+    'Morocco': { code: 'MAD', symbol: 'MAD' },
+    'Tunisia': { code: 'TND', symbol: 'TND' },
+    'Algeria': { code: 'DZD', symbol: 'DZD' },
+    'Egypt': { code: 'EGP', symbol: 'EGP' },
+    'South Africa': { code: 'ZAR', symbol: 'R' },
+    'Nigeria': { code: 'NGN', symbol: '₦' },
+    'Kenya': { code: 'KES', symbol: 'KSh' },
+    'Ghana': { code: 'GHS', symbol: 'GH₵' },
+    'Senegal': { code: 'XOF', symbol: 'CFA' },
+    'Ivory Coast': { code: 'XOF', symbol: 'CFA' },
+    'Cameroon': { code: 'XAF', symbol: 'FCFA' },
+    'Ethiopia': { code: 'ETB', symbol: 'ETB' },
+    'UAE': { code: 'AED', symbol: 'AED' },
+    'Saudi Arabia': { code: 'SAR', symbol: 'SAR' },
+    'Qatar': { code: 'QAR', symbol: 'QAR' },
+    'Kuwait': { code: 'KWD', symbol: 'KWD' },
+    'Bahrain': { code: 'BHD', symbol: 'BHD' },
+    'Oman': { code: 'OMR', symbol: 'OMR' },
+    'Jordan': { code: 'JOD', symbol: 'JOD' },
+    'Lebanon': { code: 'LBP', symbol: 'LBP' },
+    'France': { code: 'EUR', symbol: '€' },
+    'Germany': { code: 'EUR', symbol: '€' },
+    'United Kingdom': { code: 'GBP', symbol: '£' },
+    'Spain': { code: 'EUR', symbol: '€' },
+    'Italy': { code: 'EUR', symbol: '€' },
+    'Netherlands': { code: 'EUR', symbol: '€' },
+    'Belgium': { code: 'EUR', symbol: '€' },
+    'Switzerland': { code: 'CHF', symbol: 'CHF' },
+    'Portugal': { code: 'EUR', symbol: '€' },
+    'Sweden': { code: 'SEK', symbol: 'kr' },
+    'Norway': { code: 'NOK', symbol: 'kr' },
+    'Denmark': { code: 'DKK', symbol: 'kr' },
+    'Poland': { code: 'PLN', symbol: 'zł' },
+    'Austria': { code: 'EUR', symbol: '€' },
+    'Ireland': { code: 'EUR', symbol: '€' },
+    'United States': { code: 'USD', symbol: '$' },
+    'Canada': { code: 'CAD', symbol: 'CA$' },
+    'Mexico': { code: 'MXN', symbol: 'MX$' },
+    'Brazil': { code: 'BRL', symbol: 'R$' },
+    'Argentina': { code: 'ARS', symbol: 'AR$' },
+    'Colombia': { code: 'COP', symbol: 'COL$' },
+    'Chile': { code: 'CLP', symbol: 'CLP' },
+    'China': { code: 'CNY', symbol: '¥' },
+    'Japan': { code: 'JPY', symbol: '¥' },
+    'India': { code: 'INR', symbol: '₹' },
+    'South Korea': { code: 'KRW', symbol: '₩' },
+    'Singapore': { code: 'SGD', symbol: 'S$' },
+    'Malaysia': { code: 'MYR', symbol: 'RM' },
+    'Indonesia': { code: 'IDR', symbol: 'Rp' },
+    'Thailand': { code: 'THB', symbol: '฿' },
+    'Vietnam': { code: 'VND', symbol: '₫' },
+    'Philippines': { code: 'PHP', symbol: '₱' },
+    'Australia': { code: 'AUD', symbol: 'A$' },
+    'New Zealand': { code: 'NZD', symbol: 'NZ$' },
+    'Turkey': { code: 'TRY', symbol: '₺' },
+    'Russia': { code: 'RUB', symbol: '₽' },
+    'Pakistan': { code: 'PKR', symbol: 'Rs' },
+    'Bangladesh': { code: 'BDT', symbol: '৳' },
+  };
+
+  const getCurrency = () => currencyMap[requirements.country] || { code: 'MAD', symbol: 'MAD' };
+
   const companySizes = [
     '1-10 employees', '11-50 employees', '51-200 employees', 
     '201-500 employees', '501-1000 employees', '1000+ employees'
@@ -1357,7 +1420,7 @@ export default function AIPlanBuilder() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Budget (MAD)</label>
+                  <label className="text-sm font-medium">Budget ({getCurrency().code})</label>
                   <Input
                     type="number"
                     value={requirements.budget}
@@ -1648,8 +1711,8 @@ export default function AIPlanBuilder() {
                             <div className="text-sm text-muted-foreground">Duration</div>
                           </div>
                           <div className="text-center p-4 bg-blue-500/5 rounded-lg">
-                            <div className="text-2xl font-bold text-blue-600">{requirements.budget.toLocaleString()}</div>
-                            <div className="text-sm text-muted-foreground">Budget (MAD)</div>
+                            <div className="text-2xl font-bold text-blue-600">{getCurrency().symbol} {requirements.budget.toLocaleString()}</div>
+                            <div className="text-sm text-muted-foreground">Budget ({getCurrency().code})</div>
                           </div>
                           <div className="text-center p-4 bg-purple-500/5 rounded-lg">
                             <div className="text-2xl font-bold text-purple-600">{generatedPlan.kpis?.length || 0}</div>
@@ -1706,7 +1769,7 @@ export default function AIPlanBuilder() {
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Est. Cost:</span>
-                                <p className="font-medium">{module.estimated_cost ? `${module.estimated_cost.toLocaleString()} MAD` : 'TBD'}</p>
+                                <p className="font-medium">{module.estimated_cost ? `${getCurrency().symbol} ${module.estimated_cost.toLocaleString()}` : 'TBD'}</p>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Skills:</span>
@@ -1739,14 +1802,14 @@ export default function AIPlanBuilder() {
                             {Object.entries(generatedPlan.budget_breakdown).map(([category, amount]) => (
                               <div key={category} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded">
                                 <span className="capitalize">{category.replace(/_/g, ' ')}</span>
-                                <span className="font-medium">{typeof amount === 'number' ? `${amount.toLocaleString()} MAD` : String(amount)}</span>
+                                <span className="font-medium">{typeof amount === 'number' ? `${getCurrency().symbol} ${amount.toLocaleString()}` : String(amount)}</span>
                               </div>
                             ))}
                             <Separator />
                             <div className="flex justify-between items-center p-2 font-bold">
                               <span>Total</span>
                               <span className="text-primary">
-                                {Object.values(generatedPlan.budget_breakdown).reduce<number>((sum, val) => sum + (typeof val === 'number' ? val : 0), 0).toLocaleString()} MAD
+                                {getCurrency().symbol} {Object.values(generatedPlan.budget_breakdown).reduce<number>((sum, val) => sum + (typeof val === 'number' ? val : 0), 0).toLocaleString()}
                               </span>
                             </div>
                           </div>
