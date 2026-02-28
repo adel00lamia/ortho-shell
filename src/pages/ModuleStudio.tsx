@@ -21,6 +21,8 @@ import { SlideEditor } from "@/components/module-studio/SlideEditor";
 import { QuizEditor } from "@/components/module-studio/QuizEditor";
 import { PresentationMode } from "@/components/module-studio/PresentationMode";
 import { exportModuleToPDF } from "@/components/module-studio/ModulePDFExport";
+import { useModuleProgress } from "@/hooks/useModuleProgress";
+import { Progress } from "@/components/ui/progress";
 
 interface ModuleContent {
   slides?: { title: string; content: string; type?: string; videoUrl?: string; exerciseInstructions?: string; resourceLinks?: string[] }[];
@@ -236,6 +238,15 @@ export default function ModuleStudio() {
   const slides = formData.content.slides || [];
   const quiz = formData.content.quiz || [];
 
+  const {
+    progress: learnerProgress,
+    markSlideCompleted,
+    submitQuizAnswer,
+    slideCompletionPercent,
+    quizCompletionPercent,
+    isComplete,
+  } = useModuleProgress(moduleId, slides.length, quiz.length);
+
   return (
     <>
       {showPresentation && (
@@ -243,6 +254,8 @@ export default function ModuleStudio() {
           slides={slides}
           moduleTitle={formData.title || "Module Preview"}
           onClose={() => setShowPresentation(false)}
+          onSlideViewed={moduleId ? markSlideCompleted : undefined}
+          completedSlides={learnerProgress.completedSlides}
         />
       )}
 
@@ -483,6 +496,44 @@ export default function ModuleStudio() {
 
             {/* Preview Tab */}
             <TabsContent value="preview" className="space-y-6">
+              {/* Learner Progress Card */}
+              {moduleId && (slides.length > 0 || quiz.length > 0) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Play className="w-5 h-5" />
+                      Learner Progress
+                      {isComplete && <Badge className="bg-green-500/20 text-green-700 border-green-300">Complete</Badge>}
+                    </CardTitle>
+                    <CardDescription>Track your progress through slides and quizzes</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Slides viewed</span>
+                          <span className="font-medium">{learnerProgress.completedSlides.length}/{slides.length}</span>
+                        </div>
+                        <Progress value={slideCompletionPercent} className="h-2" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Quiz answered</span>
+                          <span className="font-medium">{Object.keys(learnerProgress.quizAnswers).length}/{quiz.length}</span>
+                        </div>
+                        <Progress value={quizCompletionPercent} className="h-2" />
+                      </div>
+                    </div>
+                    {learnerProgress.quizScore !== null && (
+                      <div className="border rounded-lg p-3 bg-muted/50 text-center">
+                        <span className="text-sm text-muted-foreground">Quiz Score: </span>
+                        <span className="font-bold text-lg">{Math.round(learnerProgress.quizScore)}%</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -511,21 +562,27 @@ export default function ModuleStudio() {
                     </div>
                   </div>
 
-                  {/* Mini slide preview strip */}
+                  {/* Mini slide preview strip with completion indicators */}
                   {slides.length > 0 && (
                     <div className="mt-6">
                       <h4 className="text-sm font-medium mb-3">Slide Thumbnails</h4>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {slides.map((slide, i) => (
-                          <button
-                            key={i}
-                            onClick={() => { setShowPresentation(true); }}
-                            className="border rounded-lg p-3 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
-                          >
-                            <span className="text-[10px] text-muted-foreground">#{i + 1}</span>
-                            <p className="text-xs font-medium line-clamp-2 group-hover:text-primary">{slide.title}</p>
-                          </button>
-                        ))}
+                        {slides.map((slide, i) => {
+                          const isViewed = learnerProgress.completedSlides.includes(i);
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => { setShowPresentation(true); }}
+                              className={`border rounded-lg p-3 text-left hover:border-primary/50 hover:shadow-sm transition-all group relative ${isViewed ? 'border-green-300 bg-green-50/50 dark:bg-green-950/20' : ''}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-muted-foreground">#{i + 1}</span>
+                                {isViewed && <span className="text-green-500 text-[10px]">✓</span>}
+                              </div>
+                              <p className="text-xs font-medium line-clamp-2 group-hover:text-primary">{slide.title}</p>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

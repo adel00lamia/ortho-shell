@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, X, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Maximize2, CheckCircle2 } from "lucide-react";
 
 interface Slide {
   title: string;
@@ -16,14 +16,25 @@ interface PresentationModeProps {
   slides: Slide[];
   moduleTitle: string;
   onClose: () => void;
+  onSlideViewed?: (slideIndex: number) => void;
+  completedSlides?: number[];
 }
 
-export function PresentationMode({ slides, moduleTitle, onClose }: PresentationModeProps) {
+export function PresentationMode({ slides, moduleTitle, onClose, onSlideViewed, completedSlides = [] }: PresentationModeProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Mark slide as viewed after 2 seconds
+  useEffect(() => {
+    if (!onSlideViewed) return;
+    const timer = setTimeout(() => {
+      onSlideViewed(currentSlide);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [currentSlide, onSlideViewed]);
 
   const goNext = useCallback(() => {
     if (isTransitioning || currentSlide >= slides.length - 1) return;
@@ -165,15 +176,24 @@ export function PresentationMode({ slides, moduleTitle, onClose }: PresentationM
         <Button variant="ghost" onClick={goPrev} disabled={currentSlide === 0 || isTransitioning} className="text-white hover:bg-white/20 disabled:opacity-30">
           <ChevronLeft className="w-5 h-5 mr-1" /> Previous
         </Button>
-        {/* Progress dots */}
+        {/* Progress dots with completion indicators */}
         <div className="flex gap-1.5">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToSlide(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-white w-6" : "bg-white/30 hover:bg-white/50 w-2"}`}
-            />
-          ))}
+          {slides.map((_, i) => {
+            const isViewed = completedSlides.includes(i);
+            return (
+              <button
+                key={i}
+                onClick={() => goToSlide(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === currentSlide
+                    ? "bg-white w-6"
+                    : isViewed
+                      ? "bg-green-400/70 hover:bg-green-400 w-2"
+                      : "bg-white/30 hover:bg-white/50 w-2"
+                }`}
+              />
+            );
+          })}
         </div>
         <Button variant="ghost" onClick={goNext} disabled={currentSlide === slides.length - 1 || isTransitioning} className="text-white hover:bg-white/20 disabled:opacity-30">
           Next <ChevronRight className="w-5 h-5 ml-1" />
