@@ -228,16 +228,6 @@ export default function ModuleStudio() {
     setFormData(prev => ({ ...prev, skills_covered: prev.skills_covered.filter((_, i) => i !== index) }));
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center min-h-64">
-          <div className="text-center">Loading module studio...</div>
-        </div>
-      </div>
-    );
-  }
-
   const slides = formData.content.slides || [];
   const quiz = formData.content.quiz || [];
 
@@ -249,6 +239,16 @@ export default function ModuleStudio() {
     quizCompletionPercent,
     isComplete,
   } = useModuleProgress(moduleId, slides.length, quiz.length);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-center min-h-64">
+          <div className="text-center">Loading module studio...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
