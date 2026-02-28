@@ -115,6 +115,7 @@ interface TrainingPack {
 
 interface PlanRequirements {
   company: string;
+  country: string;
   industry: string;
   companySize: string;
   budget: number;
@@ -162,6 +163,7 @@ export default function AIPlanBuilder() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [requirements, setRequirements] = useState<PlanRequirements>({
     company: '',
+    country: '',
     industry: '',
     companySize: '',
     budget: 50000,
@@ -553,6 +555,21 @@ export default function AIPlanBuilder() {
     // Other Industries
     'Waste Management', 'Security Services', 'Cleaning Services', 'Maintenance Services',
     'Photography', 'Art & Culture', 'Sports Organizations', 'Fitness & Wellness'
+  ];
+
+  const countries = [
+    // Africa
+    'Morocco', 'Tunisia', 'Algeria', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Ghana', 'Senegal', 'Ivory Coast', 'Cameroon', 'Ethiopia',
+    // Middle East
+    'UAE', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Jordan', 'Lebanon',
+    // Europe
+    'France', 'Germany', 'United Kingdom', 'Spain', 'Italy', 'Netherlands', 'Belgium', 'Switzerland', 'Portugal', 'Sweden', 'Norway', 'Denmark', 'Poland', 'Austria', 'Ireland',
+    // Americas
+    'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Colombia', 'Chile',
+    // Asia-Pacific
+    'China', 'Japan', 'India', 'South Korea', 'Singapore', 'Malaysia', 'Indonesia', 'Thailand', 'Vietnam', 'Philippines', 'Australia', 'New Zealand',
+    // Other
+    'Turkey', 'Russia', 'Pakistan', 'Bangladesh'
   ];
 
   const companySizes = [
@@ -1033,6 +1050,7 @@ export default function AIPlanBuilder() {
               {/* Company Research */}
               <CompanyResearch 
                 initialCompanyName={requirements.company}
+                country={requirements.country}
                 onResearchComplete={(data: CompanyResearchData) => {
                   setRequirements(prev => ({
                     ...prev,
@@ -1064,6 +1082,20 @@ export default function AIPlanBuilder() {
                     onChange={(e) => setRequirements({...requirements, company: e.target.value})}
                     placeholder="Enter company name"
                   />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Country / Market</label>
+                  <Select value={requirements.country} onValueChange={(value) => 
+                    setRequirements({...requirements, country: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {countries.map(country => (
+                        <SelectItem key={country} value={country}>{country}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Industry</label>

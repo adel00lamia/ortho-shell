@@ -11,12 +11,13 @@ serve(async (req) => {
   }
 
   try {
-    const { companyName } = await req.json();
+    const { companyName, country } = await req.json();
     if (!companyName || typeof companyName !== 'string' || companyName.length > 200) {
       return new Response(JSON.stringify({ error: 'Valid company name is required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const targetCountry = country || 'Morocco';
 
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -86,7 +87,7 @@ serve(async (req) => {
     }
 
     // Step 2: Use AI to analyze and generate industry insights
-    const aiPrompt = `Research and analyze the company "${companyName}".
+    const aiPrompt = `Research and analyze the company "${companyName}" operating in ${targetCountry}.
 ${websiteContent ? `\nHere is content from their website:\n${websiteContent.slice(0, 3000)}` : ''}
 
 Return a JSON object with this exact structure:
@@ -111,7 +112,7 @@ Return a JSON object with this exact structure:
     "challenges": ["challenge1", "challenge2", "challenge3"]
   },
   "benchmark": {
-    "avgTrainingBudgetPerEmployee": "Amount in MAD",
+    "avgTrainingBudgetPerEmployee": "Amount in ${targetCountry === 'Morocco' ? 'MAD' : 'local currency for ' + targetCountry}",
     "avgTrainingHoursPerYear": "Number of hours",
     "topTrainingAreas": ["area1", "area2", "area3", "area4", "area5"],
     "industryCompletionRate": "Percentage",
@@ -123,7 +124,7 @@ Return a JSON object with this exact structure:
   "recommendations": {
     "suggestedObjectives": ["objective1", "objective2", "objective3"],
     "prioritySkills": ["skill1", "skill2", "skill3", "skill4", "skill5"],
-    "suggestedBudget": "Recommended budget range in MAD",
+    "suggestedBudget": "Recommended budget range in ${targetCountry === 'Morocco' ? 'MAD' : 'local currency for ' + targetCountry}",
     "suggestedDuration": "Recommended training plan duration in months",
     "deliveryMethods": ["method1", "method2"]
   }
