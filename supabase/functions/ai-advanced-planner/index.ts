@@ -72,14 +72,41 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an expert training consultant and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan that demonstrates innovation and creativity.
+    const systemPrompt = `You are an expert training consultant, market analyst, and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan with full market and strategic analysis.
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
   "plan": {
     "title": "Comprehensive Training Plan Title",
+    "executive_summary": "A 2-3 paragraph executive summary covering the strategic rationale, key objectives, expected outcomes, and ROI justification for this training investment.",
     "description": "Detailed plan description with innovative approach",
     "timeline": "Detailed timeline breakdown with phases and milestones",
+    "market_research": {
+      "market_overview": "Comprehensive overview of the training market in this industry and country",
+      "market_size": "Estimated market size for training in this sector",
+      "growth_rate": "Annual growth rate of the training market",
+      "key_trends": ["Trend 1 with detailed explanation", "Trend 2"],
+      "competitive_landscape": "Analysis of training providers, competitors, and market positioning",
+      "target_audience_analysis": "Detailed profile of the target learners, their needs, learning styles, and motivations",
+      "demand_drivers": ["Driver 1", "Driver 2"],
+      "market_challenges": ["Challenge 1", "Challenge 2"]
+    },
+    "swot_analysis": {
+      "strengths": ["Internal strength 1 related to the company's training capabilities", "Strength 2"],
+      "weaknesses": ["Internal weakness 1 that could hinder training effectiveness", "Weakness 2"],
+      "opportunities": ["External opportunity 1 for training and development", "Opportunity 2"],
+      "threats": ["External threat 1 to training success", "Threat 2"],
+      "strategic_implications": "Summary of how the SWOT analysis informs the training strategy"
+    },
+    "pestel_analysis": {
+      "political": ["Political factor affecting training in this country/industry"],
+      "economic": ["Economic factor such as labor costs, funding availability"],
+      "social": ["Social/cultural factor affecting learning and development"],
+      "technological": ["Technology trend impacting training delivery"],
+      "environmental": ["Environmental/sustainability consideration for training"],
+      "legal": ["Legal/regulatory requirement for training compliance"],
+      "key_implications": "Summary of how PESTEL factors shape the training plan"
+    },
     "modules": [
       {
         "title": "Module Title",
@@ -116,9 +143,7 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "improvement_expected": "Expected improvement percentage"
       }
     ],
-    "recommendations": [
-      "Strategic recommendation with innovation focus"
-    ],
+    "recommendations": ["Strategic recommendation with innovation focus"],
     "risk_assessment": {
       "high_risks": ["Risk 1"],
       "medium_risks": ["Medium risk 1"],
@@ -126,6 +151,16 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "contingency_plans": ["Backup plan 1"]
     },
     "success_metrics": ["Metric 1"],
+    "implementation_roadmap": {
+      "phases": [
+        {
+          "name": "Phase 1: Foundation",
+          "duration": "Month 1-2",
+          "activities": ["Activity 1", "Activity 2"],
+          "deliverables": ["Deliverable 1", "Deliverable 2"]
+        }
+      ]
+    },
     "innovation_features": {
       "ai_integration": "How AI will enhance the learning experience",
       "personalization": "Adaptive learning paths",
@@ -145,10 +180,10 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "country": "Country name",
       "governing_bodies": ["List of relevant training/labor regulatory bodies"],
       "key_regulations": ["Specific training regulations and labor laws applicable"],
-      "funding_programs": ["Available government funding, tax incentives, or reimbursement programs for training"],
+      "funding_programs": ["Available government funding, tax incentives, or reimbursement programs"],
       "mandatory_training": ["Any legally required training topics"],
-      "certification_standards": ["Recognized certifications and standards in this market"],
-      "compliance_checklist": ["Steps to ensure the training plan meets local regulations"]
+      "certification_standards": ["Recognized certifications and standards"],
+      "compliance_checklist": ["Steps to ensure compliance"]
     }
   }
 }`;

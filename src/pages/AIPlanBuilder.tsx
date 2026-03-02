@@ -160,6 +160,38 @@ interface GeneratedPlan {
     certification_standards?: string[];
     compliance_checklist?: string[];
   };
+  market_research?: {
+    market_overview?: string;
+    market_size?: string;
+    growth_rate?: string;
+    key_trends?: string[];
+    competitive_landscape?: string;
+    target_audience_analysis?: string;
+    demand_drivers?: string[];
+    market_challenges?: string[];
+  };
+  swot_analysis?: {
+    strengths?: string[];
+    weaknesses?: string[];
+    opportunities?: string[];
+    threats?: string[];
+    strategic_implications?: string;
+  };
+  pestel_analysis?: {
+    political?: string[];
+    economic?: string[];
+    social?: string[];
+    technological?: string[];
+    environmental?: string[];
+    legal?: string[];
+    key_implications?: string;
+  };
+  innovation_features?: any;
+  sustainability_plan?: any;
+  executive_summary?: string;
+  implementation_roadmap?: {
+    phases?: { name: string; duration: string; activities: string[]; deliverables: string[] }[];
+  };
 }
 
 export default function AIPlanBuilder() {
