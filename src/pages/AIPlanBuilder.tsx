@@ -1792,6 +1792,7 @@ export default function AIPlanBuilder() {
                     <TabsTrigger value="roi">ROI</TabsTrigger>
                     <TabsTrigger value="kpis">KPIs</TabsTrigger>
                     <TabsTrigger value="risk">Risk</TabsTrigger>
+                    <TabsTrigger value="innovation">Innovation</TabsTrigger>
                     <TabsTrigger value="collaborate">Collaborate</TabsTrigger>
                   </TabsList>
 
@@ -2250,6 +2251,88 @@ export default function AIPlanBuilder() {
                         )}
                       </CardContent>
                     </Card>
+                  </TabsContent>
+
+                  <TabsContent value="innovation" className="space-y-4">
+                    {generatedPlan.innovation_features && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Zap className="h-5 w-5 text-primary" />
+                            Innovation Features
+                          </CardTitle>
+                          <CardDescription>Technology-driven enhancements powering the learning experience</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[
+                              { key: 'ai_integration', label: 'AI Integration', icon: <Brain className="h-5 w-5" />, color: 'text-purple-600' },
+                              { key: 'personalization', label: 'Personalization', icon: <Target className="h-5 w-5" />, color: 'text-blue-600' },
+                              { key: 'social_learning', label: 'Social Learning', icon: <Users className="h-5 w-5" />, color: 'text-green-600' },
+                              { key: 'microlearning', label: 'Microlearning', icon: <BookOpen className="h-5 w-5" />, color: 'text-orange-600' },
+                              { key: 'gamification', label: 'Gamification', icon: <Gamepad2 className="h-5 w-5" />, color: 'text-pink-600' },
+                              { key: 'virtual_reality', label: 'Virtual Reality', icon: <MonitorPlay className="h-5 w-5" />, color: 'text-indigo-600' },
+                              { key: 'mobile_learning', label: 'Mobile Learning', icon: <Globe className="h-5 w-5" />, color: 'text-teal-600' },
+                            ]
+                              .filter(item => generatedPlan.innovation_features?.[item.key as keyof typeof generatedPlan.innovation_features])
+                              .map(item => (
+                                <div key={item.key} className="p-4 rounded-lg border bg-muted/30 space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className={item.color}>{item.icon}</span>
+                                    <h4 className="font-semibold text-sm">{item.label}</h4>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {String(generatedPlan.innovation_features[item.key as keyof typeof generatedPlan.innovation_features])}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {generatedPlan.sustainability_plan && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            Sustainability Plan
+                          </CardTitle>
+                          <CardDescription>Long-term strategy for continuous learning and organizational growth</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[
+                              { key: 'long_term_vision', label: 'Long-Term Vision', icon: <Star className="h-5 w-5 text-amber-500" /> },
+                              { key: 'continuous_improvement', label: 'Continuous Improvement', icon: <RefreshCw className="h-5 w-5 text-blue-500" /> },
+                              { key: 'knowledge_retention', label: 'Knowledge Retention', icon: <BookOpen className="h-5 w-5 text-green-500" /> },
+                              { key: 'culture_transformation', label: 'Culture Transformation', icon: <Users className="h-5 w-5 text-purple-500" /> },
+                            ]
+                              .filter(item => generatedPlan.sustainability_plan?.[item.key as keyof typeof generatedPlan.sustainability_plan])
+                              .map(item => (
+                                <div key={item.key} className="p-4 rounded-lg border bg-muted/30 space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    {item.icon}
+                                    <h4 className="font-semibold text-sm">{item.label}</h4>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {String(generatedPlan.sustainability_plan[item.key as keyof typeof generatedPlan.sustainability_plan])}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {!generatedPlan.innovation_features && !generatedPlan.sustainability_plan && (
+                      <Card>
+                        <CardContent className="py-12 text-center">
+                          <Zap className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+                          <p className="text-muted-foreground">No innovation or sustainability data available. Try regenerating the plan.</p>
+                        </CardContent>
+                      </Card>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="collaborate" className="space-y-4">
