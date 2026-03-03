@@ -5,3 +5,6 @@ export { PlanComparison } from './PlanComparison';
 export { PlanComments } from './PlanComments';
 export { PlanTemplateSaver } from './PlanTemplateSaver';
 export { PlanVersionHistory } from './PlanVersionHistory';
+export { SWOTAnalysis } from './SWOTAnalysis';
+export { PESTELAnalysis } from './PESTELAnalysis';
+export { MarketResearchView } from './MarketResearchView';

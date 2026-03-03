@@ -80,7 +80,10 @@ import {
   PlanComparison,
   PlanComments,
   PlanTemplateSaver,
-  PlanVersionHistory
+  PlanVersionHistory,
+  SWOTAnalysis,
+  PESTELAnalysis,
+  MarketResearchView
 } from '@/components/plan';
 import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
 
@@ -1777,8 +1780,11 @@ export default function AIPlanBuilder() {
                 )}
 
                 <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+                  <TabsList className="flex flex-wrap w-full h-auto gap-1 p-1">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="market">Market</TabsTrigger>
+                    <TabsTrigger value="swot">SWOT</TabsTrigger>
+                    <TabsTrigger value="pestel">PESTEL</TabsTrigger>
                     <TabsTrigger value="modules">Modules</TabsTrigger>
                     <TabsTrigger value="timeline">Timeline</TabsTrigger>
                     <TabsTrigger value="budget">Budget</TabsTrigger>
@@ -1953,6 +1959,30 @@ export default function AIPlanBuilder() {
                           )}
                         </CardContent>
                       </Card>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="market" className="space-y-4">
+                    {generatedPlan.market_research ? (
+                      <MarketResearchView data={generatedPlan.market_research} />
+                    ) : (
+                      <Card><CardContent className="py-8 text-center text-muted-foreground">Market research data not available. Try regenerating the plan.</CardContent></Card>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="swot" className="space-y-4">
+                    {generatedPlan.swot_analysis ? (
+                      <SWOTAnalysis data={generatedPlan.swot_analysis} />
+                    ) : (
+                      <Card><CardContent className="py-8 text-center text-muted-foreground">SWOT analysis not available. Try regenerating the plan.</CardContent></Card>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="pestel" className="space-y-4">
+                    {generatedPlan.pestel_analysis ? (
+                      <PESTELAnalysis data={generatedPlan.pestel_analysis} />
+                    ) : (
+                      <Card><CardContent className="py-8 text-center text-muted-foreground">PESTEL analysis not available. Try regenerating the plan.</CardContent></Card>
                     )}
                   </TabsContent>
 
