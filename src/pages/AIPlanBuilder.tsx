@@ -1782,6 +1782,7 @@ export default function AIPlanBuilder() {
                 <Tabs defaultValue="overview" className="w-full">
                   <TabsList className="flex flex-wrap w-full h-auto gap-1 p-1">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="executive">Executive</TabsTrigger>
                     <TabsTrigger value="market">Market</TabsTrigger>
                     <TabsTrigger value="swot">SWOT</TabsTrigger>
                     <TabsTrigger value="pestel">PESTEL</TabsTrigger>
@@ -1957,6 +1958,99 @@ export default function AIPlanBuilder() {
                               </div>
                             </div>
                           )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="executive" className="space-y-4">
+                    {generatedPlan.executive_summary && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-primary" />
+                            Executive Summary
+                          </CardTitle>
+                          <CardDescription>Strategic rationale, key objectives, and ROI justification</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="prose prose-sm max-w-none">
+                            {generatedPlan.executive_summary.split('\n').map((paragraph, i) => (
+                              <p key={i} className="text-sm leading-relaxed text-muted-foreground mb-3">{paragraph}</p>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {generatedPlan.implementation_roadmap?.phases && generatedPlan.implementation_roadmap.phases.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Rocket className="h-5 w-5 text-primary" />
+                            Implementation Roadmap
+                          </CardTitle>
+                          <CardDescription>Phased rollout with activities and deliverables</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="relative space-y-0">
+                            {generatedPlan.implementation_roadmap.phases.map((phase, index) => (
+                              <div key={index} className="relative pl-8 pb-8 last:pb-0">
+                                {/* Timeline connector */}
+                                {index < (generatedPlan.implementation_roadmap?.phases?.length ?? 0) - 1 && (
+                                  <div className="absolute left-[15px] top-8 bottom-0 w-0.5 bg-border" />
+                                )}
+                                {/* Phase dot */}
+                                <div className="absolute left-0 top-1 w-8 h-8 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
+                                  <span className="text-xs font-bold text-primary">{index + 1}</span>
+                                </div>
+
+                                <div className="bg-muted/30 rounded-lg p-4 border">
+                                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                                    <h4 className="font-semibold text-sm">{phase.name}</h4>
+                                    <Badge variant="outline" className="text-xs">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      {phase.duration}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Activities</h5>
+                                      <ul className="space-y-1">
+                                        {phase.activities.map((activity, ai) => (
+                                          <li key={ai} className="flex items-start gap-2 text-sm">
+                                            <CheckCircle2 className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                                            <span>{activity}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    <div>
+                                      <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Deliverables</h5>
+                                      <ul className="space-y-1">
+                                        {phase.deliverables.map((deliverable, di) => (
+                                          <li key={di} className="flex items-start gap-2 text-sm">
+                                            <FileCheck className="h-3.5 w-3.5 text-green-600 mt-0.5 shrink-0" />
+                                            <span>{deliverable}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {!generatedPlan.executive_summary && !generatedPlan.implementation_roadmap?.phases?.length && (
+                      <Card>
+                        <CardContent className="py-12 text-center">
+                          <FileText className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+                          <p className="text-muted-foreground">No executive summary or roadmap data available. Try regenerating the plan.</p>
                         </CardContent>
                       </Card>
                     )}
