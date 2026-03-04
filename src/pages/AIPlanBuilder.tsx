@@ -892,11 +892,32 @@ export default function AIPlanBuilder() {
     }
 
     try {
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', user.id)
         .maybeSingle();
+
+      let companyId = profile?.company_id;
+
+      // Auto-create a company if user doesn't have one
+      if (!companyId) {
+        const { data: newCompany, error: companyError } = await supabase
+          .from('companies')
+          .insert({ name: user.email?.split('@')[0] || 'My Company' })
+          .select('id')
+          .single();
+
+        if (companyError) throw companyError;
+
+        companyId = newCompany.id;
+
+        // Link company to user profile
+        await supabase
+          .from('profiles')
+          .update({ company_id: companyId })
+          .eq('id', user.id);
+      }
 
       const { data, error } = await supabase
         .from('training_plans')
@@ -908,7 +929,7 @@ export default function AIPlanBuilder() {
           duration_months: requirements.duration,
           budget: requirements.budget,
           created_by: user.id,
-          company_id: profile?.company_id,
+          company_id: companyId,
           ai_generated: true,
           modules: generatedPlan.modules,
           kpis: generatedPlan.kpis
