@@ -26,6 +26,7 @@ import OFPPTReimbursement from "./pages/OFPPTReimbursement";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import NotFound from "./pages/NotFound";
 import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
+import SubscriptionGate from "./components/SubscriptionGate";
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
@@ -64,18 +65,18 @@ const App = () => (
               <Route path="/workflow/assess/benchmark" element={<ProtectedLayout><Benchmark /></ProtectedLayout>} />
               
               {/* Workflow Routes - Plan */}
-              <Route path="/workflow/plan/builder" element={<ProtectedLayout><AIPlanBuilder /></ProtectedLayout>} />
-              <Route path="/workflow/plan/plans" element={<ProtectedLayout><AIPlanBuilder /></ProtectedLayout>} />
+              <Route path="/workflow/plan/builder" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/plan/plans" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
               <Route path="/workflow/plan/plans/:id" element={<ProtectedLayout><TrainingPlan /></ProtectedLayout>} />
               
               {/* Workflow Routes - Execute */}
-              <Route path="/workflow/execute/modules" element={<ProtectedLayout><ModuleStudio /></ProtectedLayout>} />
-              <Route path="/workflow/execute/modules/:planId" element={<ProtectedLayout><ModuleStudio /></ProtectedLayout>} />
-              <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ProtectedLayout><ModuleStudio /></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules/:planId" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
               <Route path="/workflow/execute/marketplace" element={<ProtectedLayout><Marketplace /></ProtectedLayout>} />
               
               {/* Workflow Routes - Track */}
-              <Route path="/workflow/track/analytics" element={<ProtectedLayout><Analytics /></ProtectedLayout>} />
+              <Route path="/workflow/track/analytics" element={<ProtectedLayout><SubscriptionGate requiredPlan="professional"><Analytics /></SubscriptionGate></ProtectedLayout>} />
               <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
               <Route path="/workflow/track/certificates" element={<ProtectedLayout><CertificateGenerator /></ProtectedLayout>} />
               <Route path="/workflow/track/reimbursement" element={<ProtectedLayout><OFPPTReimbursement /></ProtectedLayout>} />
