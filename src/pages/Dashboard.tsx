@@ -141,7 +141,7 @@ const Dashboard = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-green-600">{stat.trend}</p>
+                  {stat.trend && <p className="text-xs text-primary">{stat.trend}</p>}
                 </div>
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <StatIcon className="h-6 w-6 text-primary" />
