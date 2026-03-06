@@ -87,11 +87,11 @@ export const useDashboardStats = (role: string | null) => {
         // If not enough activity, add plan-related entries
         if (plans && recentActivity.length < 4) {
           const recentPlans = plans.slice(0, 4 - recentActivity.length);
-          recentPlans.forEach(p => {
+          recentPlans.forEach(() => {
             recentActivity.push({
               title: `Plan de formation créé`,
               time: '',
-              type: 'info' as const,
+              type: 'info' as 'success' | 'info' | 'warning',
             });
           });
         }
