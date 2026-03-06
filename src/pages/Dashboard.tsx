@@ -111,11 +111,8 @@ const Dashboard = () => {
     { step: '4', title: t.nav.trackCertify.split(' ')[0], desc: d.monitorResults, icon: BarChart3, path: '/workflow/track/analytics' },
   ];
 
-  const activities = [
-    { title: d.newDiagnosticCompleted, time: d.hoursAgo(2), type: 'success' },
-    { title: d.planUpdated, time: d.hoursAgo(5), type: 'info' },
-    { title: d.modulePublished, time: d.dayAgo, type: 'success' },
-    { title: d.reviewScheduled, time: d.daysAgo(2), type: 'warning' },
+  const activities = stats?.recentActivity?.length ? stats.recentActivity : [
+    { title: d.newDiagnosticCompleted || 'No recent activity', time: '', type: 'info' as const },
   ];
 
   return (
