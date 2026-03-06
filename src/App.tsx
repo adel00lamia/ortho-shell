@@ -65,7 +65,7 @@ const App = () => (
               
               {/* Workflow Routes - Plan */}
               <Route path="/workflow/plan/builder" element={<ProtectedLayout><AIPlanBuilder /></ProtectedLayout>} />
-              <Route path="/workflow/plan/plans" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/workflow/plan/plans" element={<ProtectedLayout><AIPlanBuilder /></ProtectedLayout>} />
               <Route path="/workflow/plan/plans/:id" element={<ProtectedLayout><TrainingPlan /></ProtectedLayout>} />
               
               {/* Workflow Routes - Execute */}
@@ -83,7 +83,7 @@ const App = () => (
               {/* Management Routes */}
               <Route path="/manage/users" element={<ProtectedLayout><UserManagement /></ProtectedLayout>} />
               <Route path="/manage/team" element={<ProtectedLayout><TeamCollaboration /></ProtectedLayout>} />
-              <Route path="/manage/settings" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/manage/settings" element={<ProtectedLayout><Billing /></ProtectedLayout>} />
               
               {/* Billing */}
               <Route path="/billing" element={<ProtectedLayout><Billing /></ProtectedLayout>} />
