@@ -9,13 +9,15 @@ import {
   ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Dashboard = () => {
   const { role, loading: roleLoading } = useUserRole();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { stats, loading: statsLoading } = useDashboardStats(role);
 
-  if (roleLoading) {
+  if (roleLoading || statsLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-12 w-64" />
@@ -36,14 +38,14 @@ const Dashboard = () => {
       actions: [
         { title: d.userManagement, desc: d.manageUsersPerms, icon: Users, path: '/manage/users', variant: 'default' as const },
         { title: d.platformAnalytics, desc: d.viewMetrics, icon: BarChart3, path: '/workflow/track/analytics', variant: 'default' as const },
-        { title: d.companyOverview, desc: d.monitorCompanies, icon: Building2, path: '/manage/companies', variant: 'secondary' as const },
+        { title: d.companyOverview, desc: d.monitorCompanies, icon: Building2, path: '/workflow/track/analytics', variant: 'secondary' as const },
         { title: t.common.settings, desc: d.configurePlatform, icon: Settings, path: '/manage/settings', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.totalUsers, value: '1,284', icon: Users, trend: '+12%' },
-        { label: d.activeCompanies, value: '47', icon: Building2, trend: '+5%' },
-        { label: d.trainingPlans, value: '156', icon: Target, trend: '+18%' },
-        { label: d.completionRate, value: '87%', icon: TrendingUp, trend: '+3%' },
+        { label: d.totalUsers, value: String(stats?.totalUsers || 0), icon: Users, trend: '' },
+        { label: d.activeCompanies, value: String(stats?.activeCompanies || 0), icon: Building2, trend: '' },
+        { label: d.trainingPlans, value: String(stats?.trainingPlans || 0), icon: Target, trend: '' },
+        { label: d.completionRate, value: `${stats?.completionRate || 0}%`, icon: TrendingUp, trend: '' },
       ]
     },
     hr_manager: {
@@ -57,10 +59,10 @@ const Dashboard = () => {
         { title: d.teamManagement, desc: d.manageTeam, icon: Users, path: '/manage/team', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.teamMembers, value: '48', icon: Users, trend: '+4' },
-        { label: d.activePlans, value: '12', icon: Target, trend: '+2' },
-        { label: d.avgProgress, value: '72%', icon: TrendingUp, trend: '+8%' },
-        { label: t.nav.certificates, value: '34', icon: Award, trend: '+6' },
+        { label: d.teamMembers, value: String(stats?.teamMembers || 0), icon: Users, trend: '' },
+        { label: d.activePlans, value: String(stats?.activePlans || 0), icon: Target, trend: '' },
+        { label: d.avgProgress, value: `${stats?.avgProgress || 0}%`, icon: TrendingUp, trend: '' },
+        { label: t.nav.certificates, value: String(stats?.certificates || 0), icon: Award, trend: '' },
       ]
     },
     trainer: {
@@ -74,10 +76,10 @@ const Dashboard = () => {
         { title: t.nav.certificates, desc: d.issueCertificates, icon: Award, path: '/workflow/track/certificates', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.activeCourses, value: '8', icon: BookOpen, trend: '+2' },
-        { label: d.totalStudents, value: '124', icon: Users, trend: '+15' },
-        { label: d.completionRate, value: '85%', icon: CheckCircle2, trend: '+5%' },
-        { label: d.avgRating, value: '4.7', icon: Award, trend: '+0.2' },
+        { label: d.activeCourses, value: String(stats?.activeCourses || 0), icon: BookOpen, trend: '' },
+        { label: d.totalStudents, value: String(stats?.totalStudents || 0), icon: Users, trend: '' },
+        { label: d.completionRate, value: `${stats?.avgProgress || 0}%`, icon: CheckCircle2, trend: '' },
+        { label: d.avgRating, value: '-', icon: Award, trend: '' },
       ]
     },
     employee: {
@@ -85,16 +87,16 @@ const Dashboard = () => {
       badge: d.employee,
       icon: GraduationCap,
       actions: [
-        { title: d.myTraining, desc: d.viewAssigned, icon: BookOpen, path: '/workflow/execute/my-courses', variant: 'default' as const },
+        { title: d.myTraining, desc: d.viewAssigned, icon: BookOpen, path: '/workflow/execute/modules', variant: 'default' as const },
         { title: d.browseMarketplace, desc: d.exploreAvailable, icon: PlayCircle, path: '/workflow/execute/marketplace', variant: 'secondary' as const },
-        { title: d.myProgress, desc: d.trackLearning, icon: TrendingUp, path: '/workflow/track/my-progress', variant: 'secondary' as const },
+        { title: d.myProgress, desc: d.trackLearning, icon: TrendingUp, path: '/workflow/track/analytics', variant: 'secondary' as const },
         { title: t.nav.certificates, desc: d.viewCertificates, icon: Award, path: '/workflow/track/certificates', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.assignedCourses, value: '5', icon: BookOpen, trend: '+1' },
-        { label: d.inProgress, value: '3', icon: PlayCircle, trend: '0' },
-        { label: d.completed, value: '12', icon: CheckCircle2, trend: '+2' },
-        { label: t.nav.certificates, value: '8', icon: Award, trend: '+2' },
+        { label: d.assignedCourses, value: String(stats?.activeCourses || 0), icon: BookOpen, trend: '' },
+        { label: d.inProgress, value: String(stats?.activePlans || 0), icon: PlayCircle, trend: '' },
+        { label: d.completed, value: String(stats?.certificates || 0), icon: CheckCircle2, trend: '' },
+        { label: t.nav.certificates, value: String(stats?.certificates || 0), icon: Award, trend: '' },
       ]
     }
   };
@@ -109,11 +111,8 @@ const Dashboard = () => {
     { step: '4', title: t.nav.trackCertify.split(' ')[0], desc: d.monitorResults, icon: BarChart3, path: '/workflow/track/analytics' },
   ];
 
-  const activities = [
-    { title: d.newDiagnosticCompleted, time: d.hoursAgo(2), type: 'success' },
-    { title: d.planUpdated, time: d.hoursAgo(5), type: 'info' },
-    { title: d.modulePublished, time: d.dayAgo, type: 'success' },
-    { title: d.reviewScheduled, time: d.daysAgo(2), type: 'warning' },
+  const activities = stats?.recentActivity?.length ? stats.recentActivity : [
+    { title: d.newDiagnosticCompleted || 'No recent activity', time: '', type: 'info' as const },
   ];
 
   return (
@@ -142,7 +141,7 @@ const Dashboard = () => {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-green-600">{stat.trend}</p>
+                  {stat.trend && <p className="text-xs text-primary">{stat.trend}</p>}
                 </div>
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <StatIcon className="h-6 w-6 text-primary" />
