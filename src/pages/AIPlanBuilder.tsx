@@ -335,6 +335,7 @@ export default function AIPlanBuilder() {
   const predefinedConstraints = constraintCategories.flatMap(cat => cat.constraints);
   
   const { user } = useAuth();
+  const { language } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
 
