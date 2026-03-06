@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Upload, X, FileText, Plus } from "lucide-react";
+import { Upload, X, FileText, Plus, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,8 +34,36 @@ export default function ResumeSection({
   employeeName,
 }: ResumeSectionProps) {
   const [uploading, setUploading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [newCert, setNewCert] = useState("");
+
+  const extractFromCV = async (filePath: string) => {
+    setExtracting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-resume-extract", {
+        body: { filePath, employeeName },
+      });
+
+      if (error) throw error;
+
+      if (data?.extracted) {
+        const ext = data.extracted;
+        onResumeSummaryChange({
+          experience: ext.experience || resumeSummary.experience,
+          education: ext.education || resumeSummary.education,
+          skills: ext.skills?.length ? ext.skills : resumeSummary.skills,
+          certifications: ext.certifications?.length ? ext.certifications : resumeSummary.certifications,
+        });
+        toast.success("Compétences extraites du CV avec succès !");
+      }
+    } catch (error: any) {
+      console.error("Extract error:", error);
+      toast.error(error.message || "Erreur lors de l'extraction IA");
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,12 +83,13 @@ export default function ResumeSection({
 
       if (error) throw error;
 
-      const { data: urlData } = supabase.storage
-        .from("employee-cvs")
-        .getPublicUrl(data.path);
-
       onResumeUrlChange(data.path);
       toast.success("CV uploadé avec succès");
+
+      // Auto-extract if PDF
+      if (file.name.toLowerCase().endsWith(".pdf")) {
+        await extractFromCV(data.path);
+      }
     } catch (error: any) {
       console.error("Upload error:", error);
       toast.error("Erreur lors de l'upload du CV");
@@ -147,6 +176,32 @@ export default function ResumeSection({
               </label>
             )}
           </div>
+
+          {/* Extract button for already-uploaded files */}
+          {resumeUrl && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => extractFromCV(resumeUrl)}
+              disabled={extracting}
+            >
+              {extracting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-2" />
+              )}
+              {extracting ? "Extraction en cours..." : "Extraire les compétences via IA"}
+            </Button>
+          )}
+
+          {extracting && !resumeUrl && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Extraction automatique des compétences...
+            </div>
+          )}
         </div>
 
         {/* Structured Resume Fields */}
