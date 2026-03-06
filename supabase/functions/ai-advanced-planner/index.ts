@@ -65,6 +65,7 @@ serve(async (req) => {
       });
     }
     const { requirements } = parsed.data;
+    const language = rawBody.language === 'fr' ? 'fr' : 'en';
 
     console.log('Advanced plan generation for user:', userId);
 
@@ -72,7 +73,11 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an expert training consultant, market analyst, and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan with full market and strategic analysis.
+    const languageInstruction = language === 'fr'
+      ? '\n\nCRITICAL: You MUST write ALL content in French. Every title, description, recommendation, analysis, and text field must be in French. Only the JSON keys should remain in English.'
+      : '';
+
+    const systemPrompt = `You are an expert training consultant, market analyst, and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan with full market and strategic analysis.${languageInstruction}
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {

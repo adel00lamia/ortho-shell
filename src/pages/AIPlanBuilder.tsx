@@ -71,6 +71,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { WorkflowIndicator } from '@/components/WorkflowIndicator';
 import { ContextualActions } from '@/components/ContextualActions';
 import { 
@@ -334,6 +335,7 @@ export default function AIPlanBuilder() {
   const predefinedConstraints = constraintCategories.flatMap(cat => cat.constraints);
   
   const { user } = useAuth();
+  const { language } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -838,7 +840,8 @@ export default function AIPlanBuilder() {
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
         body: {
           requirements,
-          userId: user?.id || 'anonymous'
+          userId: user?.id || 'anonymous',
+          language: language
         }
       });
 
