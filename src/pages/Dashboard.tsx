@@ -36,7 +36,7 @@ const Dashboard = () => {
       actions: [
         { title: d.userManagement, desc: d.manageUsersPerms, icon: Users, path: '/manage/users', variant: 'default' as const },
         { title: d.platformAnalytics, desc: d.viewMetrics, icon: BarChart3, path: '/workflow/track/analytics', variant: 'default' as const },
-        { title: d.companyOverview, desc: d.monitorCompanies, icon: Building2, path: '/manage/companies', variant: 'secondary' as const },
+        { title: d.companyOverview, desc: d.monitorCompanies, icon: Building2, path: '/workflow/track/analytics', variant: 'secondary' as const },
         { title: t.common.settings, desc: d.configurePlatform, icon: Settings, path: '/manage/settings', variant: 'secondary' as const },
       ],
       stats: [
@@ -85,9 +85,9 @@ const Dashboard = () => {
       badge: d.employee,
       icon: GraduationCap,
       actions: [
-        { title: d.myTraining, desc: d.viewAssigned, icon: BookOpen, path: '/workflow/execute/my-courses', variant: 'default' as const },
+        { title: d.myTraining, desc: d.viewAssigned, icon: BookOpen, path: '/workflow/execute/modules', variant: 'default' as const },
         { title: d.browseMarketplace, desc: d.exploreAvailable, icon: PlayCircle, path: '/workflow/execute/marketplace', variant: 'secondary' as const },
-        { title: d.myProgress, desc: d.trackLearning, icon: TrendingUp, path: '/workflow/track/my-progress', variant: 'secondary' as const },
+        { title: d.myProgress, desc: d.trackLearning, icon: TrendingUp, path: '/workflow/track/analytics', variant: 'secondary' as const },
         { title: t.nav.certificates, desc: d.viewCertificates, icon: Award, path: '/workflow/track/certificates', variant: 'secondary' as const },
       ],
       stats: [
