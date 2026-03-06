@@ -17,7 +17,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { stats, loading: statsLoading } = useDashboardStats(role);
 
-  if (roleLoading) {
+  if (roleLoading || statsLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-12 w-64" />
