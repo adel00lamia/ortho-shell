@@ -9,11 +9,13 @@ import {
   ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const Dashboard = () => {
   const { role, loading: roleLoading } = useUserRole();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { stats, loading: statsLoading } = useDashboardStats(role);
 
   if (roleLoading) {
     return (
