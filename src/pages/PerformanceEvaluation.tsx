@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, TrendingUp, Users } from "lucide-react";
+import { Plus, FileText, TrendingUp, Users, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 import PerformanceAnalytics from "@/components/performance/PerformanceAnalytics";
+import SkillsOverview from "@/components/performance/SkillsOverview";
 import { Badge } from "@/components/ui/badge";
 import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
@@ -180,7 +181,7 @@ export default function PerformanceEvaluation() {
       </div>
 
       <Tabs defaultValue="evaluations" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
+        <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
           <TabsTrigger value="evaluations">
             <FileText className="w-4 h-4 mr-2" />
             Evaluations
@@ -188,6 +189,10 @@ export default function PerformanceEvaluation() {
           <TabsTrigger value="analytics">
             <TrendingUp className="w-4 h-4 mr-2" />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="skills">
+            <Brain className="w-4 h-4 mr-2" />
+            Compétences
           </TabsTrigger>
           <TabsTrigger value="employees">
             <Users className="w-4 h-4 mr-2" />
@@ -265,6 +270,10 @@ export default function PerformanceEvaluation() {
 
         <TabsContent value="analytics">
           <PerformanceAnalytics evaluations={evaluations} />
+        </TabsContent>
+
+        <TabsContent value="skills">
+          <SkillsOverview evaluations={evaluations} />
         </TabsContent>
 
         <TabsContent value="employees">
