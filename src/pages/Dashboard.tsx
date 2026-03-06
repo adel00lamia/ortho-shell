@@ -42,10 +42,10 @@ const Dashboard = () => {
         { title: t.common.settings, desc: d.configurePlatform, icon: Settings, path: '/manage/settings', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.totalUsers, value: '1,284', icon: Users, trend: '+12%' },
-        { label: d.activeCompanies, value: '47', icon: Building2, trend: '+5%' },
-        { label: d.trainingPlans, value: '156', icon: Target, trend: '+18%' },
-        { label: d.completionRate, value: '87%', icon: TrendingUp, trend: '+3%' },
+        { label: d.totalUsers, value: String(stats?.totalUsers || 0), icon: Users, trend: '' },
+        { label: d.activeCompanies, value: String(stats?.activeCompanies || 0), icon: Building2, trend: '' },
+        { label: d.trainingPlans, value: String(stats?.trainingPlans || 0), icon: Target, trend: '' },
+        { label: d.completionRate, value: `${stats?.completionRate || 0}%`, icon: TrendingUp, trend: '' },
       ]
     },
     hr_manager: {
@@ -59,10 +59,10 @@ const Dashboard = () => {
         { title: d.teamManagement, desc: d.manageTeam, icon: Users, path: '/manage/team', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.teamMembers, value: '48', icon: Users, trend: '+4' },
-        { label: d.activePlans, value: '12', icon: Target, trend: '+2' },
-        { label: d.avgProgress, value: '72%', icon: TrendingUp, trend: '+8%' },
-        { label: t.nav.certificates, value: '34', icon: Award, trend: '+6' },
+        { label: d.teamMembers, value: String(stats?.teamMembers || 0), icon: Users, trend: '' },
+        { label: d.activePlans, value: String(stats?.activePlans || 0), icon: Target, trend: '' },
+        { label: d.avgProgress, value: `${stats?.avgProgress || 0}%`, icon: TrendingUp, trend: '' },
+        { label: t.nav.certificates, value: String(stats?.certificates || 0), icon: Award, trend: '' },
       ]
     },
     trainer: {
@@ -76,10 +76,10 @@ const Dashboard = () => {
         { title: t.nav.certificates, desc: d.issueCertificates, icon: Award, path: '/workflow/track/certificates', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.activeCourses, value: '8', icon: BookOpen, trend: '+2' },
-        { label: d.totalStudents, value: '124', icon: Users, trend: '+15' },
-        { label: d.completionRate, value: '85%', icon: CheckCircle2, trend: '+5%' },
-        { label: d.avgRating, value: '4.7', icon: Award, trend: '+0.2' },
+        { label: d.activeCourses, value: String(stats?.activeCourses || 0), icon: BookOpen, trend: '' },
+        { label: d.totalStudents, value: String(stats?.totalStudents || 0), icon: Users, trend: '' },
+        { label: d.completionRate, value: `${stats?.avgProgress || 0}%`, icon: CheckCircle2, trend: '' },
+        { label: d.avgRating, value: '-', icon: Award, trend: '' },
       ]
     },
     employee: {
@@ -93,10 +93,10 @@ const Dashboard = () => {
         { title: t.nav.certificates, desc: d.viewCertificates, icon: Award, path: '/workflow/track/certificates', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.assignedCourses, value: '5', icon: BookOpen, trend: '+1' },
-        { label: d.inProgress, value: '3', icon: PlayCircle, trend: '0' },
-        { label: d.completed, value: '12', icon: CheckCircle2, trend: '+2' },
-        { label: t.nav.certificates, value: '8', icon: Award, trend: '+2' },
+        { label: d.assignedCourses, value: String(stats?.activeCourses || 0), icon: BookOpen, trend: '' },
+        { label: d.inProgress, value: String(stats?.activePlans || 0), icon: PlayCircle, trend: '' },
+        { label: d.completed, value: String(stats?.certificates || 0), icon: CheckCircle2, trend: '' },
+        { label: t.nav.certificates, value: String(stats?.certificates || 0), icon: Award, trend: '' },
       ]
     }
   };
