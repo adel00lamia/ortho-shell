@@ -78,10 +78,11 @@ export const useDashboardStats = (role: string | null) => {
         const { count: diagCount } = await diagQuery;
 
         // Build recent activity from real data
-        const recentActivity = (evals || []).map(ev => ({
+        type ActivityType = 'success' | 'info' | 'warning';
+        const recentActivity: { title: string; time: string; type: ActivityType }[] = (evals || []).map(ev => ({
           title: `Évaluation: ${ev.employee_name}`,
           time: ev.created_at ? formatTimeAgo(new Date(ev.created_at)) : '',
-          type: 'success' as const,
+          type: 'success' as ActivityType,
         }));
 
         // If not enough activity, add plan-related entries
