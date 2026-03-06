@@ -65,6 +65,7 @@ serve(async (req) => {
       });
     }
     const { requirements } = parsed.data;
+    const language = rawBody.language === 'fr' ? 'fr' : 'en';
 
     console.log('Advanced plan generation for user:', userId);
 
