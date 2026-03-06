@@ -31,7 +31,10 @@ export default function PerformanceEvaluation() {
   }, [companyId]);
 
   const loadProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from('profiles')
       .select('company_id')
@@ -40,6 +43,8 @@ export default function PerformanceEvaluation() {
     
     if (data?.company_id) {
       setCompanyId(data.company_id);
+    } else {
+      setLoading(false);
     }
   };
 
