@@ -12,9 +12,12 @@ import SkillsOverview from "@/components/performance/SkillsOverview";
 import { Badge } from "@/components/ui/badge";
 import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PerformanceEvaluation() {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const p = t.performance;
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -58,7 +61,7 @@ export default function PerformanceEvaluation() {
       .order('evaluation_date', { ascending: false });
 
     if (error) {
-      toast.error("Failed to load evaluations");
+      toast.error(p.failedToLoad);
     } else {
       setEvaluations(data || []);
     }
@@ -100,9 +103,9 @@ export default function PerformanceEvaluation() {
     }
 
     if (result.error) {
-      toast.error("Failed to save evaluation");
+      toast.error(p.failedToSave);
     } else {
-      toast.success(editingEvaluation ? "Evaluation updated" : "Evaluation created");
+      toast.success(editingEvaluation ? p.evaluationUpdated : p.evaluationCreated);
       setShowForm(false);
       setEditingEvaluation(null);
       loadEvaluations();
@@ -121,23 +124,24 @@ export default function PerformanceEvaluation() {
       .eq('id', id);
 
     if (error) {
-      toast.error("Failed to delete evaluation");
+      toast.error(p.failedToDelete);
     } else {
-      toast.success("Evaluation deleted");
+      toast.success(p.evaluationDeleted);
       loadEvaluations();
     }
   };
 
   const getRatingBadge = (rating: number) => {
-    if (rating >= 4.5) return <Badge className="bg-green-500">Exceptional</Badge>;
-    if (rating >= 3.5) return <Badge className="bg-blue-500">Exceeds</Badge>;
-    if (rating >= 2.5) return <Badge className="bg-yellow-500">Meets</Badge>;
-    if (rating >= 1.5) return <Badge className="bg-orange-500">Below</Badge>;
-    return <Badge className="bg-red-500">Needs Improvement</Badge>;
+    const r = p.form.ratings;
+    if (rating >= 4.5) return <Badge className="bg-green-500">{r.exceptional}</Badge>;
+    if (rating >= 3.5) return <Badge className="bg-blue-500">{r.exceeds}</Badge>;
+    if (rating >= 2.5) return <Badge className="bg-yellow-500">{r.meets}</Badge>;
+    if (rating >= 1.5) return <Badge className="bg-orange-500">{r.below}</Badge>;
+    return <Badge className="bg-red-500">{r.needsImprovement}</Badge>;
   };
 
   if (loading) {
-    return <div className="container mx-auto p-6">Loading...</div>;
+    return <div className="container mx-auto p-6">{t.common.loading}</div>;
   }
 
   if (showForm) {
@@ -146,7 +150,7 @@ export default function PerformanceEvaluation() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {editingEvaluation ? "Edit Performance Evaluation" : "New Performance Evaluation"}
+              {editingEvaluation ? p.editEvaluation : p.newEvaluationTitle}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -171,12 +175,12 @@ export default function PerformanceEvaluation() {
       
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Performance Evaluations</h1>
-          <p className="text-muted-foreground">Manage and analyze employee performance</p>
+          <h1 className="text-3xl font-bold">{p.title}</h1>
+          <p className="text-muted-foreground">{p.subtitle}</p>
         </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          New Evaluation
+          {p.newEvaluation}
         </Button>
       </div>
 
@@ -184,19 +188,19 @@ export default function PerformanceEvaluation() {
         <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
           <TabsTrigger value="evaluations">
             <FileText className="w-4 h-4 mr-2" />
-            Evaluations
+            {p.tabs.evaluations}
           </TabsTrigger>
           <TabsTrigger value="analytics">
             <TrendingUp className="w-4 h-4 mr-2" />
-            Analytics
+            {p.tabs.analytics}
           </TabsTrigger>
           <TabsTrigger value="skills">
             <Brain className="w-4 h-4 mr-2" />
-            Compétences
+            {p.tabs.skills}
           </TabsTrigger>
           <TabsTrigger value="employees">
             <Users className="w-4 h-4 mr-2" />
-            By Employee
+            {p.tabs.byEmployee}
           </TabsTrigger>
         </TabsList>
 
@@ -204,10 +208,10 @@ export default function PerformanceEvaluation() {
           {evaluations.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center">
-                <p className="text-muted-foreground mb-4">No evaluations yet</p>
+                <p className="text-muted-foreground mb-4">{p.noEvaluations}</p>
                 <Button onClick={() => setShowForm(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create First Evaluation
+                  {p.createFirst}
                 </Button>
               </CardContent>
             </Card>
@@ -224,21 +228,21 @@ export default function PerformanceEvaluation() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground mb-4">
                           <div>
-                            <span className="font-medium">Department:</span> {evaluation.department || 'N/A'}
+                            <span className="font-medium">{p.card.department}:</span> {evaluation.department || 'N/A'}
                           </div>
                           <div>
-                            <span className="font-medium">Period:</span> {evaluation.evaluation_period || 'N/A'}
+                            <span className="font-medium">{p.card.period}:</span> {evaluation.evaluation_period || 'N/A'}
                           </div>
                           <div>
-                            <span className="font-medium">Date:</span> {new Date(evaluation.evaluation_date).toLocaleDateString()}
+                            <span className="font-medium">{p.card.date}:</span> {new Date(evaluation.evaluation_date).toLocaleDateString()}
                           </div>
                           <div>
-                            <span className="font-medium">Rating:</span> {evaluation.overall_rating}/5
+                            <span className="font-medium">{p.card.rating}:</span> {evaluation.overall_rating}/5
                           </div>
                         </div>
                         {evaluation.strengths && evaluation.strengths.length > 0 && (
                           <div className="mb-2">
-                            <span className="text-sm font-medium">Strengths:</span>
+                            <span className="text-sm font-medium">{p.sections.strengths}:</span>
                             <div className="flex flex-wrap gap-2 mt-1">
                               {evaluation.strengths.slice(0, 3).map((strength: string, idx: number) => (
                                 <Badge key={idx} variant="secondary" className="bg-green-50 dark:bg-green-900/20">
@@ -246,7 +250,7 @@ export default function PerformanceEvaluation() {
                                 </Badge>
                               ))}
                               {evaluation.strengths.length > 3 && (
-                                <Badge variant="secondary">+{evaluation.strengths.length - 3} more</Badge>
+                                <Badge variant="secondary">+{evaluation.strengths.length - 3} {t.common.more}</Badge>
                               )}
                             </div>
                           </div>
@@ -254,10 +258,10 @@ export default function PerformanceEvaluation() {
                       </div>
                       <div className="flex gap-2 ml-4">
                         <Button variant="outline" size="sm" onClick={() => handleEdit(evaluation)}>
-                          Edit
+                          {t.common.edit}
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => handleDelete(evaluation.id)}>
-                          Delete
+                          {t.common.delete}
                         </Button>
                       </div>
                     </div>
@@ -279,11 +283,11 @@ export default function PerformanceEvaluation() {
         <TabsContent value="employees">
           <Card>
             <CardHeader>
-              <CardTitle>Employee Performance History</CardTitle>
+              <CardTitle>{p.employees.title}</CardTitle>
             </CardHeader>
             <CardContent>
               {evaluations.length === 0 ? (
-                <p className="text-center text-muted-foreground">No evaluation data available</p>
+                <p className="text-center text-muted-foreground">{p.employees.noData}</p>
               ) : (
                 <div className="space-y-4">
                   {Array.from(new Set(evaluations.map(e => e.employee_name))).map(employeeName => {
@@ -301,8 +305,8 @@ export default function PerformanceEvaluation() {
                             </div>
                             <div className="text-right">
                               <div className="text-2xl font-bold">{avgRating.toFixed(1)}</div>
-                              <p className="text-xs text-muted-foreground">Average Rating</p>
-                              <Badge variant="outline" className="mt-1">{employeeEvals.length} evaluations</Badge>
+                              <p className="text-xs text-muted-foreground">{p.employees.averageRating}</p>
+                              <Badge variant="outline" className="mt-1">{employeeEvals.length} {p.employees.evaluationsCount}</Badge>
                             </div>
                           </div>
                         </CardContent>

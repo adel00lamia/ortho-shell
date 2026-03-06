@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CompetencyScore {
   name: string;
@@ -13,17 +14,19 @@ interface PerformanceAnalyticsProps {
 }
 
 export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyticsProps) {
+  const { t } = useLanguage();
+  const a = t.performance.analytics;
+
   if (evaluations.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">No evaluations available for analytics</p>
+          <p className="text-center text-muted-foreground">{a.noData}</p>
         </CardContent>
       </Card>
     );
   }
 
-  // Calculate average ratings distribution
   const ratingDistribution = evaluations.reduce((acc: any, evaluation: any) => {
     const rating = Math.round(evaluation.overall_rating);
     acc[rating] = (acc[rating] || 0) + 1;
@@ -31,11 +34,10 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
   }, {});
 
   const ratingData = [1, 2, 3, 4, 5].map(rating => ({
-    rating: `${rating} Star`,
+    rating: `${rating} ★`,
     count: ratingDistribution[rating] || 0
   }));
 
-  // Calculate competency averages
   const competencyAverages = evaluations.reduce((acc: any, evaluation: any) => {
     if (evaluation.competency_scores && Array.isArray(evaluation.competency_scores)) {
       evaluation.competency_scores.forEach((comp: CompetencyScore) => {
@@ -55,12 +57,10 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
     fullMark: 5
   }));
 
-  // Top performers
   const topPerformers = [...evaluations]
     .sort((a, b) => b.overall_rating - a.overall_rating)
     .slice(0, 5);
 
-  // Areas needing improvement (most common)
   const improvementAreas = evaluations.reduce((acc: any, evaluation: any) => {
     if (evaluation.areas_for_improvement && Array.isArray(evaluation.areas_for_improvement)) {
       evaluation.areas_for_improvement.forEach((area: string) => {
@@ -78,7 +78,7 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Rating Distribution</CardTitle>
+          <CardTitle>{a.ratingDistribution}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
@@ -95,7 +95,7 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
 
       <Card>
         <CardHeader>
-          <CardTitle>Competency Averages</CardTitle>
+          <CardTitle>{a.competencyAverages}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
@@ -103,7 +103,7 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
               <PolarGrid />
               <PolarAngleAxis dataKey="competency" />
               <PolarRadiusAxis angle={90} domain={[0, 5]} />
-              <Radar name="Average Score" dataKey="average" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
+              <Radar name={a.averageScore} dataKey="average" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
               <Tooltip />
             </RadarChart>
           </ResponsiveContainer>
@@ -112,7 +112,7 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
 
       <Card>
         <CardHeader>
-          <CardTitle>Top Performers</CardTitle>
+          <CardTitle>{a.topPerformers}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -136,14 +136,14 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
 
       <Card>
         <CardHeader>
-          <CardTitle>Common Improvement Areas</CardTitle>
+          <CardTitle>{a.commonImprovementAreas}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {topImprovementAreas.map(([area, count]: any, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex-1 text-sm">{area}</div>
-                <Badge variant="secondary">{count} employees</Badge>
+                <Badge variant="secondary">{count} {t.performance.overview.employees}</Badge>
               </div>
             ))}
           </div>

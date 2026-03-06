@@ -3,12 +3,16 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Target, TrendingUp, AlertTriangle, BookOpen } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SkillsOverviewProps {
   evaluations: any[];
 }
 
 export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
+  const { t } = useLanguage();
+  const o = t.performance.overview;
+
   const evalsWithAnalysis = evaluations.filter(
     (e) => e.skills_analysis && typeof e.skills_analysis === "object" && e.skills_analysis.overallMatch != null
   );
@@ -17,20 +21,16 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">
-            Aucune analyse de compétences disponible. Lancez une analyse IA depuis une évaluation pour voir les résultats ici.
-          </p>
+          <p className="text-center text-muted-foreground">{o.noAnalysisData}</p>
         </CardContent>
       </Card>
     );
   }
 
-  // Average match score
   const avgMatch =
     evalsWithAnalysis.reduce((sum, e) => sum + (e.skills_analysis.overallMatch || 0), 0) /
     evalsWithAnalysis.length;
 
-  // Match distribution data
   const matchBuckets = [
     { range: "0-25%", min: 0, max: 25, count: 0 },
     { range: "26-50%", min: 26, max: 50, count: 0 },
@@ -43,7 +43,6 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
     if (bucket) bucket.count++;
   });
 
-  // Aggregate gaps by priority
   const gapsByPriority: Record<string, number> = { high: 0, medium: 0, low: 0 };
   const allGaps: Record<string, { count: number; priorities: string[] }> = {};
   const allTraining: Record<string, number> = {};
@@ -73,7 +72,6 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 6);
 
-  // Matched skills radar (top skills across employees)
   const matchedSkillsAgg: Record<string, { total: number; count: number }> = {};
   evalsWithAnalysis.forEach((e) => {
     if (Array.isArray(e.skills_analysis.matchedSkills)) {
@@ -90,7 +88,6 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 
-  // Per-employee summary
   const employeeSummaries = evalsWithAnalysis.map((e) => ({
     name: e.employee_name,
     department: e.department || "N/A",
@@ -101,12 +98,6 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
       : 0,
   }));
 
-  const getPriorityColor = (p: string) => {
-    if (p === "high") return "text-destructive";
-    if (p === "medium") return "text-yellow-600 dark:text-yellow-400";
-    return "text-muted-foreground";
-  };
-
   const getMatchColor = (m: number) => {
     if (m >= 75) return "text-green-600 dark:text-green-400";
     if (m >= 50) return "text-yellow-600 dark:text-yellow-400";
@@ -115,7 +106,6 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
@@ -123,7 +113,7 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
               <Target className="w-8 h-8 text-primary" />
               <div>
                 <p className="text-2xl font-bold">{Math.round(avgMatch)}%</p>
-                <p className="text-xs text-muted-foreground">Correspondance moyenne</p>
+                <p className="text-xs text-muted-foreground">{o.avgMatch}</p>
               </div>
             </div>
           </CardContent>
@@ -134,7 +124,7 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
               <TrendingUp className="w-8 h-8 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">{evalsWithAnalysis.length}</p>
-                <p className="text-xs text-muted-foreground">Analyses réalisées</p>
+                <p className="text-xs text-muted-foreground">{o.analysesCompleted}</p>
               </div>
             </div>
           </CardContent>
@@ -145,7 +135,7 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
               <AlertTriangle className="w-8 h-8 text-destructive" />
               <div>
                 <p className="text-2xl font-bold">{gapsByPriority.high || 0}</p>
-                <p className="text-xs text-muted-foreground">Lacunes prioritaires</p>
+                <p className="text-xs text-muted-foreground">{o.priorityGaps}</p>
               </div>
             </div>
           </CardContent>
@@ -156,7 +146,7 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
               <BookOpen className="w-8 h-8 text-blue-500" />
               <div>
                 <p className="text-2xl font-bold">{Object.keys(allTraining).length}</p>
-                <p className="text-xs text-muted-foreground">Formations recommandées</p>
+                <p className="text-xs text-muted-foreground">{o.recommendedTraining}</p>
               </div>
             </div>
           </CardContent>
@@ -164,10 +154,9 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Match Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Distribution des correspondances</CardTitle>
+            <CardTitle>{o.matchDistribution}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -182,11 +171,10 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
           </CardContent>
         </Card>
 
-        {/* Skills Radar */}
         {radarData.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Compétences les plus fortes</CardTitle>
+              <CardTitle>{o.strongestSkills}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -194,7 +182,7 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
                   <PolarGrid />
                   <PolarAngleAxis dataKey="skill" tick={{ fontSize: 11 }} />
                   <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                  <Radar name="Score moyen" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} />
+                  <Radar name="Score" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} />
                   <Tooltip />
                 </RadarChart>
               </ResponsiveContainer>
@@ -202,15 +190,14 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
           </Card>
         )}
 
-        {/* Top Skill Gaps */}
         <Card>
           <CardHeader>
-            <CardTitle>Lacunes les plus fréquentes</CardTitle>
+            <CardTitle>{o.frequentGaps}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {topGaps.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center">Aucune lacune identifiée</p>
+                <p className="text-sm text-muted-foreground text-center">{o.noGaps}</p>
               ) : (
                 topGaps.map(([skill, data], idx) => {
                   const highCount = data.priorities.filter((p) => p === "high").length;
@@ -221,9 +208,9 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         {highCount > 0 && (
-                          <Badge variant="destructive" className="text-xs">{highCount} urgent</Badge>
+                          <Badge variant="destructive" className="text-xs">{highCount} {o.urgent}</Badge>
                         )}
-                        <Badge variant="secondary">{data.count} employés</Badge>
+                        <Badge variant="secondary">{data.count} {o.employees}</Badge>
                       </div>
                     </div>
                   );
@@ -233,20 +220,19 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
           </CardContent>
         </Card>
 
-        {/* Top Training Needs */}
         <Card>
           <CardHeader>
-            <CardTitle>Formations les plus recommandées</CardTitle>
+            <CardTitle>{o.recommendedTrainingTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {topTraining.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center">Aucune formation recommandée</p>
+                <p className="text-sm text-muted-foreground text-center">{o.noTraining}</p>
               ) : (
                 topTraining.map(([skill, count], idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <span className="text-sm font-medium">{skill}</span>
-                    <Badge variant="outline">{count} employés</Badge>
+                    <Badge variant="outline">{count} {o.employees}</Badge>
                   </div>
                 ))
               )}
@@ -255,10 +241,9 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
         </Card>
       </div>
 
-      {/* Per-Employee Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Résumé par employé</CardTitle>
+          <CardTitle>{o.employeeSummary}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -278,10 +263,10 @@ export default function SkillsOverview({ evaluations }: SkillsOverviewProps) {
                   </span>
                   <div className="flex gap-1">
                     {emp.highPriorityGaps > 0 && (
-                      <Badge variant="destructive" className="text-xs">{emp.highPriorityGaps} urgent</Badge>
+                      <Badge variant="destructive" className="text-xs">{emp.highPriorityGaps} {o.urgent}</Badge>
                     )}
                     {emp.gapsCount > 0 && (
-                      <Badge variant="secondary" className="text-xs">{emp.gapsCount} lacunes</Badge>
+                      <Badge variant="secondary" className="text-xs">{emp.gapsCount} {o.gaps}</Badge>
                     )}
                   </div>
                 </div>
