@@ -38,7 +38,7 @@ export default function PerformanceEvaluationForm({
   companyId,
   initialData 
 }: PerformanceEvaluationFormProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [jobDescriptions, setJobDescriptions] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>(initialData?.job_description_id || "");
   const [formData, setFormData] = useState({
@@ -64,7 +64,6 @@ export default function PerformanceEvaluationForm({
   );
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Resume & Skills Analysis state
   const [resumeUrl, setResumeUrl] = useState<string>(initialData?.resume_url || "");
   const [resumeSummary, setResumeSummary] = useState<ResumeSummary>(
     initialData?.resume_summary && typeof initialData.resume_summary === 'object'
@@ -118,9 +117,18 @@ export default function PerformanceEvaluationForm({
     );
   };
 
+  const getRatingLabel = (rating: number) => {
+    const r = t.performance.form.ratings;
+    if (rating >= 4.5) return r.exceptional;
+    if (rating >= 3.5) return r.exceeds;
+    if (rating >= 2.5) return r.meets;
+    if (rating >= 1.5) return r.below;
+    return r.needsImprovement;
+  };
+
   const suggestWithAI = async (type: 'strengths' | 'improvements' | 'recommendations') => {
     if (!formData.employeeName || competencyScores.length === 0) {
-      toast.error("Please enter employee name and score competencies first");
+      toast.error(t.performance.enterNameAndScores);
       return;
     }
 
@@ -151,11 +159,11 @@ export default function PerformanceEvaluationForm({
         if (type === 'strengths') setStrengths([...strengths, ...data.suggestions]);
         else if (type === 'improvements') setAreasForImprovement([...areasForImprovement, ...data.suggestions]);
         else setTrainingRecommendations([...trainingRecommendations, ...data.suggestions]);
-        toast.success("AI suggestions added!");
+        toast.success(t.performance.aiSuggestionsAdded);
       }
     } catch (error: any) {
       console.error('AI suggestion error:', error);
-      toast.error(error.message || "Failed to generate suggestions");
+      toast.error(error.message || t.performance.failedToGenerate);
     } finally {
       setAiLoading(false);
     }
@@ -177,36 +185,37 @@ export default function PerformanceEvaluationForm({
   };
 
   const selectedJob = jobDescriptions.find(j => j.id === selectedJobId);
+  const p = t.performance;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>Employee Name *</Label>
+          <Label>{p.form.employeeName} *</Label>
           <Input
             value={formData.employeeName}
             onChange={(e) => setFormData(prev => ({ ...prev, employeeName: e.target.value }))}
-            placeholder="Full name"
+            placeholder={p.form.fullName}
             required
           />
         </div>
         <div>
-          <Label>Email</Label>
+          <Label>{p.form.email}</Label>
           <Input
             type="email"
             value={formData.employeeEmail}
             onChange={(e) => setFormData(prev => ({ ...prev, employeeEmail: e.target.value }))}
-            placeholder="email@company.com"
+            placeholder={p.form.emailPlaceholder}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>Job Description</Label>
+          <Label>{p.form.jobDescription}</Label>
           <Select value={selectedJobId} onValueChange={setSelectedJobId}>
             <SelectTrigger>
-              <SelectValue placeholder="Select job description" />
+              <SelectValue placeholder={p.form.selectJobDescription} />
             </SelectTrigger>
             <SelectContent>
               {jobDescriptions.map(job => (
@@ -218,26 +227,26 @@ export default function PerformanceEvaluationForm({
           </Select>
         </div>
         <div>
-          <Label>Department</Label>
+          <Label>{p.form.department}</Label>
           <Input
             value={formData.department}
             onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-            placeholder="e.g., Engineering"
+            placeholder={p.form.departmentPlaceholder}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <Label>Evaluation Period</Label>
+          <Label>{p.form.evaluationPeriod}</Label>
           <Input
             value={formData.evaluationPeriod}
             onChange={(e) => setFormData(prev => ({ ...prev, evaluationPeriod: e.target.value }))}
-            placeholder="e.g., Q1 2024"
+            placeholder={p.form.evaluationPeriodPlaceholder}
           />
         </div>
         <div>
-          <Label>Evaluation Date *</Label>
+          <Label>{p.form.evaluationDate} *</Label>
           <Input
             type="date"
             value={formData.evaluationDate}
@@ -246,7 +255,7 @@ export default function PerformanceEvaluationForm({
           />
         </div>
         <div>
-          <Label>Overall Rating (1-5) *</Label>
+          <Label>{p.form.overallRating} *</Label>
           <Select 
             value={formData.overallRating.toString()} 
             onValueChange={(value) => setFormData(prev => ({ ...prev, overallRating: parseFloat(value) }))}
@@ -257,7 +266,7 @@ export default function PerformanceEvaluationForm({
             <SelectContent>
               {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map(rating => (
                 <SelectItem key={rating} value={rating.toString()}>
-                  {rating} - {rating >= 4.5 ? 'Exceptional' : rating >= 3.5 ? 'Exceeds' : rating >= 2.5 ? 'Meets' : rating >= 1.5 ? 'Below' : 'Needs Improvement'}
+                  {rating} - {getRatingLabel(rating)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -265,7 +274,6 @@ export default function PerformanceEvaluationForm({
         </div>
       </div>
 
-      {/* Resume Section */}
       <ResumeSection
         resumeUrl={resumeUrl}
         resumeSummary={resumeSummary}
@@ -276,14 +284,13 @@ export default function PerformanceEvaluationForm({
       />
 
       <div>
-        <Label className="text-base mb-4 block">Competency Scores</Label>
+        <Label className="text-base mb-4 block">{p.form.competencyScores}</Label>
         <CompetencyScoreCard
           competencies={competencyScores}
           onScoreUpdate={updateCompetencyScore}
         />
       </div>
 
-      {/* Skills Analysis */}
       <SkillsAnalysisCard
         analysis={skillsAnalysis}
         onAnalysisUpdate={setSkillsAnalysis}
@@ -296,57 +303,60 @@ export default function PerformanceEvaluationForm({
       />
 
       <EvaluationSection
-        title="Strengths"
+        title={p.sections.strengths}
         items={strengths}
         onAdd={(value) => setStrengths([...strengths, value])}
         onRemove={(idx) => setStrengths(strengths.filter((_, i) => i !== idx))}
-        placeholder="Add a strength..."
+        placeholder={p.sections.addStrength}
         bgColorClass="bg-green-50 dark:bg-green-900/20"
         onAISuggest={() => suggestWithAI('strengths')}
         aiLoading={aiLoading}
         aiDisabled={!formData.employeeName || competencyScores.length === 0}
+        aiSuggestLabel={p.sections.aiSuggest}
       />
 
       <EvaluationSection
-        title="Areas for Improvement"
+        title={p.sections.areasForImprovement}
         items={areasForImprovement}
         onAdd={(value) => setAreasForImprovement([...areasForImprovement, value])}
         onRemove={(idx) => setAreasForImprovement(areasForImprovement.filter((_, i) => i !== idx))}
-        placeholder="Add an area for improvement..."
+        placeholder={p.sections.addImprovement}
         bgColorClass="bg-yellow-50 dark:bg-yellow-900/20"
         onAISuggest={() => suggestWithAI('improvements')}
         aiLoading={aiLoading}
         aiDisabled={!formData.employeeName || competencyScores.length === 0}
+        aiSuggestLabel={p.sections.aiSuggest}
       />
 
       <EvaluationSection
-        title="Training Recommendations"
+        title={p.sections.trainingRecommendations}
         items={trainingRecommendations}
         onAdd={(value) => setTrainingRecommendations([...trainingRecommendations, value])}
         onRemove={(idx) => setTrainingRecommendations(trainingRecommendations.filter((_, i) => i !== idx))}
-        placeholder="Add a training recommendation..."
+        placeholder={p.sections.addRecommendation}
         bgColorClass="bg-blue-50 dark:bg-blue-900/20"
         onAISuggest={() => suggestWithAI('recommendations')}
         aiLoading={aiLoading}
         aiDisabled={areasForImprovement.length === 0}
+        aiSuggestLabel={p.sections.aiSuggest}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>Career Goals</Label>
+          <Label>{p.form.careerGoals}</Label>
           <Textarea
             value={formData.careerGoals}
             onChange={(e) => setFormData(prev => ({ ...prev, careerGoals: e.target.value }))}
-            placeholder="Employee's career aspirations..."
+            placeholder={p.form.careerGoalsPlaceholder}
             rows={3}
           />
         </div>
         <div>
-          <Label>Additional Notes</Label>
+          <Label>{p.form.additionalNotes}</Label>
           <Textarea
             value={formData.notes}
             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Any additional observations..."
+            placeholder={p.form.additionalNotesPlaceholder}
             rows={3}
           />
         </div>
@@ -354,10 +364,10 @@ export default function PerformanceEvaluationForm({
 
       <div className="flex gap-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button type="submit" className="flex-1">
-          {initialData ? "Update" : "Create"} Evaluation
+          {initialData ? p.form.updateEvaluation : p.form.createEvaluation}
         </Button>
       </div>
     </form>

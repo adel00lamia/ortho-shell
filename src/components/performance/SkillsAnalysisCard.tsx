@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Sparkles, Loader2, AlertTriangle, CheckCircle2, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SkillsAnalysis {
   overallMatch: number;
@@ -36,11 +37,13 @@ export default function SkillsAnalysisCard({
   jobTitle,
   language = "en",
 }: SkillsAnalysisCardProps) {
+  const { t } = useLanguage();
+  const s = t.performance.skills;
   const [loading, setLoading] = useState(false);
 
   const runAnalysis = async () => {
     if (!resumeSummary?.experience && (!resumeSummary?.skills || resumeSummary.skills.length === 0)) {
-      toast.error("Veuillez remplir le résumé du CV avant de lancer l'analyse");
+      toast.error(s.noResume);
       return;
     }
 
@@ -60,11 +63,11 @@ export default function SkillsAnalysisCard({
       if (error) throw error;
       if (data?.analysis) {
         onAnalysisUpdate(data.analysis);
-        toast.success("Analyse des compétences terminée !");
+        toast.success(s.analysisSuccess);
       }
     } catch (error: any) {
       console.error("Skills analysis error:", error);
-      toast.error(error.message || "Erreur lors de l'analyse");
+      toast.error(error.message || s.analysisError);
     } finally {
       setLoading(false);
     }
@@ -85,7 +88,7 @@ export default function SkillsAnalysisCard({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5" />
-            Analyse des compétences
+            {s.title}
           </CardTitle>
           <Button
             type="button"
@@ -98,41 +101,39 @@ export default function SkillsAnalysisCard({
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            {analysis ? "Relancer l'analyse" : "Lancer l'analyse IA"}
+            {analysis ? s.rerunAnalysis : s.runAnalysis}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {!analysis ? (
           <p className="text-sm text-muted-foreground text-center py-6">
-            Remplissez le résumé du CV et les compétences, puis lancez l'analyse IA pour obtenir un rapport détaillé.
+            {s.noAnalysis}
           </p>
         ) : (
           <div className="space-y-6">
-            {/* Overall Match */}
             <div className="p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">Correspondance globale</span>
+                <span className="font-medium">{s.overallMatch}</span>
                 <span className="text-2xl font-bold">{analysis.overallMatch}%</span>
               </div>
               <Progress value={analysis.overallMatch} className="h-3" />
               <p className="text-sm text-muted-foreground mt-2">{analysis.summary}</p>
             </div>
 
-            {/* Matched Skills */}
             {analysis.matchedSkills?.length > 0 && (
               <div>
                 <h4 className="font-medium flex items-center gap-2 mb-3">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Compétences correspondantes
+                  {s.matchedSkills}
                 </h4>
                 <div className="grid gap-2">
-                  {analysis.matchedSkills.map((s, idx) => (
+                  {analysis.matchedSkills.map((ms, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 rounded bg-green-50 dark:bg-green-900/20 border">
-                      <span className="text-sm font-medium">{s.skill}</span>
+                      <span className="text-sm font-medium">{ms.skill}</span>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{s.level}</Badge>
-                        <span className="text-sm text-muted-foreground">{s.matchScore}%</span>
+                        <Badge variant="secondary">{ms.level}</Badge>
+                        <span className="text-sm text-muted-foreground">{ms.matchScore}%</span>
                       </div>
                     </div>
                   ))}
@@ -140,12 +141,11 @@ export default function SkillsAnalysisCard({
               </div>
             )}
 
-            {/* Skill Gaps */}
             {analysis.gaps?.length > 0 && (
               <div>
                 <h4 className="font-medium flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                  Écarts de compétences
+                  {s.skillGaps}
                 </h4>
                 <div className="grid gap-2">
                   {analysis.gaps.map((gap, idx) => (
@@ -155,7 +155,7 @@ export default function SkillsAnalysisCard({
                         <Badge className={getPriorityColor(gap.priority)}>{gap.priority}</Badge>
                       </div>
                       <div className="text-xs text-muted-foreground mb-1">
-                        Actuel: {gap.currentLevel} → Requis: {gap.requiredLevel}
+                        {s.current}: {gap.currentLevel} → {s.required}: {gap.requiredLevel}
                       </div>
                       <p className="text-sm">{gap.recommendation}</p>
                     </div>
@@ -164,12 +164,11 @@ export default function SkillsAnalysisCard({
               </div>
             )}
 
-            {/* Training Plan */}
             {analysis.trainingPlan?.length > 0 && (
               <div>
                 <h4 className="font-medium flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  Plan de formation recommandé
+                  {s.trainingPlan}
                 </h4>
                 <div className="grid gap-2">
                   {analysis.trainingPlan.map((item, idx) => (

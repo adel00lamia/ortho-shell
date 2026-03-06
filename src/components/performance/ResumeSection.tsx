@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, X, FileText, Plus, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ResumeSummary {
   experience: string;
@@ -33,6 +34,8 @@ export default function ResumeSection({
   companyId,
   employeeName,
 }: ResumeSectionProps) {
+  const { t } = useLanguage();
+  const r = t.performance.resume;
   const [uploading, setUploading] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [newSkill, setNewSkill] = useState("");
@@ -55,11 +58,11 @@ export default function ResumeSection({
           skills: ext.skills?.length ? ext.skills : resumeSummary.skills,
           certifications: ext.certifications?.length ? ext.certifications : resumeSummary.certifications,
         });
-        toast.success("Compétences extraites du CV avec succès !");
+        toast.success(r.extractSuccess);
       }
     } catch (error: any) {
       console.error("Extract error:", error);
-      toast.error(error.message || "Erreur lors de l'extraction IA");
+      toast.error(error.message || r.extractError);
     } finally {
       setExtracting(false);
     }
@@ -70,7 +73,7 @@ export default function ResumeSection({
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Le fichier ne doit pas dépasser 10 Mo");
+      toast.error(r.fileTooLarge);
       return;
     }
 
@@ -84,15 +87,14 @@ export default function ResumeSection({
       if (error) throw error;
 
       onResumeUrlChange(data.path);
-      toast.success("CV uploadé avec succès");
+      toast.success(r.uploadSuccess);
 
-      // Auto-extract if PDF
       if (file.name.toLowerCase().endsWith(".pdf")) {
         await extractFromCV(data.path);
       }
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.error("Erreur lors de l'upload du CV");
+      toast.error(r.uploadError);
     } finally {
       setUploading(false);
     }
@@ -144,13 +146,12 @@ export default function ResumeSection({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          CV / Résumé de l'employé
+          {r.title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* File Upload */}
         <div>
-          <Label>Fichier CV (PDF, DOC)</Label>
+          <Label>{r.fileLabel}</Label>
           <div className="flex items-center gap-3 mt-1">
             {resumeUrl ? (
               <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50 flex-1">
@@ -164,7 +165,7 @@ export default function ResumeSection({
               <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-dashed rounded-lg hover:border-primary transition-colors flex-1">
                 <Upload className="w-5 h-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {uploading ? "Upload en cours..." : "Cliquez pour uploader un CV"}
+                  {uploading ? r.uploading : r.clickToUpload}
                 </span>
                 <input
                   type="file"
@@ -177,7 +178,6 @@ export default function ResumeSection({
             )}
           </div>
 
-          {/* Extract button for already-uploaded files */}
           {resumeUrl && (
             <Button
               type="button"
@@ -192,46 +192,44 @@ export default function ResumeSection({
               ) : (
                 <Sparkles className="w-4 h-4 mr-2" />
               )}
-              {extracting ? "Extraction en cours..." : "Extraire les compétences via IA"}
+              {extracting ? r.extracting : r.extractSkills}
             </Button>
           )}
 
           {extracting && !resumeUrl && (
             <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Extraction automatique des compétences...
+              {r.autoExtracting}
             </div>
           )}
         </div>
 
-        {/* Structured Resume Fields */}
         <div>
-          <Label>Expérience professionnelle</Label>
+          <Label>{r.experience}</Label>
           <Textarea
             value={resumeSummary.experience}
             onChange={(e) =>
               onResumeSummaryChange({ ...resumeSummary, experience: e.target.value })
             }
-            placeholder="Résumez l'expérience professionnelle de l'employé..."
+            placeholder={r.experiencePlaceholder}
             rows={3}
           />
         </div>
 
         <div>
-          <Label>Formation / Éducation</Label>
+          <Label>{r.education}</Label>
           <Textarea
             value={resumeSummary.education}
             onChange={(e) =>
               onResumeSummaryChange({ ...resumeSummary, education: e.target.value })
             }
-            placeholder="Diplômes, formations suivies..."
+            placeholder={r.educationPlaceholder}
             rows={2}
           />
         </div>
 
-        {/* Skills */}
         <div>
-          <Label>Compétences clés</Label>
+          <Label>{r.keySkills}</Label>
           <div className="flex flex-wrap gap-2 mt-1 mb-2">
             {resumeSummary.skills.map((skill, idx) => (
               <Badge key={idx} variant="secondary" className="gap-1">
@@ -246,7 +244,7 @@ export default function ResumeSection({
             <Input
               value={newSkill}
               onChange={(e) => setNewSkill(e.target.value)}
-              placeholder="Ajouter une compétence..."
+              placeholder={r.addSkill}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -260,9 +258,8 @@ export default function ResumeSection({
           </div>
         </div>
 
-        {/* Certifications */}
         <div>
-          <Label>Certifications</Label>
+          <Label>{r.certifications}</Label>
           <div className="flex flex-wrap gap-2 mt-1 mb-2">
             {resumeSummary.certifications.map((cert, idx) => (
               <Badge key={idx} variant="outline" className="gap-1">
@@ -277,7 +274,7 @@ export default function ResumeSection({
             <Input
               value={newCert}
               onChange={(e) => setNewCert(e.target.value)}
-              placeholder="Ajouter une certification..."
+              placeholder={r.addCertification}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();

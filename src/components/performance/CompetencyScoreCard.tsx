@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CompetencyScore {
   name: string;
@@ -14,15 +15,19 @@ interface CompetencyScoreCardProps {
   readOnly?: boolean;
 }
 
-const scoreLabels = ['Beginner', 'Basic', 'Intermediate', 'Advanced', 'Expert'];
 const scoreColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
 
 export default function CompetencyScoreCard({ competencies, onScoreUpdate, readOnly = false }: CompetencyScoreCardProps) {
+  const { t } = useLanguage();
+  const r = t.performance.form.ratings;
+
+  const scoreLabels = [r.needsImprovement, r.below, r.meets, r.exceeds, r.exceptional];
+
   if (competencies.length === 0) {
     return (
       <Card className="p-6">
         <p className="text-sm text-muted-foreground text-center">
-          Select a job description to load competencies for evaluation
+          {t.performance.form.selectJobDescription}
         </p>
       </Card>
     );
@@ -34,7 +39,7 @@ export default function CompetencyScoreCard({ competencies, onScoreUpdate, readO
     <div className="space-y-4">
       <Card className="p-4 bg-gradient-to-r from-primary/5 to-primary/10">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Overall Competency Level</span>
+          <span className="text-sm font-medium">{t.performance.form.overallRating}</span>
           <span className="text-2xl font-bold">{averageScore.toFixed(1)}/5</span>
         </div>
         <Progress value={(averageScore / 5) * 100} className="h-2" />

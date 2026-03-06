@@ -15,6 +15,7 @@ interface EvaluationSectionProps {
   onAISuggest?: () => void;
   aiLoading?: boolean;
   aiDisabled?: boolean;
+  aiSuggestLabel?: string;
 }
 
 export default function EvaluationSection({
@@ -26,7 +27,8 @@ export default function EvaluationSection({
   bgColorClass,
   onAISuggest,
   aiLoading,
-  aiDisabled
+  aiDisabled,
+  aiSuggestLabel = "AI Suggest",
 }: EvaluationSectionProps) {
   const [newItem, setNewItem] = useState("");
 
@@ -61,7 +63,7 @@ export default function EvaluationSection({
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            AI Suggest
+            {aiSuggestLabel}
           </Button>
         )}
       </div>
