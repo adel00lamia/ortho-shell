@@ -8,11 +8,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CompetencyScoreCard from "@/components/performance/CompetencyScoreCard";
 import EvaluationSection from "@/components/performance/EvaluationSection";
+import ResumeSection from "@/components/performance/ResumeSection";
+import SkillsAnalysisCard from "@/components/performance/SkillsAnalysisCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CompetencyScore {
   name: string;
   score: number;
   category: string;
+}
+
+interface ResumeSummary {
+  experience: string;
+  education: string;
+  skills: string[];
+  certifications: string[];
 }
 
 interface PerformanceEvaluationFormProps {
@@ -28,6 +38,7 @@ export default function PerformanceEvaluationForm({
   companyId,
   initialData 
 }: PerformanceEvaluationFormProps) {
+  const { language } = useLanguage();
   const [jobDescriptions, setJobDescriptions] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>(initialData?.job_description_id || "");
   const [formData, setFormData] = useState({
@@ -51,8 +62,25 @@ export default function PerformanceEvaluationForm({
   const [trainingRecommendations, setTrainingRecommendations] = useState<string[]>(
     initialData?.training_recommendations || []
   );
-
   const [aiLoading, setAiLoading] = useState(false);
+
+  // Resume & Skills Analysis state
+  const [resumeUrl, setResumeUrl] = useState<string>(initialData?.resume_url || "");
+  const [resumeSummary, setResumeSummary] = useState<ResumeSummary>(
+    initialData?.resume_summary && typeof initialData.resume_summary === 'object'
+      ? { 
+          experience: initialData.resume_summary.experience || "",
+          education: initialData.resume_summary.education || "",
+          skills: initialData.resume_summary.skills || [],
+          certifications: initialData.resume_summary.certifications || [],
+        }
+      : { experience: "", education: "", skills: [], certifications: [] }
+  );
+  const [skillsAnalysis, setSkillsAnalysis] = useState<any>(
+    initialData?.skills_analysis && Object.keys(initialData.skills_analysis).length > 0
+      ? initialData.skills_analysis
+      : null
+  );
 
   useEffect(() => {
     loadJobDescriptions();
@@ -69,17 +97,15 @@ export default function PerformanceEvaluationForm({
       .from('job_descriptions')
       .select('*')
       .eq('company_id', companyId);
-    
     if (data) setJobDescriptions(data);
   };
 
   const loadCompetenciesFromJob = async () => {
     const job = jobDescriptions.find(j => j.id === selectedJobId);
     if (job?.competencies) {
-      // Pre-populate competency scores from job description
-      const scores = job.competencies.map((comp: any) => ({
+      const scores = (job.competencies as any[]).map((comp: any) => ({
         name: comp.name,
-        score: 3, // Default mid-level score
+        score: 3,
         category: comp.category
       }));
       setCompetencyScores(scores);
@@ -101,7 +127,6 @@ export default function PerformanceEvaluationForm({
     setAiLoading(true);
     try {
       const selectedJob = jobDescriptions.find(j => j.id === selectedJobId);
-      
       let requestType = '';
       let context: any = {
         employeeName: formData.employeeName,
@@ -109,11 +134,9 @@ export default function PerformanceEvaluationForm({
         scores: competencyScores
       };
 
-      if (type === 'strengths') {
-        requestType = 'performance_strengths';
-      } else if (type === 'improvements') {
-        requestType = 'performance_improvements';
-      } else {
+      if (type === 'strengths') requestType = 'performance_strengths';
+      else if (type === 'improvements') requestType = 'performance_improvements';
+      else {
         requestType = 'training_recommendations';
         context.improvements = areasForImprovement;
       }
@@ -125,13 +148,9 @@ export default function PerformanceEvaluationForm({
       if (error) throw error;
 
       if (data?.suggestions) {
-        if (type === 'strengths') {
-          setStrengths([...strengths, ...data.suggestions]);
-        } else if (type === 'improvements') {
-          setAreasForImprovement([...areasForImprovement, ...data.suggestions]);
-        } else {
-          setTrainingRecommendations([...trainingRecommendations, ...data.suggestions]);
-        }
+        if (type === 'strengths') setStrengths([...strengths, ...data.suggestions]);
+        else if (type === 'improvements') setAreasForImprovement([...areasForImprovement, ...data.suggestions]);
+        else setTrainingRecommendations([...trainingRecommendations, ...data.suggestions]);
         toast.success("AI suggestions added!");
       }
     } catch (error: any) {
@@ -150,9 +169,14 @@ export default function PerformanceEvaluationForm({
       competencyScores,
       strengths,
       areasForImprovement,
-      trainingRecommendations
+      trainingRecommendations,
+      resumeUrl,
+      resumeSummary,
+      skillsAnalysis,
     });
   };
+
+  const selectedJob = jobDescriptions.find(j => j.id === selectedJobId);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -241,6 +265,16 @@ export default function PerformanceEvaluationForm({
         </div>
       </div>
 
+      {/* Resume Section */}
+      <ResumeSection
+        resumeUrl={resumeUrl}
+        resumeSummary={resumeSummary}
+        onResumeUrlChange={setResumeUrl}
+        onResumeSummaryChange={setResumeSummary}
+        companyId={companyId}
+        employeeName={formData.employeeName}
+      />
+
       <div>
         <Label className="text-base mb-4 block">Competency Scores</Label>
         <CompetencyScoreCard
@@ -248,6 +282,18 @@ export default function PerformanceEvaluationForm({
           onScoreUpdate={updateCompetencyScore}
         />
       </div>
+
+      {/* Skills Analysis */}
+      <SkillsAnalysisCard
+        analysis={skillsAnalysis}
+        onAnalysisUpdate={setSkillsAnalysis}
+        resumeSummary={resumeSummary}
+        jobCompetencies={selectedJob?.competencies || []}
+        competencyScores={competencyScores}
+        employeeName={formData.employeeName}
+        jobTitle={selectedJob?.title || ""}
+        language={language}
+      />
 
       <EvaluationSection
         title="Strengths"

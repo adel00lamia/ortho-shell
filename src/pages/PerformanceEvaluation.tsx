@@ -75,7 +75,10 @@ export default function PerformanceEvaluation() {
       areas_for_improvement: formData.areasForImprovement,
       training_recommendations: formData.trainingRecommendations,
       career_goals: formData.careerGoals,
-      notes: formData.notes
+      notes: formData.notes,
+      resume_url: formData.resumeUrl || null,
+      resume_summary: formData.resumeSummary || {},
+      skills_analysis: formData.skillsAnalysis || {},
     };
 
     let result;

@@ -37,3 +37,6 @@ verify_jwt = false
 
 [functions.module-content-generator]
 verify_jwt = false
+
+[functions.ai-skills-analysis]
+verify_jwt = false

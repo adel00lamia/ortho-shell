@@ -313,6 +313,9 @@ export type Database = {
           job_description_id: string | null
           notes: string | null
           overall_rating: number | null
+          resume_summary: Json | null
+          resume_url: string | null
+          skills_analysis: Json | null
           strengths: string[] | null
           training_recommendations: string[] | null
           updated_at: string | null
@@ -333,6 +336,9 @@ export type Database = {
           job_description_id?: string | null
           notes?: string | null
           overall_rating?: number | null
+          resume_summary?: Json | null
+          resume_url?: string | null
+          skills_analysis?: Json | null
           strengths?: string[] | null
           training_recommendations?: string[] | null
           updated_at?: string | null
@@ -353,6 +359,9 @@ export type Database = {
           job_description_id?: string | null
           notes?: string | null
           overall_rating?: number | null
+          resume_summary?: Json | null
+          resume_url?: string | null
+          skills_analysis?: Json | null
           strengths?: string[] | null
           training_recommendations?: string[] | null
           updated_at?: string | null
