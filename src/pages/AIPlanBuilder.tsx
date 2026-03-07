@@ -117,6 +117,12 @@ interface TrainingPack {
   bestFor: string[];
 }
 
+interface PreviousPlanFile {
+  name: string;
+  year: string;
+  content: string;
+}
+
 interface PlanRequirements {
   company: string;
   country: string;
@@ -131,6 +137,7 @@ interface PlanRequirements {
   context: string;
   template?: string;
   pack?: string;
+  previousPlans?: PreviousPlanFile[];
   customizations: {
     deliveryMethods: string[];
     certification: boolean;
@@ -239,6 +246,8 @@ export default function AIPlanBuilder() {
   const [newObjective, setNewObjective] = useState('');
   const [newSkill, setNewSkill] = useState('');
   const [newConstraint, setNewConstraint] = useState('');
+  const [previousPlanFiles, setPreviousPlanFiles] = useState<PreviousPlanFile[]>([]);
+  const [uploadingPlan, setUploadingPlan] = useState(false);
 
   const predefinedObjectives = [
     'Improve employee productivity and efficiency',
@@ -839,7 +848,10 @@ export default function AIPlanBuilder() {
     try {
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
         body: {
-          requirements,
+          requirements: {
+            ...requirements,
+            previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles : undefined
+          },
           userId: user?.id || 'anonymous',
           language: language
         }
@@ -1384,6 +1396,137 @@ export default function AIPlanBuilder() {
                   </p>
                 )}
               </div>
+
+              {/* Previous Training Plan Upload */}
+              <Separator />
+              <div>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Previous Training Plans (Optional)
+                </label>
+                <p className="text-sm text-muted-foreground mt-1 mb-3">
+                  Upload your last training plans (up to 3 years) so the AI can avoid redundancy and build on previous efforts.
+                </p>
+
+                {previousPlanFiles.length < 3 && (
+                  <div className="border-2 border-dashed border-border/60 rounded-lg p-4 text-center hover:border-primary/40 transition-colors">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls"
+                      className="hidden"
+                      id="previous-plan-upload"
+                      disabled={uploadingPlan}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast({ title: 'File too large', description: 'Maximum file size is 10MB.', variant: 'destructive' });
+                          return;
+                        }
+
+                        setUploadingPlan(true);
+                        try {
+                          let content = '';
+                          
+                          if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.csv')) {
+                            content = await file.text();
+                          } else {
+                            // For PDF/DOC files, read as text (best effort)
+                            content = await file.text();
+                          }
+
+                          // Truncate to avoid exceeding AI context
+                          const maxChars = 8000;
+                          if (content.length > maxChars) {
+                            content = content.substring(0, maxChars) + '\n\n[... content truncated for analysis ...]';
+                          }
+
+                          const currentYear = new Date().getFullYear();
+                          const yearOptions = [
+                            String(currentYear - 1),
+                            String(currentYear - 2),
+                            String(currentYear - 3)
+                          ];
+                          const defaultYear = yearOptions.find(y => 
+                            !previousPlanFiles.some(p => p.year === y)
+                          ) || String(currentYear - 1);
+
+                          setPreviousPlanFiles(prev => [...prev, {
+                            name: file.name,
+                            year: defaultYear,
+                            content
+                          }]);
+
+                          toast({ title: 'Plan uploaded', description: `"${file.name}" added for redundancy analysis.` });
+                        } catch (err) {
+                          console.error('File upload error:', err);
+                          toast({ title: 'Upload failed', description: 'Could not read the file.', variant: 'destructive' });
+                        } finally {
+                          setUploadingPlan(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <label htmlFor="previous-plan-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                      {uploadingPlan ? (
+                        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      )}
+                      <span className="text-sm text-muted-foreground">
+                        {uploadingPlan ? 'Processing...' : 'Click to upload a previous training plan'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        PDF, DOC, TXT, CSV, XLSX — Max 10MB — {3 - previousPlanFiles.length} remaining
+                      </span>
+                    </label>
+                  </div>
+                )}
+
+                {previousPlanFiles.length > 0 && (
+                  <div className="space-y-2 mt-3">
+                    {previousPlanFiles.map((plan, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg border">
+                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{plan.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {Math.round(plan.content.length / 1000)}K chars extracted
+                          </p>
+                        </div>
+                        <Select
+                          value={plan.year}
+                          onValueChange={(value) => {
+                            setPreviousPlanFiles(prev => prev.map((p, i) => 
+                              i === index ? { ...p, year: value } : p
+                            ));
+                          }}
+                        >
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[...Array(3)].map((_, i) => {
+                              const y = String(new Date().getFullYear() - 1 - i);
+                              return <SelectItem key={y} value={y}>{y}</SelectItem>;
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPreviousPlanFiles(prev => prev.filter((_, i) => i !== index))}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
 
               <div>
                 <label className="text-sm font-medium">Additional Context</label>
