@@ -43,3 +43,6 @@ verify_jwt = false
 
 [functions.ai-resume-extract]
 verify_jwt = false
+
+[functions.ai-org-assessment]
+verify_jwt = false

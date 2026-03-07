@@ -12,13 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2 } from "lucide-react";
+import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2, Building2, BarChart3, ClipboardCheck } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 
 import { ContextualActions } from "@/components/ContextualActions";
 import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { JDTemplateLibrary } from '@/components/assessment/JDTemplateLibrary';
+import { OrgChartView } from '@/components/assessment/OrgChartView';
+import { SkillsMatrixView } from '@/components/assessment/SkillsMatrixView';
+import { AssessmentReport } from '@/components/assessment/AssessmentReport';
+import type { JDTemplate } from '@/data/jobDescriptionTemplates';
 
 interface Employee {
   id: string;
@@ -69,6 +74,11 @@ export default function Diagnostic() {
   
   // Employees for diagnostic
   const [employees, setEmployees] = useState<Employee[]>([]);
+  
+  // Org chart data
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [companyName, setCompanyName] = useState('');
   
   const [formData, setFormData] = useState({
     objectives: "",
@@ -143,6 +153,14 @@ export default function Diagnostic() {
       if (profile?.company_id) {
         setCompanyId(profile.company_id);
 
+        // Load company name
+        const { data: company } = await supabase
+          .from('companies')
+          .select('name')
+          .eq('id', profile.company_id)
+          .single();
+        if (company) setCompanyName(company.name);
+
         // Load job descriptions
         const { data: jobs } = await supabase
           .from('job_descriptions')
@@ -158,6 +176,22 @@ export default function Diagnostic() {
           .eq('company_id', profile.company_id);
 
         if (evals) setPerformanceEvaluations(evals);
+
+        // Load departments
+        const { data: depts } = await supabase
+          .from('departments')
+          .select('*')
+          .eq('company_id', profile.company_id);
+
+        if (depts) setDepartments(depts);
+
+        // Load positions
+        const { data: pos } = await supabase
+          .from('positions')
+          .select('*')
+          .eq('company_id', profile.company_id);
+
+        if (pos) setPositions(pos);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -490,6 +524,22 @@ export default function Diagnostic() {
     }
   };
 
+  const handleApplyTemplate = (template: JDTemplate) => {
+    setActiveTab('jobs');
+    setShowJobForm(true);
+    setEditingJob({
+      title: template.title,
+      department: template.department,
+      level: template.level,
+      description: template.description,
+      competencies: template.competencies,
+      responsibilities: template.responsibilities,
+      required_skills: template.technicalSkills.map(s => ({ name: s })),
+      preferred_skills: template.softSkills.map(s => ({ name: s })),
+    });
+    toast.success(t.diagnostic.overview === 'Overview' ? 'Template applied - edit and save' : 'Template appliqué - modifiez et sauvegardez');
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -500,11 +550,15 @@ export default function Diagnostic() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">{d.overview}</TabsTrigger>
-            <TabsTrigger value="jobs">{d.jobDescriptions}</TabsTrigger>
-            <TabsTrigger value="evaluations">{d.performanceEvaluations}</TabsTrigger>
-            <TabsTrigger value="diagnostic">{d.diagnostic}</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto">
+            <TabsTrigger value="overview" className="flex items-center gap-1"><ClipboardCheck className="h-3.5 w-3.5" /> {d.overview}</TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {d.jobDescriptions}</TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> Templates</TabsTrigger>
+            <TabsTrigger value="orgchart" className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> Org Chart</TabsTrigger>
+            <TabsTrigger value="evaluations" className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {d.performanceEvaluations}</TabsTrigger>
+            <TabsTrigger value="skills" className="flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Skills Matrix</TabsTrigger>
+            <TabsTrigger value="report" className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> AI Report</TabsTrigger>
+            <TabsTrigger value="diagnostic" className="flex items-center gap-1"><Target className="h-3.5 w-3.5" /> {d.diagnostic}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -785,6 +839,44 @@ export default function Diagnostic() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* JD Templates Tab */}
+          <TabsContent value="templates" className="space-y-4">
+            <JDTemplateLibrary companyId={companyId} onApplyTemplate={handleApplyTemplate} />
+          </TabsContent>
+
+          {/* Org Chart Tab */}
+          <TabsContent value="orgchart" className="space-y-4">
+            <OrgChartView
+              companyId={companyId}
+              departments={departments}
+              positions={positions}
+              onRefresh={loadData}
+              jobDescriptions={jobDescriptions}
+              evaluations={performanceEvaluations}
+            />
+          </TabsContent>
+
+          {/* Skills Matrix Tab */}
+          <TabsContent value="skills" className="space-y-4">
+            <SkillsMatrixView
+              positions={positions}
+              evaluations={performanceEvaluations}
+              jobDescriptions={jobDescriptions}
+            />
+          </TabsContent>
+
+          {/* AI Assessment Report Tab */}
+          <TabsContent value="report" className="space-y-4">
+            <AssessmentReport
+              companyId={companyId}
+              companyName={companyName}
+              departments={departments}
+              positions={positions}
+              jobDescriptions={jobDescriptions}
+              evaluations={performanceEvaluations}
+            />
           </TabsContent>
 
           {/* Diagnostic Tab */}
