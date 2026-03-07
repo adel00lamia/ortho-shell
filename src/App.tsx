@@ -25,7 +25,7 @@ import Benchmark from "./pages/Benchmark";
 import OFPPTReimbursement from "./pages/OFPPTReimbursement";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import NotFound from "./pages/NotFound";
-import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
+import Index from "./pages/Index";
 import SubscriptionGate from "./components/SubscriptionGate";
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
@@ -49,12 +49,10 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Pricing />} />
-              
-              {/* Root redirect */}
-              <Route path="/" element={<RoleBasedRedirect />} />
               
               {/* Protected routes with sidebar */}
               <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
