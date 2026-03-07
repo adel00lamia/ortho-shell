@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Brain, BookOpen, BarChart3, TrendingUp, ArrowRight, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { motion } from 'framer-motion';
 
 interface ContextualActionsProps {
   currentPage: 'diagnostic' | 'plan-builder' | 'module-studio' | 'performance' | 'benchmark';
@@ -89,22 +90,37 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
   if (currentActions.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm p-5">
-      <div className="flex items-center gap-2 mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm p-5"
+    >
+      <motion.div
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.15, duration: 0.3 }}
+        className="flex items-center gap-2 mb-4"
+      >
         <div className="h-1 w-5 rounded-full bg-primary" />
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {ca.nextStep}
         </span>
-      </div>
+      </motion.div>
 
       <div className={`grid gap-3 ${currentActions.length > 1 ? 'md:grid-cols-2' : ''}`}>
         {currentActions.map((action, index) => {
           const Icon = action.icon;
           return (
-            <button
+            <motion.button
               key={index}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + index * 0.1, duration: 0.35, ease: 'easeOut' }}
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.985 }}
               onClick={action.action}
-              className={`group flex items-center gap-3 rounded-lg p-3 text-left transition-all duration-200 ${
+              className={`group flex items-center gap-3 rounded-lg p-3 text-left transition-colors duration-200 ${
                 action.highlighted
                   ? 'bg-primary/8 hover:bg-primary/14 border border-primary/20'
                   : 'bg-muted/40 hover:bg-muted/70 border border-transparent'
@@ -127,13 +143,13 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
                   {action.description}
                 </p>
               </div>
-              <ChevronRight className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${
+              <ChevronRight className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 ${
                 action.highlighted ? 'text-primary' : 'text-muted-foreground'
               }`} />
-            </button>
+            </motion.button>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
