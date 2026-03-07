@@ -737,6 +737,7 @@ export const JD_DEPARTMENTS = [
   'Engineering', 'Sales', 'Marketing', 'Finance', 'Human Resources',
   'Operations', 'Quality', 'Customer Success', 'Analytics', 'Legal',
   'IT', 'Product', 'Design', 'Supply Chain', 'Manufacturing',
+  'Logistics', 'Construction', 'Agriculture', 'Maintenance',
 ];
 
 export const POSITION_STATUSES = [
