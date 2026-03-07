@@ -134,7 +134,7 @@ export const HierarchicalSidebar = () => {
             <span className="text-primary-foreground font-bold text-sm">LM</span>
           </div>
           <div>
-            <h2 className="font-semibold text-sidebar-foreground text-sm">LMF Academy</h2>
+            <h2 className="font-semibold text-sidebar-foreground text-sm">FLM Academy</h2>
             <p className="text-xs text-sidebar-foreground/60">Formation intelligente</p>
           </div>
         </div>
