@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Brain, BookOpen, BarChart3, TrendingUp, ArrowRight } from 'lucide-react';
+import { Brain, BookOpen, BarChart3, TrendingUp, ArrowRight, ChevronRight } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContextualActionsProps {
   currentPage: 'diagnostic' | 'plan-builder' | 'module-studio' | 'performance' | 'benchmark';
@@ -16,43 +15,38 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
       {
         title: 'Create Training Plan',
         description: 'Use AI to generate a plan based on this diagnostic',
-        icon: <Brain className="w-5 h-5" />,
+        icon: Brain,
         action: () => navigate('/workflow/plan/builder', { state: { diagnosticData: data } }),
-        variant: 'default' as const,
         highlighted: true
       },
       {
         title: 'View Benchmark',
         description: 'Compare results with industry standards',
-        icon: <TrendingUp className="w-5 h-5" />,
+        icon: TrendingUp,
         action: () => navigate('/workflow/assess/benchmark'),
-        variant: 'outline' as const
       }
     ],
     'plan-builder': [
       {
         title: 'Build Modules',
         description: 'Create custom training content',
-        icon: <BookOpen className="w-5 h-5" />,
+        icon: BookOpen,
         action: () => navigate('/workflow/execute/modules'),
-        variant: 'default' as const,
         highlighted: true
       },
       {
         title: 'Browse Marketplace',
         description: 'Find external courses to complement your plan',
-        icon: <ArrowRight className="w-5 h-5" />,
+        icon: ArrowRight,
         action: () => navigate('/workflow/execute/marketplace'),
-        variant: 'outline' as const
       }
     ],
     'module-studio': [
       {
         title: 'Track Progress',
         description: 'View analytics and ROI metrics',
-        icon: <BarChart3 className="w-5 h-5" />,
+        icon: BarChart3,
         action: () => navigate('/workflow/track/analytics'),
-        variant: 'default' as const,
         highlighted: true
       }
     ],
@@ -60,34 +54,30 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
       {
         title: 'Generate Training Plan',
         description: 'Create plan based on evaluation gaps',
-        icon: <Brain className="w-5 h-5" />,
+        icon: Brain,
         action: () => navigate('/workflow/plan/builder', { state: { performanceData: data } }),
-        variant: 'default' as const,
         highlighted: true
       },
       {
         title: 'Compare Benchmark',
         description: 'See industry performance standards',
-        icon: <TrendingUp className="w-5 h-5" />,
+        icon: TrendingUp,
         action: () => navigate('/workflow/assess/benchmark'),
-        variant: 'outline' as const
       }
     ],
     benchmark: [
       {
         title: 'Start Diagnostic',
         description: 'Assess your current skill levels',
-        icon: <Brain className="w-5 h-5" />,
+        icon: Brain,
         action: () => navigate('/workflow/assess/diagnostic'),
-        variant: 'default' as const,
         highlighted: true
       },
       {
         title: 'Create Plan',
         description: 'Build training plan with AI',
-        icon: <ArrowRight className="w-5 h-5" />,
+        icon: ArrowRight,
         action: () => navigate('/workflow/plan/builder'),
-        variant: 'outline' as const
       }
     ]
   };
@@ -97,39 +87,51 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
   if (currentActions.length === 0) return null;
 
   return (
-    <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10">
-      <CardHeader>
-        <CardTitle className="text-lg">What's Next?</CardTitle>
-        <CardDescription>
-          Continue your training workflow with these suggested actions
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid md:grid-cols-2 gap-4">
-        {currentActions.map((action, index) => (
-          <Card
-            key={index}
-            className={`cursor-pointer transition-all hover:shadow-lg ${
-              action.highlighted ? 'border-2 border-primary bg-gradient-to-br from-primary/5 to-accent/10' : ''
-            }`}
-            onClick={action.action}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${
-                  action.highlighted ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  {action.icon}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold mb-1">{action.title}</h4>
-                  <p className="text-sm text-muted-foreground">{action.description}</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+    <div className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-1 w-5 rounded-full bg-primary" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Next Step
+        </span>
+      </div>
+
+      <div className={`grid gap-3 ${currentActions.length > 1 ? 'md:grid-cols-2' : ''}`}>
+        {currentActions.map((action, index) => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={index}
+              onClick={action.action}
+              className={`group flex items-center gap-3 rounded-lg p-3 text-left transition-all duration-200 ${
+                action.highlighted
+                  ? 'bg-primary/8 hover:bg-primary/14 border border-primary/20'
+                  : 'bg-muted/40 hover:bg-muted/70 border border-transparent'
+              }`}
+            >
+              <div className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
+                action.highlighted
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground group-hover:text-foreground'
+              }`}>
+                <Icon className="w-4 h-4" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </CardContent>
-    </Card>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium leading-tight ${
+                  action.highlighted ? 'text-foreground' : 'text-foreground/80'
+                }`}>
+                  {action.title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {action.description}
+                </p>
+              </div>
+              <ChevronRight className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${
+                action.highlighted ? 'text-primary' : 'text-muted-foreground'
+              }`} />
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
