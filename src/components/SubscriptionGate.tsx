@@ -90,12 +90,9 @@ const SubscriptionGate = ({ children, requiredPlan = 'starter' }: SubscriptionGa
     return Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+  // DISCOVERY MODE: skip all checks, render children directly
+  if (DISCOVERY_MODE) {
+    return <>{children}</>;
   }
 
   // Show trial ending warning
