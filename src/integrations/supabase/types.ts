@@ -63,30 +63,66 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
+          city: string | null
+          cnss_number: string | null
+          company_size: string | null
+          contact_email: string | null
           created_at: string
           domain: string | null
+          employee_count: number | null
+          ice_number: string | null
           id: string
+          industry: string | null
           logo_url: string | null
           name: string
+          org_chart_url: string | null
+          phone: string | null
           primary_color: string | null
+          profile_completed: boolean | null
+          rc_number: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
+          cnss_number?: string | null
+          company_size?: string | null
+          contact_email?: string | null
           created_at?: string
           domain?: string | null
+          employee_count?: number | null
+          ice_number?: string | null
           id?: string
+          industry?: string | null
           logo_url?: string | null
           name: string
+          org_chart_url?: string | null
+          phone?: string | null
           primary_color?: string | null
+          profile_completed?: boolean | null
+          rc_number?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
+          cnss_number?: string | null
+          company_size?: string | null
+          contact_email?: string | null
           created_at?: string
           domain?: string | null
+          employee_count?: number | null
+          ice_number?: string | null
           id?: string
+          industry?: string | null
           logo_url?: string | null
           name?: string
+          org_chart_url?: string | null
+          phone?: string | null
           primary_color?: string | null
+          profile_completed?: boolean | null
+          rc_number?: string | null
           updated_at?: string
         }
         Relationships: []

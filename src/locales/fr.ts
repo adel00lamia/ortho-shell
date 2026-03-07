@@ -56,6 +56,7 @@ export const fr: Translations = {
     progressTracking: 'Suivi de progression',
     certificates: 'Certificats',
     ofpptReimbursement: 'Remboursement OFPPT',
+    companyProfile: 'Profil Entreprise',
     userManagement: 'Gestion des utilisateurs',
     teamCollaboration: 'Collaboration d\'équipe',
   },
@@ -80,6 +81,7 @@ export const fr: Translations = {
     manage: 'Gestion',
     settings: 'Paramètres',
     profile: 'Profil',
+    'company-profile': 'Profil Entreprise',
   },
 
   dashboard: {
