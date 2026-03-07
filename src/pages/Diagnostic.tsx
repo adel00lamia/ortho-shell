@@ -524,6 +524,22 @@ export default function Diagnostic() {
     }
   };
 
+  const handleApplyTemplate = (template: JDTemplate) => {
+    setActiveTab('jobs');
+    setShowJobForm(true);
+    setEditingJob({
+      title: template.title,
+      department: template.department,
+      level: template.level,
+      description: template.description,
+      competencies: template.competencies,
+      responsibilities: template.responsibilities,
+      required_skills: template.technicalSkills.map(s => ({ name: s })),
+      preferred_skills: template.softSkills.map(s => ({ name: s })),
+    });
+    toast.success(t.diagnostic.overview === 'Overview' ? 'Template applied - edit and save' : 'Template appliqué - modifiez et sauvegardez');
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -534,11 +550,15 @@ export default function Diagnostic() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">{d.overview}</TabsTrigger>
-            <TabsTrigger value="jobs">{d.jobDescriptions}</TabsTrigger>
-            <TabsTrigger value="evaluations">{d.performanceEvaluations}</TabsTrigger>
-            <TabsTrigger value="diagnostic">{d.diagnostic}</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto">
+            <TabsTrigger value="overview" className="flex items-center gap-1"><ClipboardCheck className="h-3.5 w-3.5" /> {d.overview}</TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {d.jobDescriptions}</TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> Templates</TabsTrigger>
+            <TabsTrigger value="orgchart" className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> Org Chart</TabsTrigger>
+            <TabsTrigger value="evaluations" className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {d.performanceEvaluations}</TabsTrigger>
+            <TabsTrigger value="skills" className="flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Skills Matrix</TabsTrigger>
+            <TabsTrigger value="report" className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> AI Report</TabsTrigger>
+            <TabsTrigger value="diagnostic" className="flex items-center gap-1"><Target className="h-3.5 w-3.5" /> {d.diagnostic}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
