@@ -153,6 +153,14 @@ export default function Diagnostic() {
       if (profile?.company_id) {
         setCompanyId(profile.company_id);
 
+        // Load company name
+        const { data: company } = await supabase
+          .from('companies')
+          .select('name')
+          .eq('id', profile.company_id)
+          .single();
+        if (company) setCompanyName(company.name);
+
         // Load job descriptions
         const { data: jobs } = await supabase
           .from('job_descriptions')
@@ -168,6 +176,22 @@ export default function Diagnostic() {
           .eq('company_id', profile.company_id);
 
         if (evals) setPerformanceEvaluations(evals);
+
+        // Load departments
+        const { data: depts } = await supabase
+          .from('departments')
+          .select('*')
+          .eq('company_id', profile.company_id);
+
+        if (depts) setDepartments(depts);
+
+        // Load positions
+        const { data: pos } = await supabase
+          .from('positions')
+          .select('*')
+          .eq('company_id', profile.company_id);
+
+        if (pos) setPositions(pos);
       }
     } catch (error) {
       console.error('Error loading data:', error);
