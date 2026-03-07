@@ -59,6 +59,7 @@ export const HierarchicalSidebar = () => {
       titleKey: 'assess',
       roles: ['admin', 'hr_manager'],
       items: [
+        { path: '/company-profile', labelKey: 'companyProfile', icon: Building2 },
         { path: '/workflow/assess/diagnostic', labelKey: 'skillsDiagnostic', icon: ClipboardCheck },
         { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
         { path: '/workflow/assess/benchmark', labelKey: 'industryBenchmark', icon: TrendingUp },

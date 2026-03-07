@@ -28,6 +28,7 @@ import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import SubscriptionGate from "./components/SubscriptionGate";
+import CompanyProfile from "./pages/CompanyProfile";
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
@@ -60,6 +61,9 @@ const App = () => (
               
               {/* Protected routes with sidebar */}
               <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+              
+              {/* Company Profile - pre-diagnostic */}
+              <Route path="/company-profile" element={<ProtectedLayout><CompanyProfile /></ProtectedLayout>} />
               
               {/* Workflow Routes - Assess */}
               <Route path="/workflow/assess/diagnostic" element={<ProtectedLayout><Diagnostic /></ProtectedLayout>} />
