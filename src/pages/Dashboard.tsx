@@ -1,21 +1,57 @@
+import { useState, useEffect } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
-  ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck
+  ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+const PROFILE_FIELDS = [
+  { key: 'name', label: 'fieldName' },
+  { key: 'cnss_number', label: 'fieldCnss' },
+  { key: 'rc_number', label: 'fieldRc' },
+  { key: 'ice_number', label: 'fieldIce' },
+  { key: 'industry', label: 'fieldIndustry' },
+  { key: 'company_size', label: 'fieldSize' },
+  { key: 'address', label: 'fieldAddress' },
+  { key: 'city', label: 'fieldCity' },
+  { key: 'contact_email', label: 'fieldContact' },
+  { key: 'logo_url', label: 'fieldLogo' },
+] as const;
 
 const Dashboard = () => {
   const { role, loading: roleLoading } = useUserRole();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { stats, loading: statsLoading } = useDashboardStats(role);
+  const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
+      if (!profile?.company_id) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
+      const { data: company } = await supabase.from('companies').select('*').eq('id', profile.company_id).single();
+      if (!company) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
+      const missing: string[] = [];
+      PROFILE_FIELDS.forEach(f => {
+        if (!(company as any)[f.key]) missing.push(f.label);
+      });
+      const filled = PROFILE_FIELDS.length - missing.length;
+      setProfileCompletion({ percent: Math.round((filled / PROFILE_FIELDS.length) * 100), missing });
+    };
+    loadProfile();
+  }, [user]);
 
   if (roleLoading || statsLoading) {
     return (
