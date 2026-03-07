@@ -82,6 +82,7 @@ export const en = {
     manage: 'Management',
     settings: 'Settings',
     profile: 'Profile',
+    'company-profile': 'Company Profile',
   },
 
   // Dashboard

@@ -81,6 +81,7 @@ export const fr: Translations = {
     manage: 'Gestion',
     settings: 'Paramètres',
     profile: 'Profil',
+    'company-profile': 'Profil Entreprise',
   },
 
   dashboard: {
