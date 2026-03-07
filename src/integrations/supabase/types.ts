@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessment_reports: {
+        Row: {
+          ai_generated: boolean | null
+          company_id: string
+          created_at: string
+          created_by: string
+          id: string
+          maturity_score: number | null
+          report_data: Json
+          report_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          company_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          maturity_score?: number | null
+          report_data?: Json
+          report_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_generated?: boolean | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          maturity_score?: number | null
+          report_data?: Json
+          report_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string
@@ -43,6 +90,69 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      departments: {
+        Row: {
+          budget: number | null
+          company_id: string
+          created_at: string
+          description: string | null
+          employee_count: number
+          head_employee_email: string | null
+          head_employee_name: string | null
+          id: string
+          level: number
+          location: string | null
+          name: string
+          parent_department_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          employee_count?: number
+          head_employee_email?: string | null
+          head_employee_name?: string | null
+          id?: string
+          level?: number
+          location?: string | null
+          name: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          employee_count?: number
+          head_employee_email?: string | null
+          head_employee_name?: string | null
+          id?: string
+          level?: number
+          location?: string | null
+          name?: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_descriptions: {
         Row: {
@@ -533,6 +643,101 @@ export type Database = {
           },
         ]
       }
+      positions: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_holder_email: string | null
+          current_holder_name: string | null
+          department_id: string | null
+          id: string
+          is_critical: boolean | null
+          job_description_id: string | null
+          level: string | null
+          match_score: number | null
+          notes: string | null
+          reports_to_position_id: string | null
+          reskill_candidate: boolean | null
+          skills_current: Json | null
+          skills_required: Json | null
+          status: string
+          title: string
+          updated_at: string
+          upskill_potential: boolean | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_holder_email?: string | null
+          current_holder_name?: string | null
+          department_id?: string | null
+          id?: string
+          is_critical?: boolean | null
+          job_description_id?: string | null
+          level?: string | null
+          match_score?: number | null
+          notes?: string | null
+          reports_to_position_id?: string | null
+          reskill_candidate?: boolean | null
+          skills_current?: Json | null
+          skills_required?: Json | null
+          status?: string
+          title: string
+          updated_at?: string
+          upskill_potential?: boolean | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_holder_email?: string | null
+          current_holder_name?: string | null
+          department_id?: string | null
+          id?: string
+          is_critical?: boolean | null
+          job_description_id?: string | null
+          level?: string | null
+          match_score?: number | null
+          notes?: string | null
+          reports_to_position_id?: string | null
+          reskill_candidate?: boolean | null
+          skills_current?: Json | null
+          skills_required?: Json | null
+          status?: string
+          title?: string
+          updated_at?: string
+          upskill_potential?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "positions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "positions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "positions_job_description_id_fkey"
+            columns: ["job_description_id"]
+            isOneToOne: false
+            referencedRelation: "job_descriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "positions_reports_to_position_id_fkey"
+            columns: ["reports_to_position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -567,6 +772,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skills_catalog: {
+        Row: {
+          category: string
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skills_catalog_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
