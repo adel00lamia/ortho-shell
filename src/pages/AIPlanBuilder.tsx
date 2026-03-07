@@ -240,6 +240,7 @@ export default function AIPlanBuilder() {
   });
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<Array<{plan: GeneratedPlan; requirements: PlanRequirements; generatedAt: Date}>>([]);
+  const [researchData, setResearchData] = useState<CompanyResearchData | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [planVersions, setPlanVersions] = useState<any[]>([]);
   const [planComments, setPlanComments] = useState<any[]>([]);
