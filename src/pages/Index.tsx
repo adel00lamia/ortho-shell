@@ -238,13 +238,20 @@ const Index = () => {
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
-            <Badge className="mb-6 bg-primary/20 text-primary-foreground border-primary/30 hover:bg-primary/30 px-4 py-1.5 text-sm font-medium">
-              <Sparkles className="h-3.5 w-3.5 mr-2" />
-              {language === 'fr' ? 'Plateforme propulsée par l\'IA' : 'AI-Powered Platform'}
-            </Badge>
+          <motion.div
+            className="text-center max-w-4xl mx-auto"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <motion.div variants={fadeInUp} custom={0}>
+              <Badge className="mb-6 bg-primary/20 text-primary-foreground border-primary/30 hover:bg-primary/30 px-4 py-1.5 text-sm font-medium">
+                <Sparkles className="h-3.5 w-3.5 mr-2" />
+                {language === 'fr' ? 'Plateforme propulsée par l\'IA' : 'AI-Powered Platform'}
+              </Badge>
+            </motion.div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+            <motion.h1 variants={fadeInUp} custom={1} className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
               {language === 'fr' ? (
                 <>
                   Transformez la formation <br className="hidden sm:block" />
@@ -260,15 +267,15 @@ const Index = () => {
                   </span>
                 </>
               )}
-            </h1>
+            </motion.h1>
 
-            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+            <motion.p variants={fadeInUp} custom={2} className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
               {language === 'fr'
                 ? 'Diagnostic IA, plans personnalisés, conformité OFPPT/GIAC et certificats numériques. Tout-en-un pour piloter la montée en compétences.'
                 : 'AI diagnostics, personalized plans, OFPPT/GIAC compliance, and digital certificates. All-in-one platform to drive upskilling.'}
-            </p>
+            </motion.p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <motion.div variants={fadeInUp} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button
                 size="lg"
                 onClick={() => navigate(user ? '/dashboard' : '/auth')}
@@ -289,18 +296,18 @@ const Index = () => {
                 <Play className="mr-2 h-5 w-5" />
                 {language === 'fr' ? 'Voir la démo' : 'Watch Demo'}
               </Button>
-            </div>
+            </motion.div>
 
             {/* Stats bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+            <motion.div variants={fadeInUp} custom={4} className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
               {stats.map((stat, i) => (
                 <div key={i} className="text-center">
                   <div className="text-3xl md:text-4xl font-extrabold text-white" style={{ fontFamily: 'Plus Jakarta Sans' }}>{stat.value}</div>
                   <div className="text-sm text-white/50 mt-1">{stat.label}</div>
                 </div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -368,20 +375,27 @@ const Index = () => {
       <section className="py-20 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <Badge variant="secondary" className="mb-4">
-                <Shield className="h-3.5 w-3.5 mr-1" />
-                {language === 'fr' ? 'Conformité' : 'Compliance'}
-              </Badge>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={staggerContainer}
+            >
+              <motion.div variants={fadeInUp} custom={0}>
+                <Badge variant="secondary" className="mb-4">
+                  <Shield className="h-3.5 w-3.5 mr-1" />
+                  {language === 'fr' ? 'Conformité' : 'Compliance'}
+                </Badge>
+              </motion.div>
+              <motion.h2 variants={fadeInUp} custom={1} className="text-3xl md:text-4xl font-extrabold text-foreground mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
                 {language === 'fr' ? 'OFPPT & GIAC en toute sérénité' : 'OFPPT & GIAC Made Simple'}
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
+              </motion.h2>
+              <motion.p variants={fadeInUp} custom={2} className="text-lg text-muted-foreground mb-8">
                 {language === 'fr'
                   ? 'Automatisez la gestion de vos dossiers CSF, suivez vos remboursements et restez conforme aux exigences réglementaires marocaines.'
                   : 'Automate CSF dossier management, track reimbursements, and stay compliant with Moroccan regulatory requirements.'}
-              </p>
-              <div className="space-y-4">
+              </motion.p>
+              <motion.div variants={fadeInUp} custom={3} className="space-y-4">
                 {[
                   language === 'fr' ? 'Génération automatique des 10 modèles OFPPT' : 'Auto-generate all 10 OFPPT document templates',
                   language === 'fr' ? 'Suivi des remboursements en temps réel' : 'Real-time reimbursement tracking',
@@ -393,9 +407,15 @@ const Index = () => {
                     <span className="text-foreground">{item}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-            <div className="relative">
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+            >
               <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 border border-border">
                 <div className="space-y-4">
                   {[
@@ -416,7 +436,7 @@ const Index = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
