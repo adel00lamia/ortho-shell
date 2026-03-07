@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Sparkles, Loader2, FileText, Download, CheckCircle2, AlertTriangle, TrendingUp, Target, Shield } from 'lucide-react';
+import { exportAssessmentReportPDF } from './AssessmentReportPDFExport';
 
 interface AssessmentReportProps {
   companyId: string | null;
@@ -46,6 +47,7 @@ interface ReportData {
 export const AssessmentReport = ({ companyId, companyName, departments, positions, jobDescriptions, evaluations }: AssessmentReportProps) => {
   const { language } = useLanguage();
   const [generating, setGenerating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [report, setReport] = useState<ReportData | null>(null);
 
   const handleGenerate = async () => {
@@ -83,6 +85,42 @@ export const AssessmentReport = ({ companyId, companyName, departments, position
       toast.error(err.message || 'Report generation failed');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!report) return;
+    setExporting(true);
+    try {
+      // Fetch company branding
+      let logoUrl: string | null = null;
+      let primaryColor: string | null = null;
+      if (companyId) {
+        const { data: companyRow } = await supabase
+          .from('companies')
+          .select('logo_url, primary_color')
+          .eq('id', companyId)
+          .single();
+        logoUrl = companyRow?.logo_url || null;
+        primaryColor = companyRow?.primary_color || null;
+      }
+
+      await exportAssessmentReportPDF({
+        report,
+        company: { name: companyName, logoUrl, primaryColor },
+        language: language as 'fr' | 'en',
+        stats: {
+          departments: departments.length,
+          positions: positions.length,
+          jobDescriptions: jobDescriptions.length,
+          evaluations: evaluations.length,
+        },
+      });
+      toast.success(language === 'fr' ? 'PDF exporté avec succès' : 'PDF exported successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'PDF export failed');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -261,6 +299,10 @@ export const AssessmentReport = ({ companyId, companyName, departments, position
         <Button variant="outline" onClick={handleGenerate} disabled={generating}>
           {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
           {language === 'fr' ? 'Régénérer' : 'Regenerate'}
+        </Button>
+        <Button onClick={handleExportPDF} disabled={exporting}>
+          {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          {language === 'fr' ? 'Exporter PDF' : 'Export PDF'}
         </Button>
       </div>
     </div>
