@@ -75,6 +75,11 @@ export default function Diagnostic() {
   // Employees for diagnostic
   const [employees, setEmployees] = useState<Employee[]>([]);
   
+  // Org chart data
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [companyName, setCompanyName] = useState('');
+  
   const [formData, setFormData] = useState({
     objectives: "",
     industry: "",
