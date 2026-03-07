@@ -88,6 +88,41 @@ export const AssessmentReport = ({ companyId, companyName, departments, position
     }
   };
 
+  const handleExportPDF = async () => {
+    if (!report) return;
+    setExporting(true);
+    try {
+      // Fetch company branding
+      let logoUrl: string | null = null;
+      let primaryColor: string | null = null;
+      if (companyId) {
+        const { data: companyRow } = await supabase
+          .from('companies')
+          .select('logo_url, primary_color')
+          .eq('id', companyId)
+          .single();
+        logoUrl = companyRow?.logo_url || null;
+        primaryColor = companyRow?.primary_color || null;
+      }
+
+      await exportAssessmentReportPDF({
+        report,
+        company: { name: companyName, logoUrl, primaryColor },
+        language: language as 'fr' | 'en',
+        stats: {
+          departments: departments.length,
+          positions: positions.length,
+          jobDescriptions: jobDescriptions.length,
+          evaluations: evaluations.length,
+        },
+      });
+      toast.success(language === 'fr' ? 'PDF exporté avec succès' : 'PDF exported successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'PDF export failed');
+    } finally {
+      setExporting(false);
+    }
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200';
