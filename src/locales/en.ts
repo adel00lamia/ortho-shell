@@ -649,6 +649,39 @@ export const en = {
     failedToGenerate: 'Failed to generate suggestions',
   },
 
+  // Contextual Actions
+  contextualActions: {
+    nextStep: 'Next Step',
+    diagnostic: {
+      createPlanTitle: 'Create Training Plan',
+      createPlanDesc: 'Use AI to generate a plan based on this diagnostic',
+      viewBenchmarkTitle: 'View Benchmark',
+      viewBenchmarkDesc: 'Compare results with industry standards',
+    },
+    planBuilder: {
+      buildModulesTitle: 'Build Modules',
+      buildModulesDesc: 'Create custom training content',
+      browseMarketplaceTitle: 'Browse Marketplace',
+      browseMarketplaceDesc: 'Find external courses to complement your plan',
+    },
+    moduleStudio: {
+      trackProgressTitle: 'Track Progress',
+      trackProgressDesc: 'View analytics and ROI metrics',
+    },
+    performance: {
+      generatePlanTitle: 'Generate Training Plan',
+      generatePlanDesc: 'Create plan based on evaluation gaps',
+      compareBenchmarkTitle: 'Compare Benchmark',
+      compareBenchmarkDesc: 'See industry performance standards',
+    },
+    benchmark: {
+      startDiagnosticTitle: 'Start Diagnostic',
+      startDiagnosticDesc: 'Assess your current skill levels',
+      createPlanTitle: 'Create Plan',
+      createPlanDesc: 'Build training plan with AI',
+    },
+  },
+
   // Language
   language: {
     label: 'Language',

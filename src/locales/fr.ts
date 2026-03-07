@@ -638,6 +638,38 @@ export const fr: Translations = {
     failedToGenerate: 'Échec de la génération des suggestions',
   },
 
+  contextualActions: {
+    nextStep: 'Étape suivante',
+    diagnostic: {
+      createPlanTitle: 'Créer un plan de formation',
+      createPlanDesc: 'Utilisez l\'IA pour générer un plan basé sur ce diagnostic',
+      viewBenchmarkTitle: 'Voir le benchmark',
+      viewBenchmarkDesc: 'Comparer les résultats aux standards du secteur',
+    },
+    planBuilder: {
+      buildModulesTitle: 'Créer des modules',
+      buildModulesDesc: 'Concevoir du contenu de formation personnalisé',
+      browseMarketplaceTitle: 'Explorer le marketplace',
+      browseMarketplaceDesc: 'Trouver des formations externes pour compléter votre plan',
+    },
+    moduleStudio: {
+      trackProgressTitle: 'Suivre la progression',
+      trackProgressDesc: 'Voir les analytics et métriques ROI',
+    },
+    performance: {
+      generatePlanTitle: 'Générer un plan de formation',
+      generatePlanDesc: 'Créer un plan basé sur les écarts d\'évaluation',
+      compareBenchmarkTitle: 'Comparer au benchmark',
+      compareBenchmarkDesc: 'Voir les standards de performance du secteur',
+    },
+    benchmark: {
+      startDiagnosticTitle: 'Lancer un diagnostic',
+      startDiagnosticDesc: 'Évaluer vos niveaux de compétences actuels',
+      createPlanTitle: 'Créer un plan',
+      createPlanDesc: 'Construire un plan de formation avec l\'IA',
+    },
+  },
+
   language: {
     label: 'Langue',
     en: 'English',
