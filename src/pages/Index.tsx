@@ -375,20 +375,27 @@ const Index = () => {
       <section className="py-20 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <Badge variant="secondary" className="mb-4">
-                <Shield className="h-3.5 w-3.5 mr-1" />
-                {language === 'fr' ? 'Conformité' : 'Compliance'}
-              </Badge>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={staggerContainer}
+            >
+              <motion.div variants={fadeInUp} custom={0}>
+                <Badge variant="secondary" className="mb-4">
+                  <Shield className="h-3.5 w-3.5 mr-1" />
+                  {language === 'fr' ? 'Conformité' : 'Compliance'}
+                </Badge>
+              </motion.div>
+              <motion.h2 variants={fadeInUp} custom={1} className="text-3xl md:text-4xl font-extrabold text-foreground mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
                 {language === 'fr' ? 'OFPPT & GIAC en toute sérénité' : 'OFPPT & GIAC Made Simple'}
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
+              </motion.h2>
+              <motion.p variants={fadeInUp} custom={2} className="text-lg text-muted-foreground mb-8">
                 {language === 'fr'
                   ? 'Automatisez la gestion de vos dossiers CSF, suivez vos remboursements et restez conforme aux exigences réglementaires marocaines.'
                   : 'Automate CSF dossier management, track reimbursements, and stay compliant with Moroccan regulatory requirements.'}
-              </p>
-              <div className="space-y-4">
+              </motion.p>
+              <motion.div variants={fadeInUp} custom={3} className="space-y-4">
                 {[
                   language === 'fr' ? 'Génération automatique des 10 modèles OFPPT' : 'Auto-generate all 10 OFPPT document templates',
                   language === 'fr' ? 'Suivi des remboursements en temps réel' : 'Real-time reimbursement tracking',
@@ -400,9 +407,15 @@ const Index = () => {
                     <span className="text-foreground">{item}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-            <div className="relative">
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+            >
               <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 border border-border">
                 <div className="space-y-4">
                   {[
@@ -423,7 +436,7 @@ const Index = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
