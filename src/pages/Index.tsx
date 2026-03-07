@@ -87,35 +87,8 @@ const Index = () => {
     { value: '95%', label: language === 'fr' ? 'Taux d\'achèvement' : 'Completion Rate' },
     { value: '300%', label: language === 'fr' ? 'ROI moyen' : 'Average ROI' },
     { value: '40h', label: language === 'fr' ? 'Économisées/mois' : 'Saved/month' },
-    { value: '500+', label: language === 'fr' ? 'Entreprises' : 'Companies' },
   ];
 
-  const testimonials = [
-    {
-      quote: language === 'fr'
-        ? 'TrainPro Academy a transformé notre approche de la formation. Les plans générés par l\'IA sont précis et nous ont fait gagner un temps considérable.'
-        : 'TrainPro Academy transformed our approach to training. The AI-generated plans are precise and saved us considerable time.',
-      author: 'Fatima El Amrani',
-      role: language === 'fr' ? 'DRH, Groupe Industriel' : 'HR Director, Industrial Group',
-      rating: 5,
-    },
-    {
-      quote: language === 'fr'
-        ? 'La conformité OFPPT est enfin simplifiée. Le suivi des remboursements et la gestion documentaire nous ont permis de récupérer 100% de nos droits.'
-        : 'OFPPT compliance is finally simplified. Reimbursement tracking and document management helped us recover 100% of our entitlements.',
-      author: 'Karim Benjelloun',
-      role: language === 'fr' ? 'Responsable Formation, SSII' : 'Training Manager, IT Services',
-      rating: 5,
-    },
-    {
-      quote: language === 'fr'
-        ? 'L\'analytique en temps réel nous permet de mesurer le ROI de chaque formation. Un outil indispensable pour justifier nos investissements.'
-        : 'Real-time analytics let us measure the ROI of each training. An essential tool to justify our investments.',
-      author: 'Salma Tazi',
-      role: language === 'fr' ? 'CEO, Cabinet de conseil' : 'CEO, Consulting Firm',
-      rating: 5,
-    },
-  ];
 
   const plans = [
     {
@@ -170,8 +143,8 @@ const Index = () => {
               <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {language === 'fr' ? 'Fonctionnalités' : 'Features'}
               </a>
-              <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                {language === 'fr' ? 'Témoignages' : 'Testimonials'}
+              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                {language === 'fr' ? 'Tarifs' : 'Pricing'}
               </a>
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {language === 'fr' ? 'Tarifs' : 'Pricing'}
@@ -213,9 +186,6 @@ const Index = () => {
           <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl px-4 py-4 space-y-3">
             <a href="#features" className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileMenuOpen(false)}>
               {language === 'fr' ? 'Fonctionnalités' : 'Features'}
-            </a>
-            <a href="#testimonials" className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileMenuOpen(false)}>
-              {language === 'fr' ? 'Témoignages' : 'Testimonials'}
             </a>
             <a href="#pricing" className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileMenuOpen(false)}>
               {language === 'fr' ? 'Tarifs' : 'Pricing'}
@@ -311,19 +281,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Social Proof Bar */}
-      <section className="py-12 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-muted-foreground mb-8 font-medium uppercase tracking-wider">
-            {language === 'fr' ? 'Ils nous font confiance' : 'Trusted by leading organizations'}
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 opacity-40">
-            {['OCP Group', 'Maroc Telecom', 'BMCE Bank', 'Attijariwafa', 'Managem', 'ONCF'].map((name) => (
-              <span key={name} className="text-lg font-bold text-foreground whitespace-nowrap">{name}</span>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 md:py-28">
@@ -441,48 +398,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20 md:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <Badge variant="secondary" className="mb-4">
-              <Users className="h-3.5 w-3.5 mr-1" />
-              {language === 'fr' ? 'Témoignages' : 'Testimonials'}
-            </Badge>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>
-              {language === 'fr' ? 'Ce que disent nos clients' : 'What Our Clients Say'}
-            </h2>
-          </div>
-
-          <motion.div
-            className="grid md:grid-cols-3 gap-6"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-          >
-            {testimonials.map((t, i) => (
-              <motion.div key={i} variants={fadeInUp} custom={i}>
-                <Card className="bg-card border-border/50 hover:border-primary/20 transition-all h-full">
-                  <CardContent className="p-6">
-                    <div className="flex gap-1 mb-4">
-                      {Array.from({ length: t.rating }).map((_, j) => (
-                        <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                    <Quote className="h-8 w-8 text-primary/20 mb-3" />
-                    <p className="text-foreground mb-6 leading-relaxed">{t.quote}</p>
-                    <div className="border-t border-border pt-4">
-                      <p className="font-bold text-foreground text-sm">{t.author}</p>
-                      <p className="text-sm text-muted-foreground">{t.role}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
 
       {/* Pricing */}
       <section id="pricing" className="py-20 md:py-28 bg-muted/50">
