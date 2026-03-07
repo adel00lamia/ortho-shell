@@ -56,6 +56,7 @@ export const fr: Translations = {
     progressTracking: 'Suivi de progression',
     certificates: 'Certificats',
     ofpptReimbursement: 'Remboursement OFPPT',
+    companyProfile: 'Profil Entreprise',
     userManagement: 'Gestion des utilisateurs',
     teamCollaboration: 'Collaboration d\'équipe',
   },

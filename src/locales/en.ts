@@ -56,6 +56,7 @@ export const en = {
     progressTracking: 'Progress Tracking',
     certificates: 'Certificates',
     ofpptReimbursement: 'OFPPT Reimbursement',
+    companyProfile: 'Company Profile',
     userManagement: 'User Management',
     teamCollaboration: 'Team Collaboration',
   },
