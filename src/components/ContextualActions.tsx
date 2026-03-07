@@ -17,7 +17,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Create Training Plan',
         description: 'Use AI to generate a plan based on this diagnostic',
         icon: <Brain className="w-5 h-5" />,
-        action: () => navigate('/ai-plan-builder', { state: { diagnosticData: data } }),
+        action: () => navigate('/workflow/plan/builder', { state: { diagnosticData: data } }),
         variant: 'default' as const,
         highlighted: true
       },
@@ -25,7 +25,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'View Benchmark',
         description: 'Compare results with industry standards',
         icon: <TrendingUp className="w-5 h-5" />,
-        action: () => navigate('/benchmark'),
+        action: () => navigate('/workflow/assess/benchmark'),
         variant: 'outline' as const
       }
     ],
@@ -34,7 +34,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Build Modules',
         description: 'Create custom training content',
         icon: <BookOpen className="w-5 h-5" />,
-        action: () => navigate('/module-studio'),
+        action: () => navigate('/workflow/execute/modules'),
         variant: 'default' as const,
         highlighted: true
       },
@@ -42,7 +42,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Browse Marketplace',
         description: 'Find external courses to complement your plan',
         icon: <ArrowRight className="w-5 h-5" />,
-        action: () => navigate('/marketplace'),
+        action: () => navigate('/workflow/execute/marketplace'),
         variant: 'outline' as const
       }
     ],
@@ -51,7 +51,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Track Progress',
         description: 'View analytics and ROI metrics',
         icon: <BarChart3 className="w-5 h-5" />,
-        action: () => navigate('/analytics'),
+        action: () => navigate('/workflow/track/analytics'),
         variant: 'default' as const,
         highlighted: true
       }
@@ -61,7 +61,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Generate Training Plan',
         description: 'Create plan based on evaluation gaps',
         icon: <Brain className="w-5 h-5" />,
-        action: () => navigate('/ai-plan-builder', { state: { performanceData: data } }),
+        action: () => navigate('/workflow/plan/builder', { state: { performanceData: data } }),
         variant: 'default' as const,
         highlighted: true
       },
@@ -69,7 +69,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Compare Benchmark',
         description: 'See industry performance standards',
         icon: <TrendingUp className="w-5 h-5" />,
-        action: () => navigate('/benchmark'),
+        action: () => navigate('/workflow/assess/benchmark'),
         variant: 'outline' as const
       }
     ],
@@ -78,7 +78,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Start Diagnostic',
         description: 'Assess your current skill levels',
         icon: <Brain className="w-5 h-5" />,
-        action: () => navigate('/diagnostic'),
+        action: () => navigate('/workflow/assess/diagnostic'),
         variant: 'default' as const,
         highlighted: true
       },
@@ -86,7 +86,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: 'Create Plan',
         description: 'Build training plan with AI',
         icon: <ArrowRight className="w-5 h-5" />,
-        action: () => navigate('/ai-plan-builder'),
+        action: () => navigate('/workflow/plan/builder'),
         variant: 'outline' as const
       }
     ]
