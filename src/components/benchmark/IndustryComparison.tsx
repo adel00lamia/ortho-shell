@@ -211,25 +211,25 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
             <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">Training Investment %</p>
-                {getComparisonIcon(3.5, benchmark.trainingInvestmentPercent)}
+                {getComparisonIcon(companyTrainingInvestment, benchmark.trainingInvestmentPercent)}
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold">3.5%</p>
+                <p className="text-2xl font-bold">{companyTrainingInvestment}%</p>
                 <p className="text-sm text-muted-foreground">vs {benchmark.trainingInvestmentPercent}%</p>
               </div>
-              <div className="mt-2">{getComparisonBadge(3.5, benchmark.trainingInvestmentPercent)}</div>
+              <div className="mt-2">{getComparisonBadge(companyTrainingInvestment, benchmark.trainingInvestmentPercent)}</div>
             </div>
 
             <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">Employee Retention</p>
-                {getComparisonIcon(78, benchmark.employeeRetention)}
+                {getComparisonIcon(companyRetention, benchmark.employeeRetention)}
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold">78%</p>
+                <p className="text-2xl font-bold">{companyRetention}%</p>
                 <p className="text-sm text-muted-foreground">vs {benchmark.employeeRetention}%</p>
               </div>
-              <div className="mt-2">{getComparisonBadge(78, benchmark.employeeRetention)}</div>
+              <div className="mt-2">{getComparisonBadge(companyRetention, benchmark.employeeRetention)}</div>
             </div>
           </div>
         </CardContent>
