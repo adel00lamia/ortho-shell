@@ -9,42 +9,44 @@ interface ContextualActionsProps {
 
 export function ContextualActions({ currentPage, data }: ContextualActionsProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const ca = t.contextualActions;
 
   const actions = {
     diagnostic: [
       {
-        title: 'Create Training Plan',
-        description: 'Use AI to generate a plan based on this diagnostic',
+        title: ca.diagnostic.createPlanTitle,
+        description: ca.diagnostic.createPlanDesc,
         icon: Brain,
         action: () => navigate('/workflow/plan/builder', { state: { diagnosticData: data } }),
         highlighted: true
       },
       {
-        title: 'View Benchmark',
-        description: 'Compare results with industry standards',
+        title: ca.diagnostic.viewBenchmarkTitle,
+        description: ca.diagnostic.viewBenchmarkDesc,
         icon: TrendingUp,
         action: () => navigate('/workflow/assess/benchmark'),
       }
     ],
     'plan-builder': [
       {
-        title: 'Build Modules',
-        description: 'Create custom training content',
+        title: ca.planBuilder.buildModulesTitle,
+        description: ca.planBuilder.buildModulesDesc,
         icon: BookOpen,
         action: () => navigate('/workflow/execute/modules'),
         highlighted: true
       },
       {
-        title: 'Browse Marketplace',
-        description: 'Find external courses to complement your plan',
+        title: ca.planBuilder.browseMarketplaceTitle,
+        description: ca.planBuilder.browseMarketplaceDesc,
         icon: ArrowRight,
         action: () => navigate('/workflow/execute/marketplace'),
       }
     ],
     'module-studio': [
       {
-        title: 'Track Progress',
-        description: 'View analytics and ROI metrics',
+        title: ca.moduleStudio.trackProgressTitle,
+        description: ca.moduleStudio.trackProgressDesc,
         icon: BarChart3,
         action: () => navigate('/workflow/track/analytics'),
         highlighted: true
@@ -52,30 +54,30 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
     ],
     performance: [
       {
-        title: 'Generate Training Plan',
-        description: 'Create plan based on evaluation gaps',
+        title: ca.performance.generatePlanTitle,
+        description: ca.performance.generatePlanDesc,
         icon: Brain,
         action: () => navigate('/workflow/plan/builder', { state: { performanceData: data } }),
         highlighted: true
       },
       {
-        title: 'Compare Benchmark',
-        description: 'See industry performance standards',
+        title: ca.performance.compareBenchmarkTitle,
+        description: ca.performance.compareBenchmarkDesc,
         icon: TrendingUp,
         action: () => navigate('/workflow/assess/benchmark'),
       }
     ],
     benchmark: [
       {
-        title: 'Start Diagnostic',
-        description: 'Assess your current skill levels',
+        title: ca.benchmark.startDiagnosticTitle,
+        description: ca.benchmark.startDiagnosticDesc,
         icon: Brain,
         action: () => navigate('/workflow/assess/diagnostic'),
         highlighted: true
       },
       {
-        title: 'Create Plan',
-        description: 'Build training plan with AI',
+        title: ca.benchmark.createPlanTitle,
+        description: ca.benchmark.createPlanDesc,
         icon: ArrowRight,
         action: () => navigate('/workflow/plan/builder'),
       }
@@ -91,7 +93,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
       <div className="flex items-center gap-2 mb-4">
         <div className="h-1 w-5 rounded-full bg-primary" />
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Next Step
+          {ca.nextStep}
         </span>
       </div>
 
