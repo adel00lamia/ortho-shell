@@ -47,6 +47,7 @@ interface ReportData {
 export const AssessmentReport = ({ companyId, companyName, departments, positions, jobDescriptions, evaluations }: AssessmentReportProps) => {
   const { language } = useLanguage();
   const [generating, setGenerating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [report, setReport] = useState<ReportData | null>(null);
 
   const handleGenerate = async () => {
@@ -262,6 +263,10 @@ export const AssessmentReport = ({ companyId, companyName, departments, position
         <Button variant="outline" onClick={handleGenerate} disabled={generating}>
           {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
           {language === 'fr' ? 'Régénérer' : 'Regenerate'}
+        </Button>
+        <Button onClick={handleExportPDF} disabled={exporting}>
+          {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          {language === 'fr' ? 'Exporter PDF' : 'Export PDF'}
         </Button>
       </div>
     </div>
