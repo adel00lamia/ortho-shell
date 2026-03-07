@@ -181,9 +181,14 @@ export const JDTemplateLibrary = ({ companyId, onApplyTemplate }: JDTemplateLibr
                       </CardTitle>
                       <CardDescription>{template.department} · {JD_LEVELS.find(l => l.value === template.level)?.[language === 'fr' ? 'labelFr' : 'label']}</CardDescription>
                     </div>
-                    <Badge variant={template.category === 'morocco' ? 'default' : 'secondary'}>
-                      {template.category === 'morocco' ? '🇲🇦' : '🌍'} {template.category === 'morocco' ? (language === 'fr' ? 'Maroc' : 'Morocco') : 'International'}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                      <Badge variant={template.category === 'morocco' ? 'default' : 'secondary'}>
+                        {template.category === 'morocco' ? '🇲🇦' : '🌍'} {template.category === 'morocco' ? (language === 'fr' ? 'Maroc' : 'Morocco') : 'International'}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {template.industry}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
