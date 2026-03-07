@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Brain, Target, BarChart3, Zap, CheckCircle, ArrowRight, Star,
-  Award, TrendingUp, Globe, BookOpen, Users, Shield, Quote,
+  Brain, Target, BarChart3, Zap, CheckCircle, ArrowRight,
+  Award, TrendingUp, Globe, BookOpen, Shield,
   ChevronRight, Sparkles, Play, Menu, X
 } from 'lucide-react';
 import { useState } from 'react';
