@@ -92,6 +92,14 @@ const industryBenchmarks: Record<string, any> = {
     trainingInvestmentPercent: 4.2,
     employeeRetention: 81,
   },
+  "Consumer Goods": {
+    avgTrainingHours: 65,
+    avgTrainingBudget: 100000,
+    avgPerformanceRating: 3.9,
+    topSkills: ["Supply Chain Management", "Quality Assurance", "Brand Management", "Sales & Distribution", "Product Development"],
+    trainingInvestmentPercent: 3.4,
+    employeeRetention: 74,
+  },
 };
 
 export default function IndustryComparison({ industry, companyData, diagnosticData, evaluationData }: IndustryComparisonProps) {
@@ -108,6 +116,20 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
     diagnosticCount: diagnosticData.length,
   };
 
+  // Derive dynamic company training hours from diagnostic data
+  const companyTrainingHours = diagnosticData.length > 0
+    ? Math.round(diagnosticData.reduce((sum, d) => {
+        const skills = d.current_skills as Record<string, number> | null;
+        const count = skills ? Object.keys(skills).length : 0;
+        return sum + count * 10; // estimate hours from skill count
+      }, 0) / diagnosticData.length)
+    : 0;
+
+  // Derive retention estimate from evaluation ratings
+  const companyRetention = evaluationData.length > 0
+    ? Math.round(Math.min(95, 60 + (avgRating / 5) * 35))
+    : 0;
+
   // Comparison data for charts
   const comparisonData = [
     {
@@ -117,21 +139,37 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
     },
     {
       metric: "Training Hours",
-      company: diagnosticData.length > 0 ? 65 : 0,
+      company: companyTrainingHours,
       industry: benchmark.avgTrainingHours,
     },
     {
       metric: "Employee Retention %",
-      company: diagnosticData.length > 0 ? 78 : 0,
+      company: companyRetention,
       industry: benchmark.employeeRetention,
     },
   ];
 
-  const skillsRadarData = benchmark.topSkills.map((skill: string) => ({
-    skill,
-    industry: 4.0,
-    company: Math.random() * 2 + 2.5,
-  }));
+  // Derive skills radar from evaluation competency scores instead of random
+  const skillsRadarData = benchmark.topSkills.map((skill: string, idx: number) => {
+    // Try to derive a company score from evaluation competency data
+    let companyScore = 0;
+    let count = 0;
+    evaluationData.forEach((e) => {
+      const scores = e.competency_scores as Record<string, number> | null;
+      if (scores) {
+        const values = Object.values(scores);
+        if (values.length > idx) {
+          companyScore += Number(values[idx]) || 0;
+          count++;
+        }
+      }
+    });
+    return {
+      skill,
+      industry: 4.0,
+      company: count > 0 ? Number((companyScore / count).toFixed(1)) : 0,
+    };
+  });
 
   const getComparisonIcon = (companyValue: number, industryValue: number) => {
     const diff = ((companyValue - industryValue) / industryValue) * 100;
