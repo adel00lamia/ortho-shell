@@ -1,21 +1,57 @@
+import { useState, useEffect } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
-  ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck
+  ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+const PROFILE_FIELDS = [
+  { key: 'name', label: 'fieldName' },
+  { key: 'cnss_number', label: 'fieldCnss' },
+  { key: 'rc_number', label: 'fieldRc' },
+  { key: 'ice_number', label: 'fieldIce' },
+  { key: 'industry', label: 'fieldIndustry' },
+  { key: 'company_size', label: 'fieldSize' },
+  { key: 'address', label: 'fieldAddress' },
+  { key: 'city', label: 'fieldCity' },
+  { key: 'contact_email', label: 'fieldContact' },
+  { key: 'logo_url', label: 'fieldLogo' },
+] as const;
 
 const Dashboard = () => {
   const { role, loading: roleLoading } = useUserRole();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { stats, loading: statsLoading } = useDashboardStats(role);
+  const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
+      if (!profile?.company_id) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
+      const { data: company } = await supabase.from('companies').select('*').eq('id', profile.company_id).single();
+      if (!company) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
+      const missing: string[] = [];
+      PROFILE_FIELDS.forEach(f => {
+        if (!(company as any)[f.key]) missing.push(f.label);
+      });
+      const filled = PROFILE_FIELDS.length - missing.length;
+      setProfileCompletion({ percent: Math.round((filled / PROFILE_FIELDS.length) * 100), missing });
+    };
+    loadProfile();
+  }, [user]);
 
   if (roleLoading || statsLoading) {
     return (
@@ -151,6 +187,55 @@ const Dashboard = () => {
           );
         })}
       </div>
+
+      {/* Profile Completion */}
+      {profileCompletion && profileCompletion.percent < 100 && (role === 'hr_manager' || role === 'admin') && (
+        <Card className="p-6 border-primary/20 bg-primary/5">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Building2 className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground">{d.profileCompletion}</h3>
+                  <p className="text-sm text-muted-foreground">{d.completeProfile}</p>
+                </div>
+                <Button size="sm" onClick={() => navigate('/company-profile')}>
+                  {d.completeNow} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-3">
+                <Progress value={profileCompletion.percent} className="flex-1 h-2" />
+                <span className="text-sm font-semibold text-foreground whitespace-nowrap">{profileCompletion.percent}%</span>
+              </div>
+              {profileCompletion.missing.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {d.missingFields}
+                  </span>
+                  {profileCompletion.missing.slice(0, 4).map(field => (
+                    <Badge key={field} variant="outline" className="text-xs">{(d as any)[field] || field}</Badge>
+                  ))}
+                  {profileCompletion.missing.length > 4 && (
+                    <Badge variant="outline" className="text-xs">+{profileCompletion.missing.length - 4} {t.common.more}</Badge>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {profileCompletion && profileCompletion.percent === 100 && (role === 'hr_manager' || role === 'admin') && (
+        <Card className="p-4 border-green-500/20 bg-green-500/5">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <span className="text-sm font-medium text-green-700">{d.profileComplete}</span>
+            <Progress value={100} className="flex-1 h-2 max-w-[200px]" />
+          </div>
+        </Card>
+      )}
 
       {/* Workflow Steps */}
       {(role === 'hr_manager' || role === 'admin') && (
