@@ -47,9 +47,9 @@ export function WorkflowIndicator() {
   const location = useLocation();
 
   const getCurrentStepIndex = () => {
-    const currentStep = workflowSteps.findIndex(step => 
-      location.pathname.startsWith(step.path)
-    );
+    const pathSegments = location.pathname.split('/');
+    const workflowSection = pathSegments[2]; // e.g. 'assess', 'plan', 'execute', 'track'
+    const currentStep = workflowSteps.findIndex(step => step.id === workflowSection);
     return currentStep !== -1 ? currentStep : -1;
   };
 
@@ -61,7 +61,7 @@ export function WorkflowIndicator() {
   if (currentStepIndex === -1) return null;
 
   return (
-    <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+    <Card className="mb-6 bg-gradient-to-r from-primary/5 to-accent/10 border-primary/20">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -72,7 +72,7 @@ export function WorkflowIndicator() {
                     index === currentStepIndex
                       ? 'bg-primary text-primary-foreground shadow-md'
                       : index < currentStepIndex
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-accent text-accent-foreground'
                       : 'bg-white/50 text-muted-foreground'
                   }`}
                   onClick={() => navigate(step.path)}
@@ -97,7 +97,7 @@ export function WorkflowIndicator() {
           {nextStep && (
             <Button
               onClick={() => navigate(nextStep.path)}
-              className="ml-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="ml-4"
             >
               Next: {nextStep.label}
               <ArrowRight className="w-4 h-4 ml-2" />
