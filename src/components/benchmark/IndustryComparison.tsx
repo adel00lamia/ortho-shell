@@ -130,6 +130,17 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
     ? Math.round(Math.min(95, 60 + (avgRating / 5) * 35))
     : 0;
 
+  // Derive training investment from diagnostic budget data
+  const companyTrainingInvestment = diagnosticData.length > 0
+    ? Number((diagnosticData.reduce((sum, d) => {
+        const budget = d.budget_range;
+        if (budget === '50000-100000') return sum + 3.0;
+        if (budget === '100000-200000') return sum + 4.0;
+        if (budget === '200000+') return sum + 5.0;
+        return sum + 2.5;
+      }, 0) / diagnosticData.length).toFixed(1))
+    : 0;
+
   // Comparison data for charts
   const comparisonData = [
     {
