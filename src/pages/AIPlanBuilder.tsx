@@ -72,7 +72,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { WorkflowIndicator } from '@/components/WorkflowIndicator';
+
 import { ContextualActions } from '@/components/ContextualActions';
 import { 
   exportPlanToPDF, 
@@ -2474,8 +2474,7 @@ export default function AIPlanBuilder() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 via-background to-muted/30 p-6">
       <div className="max-w-4xl mx-auto">
-        <WorkflowIndicator />
-        
+
         {/* Navigation */}
         <div className="flex items-center justify-between mb-8">
           <Button variant="ghost" onClick={() => navigate(-1)}>
