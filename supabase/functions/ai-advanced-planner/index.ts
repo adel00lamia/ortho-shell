@@ -21,6 +21,11 @@ const requirementsSchema = z.object({
     targetSkills: z.array(z.string().max(200)).max(50).optional().default([]),
     constraints: z.array(z.string().max(500)).max(20).optional().default([]),
     context: z.string().max(5000).optional().default(''),
+    previousPlans: z.array(z.object({
+      name: z.string().max(500),
+      year: z.string().max(10),
+      content: z.string().max(10000),
+    })).max(3).optional().default([]),
     template: z.string().max(200).optional().default(''),
     pack: z.string().max(200).optional().default(''),
     aiModel: z.string().max(100).optional().default('google/gemini-3-flash-preview'),
@@ -238,7 +243,19 @@ ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
 
 Additional Context:
-${requirements.context || 'No additional context provided'}`;
+${requirements.context || 'No additional context provided'}
+
+${requirements.previousPlans && requirements.previousPlans.length > 0 ? `
+PREVIOUS TRAINING PLANS (CRITICAL — AVOID REDUNDANCY):
+The company has provided their previous training plans below. You MUST:
+1. Analyze what was already covered in previous years
+2. AVOID repeating the same training topics, modules, or skills already addressed
+3. Build upon previous training — advance to higher levels or complementary skills
+4. Explicitly mention in your recommendations what was already covered and what is new
+5. In the executive summary, reference continuity with previous plans
+
+${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.content}\n--- END ---`).join('\n\n')}
+` : ''}`;
 
     console.log('Calling Lovable AI Gateway...');
 
