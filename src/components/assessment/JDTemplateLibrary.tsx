@@ -158,6 +158,15 @@ export const JDTemplateLibrary = ({ companyId, onApplyTemplate }: JDTemplateLibr
                 ))}
               </SelectContent>
             </Select>
+            <Select value={industryFilter} onValueChange={setIndustryFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder={language === 'fr' ? 'Secteur' : 'Industry'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'fr' ? 'Tous secteurs' : 'All industries'}</SelectItem>
+                {industries.map(ind => <SelectItem key={ind} value={ind}>{ind}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Template grid */}
