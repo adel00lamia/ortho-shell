@@ -105,6 +105,9 @@ const App = () => (
               <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard/company" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard/trainer" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/profile" element={<Navigate to="/manage/settings" replace />} />
+              <Route path="/ofppt-reimbursement" element={<Navigate to="/workflow/track/reimbursement" replace />} />
+              <Route path="/training-plan" element={<Navigate to="/workflow/plan/plans" replace />} />
               
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
