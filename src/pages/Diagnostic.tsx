@@ -841,6 +841,44 @@ export default function Diagnostic() {
             )}
           </TabsContent>
 
+          {/* JD Templates Tab */}
+          <TabsContent value="templates" className="space-y-4">
+            <JDTemplateLibrary companyId={companyId} onApplyTemplate={handleApplyTemplate} />
+          </TabsContent>
+
+          {/* Org Chart Tab */}
+          <TabsContent value="orgchart" className="space-y-4">
+            <OrgChartView
+              companyId={companyId}
+              departments={departments}
+              positions={positions}
+              onRefresh={loadData}
+              jobDescriptions={jobDescriptions}
+              evaluations={performanceEvaluations}
+            />
+          </TabsContent>
+
+          {/* Skills Matrix Tab */}
+          <TabsContent value="skills" className="space-y-4">
+            <SkillsMatrixView
+              positions={positions}
+              evaluations={performanceEvaluations}
+              jobDescriptions={jobDescriptions}
+            />
+          </TabsContent>
+
+          {/* AI Assessment Report Tab */}
+          <TabsContent value="report" className="space-y-4">
+            <AssessmentReport
+              companyId={companyId}
+              companyName={companyName}
+              departments={departments}
+              positions={positions}
+              jobDescriptions={jobDescriptions}
+              evaluations={performanceEvaluations}
+            />
+          </TabsContent>
+
           {/* Diagnostic Tab */}
           <TabsContent value="diagnostic">
             <form onSubmit={handleSubmit} className="space-y-6">
