@@ -122,6 +122,7 @@ export const AssessmentReport = ({ companyId, companyName, departments, position
     } finally {
       setExporting(false);
     }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
