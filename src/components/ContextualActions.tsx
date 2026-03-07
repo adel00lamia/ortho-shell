@@ -97,7 +97,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
   if (currentActions.length === 0) return null;
 
   return (
-    <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-purple-50">
+    <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/10">
       <CardHeader>
         <CardTitle className="text-lg">What's Next?</CardTitle>
         <CardDescription>
@@ -109,7 +109,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
           <Card
             key={index}
             className={`cursor-pointer transition-all hover:shadow-lg ${
-              action.highlighted ? 'border-2 border-primary bg-gradient-to-br from-blue-50 to-purple-50' : ''
+              action.highlighted ? 'border-2 border-primary bg-gradient-to-br from-primary/5 to-accent/10' : ''
             }`}
             onClick={action.action}
           >
