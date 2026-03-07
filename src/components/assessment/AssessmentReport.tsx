@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Sparkles, Loader2, FileText, Download, CheckCircle2, AlertTriangle, TrendingUp, Target, Shield } from 'lucide-react';
+import { exportAssessmentReportPDF } from './AssessmentReportPDFExport';
 
 interface AssessmentReportProps {
   companyId: string | null;
