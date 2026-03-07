@@ -24,6 +24,7 @@ import PerformanceEvaluation from "./pages/PerformanceEvaluation";
 import Benchmark from "./pages/Benchmark";
 import OFPPTReimbursement from "./pages/OFPPTReimbursement";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
+import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import SubscriptionGate from "./components/SubscriptionGate";
@@ -32,9 +33,12 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
     <div className="flex w-full min-h-screen">
       <HierarchicalSidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <div className="flex-1 overflow-auto flex flex-col">
+        <Breadcrumbs />
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
     </div>
   </ProtectedRoute>
 );
