@@ -131,11 +131,11 @@ export const HierarchicalSidebar = () => {
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">TP</span>
+            <span className="text-primary-foreground font-bold text-sm">LM</span>
           </div>
           <div>
-            <h2 className="font-semibold text-sidebar-foreground text-sm">TrainPro</h2>
-            <p className="text-xs text-sidebar-foreground/60">Academy</p>
+            <h2 className="font-semibold text-sidebar-foreground text-sm">LMF Academy</h2>
+            <p className="text-xs text-sidebar-foreground/60">Formation intelligente</p>
           </div>
         </div>
       </div>
