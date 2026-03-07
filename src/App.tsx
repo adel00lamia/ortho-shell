@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
+import Settings from "./pages/Settings";
 import Diagnostic from "./pages/Diagnostic";
 import TrainingPlan from "./pages/TrainingPlan";
 import ModuleStudio from "./pages/ModuleStudio";
@@ -90,7 +91,7 @@ const App = () => (
               {/* Management Routes */}
               <Route path="/manage/users" element={<ProtectedLayout><UserManagement /></ProtectedLayout>} />
               <Route path="/manage/team" element={<ProtectedLayout><TeamCollaboration /></ProtectedLayout>} />
-              <Route path="/manage/settings" element={<ProtectedLayout><Billing /></ProtectedLayout>} />
+              <Route path="/manage/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
               
               {/* Billing */}
               <Route path="/billing" element={<ProtectedLayout><Billing /></ProtectedLayout>} />
