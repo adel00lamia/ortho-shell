@@ -10,6 +10,21 @@ import {
   ChevronRight, Sparkles, Play, Menu, X
 } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -321,23 +336,31 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
             {features.map((feature, i) => (
-              <Card key={i} className="group relative overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 bg-card">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 text-white shadow-lg`}>
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                  <div className="mt-4 flex items-center text-primary text-sm font-semibold group-hover:translate-x-1 transition-transform">
-                    {language === 'fr' ? 'En savoir plus' : 'Learn more'}
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </div>
-                </CardContent>
-              </Card>
+              <motion.div key={i} variants={fadeInUp} custom={i}>
+                <Card className="group relative overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 bg-card h-full">
+                  <CardContent className="p-6">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 text-white shadow-lg`}>
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                    <div className="mt-4 flex items-center text-primary text-sm font-semibold group-hover:translate-x-1 transition-transform">
+                      {language === 'fr' ? 'En savoir plus' : 'Learn more'}
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -411,25 +434,33 @@ const Index = () => {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
             {testimonials.map((t, i) => (
-              <Card key={i} className="bg-card border-border/50 hover:border-primary/20 transition-all">
-                <CardContent className="p-6">
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: t.rating }).map((_, j) => (
-                      <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <Quote className="h-8 w-8 text-primary/20 mb-3" />
-                  <p className="text-foreground mb-6 leading-relaxed">{t.quote}</p>
-                  <div className="border-t border-border pt-4">
-                    <p className="font-bold text-foreground text-sm">{t.author}</p>
-                    <p className="text-sm text-muted-foreground">{t.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <motion.div key={i} variants={fadeInUp} custom={i}>
+                <Card className="bg-card border-border/50 hover:border-primary/20 transition-all h-full">
+                  <CardContent className="p-6">
+                    <div className="flex gap-1 mb-4">
+                      {Array.from({ length: t.rating }).map((_, j) => (
+                        <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <Quote className="h-8 w-8 text-primary/20 mb-3" />
+                    <p className="text-foreground mb-6 leading-relaxed">{t.quote}</p>
+                    <div className="border-t border-border pt-4">
+                      <p className="font-bold text-foreground text-sm">{t.author}</p>
+                      <p className="text-sm text-muted-foreground">{t.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -448,42 +479,50 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <motion.div
+            className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
             {plans.map((plan, i) => (
-              <Card key={i} className={`relative bg-card border-border/50 ${plan.popular ? 'border-primary shadow-xl shadow-primary/10 scale-[1.02]' : ''} transition-all hover:shadow-lg`}>
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-4 py-1 font-semibold">
-                      {language === 'fr' ? 'Populaire' : 'Most Popular'}
-                    </Badge>
-                  </div>
-                )}
-                <CardContent className="p-6 pt-8">
-                  <h3 className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: 'Plus Jakarta Sans' }}>{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-                  <div className="mb-6">
-                    <span className="text-4xl font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{plan.price}</span>
-                    <span className="text-muted-foreground ml-1">MAD{plan.period}</span>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((f, j) => (
-                      <li key={j} className="flex items-start gap-2.5 text-sm">
-                        <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                        <span className="text-foreground">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    onClick={() => navigate(user ? '/billing' : '/auth')}
-                    className={`w-full rounded-xl ${plan.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
-                    variant={plan.popular ? 'default' : 'outline'}
-                  >
-                    {language === 'fr' ? 'Commencer l\'essai' : 'Start Trial'}
-                  </Button>
-                </CardContent>
-              </Card>
+              <motion.div key={i} variants={fadeInUp} custom={i}>
+                <Card className={`relative bg-card border-border/50 ${plan.popular ? 'border-primary shadow-xl shadow-primary/10 scale-[1.02]' : ''} transition-all hover:shadow-lg h-full`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground px-4 py-1 font-semibold">
+                        {language === 'fr' ? 'Populaire' : 'Most Popular'}
+                      </Badge>
+                    </div>
+                  )}
+                  <CardContent className="p-6 pt-8">
+                    <h3 className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: 'Plus Jakarta Sans' }}>{plan.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                    <div className="mb-6">
+                      <span className="text-4xl font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{plan.price}</span>
+                      <span className="text-muted-foreground ml-1">MAD{plan.period}</span>
+                    </div>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((f, j) => (
+                        <li key={j} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                          <span className="text-foreground">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      onClick={() => navigate(user ? '/billing' : '/auth')}
+                      className={`w-full rounded-xl ${plan.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
+                      variant={plan.popular ? 'default' : 'outline'}
+                    >
+                      {language === 'fr' ? 'Commencer l\'essai' : 'Start Trial'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
