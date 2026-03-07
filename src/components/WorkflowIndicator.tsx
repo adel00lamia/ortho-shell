@@ -15,28 +15,28 @@ const workflowSteps: WorkflowStep[] = [
   {
     id: 'assess',
     label: 'Assess',
-    path: '/diagnostic',
+    path: '/workflow/assess/diagnostic',
     icon: <Target className="w-5 h-5" />,
     description: 'Identify skill gaps'
   },
   {
     id: 'plan',
     label: 'Plan',
-    path: '/ai-plan-builder',
+    path: '/workflow/plan/builder',
     icon: <Brain className="w-5 h-5" />,
     description: 'Create training plan'
   },
   {
     id: 'execute',
     label: 'Execute',
-    path: '/module-studio',
+    path: '/workflow/execute/modules',
     icon: <BookOpen className="w-5 h-5" />,
     description: 'Build content'
   },
   {
     id: 'track',
     label: 'Track',
-    path: '/analytics',
+    path: '/workflow/track/analytics',
     icon: <BarChart3 className="w-5 h-5" />,
     description: 'Measure results'
   }
