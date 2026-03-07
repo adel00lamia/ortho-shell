@@ -240,6 +240,7 @@ export default function AIPlanBuilder() {
   });
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<Array<{plan: GeneratedPlan; requirements: PlanRequirements; generatedAt: Date}>>([]);
+  const [researchData, setResearchData] = useState<CompanyResearchData | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [planVersions, setPlanVersions] = useState<any[]>([]);
   const [planComments, setPlanComments] = useState<any[]>([]);
@@ -1253,6 +1254,7 @@ export default function AIPlanBuilder() {
                 initialCompanyName={requirements.company}
                 country={requirements.country}
                 onResearchComplete={(data: CompanyResearchData) => {
+                  setResearchData(data);
                   setRequirements(prev => ({
                     ...prev,
                     company: data.company.name,
@@ -1341,7 +1343,7 @@ export default function AIPlanBuilder() {
                      </CardDescription>
                    </CardHeader>
                    <CardContent>
-                     <IndustryBenchmarkInsights industry={requirements.industry} />
+                     <IndustryBenchmarkInsights industry={requirements.industry} researchData={researchData} />
                    </CardContent>
                  </Card>
                )}
@@ -2689,7 +2691,88 @@ export default function AIPlanBuilder() {
   );
 }
 // Industry Benchmark Insights Component
-const IndustryBenchmarkInsights = ({ industry }: { industry: string }) => {
+const IndustryBenchmarkInsights = ({ industry, researchData }: { industry: string; researchData?: CompanyResearchData | null }) => {
+  // If research data is available, use it; otherwise fall back to static defaults
+  if (researchData) {
+    const b = researchData.benchmark;
+    const ia = researchData.industryAnalysis;
+    const data = {
+      avgTrainingHours: parseInt(b.avgTrainingHoursPerYear?.replace(/[^\d]/g, '')) || 0,
+      avgBudget: b.avgTrainingBudgetPerEmployee || 'N/A',
+      topTrends: ia.topTrends || [],
+      commonPrograms: b.topTrainingAreas || [],
+      investment: b.digitalLearningAdoption || b.industryCompletionRate || 'N/A',
+      retention: b.avgROI || 'N/A',
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 bg-background rounded-lg border">
+            <p className="text-xs text-muted-foreground mb-1">Avg Training Hours</p>
+            <p className="text-xl font-bold">{data.avgTrainingHours ? `${data.avgTrainingHours}h` : 'N/A'}</p>
+          </div>
+          <div className="p-3 bg-background rounded-lg border">
+            <p className="text-xs text-muted-foreground mb-1">Avg Budget/Employee</p>
+            <p className="text-xl font-bold">{data.avgBudget}</p>
+          </div>
+          <div className="p-3 bg-background rounded-lg border">
+            <p className="text-xs text-muted-foreground mb-1">Completion Rate</p>
+            <p className="text-xl font-bold">{b.industryCompletionRate || 'N/A'}</p>
+          </div>
+          <div className="p-3 bg-background rounded-lg border">
+            <p className="text-xs text-muted-foreground mb-1">Avg ROI</p>
+            <p className="text-xl font-bold">{b.avgROI || 'N/A'}</p>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Top Training Trends
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {data.topTrends.map((trend: string, idx: number) => (
+              <Badge key={idx} variant="secondary">{trend}</Badge>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Top Training Areas
+          </h4>
+          <ul className="space-y-2">
+            {data.commonPrograms.map((program: string, idx: number) => (
+              <li key={idx} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                {program}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {b.competitorTrainingFocus && b.competitorTrainingFocus.length > 0 && (
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Competitor Training Focus
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {b.competitorTrainingFocus.map((item: string, idx: number) => (
+                <Badge key={idx} variant="outline">{item}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback: static hardcoded data
   const industryData: Record<string, any> = {
     Technology: {
       avgTrainingHours: 80,
