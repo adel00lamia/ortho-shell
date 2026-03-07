@@ -93,8 +93,8 @@ const Index = () => {
   const testimonials = [
     {
       quote: language === 'fr'
-        ? 'LMF Academy a transformé notre approche de la formation. Les plans générés par l\'IA sont précis et nous ont fait gagner un temps considérable.'
-        : 'LMF Academy transformed our approach to training. The AI-generated plans are precise and saved us considerable time.',
+        ? 'FLM Academy a transformé notre approche de la formation. Les plans générés par l\'IA sont précis et nous ont fait gagner un temps considérable.'
+        : 'FLM Academy transformed our approach to training. The AI-generated plans are precise and saved us considerable time.',
       author: 'Fatima El Amrani',
       role: language === 'fr' ? 'DRH, Groupe Industriel' : 'HR Director, Industrial Group',
       rating: 5,
@@ -161,7 +161,7 @@ const Index = () => {
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-extrabold tracking-tight text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>
-                LMF Academy
+                FLM Academy
               </span>
             </div>
 
@@ -557,8 +557,8 @@ const Index = () => {
           </h2>
           <p className="text-lg text-white/60 mb-10 max-w-2xl mx-auto">
             {language === 'fr'
-              ? 'Rejoignez plus de 500 entreprises qui utilisent LMF Academy pour développer les compétences de leurs équipes.'
-              : 'Join 500+ companies using LMF Academy to develop their team\'s skills.'}
+              ? 'Rejoignez plus de 500 entreprises qui utilisent FLM Academy pour développer les compétences de leurs équipes.'
+              : 'Join 500+ companies using FLM Academy to develop their team\'s skills.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -582,7 +582,7 @@ const Index = () => {
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <span className="text-lg font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>LMF Academy</span>
+                <span className="text-lg font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>FLM Academy</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 {language === 'fr'
@@ -617,7 +617,7 @@ const Index = () => {
           </div>
           <div className="border-t border-border pt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} LMF Academy. {language === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}
+              © {new Date().getFullYear()} FLM Academy. {language === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}
             </p>
           </div>
         </div>

@@ -161,7 +161,7 @@ export default function Navigation() {
         <div className="p-6 space-y-6 h-full overflow-y-auto">
           {/* Header */}
           <div className="space-y-2">
-            <h2 className="text-xl font-bold">LMF Academy</h2>
+            <h2 className="text-xl font-bold">FLM Academy</h2>
             {user && (
               <p className="text-sm text-muted-foreground">
                 Welcome, {user.user_metadata?.first_name || user.email}
@@ -466,7 +466,7 @@ export default function Navigation() {
               Sign Out
             </Button>
             <div className="text-xs text-center text-muted-foreground">
-              LMF Academy v1.0
+              FLM Academy v1.0
             </div>
           </div>
         </div>
