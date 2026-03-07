@@ -25,19 +25,24 @@ export const JDTemplateLibrary = ({ companyId, onApplyTemplate }: JDTemplateLibr
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [industryFilter, setIndustryFilter] = useState<string>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<JDTemplate | null>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiForm, setAiForm] = useState({ title: '', department: '', level: 'mid', industry: '', context: '' });
+
+  const industries = Array.from(new Set(JD_TEMPLATES.map(t => t.industry))).sort();
 
   const filteredTemplates = JD_TEMPLATES.filter(t => {
     const matchesSearch = !search || 
       t.title.toLowerCase().includes(search.toLowerCase()) ||
       t.titleFr.toLowerCase().includes(search.toLowerCase()) ||
-      t.department.toLowerCase().includes(search.toLowerCase());
+      t.department.toLowerCase().includes(search.toLowerCase()) ||
+      t.industry.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
     const matchesDept = departmentFilter === 'all' || t.department === departmentFilter;
     const matchesLevel = levelFilter === 'all' || t.level === levelFilter;
-    return matchesSearch && matchesCategory && matchesDept && matchesLevel;
+    const matchesIndustry = industryFilter === 'all' || t.industry === industryFilter;
+    return matchesSearch && matchesCategory && matchesDept && matchesLevel && matchesIndustry;
   });
 
   const handleAIGenerate = async () => {
@@ -151,6 +156,15 @@ export const JDTemplateLibrary = ({ companyId, onApplyTemplate }: JDTemplateLibr
                     {language === 'fr' ? l.labelFr : l.label}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={industryFilter} onValueChange={setIndustryFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder={language === 'fr' ? 'Secteur' : 'Industry'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'fr' ? 'Tous secteurs' : 'All industries'}</SelectItem>
+                {industries.map(ind => <SelectItem key={ind} value={ind}>{ind}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
