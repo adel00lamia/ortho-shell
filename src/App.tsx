@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { WorkflowProvider } from "@/contexts/WorkflowContext";
+
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
@@ -42,7 +42,7 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
 const App = () => (
   <LanguageProvider>
     <AuthProvider>
-      <WorkflowProvider>
+      
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -107,7 +107,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
           </TooltipProvider>
-        </WorkflowProvider>
+        
       </AuthProvider>
     </LanguageProvider>
 );
