@@ -126,7 +126,7 @@ export const HierarchicalSidebar = () => {
   };
 
   return (
-    <aside className="w-64 h-screen bg-sidebar-background border-r border-sidebar-border flex flex-col overflow-y-auto">
+    <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-y-auto">
       {/* Header */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
