@@ -434,25 +434,33 @@ const Index = () => {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
             {testimonials.map((t, i) => (
-              <Card key={i} className="bg-card border-border/50 hover:border-primary/20 transition-all">
-                <CardContent className="p-6">
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: t.rating }).map((_, j) => (
-                      <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <Quote className="h-8 w-8 text-primary/20 mb-3" />
-                  <p className="text-foreground mb-6 leading-relaxed">{t.quote}</p>
-                  <div className="border-t border-border pt-4">
-                    <p className="font-bold text-foreground text-sm">{t.author}</p>
-                    <p className="text-sm text-muted-foreground">{t.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <motion.div key={i} variants={fadeInUp} custom={i}>
+                <Card className="bg-card border-border/50 hover:border-primary/20 transition-all h-full">
+                  <CardContent className="p-6">
+                    <div className="flex gap-1 mb-4">
+                      {Array.from({ length: t.rating }).map((_, j) => (
+                        <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <Quote className="h-8 w-8 text-primary/20 mb-3" />
+                    <p className="text-foreground mb-6 leading-relaxed">{t.quote}</p>
+                    <div className="border-t border-border pt-4">
+                      <p className="font-bold text-foreground text-sm">{t.author}</p>
+                      <p className="text-sm text-muted-foreground">{t.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
