@@ -1254,6 +1254,7 @@ export default function AIPlanBuilder() {
                 initialCompanyName={requirements.company}
                 country={requirements.country}
                 onResearchComplete={(data: CompanyResearchData) => {
+                  setResearchData(data);
                   setRequirements(prev => ({
                     ...prev,
                     company: data.company.name,
@@ -1342,7 +1343,7 @@ export default function AIPlanBuilder() {
                      </CardDescription>
                    </CardHeader>
                    <CardContent>
-                     <IndustryBenchmarkInsights industry={requirements.industry} />
+                     <IndustryBenchmarkInsights industry={requirements.industry} researchData={researchData} />
                    </CardContent>
                  </Card>
                )}
