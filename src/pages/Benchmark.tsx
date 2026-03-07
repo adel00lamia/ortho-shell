@@ -67,7 +67,7 @@ export default function Benchmark() {
   const industries = [
     "Technology", "Healthcare", "Finance", "Manufacturing",
     "Retail", "Education", "Hospitality", "Construction",
-    "Transportation", "Energy"
+    "Transportation", "Energy", "Consumer Goods"
   ];
 
   if (loading) {

@@ -92,6 +92,14 @@ const industryBenchmarks: Record<string, any> = {
     trainingInvestmentPercent: 4.2,
     employeeRetention: 81,
   },
+  "Consumer Goods": {
+    avgTrainingHours: 65,
+    avgTrainingBudget: 100000,
+    avgPerformanceRating: 3.9,
+    topSkills: ["Supply Chain Management", "Quality Assurance", "Brand Management", "Sales & Distribution", "Product Development"],
+    trainingInvestmentPercent: 3.4,
+    employeeRetention: 74,
+  },
 };
 
 export default function IndustryComparison({ industry, companyData, diagnosticData, evaluationData }: IndustryComparisonProps) {
@@ -108,6 +116,31 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
     diagnosticCount: diagnosticData.length,
   };
 
+  // Derive dynamic company training hours from diagnostic data
+  const companyTrainingHours = diagnosticData.length > 0
+    ? Math.round(diagnosticData.reduce((sum, d) => {
+        const skills = d.current_skills as Record<string, number> | null;
+        const count = skills ? Object.keys(skills).length : 0;
+        return sum + count * 10; // estimate hours from skill count
+      }, 0) / diagnosticData.length)
+    : 0;
+
+  // Derive retention estimate from evaluation ratings
+  const companyRetention = evaluationData.length > 0
+    ? Math.round(Math.min(95, 60 + (avgRating / 5) * 35))
+    : 0;
+
+  // Derive training investment from diagnostic budget data
+  const companyTrainingInvestment = diagnosticData.length > 0
+    ? Number((diagnosticData.reduce((sum, d) => {
+        const budget = d.budget_range;
+        if (budget === '50000-100000') return sum + 3.0;
+        if (budget === '100000-200000') return sum + 4.0;
+        if (budget === '200000+') return sum + 5.0;
+        return sum + 2.5;
+      }, 0) / diagnosticData.length).toFixed(1))
+    : 0;
+
   // Comparison data for charts
   const comparisonData = [
     {
@@ -117,21 +150,37 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
     },
     {
       metric: "Training Hours",
-      company: diagnosticData.length > 0 ? 65 : 0,
+      company: companyTrainingHours,
       industry: benchmark.avgTrainingHours,
     },
     {
       metric: "Employee Retention %",
-      company: diagnosticData.length > 0 ? 78 : 0,
+      company: companyRetention,
       industry: benchmark.employeeRetention,
     },
   ];
 
-  const skillsRadarData = benchmark.topSkills.map((skill: string) => ({
-    skill,
-    industry: 4.0,
-    company: Math.random() * 2 + 2.5,
-  }));
+  // Derive skills radar from evaluation competency scores instead of random
+  const skillsRadarData = benchmark.topSkills.map((skill: string, idx: number) => {
+    // Try to derive a company score from evaluation competency data
+    let companyScore = 0;
+    let count = 0;
+    evaluationData.forEach((e) => {
+      const scores = e.competency_scores as Record<string, number> | null;
+      if (scores) {
+        const values = Object.values(scores);
+        if (values.length > idx) {
+          companyScore += Number(values[idx]) || 0;
+          count++;
+        }
+      }
+    });
+    return {
+      skill,
+      industry: 4.0,
+      company: count > 0 ? Number((companyScore / count).toFixed(1)) : 0,
+    };
+  });
 
   const getComparisonIcon = (companyValue: number, industryValue: number) => {
     const diff = ((companyValue - industryValue) / industryValue) * 100;
@@ -173,25 +222,25 @@ export default function IndustryComparison({ industry, companyData, diagnosticDa
             <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">Training Investment %</p>
-                {getComparisonIcon(3.5, benchmark.trainingInvestmentPercent)}
+                {getComparisonIcon(companyTrainingInvestment, benchmark.trainingInvestmentPercent)}
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold">3.5%</p>
+                <p className="text-2xl font-bold">{companyTrainingInvestment}%</p>
                 <p className="text-sm text-muted-foreground">vs {benchmark.trainingInvestmentPercent}%</p>
               </div>
-              <div className="mt-2">{getComparisonBadge(3.5, benchmark.trainingInvestmentPercent)}</div>
+              <div className="mt-2">{getComparisonBadge(companyTrainingInvestment, benchmark.trainingInvestmentPercent)}</div>
             </div>
 
             <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">Employee Retention</p>
-                {getComparisonIcon(78, benchmark.employeeRetention)}
+                {getComparisonIcon(companyRetention, benchmark.employeeRetention)}
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold">78%</p>
+                <p className="text-2xl font-bold">{companyRetention}%</p>
                 <p className="text-sm text-muted-foreground">vs {benchmark.employeeRetention}%</p>
               </div>
-              <div className="mt-2">{getComparisonBadge(78, benchmark.employeeRetention)}</div>
+              <div className="mt-2">{getComparisonBadge(companyRetention, benchmark.employeeRetention)}</div>
             </div>
           </div>
         </CardContent>
