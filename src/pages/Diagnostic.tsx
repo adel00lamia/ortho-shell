@@ -12,13 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2 } from "lucide-react";
+import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2, Building2, BarChart3, ClipboardCheck } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 
 import { ContextualActions } from "@/components/ContextualActions";
 import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { JDTemplateLibrary } from '@/components/assessment/JDTemplateLibrary';
+import { OrgChartView } from '@/components/assessment/OrgChartView';
+import { SkillsMatrixView } from '@/components/assessment/SkillsMatrixView';
+import { AssessmentReport } from '@/components/assessment/AssessmentReport';
+import type { JDTemplate } from '@/data/jobDescriptionTemplates';
 
 interface Employee {
   id: string;
