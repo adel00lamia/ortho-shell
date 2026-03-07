@@ -16,6 +16,9 @@ interface SubscriptionGateProps {
   requiredPlan?: 'starter' | 'professional' | 'enterprise';
 }
 
+// DISCOVERY MODE: Temporarily bypass all plan restrictions
+const DISCOVERY_MODE = true;
+
 const SubscriptionGate = ({ children, requiredPlan = 'starter' }: SubscriptionGateProps) => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
