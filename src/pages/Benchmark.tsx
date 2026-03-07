@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import IndustryComparison from "@/components/benchmark/IndustryComparison";
 import BestPractices from "@/components/benchmark/BestPractices";
-import { WorkflowIndicator } from "@/components/WorkflowIndicator";
 import { ContextualActions } from "@/components/ContextualActions";
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -81,8 +80,6 @@ export default function Benchmark() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <WorkflowIndicator />
-      
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{b.title}</h1>
         <p className="text-muted-foreground">{b.subtitle}</p>
