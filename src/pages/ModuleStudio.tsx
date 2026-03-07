@@ -15,7 +15,7 @@ import {
   Wand2, Save, Play, FileText, Award, QrCode,
   PlusCircle, Trash2, Presentation, MonitorPlay, Download, Link2, Unlink
 } from "lucide-react";
-import { WorkflowIndicator } from "@/components/WorkflowIndicator";
+
 import { ContextualActions } from "@/components/ContextualActions";
 import { SlideEditor } from "@/components/module-studio/SlideEditor";
 import { QuizEditor } from "@/components/module-studio/QuizEditor";
@@ -264,7 +264,6 @@ export default function ModuleStudio() {
 
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-6xl mx-auto">
-          <WorkflowIndicator />
 
           {/* Header */}
           <div className="flex items-center justify-between mb-8">

@@ -10,7 +10,7 @@ import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 import PerformanceAnalytics from "@/components/performance/PerformanceAnalytics";
 import SkillsOverview from "@/components/performance/SkillsOverview";
 import { Badge } from "@/components/ui/badge";
-import { WorkflowIndicator } from "@/components/WorkflowIndicator";
+
 import { ContextualActions } from "@/components/ContextualActions";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -171,8 +171,7 @@ export default function PerformanceEvaluation() {
 
   return (
     <div className="container mx-auto p-6">
-      <WorkflowIndicator />
-      
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">{p.title}</h1>

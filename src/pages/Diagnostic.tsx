@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2 } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
-import { WorkflowIndicator } from "@/components/WorkflowIndicator";
+
 import { ContextualActions } from "@/components/ContextualActions";
 import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -493,8 +493,7 @@ export default function Diagnostic() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <WorkflowIndicator />
-        
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{d.title}</h1>
           <p className="text-muted-foreground">{d.subtitle}</p>
