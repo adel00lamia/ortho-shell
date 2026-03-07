@@ -1248,30 +1248,6 @@ export default function AIPlanBuilder() {
                 </div>
               )}
 
-              {/* Company Research */}
-              <CompanyResearch 
-                initialCompanyName={requirements.company}
-                country={requirements.country}
-                onResearchComplete={(data: CompanyResearchData) => {
-                  setRequirements(prev => ({
-                    ...prev,
-                    company: data.company.name,
-                    industry: data.company.industry,
-                    companySize: data.company.companySize,
-                    objectives: [...new Set([...prev.objectives, ...data.recommendations.suggestedObjectives])],
-                    targetSkills: [...new Set([...prev.targetSkills, ...data.recommendations.prioritySkills])],
-                    budget: parseInt(data.recommendations.suggestedBudget.replace(/[^\d]/g, '')) || prev.budget,
-                    duration: parseInt(data.recommendations.suggestedDuration) || prev.duration,
-                    context: `${data.company.description}\n\nIndustry: ${data.industryAnalysis.overview}`,
-                    customizations: {
-                      ...prev.customizations,
-                      deliveryMethods: data.recommendations.deliveryMethods.length > 0 
-                        ? data.recommendations.deliveryMethods 
-                        : prev.customizations.deliveryMethods,
-                    }
-                  }));
-                }}
-              />
 
               <Separator />
 
