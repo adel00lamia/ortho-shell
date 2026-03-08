@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2, Building2, BarChart3, ClipboardCheck } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
+import EmployeeBulkUpload from "@/components/diagnostic/EmployeeBulkUpload";
 
 import { ContextualActions } from "@/components/ContextualActions";
 import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
@@ -1002,175 +1003,23 @@ export default function Diagnostic() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Employees & Skills Assessment</CardTitle>
+                      <CardTitle>Employés & Évaluation des compétences</CardTitle>
                       <CardDescription>
-                        Add employees and assess their competency levels
+                        Importez vos employés via fichier CSV ou uploadez leurs CVs pour extraction automatique des compétences
                       </CardDescription>
                     </div>
                     <Button type="button" onClick={addEmployee}>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Employee
+                      Ajouter manuellement
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {employees.length === 0 ? (
-                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                      <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground mb-4">
-                        No employees added yet
-                      </p>
-                      <Button type="button" onClick={addEmployee} variant="outline">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add First Employee
-                      </Button>
-                    </div>
-                  ) : (
-                    employees.map((emp, idx) => (
-                      <Card key={emp.id}>
-                        <CardContent className="pt-6 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">Employee #{idx + 1}</h4>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeEmployee(emp.id)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label>Employee Name</Label>
-                              <Select 
-                                value={emp.name}
-                                onValueChange={(value) => {
-                                  const perfEval = performanceEvaluations.find(e => e.employee_name === value);
-                                  if (perfEval) {
-                                    // Auto-populate from evaluation
-                                    const currentComp: Record<string, number> = {};
-                                    perfEval.competency_scores?.forEach((score: any) => {
-                                      currentComp[score.name] = score.score;
-                                    });
-                                    
-                                    const job = jobDescriptions.find(j => j.id === perfEval.job_description_id);
-                                    const targetComp: Record<string, number> = {};
-                                    job?.competencies?.forEach((comp: any) => {
-                                      targetComp[comp.name] = comp.requiredLevel;
-                                    });
-
-                                    updateEmployee(emp.id, { 
-                                      name: value,
-                                      performanceEvaluationId: perfEval.id,
-                                      jobDescriptionId: perfEval.job_description_id,
-                                      currentCompetencies: currentComp,
-                                      targetCompetencies: targetComp
-                                    });
-                                  } else {
-                                    updateEmployee(emp.id, { name: value });
-                                  }
-                                }}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select employee" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {performanceEvaluations.map(perfEval => (
-                                    <SelectItem key={perfEval.id} value={perfEval.employee_name}>
-                                      {perfEval.employee_name}
-                                    </SelectItem>
-                                  ))}
-                                  <SelectItem value="custom">+ Manual Entry</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              {emp.name === "custom" && (
-                                <Input
-                                  className="mt-2"
-                                  placeholder="Enter name"
-                                  onChange={(e) => updateEmployee(emp.id, { name: e.target.value })}
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <Label>Priority</Label>
-                              <Select 
-                                value={emp.priority} 
-                                onValueChange={(value: 'low' | 'medium' | 'high') => updateEmployee(emp.id, { priority: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="low">Low Priority</SelectItem>
-                                  <SelectItem value="medium">Medium Priority</SelectItem>
-                                  <SelectItem value="high">High Priority</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          {emp.performanceEvaluationId && (
-                            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
-                              <p className="text-green-800 dark:text-green-200">
-                                ✓ Skills auto-loaded from performance evaluation
-                              </p>
-                            </div>
-                          )}
-
-                          <div>
-                            <Label className="mb-2 block">Competency Assessment</Label>
-                            <div className="space-y-3">
-                              {skillCategories.slice(0, 5).map(skill => (
-                                <div key={skill} className="grid grid-cols-3 gap-4 items-center">
-                                  <Label className="text-sm">{skill}</Label>
-                                  <div>
-                                    <Label className="text-xs text-muted-foreground">Current</Label>
-                                    <Select 
-                                      value={emp.currentCompetencies[skill]?.toString() || ""}
-                                      onValueChange={(val) => {
-                                        const updated = { ...emp.currentCompetencies, [skill]: parseInt(val) };
-                                        updateEmployee(emp.id, { currentCompetencies: updated });
-                                      }}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="1-5" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {[1,2,3,4,5].map(level => (
-                                          <SelectItem key={level} value={level.toString()}>{level}</SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs text-muted-foreground">Target</Label>
-                                    <Select 
-                                      value={emp.targetCompetencies[skill]?.toString() || ""}
-                                      onValueChange={(val) => {
-                                        const updated = { ...emp.targetCompetencies, [skill]: parseInt(val) };
-                                        updateEmployee(emp.id, { targetCompetencies: updated });
-                                      }}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="1-5" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {[1,2,3,4,5].map(level => (
-                                          <SelectItem key={level} value={level.toString()}>{level}</SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
+                  <EmployeeBulkUpload
+                    companyId={companyId}
+                    employees={employees}
+                    onEmployeesChange={setEmployees}
+                  />
                 </CardContent>
               </Card>
 
