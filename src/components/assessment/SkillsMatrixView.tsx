@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BarChart3, AlertTriangle, TrendingUp, Users } from 'lucide-react';
+import { NineBoxGrid } from './NineBoxGrid';
 
 interface Position {
   id: string;
@@ -118,6 +119,9 @@ export const SkillsMatrixView = ({ positions, evaluations, jobDescriptions }: Sk
           <div className="text-2xl font-bold text-amber-600">{reskillCandidates.length}</div>
         </Card>
       </div>
+
+      {/* 9-Box Talent Grid */}
+      <NineBoxGrid positions={positions} />
 
       {/* Skills Heatmap */}
       <Card>
