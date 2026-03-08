@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BarChart3, AlertTriangle, TrendingUp, Users } from 'lucide-react';
+import { NineBoxGrid } from './NineBoxGrid';
 
 interface Position {
   id: string;
