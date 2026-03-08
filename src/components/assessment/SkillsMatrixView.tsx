@@ -120,6 +120,9 @@ export const SkillsMatrixView = ({ positions, evaluations, jobDescriptions }: Sk
         </Card>
       </div>
 
+      {/* 9-Box Talent Grid */}
+      <NineBoxGrid positions={positions} />
+
       {/* Skills Heatmap */}
       <Card>
         <CardHeader>
