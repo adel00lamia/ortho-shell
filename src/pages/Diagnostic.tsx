@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2, Building2, BarChart3, ClipboardCheck } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
+import EmployeeBulkUpload from "@/components/diagnostic/EmployeeBulkUpload";
 
 import { ContextualActions } from "@/components/ContextualActions";
 import { CompanyResearch, CompanyResearchData } from "@/components/CompanyResearch";
