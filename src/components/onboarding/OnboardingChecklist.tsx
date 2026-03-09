@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanyId } from '@/hooks/useCompanyId';
@@ -18,16 +18,22 @@ import {
   X,
   ChevronUp,
   ChevronDown,
+  BookOpen,
+  ShoppingBag,
+  GraduationCap,
 } from 'lucide-react';
 
 interface Step {
   id: string;
   label: string;
   labelFr: string;
+  labelAr: string;
   description: string;
   descriptionFr: string;
+  descriptionAr: string;
   icon: React.ElementType;
   path: string;
+  roles?: string[];
   checkFn: () => Promise<boolean>;
 }
 
@@ -40,16 +46,20 @@ export const OnboardingChecklist = () => {
   const [dismissed, setDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
 
-  const steps: Step[] = [
+  const allSteps: Step[] = [
     {
       id: 'company',
       label: 'Set up company profile',
       labelFr: 'Configurer le profil entreprise',
+      labelAr: 'إعداد ملف الشركة',
       description: 'Add your company details, CNSS, and industry',
       descriptionFr: 'Ajoutez les details de votre entreprise, CNSS, et secteur',
+      descriptionAr: 'أضف تفاصيل شركتك، CNSS، والقطاع',
       icon: Building2,
       path: '/company-profile',
+      roles: ['admin', 'hr_manager'],
       checkFn: async () => {
         if (!companyId) return false;
         const { data } = await supabase.from('companies').select('name, industry').eq('id', companyId).single();
@@ -60,10 +70,13 @@ export const OnboardingChecklist = () => {
       id: 'diagnostic',
       label: 'Run first diagnostic',
       labelFr: 'Lancer le premier diagnostic',
+      labelAr: 'تشغيل أول تشخيص',
       description: 'Create job descriptions and evaluate skills',
       descriptionFr: 'Creez des fiches de poste et evaluez les competences',
+      descriptionAr: 'إنشاء الأوصاف الوظيفية وتقييم المهارات',
       icon: ClipboardCheck,
       path: '/workflow/assess/diagnostic',
+      roles: ['admin', 'hr_manager'],
       checkFn: async () => {
         if (!companyId) return false;
         const { count } = await supabase.from('job_descriptions').select('id', { count: 'exact', head: true }).eq('company_id', companyId);
@@ -74,10 +87,13 @@ export const OnboardingChecklist = () => {
       id: 'plan',
       label: 'Generate a training plan',
       labelFr: 'Generer un plan de formation',
+      labelAr: 'إنشاء خطة تدريب',
       description: 'Use AI to build your annual training plan',
       descriptionFr: 'Utilisez l\'IA pour creer votre plan de formation annuel',
+      descriptionAr: 'استخدم الذكاء الاصطناعي لبناء خطة التدريب السنوية',
       icon: Lightbulb,
       path: '/workflow/plan/builder',
+      roles: ['admin', 'hr_manager'],
       checkFn: async () => {
         if (!companyId) return false;
         const { count } = await supabase.from('training_plans').select('id', { count: 'exact', head: true }).eq('company_id', companyId);
@@ -88,10 +104,13 @@ export const OnboardingChecklist = () => {
       id: 'team',
       label: 'Invite team members',
       labelFr: 'Inviter des membres',
+      labelAr: 'دعوة أعضاء الفريق',
       description: 'Add HR managers and trainers to your team',
       descriptionFr: 'Ajoutez des responsables RH et formateurs a votre equipe',
+      descriptionAr: 'أضف مديري الموارد البشرية والمدربين إلى فريقك',
       icon: Users,
       path: '/manage/users',
+      roles: ['admin', 'hr_manager'],
       checkFn: async () => {
         if (!companyId) return false;
         const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('company_id', companyId);
@@ -99,13 +118,46 @@ export const OnboardingChecklist = () => {
       },
     },
     {
+      id: 'first_module',
+      label: 'Create your first module',
+      labelFr: 'Créer votre premier module',
+      labelAr: 'إنشاء أول وحدة تعليمية',
+      description: 'Build training content for your team',
+      descriptionFr: 'Créez du contenu de formation pour votre équipe',
+      descriptionAr: 'أنشئ محتوى تدريبي لفريقك',
+      icon: BookOpen,
+      path: '/workflow/execute/modules',
+      roles: ['trainer'],
+      checkFn: async () => {
+        if (!user) return false;
+        const { count } = await supabase.from('training_modules').select('id', { count: 'exact', head: true }).eq('created_by', user.id);
+        return (count || 0) > 0;
+      },
+    },
+    {
+      id: 'explore_courses',
+      label: 'Explore available courses',
+      labelFr: 'Explorer les cours disponibles',
+      labelAr: 'استكشاف الدورات المتاحة',
+      description: 'Browse and start learning',
+      descriptionFr: 'Parcourez et commencez à apprendre',
+      descriptionAr: 'تصفح وابدأ التعلم',
+      icon: ShoppingBag,
+      path: '/workflow/execute/marketplace',
+      roles: ['employee'],
+      checkFn: async () => false, // Always show as todo
+    },
+    {
       id: 'billing',
       label: 'Choose a plan',
       labelFr: 'Choisir un abonnement',
+      labelAr: 'اختيار خطة اشتراك',
       description: 'Start your 14-day free trial',
       descriptionFr: 'Commencez votre essai gratuit de 14 jours',
+      descriptionAr: 'ابدأ فترة التجربة المجانية لمدة 14 يومًا',
       icon: CreditCard,
       path: '/pricing',
+      roles: ['admin', 'hr_manager'],
       checkFn: async () => {
         if (!user) return false;
         const { data } = await supabase.from('subscriptions').select('id').eq('user_id', user.id).in('status', ['trialing', 'active']).limit(1).maybeSingle();
@@ -114,12 +166,27 @@ export const OnboardingChecklist = () => {
     },
   ];
 
+  // Get user role from localStorage cache or default
+  const userRole = localStorage.getItem('user_role') || 'employee';
+  const steps = useMemo(
+    () => allSteps.filter(s => !s.roles || s.roles.includes(userRole)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userRole, companyId, user]
+  );
+
   useEffect(() => {
     const dismissKey = `onboarding_dismissed_${user?.id}`;
     if (localStorage.getItem(dismissKey)) {
       setDismissed(true);
       setChecking(false);
       return;
+    }
+
+    // Show welcome modal on very first login
+    const welcomeKey = `welcome_shown_${user?.id}`;
+    if (user && !localStorage.getItem(welcomeKey)) {
+      setShowWelcome(true);
+      localStorage.setItem(welcomeKey, 'true');
     }
 
     const checkSteps = async () => {
@@ -136,26 +203,60 @@ export const OnboardingChecklist = () => {
 
     if (user) checkSteps();
     else setChecking(false);
-  }, [user, companyId]);
+  }, [user, companyId, steps]);
 
-  if (dismissed || checking || !user) return null;
+  if (checking || !user) return null;
 
   const percent = Math.round((completedSteps.length / steps.length) * 100);
+  const isAr = language === 'ar';
   const fr = language === 'fr';
+
+  const getStepLabel = (step: Step) => isAr ? step.labelAr : fr ? step.labelFr : step.label;
+  const getStepDesc = (step: Step) => isAr ? step.descriptionAr : fr ? step.descriptionFr : step.description;
 
   const handleDismiss = () => {
     localStorage.setItem(`onboarding_dismissed_${user.id}`, 'true');
     setDismissed(true);
   };
 
+  const welcomeTitle = isAr ? 'مرحبًا بك في TrainPro Academy!' : fr ? 'Bienvenue sur TrainPro Academy !' : 'Welcome to TrainPro Academy!';
+  const welcomeDesc = isAr
+    ? 'منصتك الذكية لإدارة التدريب. اتبع الخطوات للبدء.'
+    : fr
+    ? 'Votre plateforme intelligente de gestion de formation. Suivez les étapes pour commencer.'
+    : 'Your intelligent training management platform. Follow the steps to get started.';
+  const welcomeBtn = isAr ? 'هيا نبدأ' : fr ? 'C\'est parti' : 'Let\'s go';
+
+  // Welcome modal
+  if (showWelcome) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <Card className="w-full max-w-md mx-4 p-8 text-center space-y-6">
+          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+            <GraduationCap className="h-8 w-8 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">{welcomeTitle}</h2>
+            <p className="text-muted-foreground">{welcomeDesc}</p>
+          </div>
+          <Button size="lg" onClick={() => setShowWelcome(false)} className="w-full">
+            {welcomeBtn}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (dismissed) return null;
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80">
+    <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 w-80">
       <Card className="shadow-lg border-primary/20">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">
-              {fr ? 'Demarrage rapide' : 'Quick Start'}
+              {isAr ? 'البدء السريع' : fr ? 'Démarrage rapide' : 'Quick Start'}
             </span>
             <span className="text-xs text-muted-foreground">
               {completedSteps.length}/{steps.length}
@@ -177,13 +278,12 @@ export const OnboardingChecklist = () => {
 
             <div className="space-y-2">
               {steps.map((step) => {
-                const Icon = step.icon;
                 const done = completedSteps.includes(step.id);
                 return (
                   <button
                     key={step.id}
                     onClick={() => !done && navigate(step.path)}
-                    className={`flex items-start gap-3 w-full text-left p-2 rounded-lg transition-colors ${
+                    className={`flex items-start gap-3 w-full text-start p-2 rounded-lg transition-colors ${
                       done ? 'opacity-60' : 'hover:bg-muted/50 cursor-pointer'
                     }`}
                     disabled={done}
@@ -195,10 +295,10 @@ export const OnboardingChecklist = () => {
                     )}
                     <div>
                       <p className={`text-sm font-medium ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                        {fr ? step.labelFr : step.label}
+                        {getStepLabel(step)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {fr ? step.descriptionFr : step.description}
+                        {getStepDesc(step)}
                       </p>
                     </div>
                   </button>

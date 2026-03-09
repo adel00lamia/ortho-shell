@@ -1,203 +1,128 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Star, Clock, Users, MapPin, Search, Filter, ArrowLeft, Heart, Share2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Star, Clock, Users, Search, Filter, ArrowLeft, Heart, Share2, ShoppingBag, Plus, Store, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  trainer: string;
-  rating: number;
-  duration: string;
-  price: number;
-  category: string;
-  skills: string[];
-  participants: number;
-  location: string;
-  type: 'online' | 'onsite' | 'hybrid';
-}
-
-interface AIMatchRequest {
-  skills: string[];
-  budget: number;
-  duration: string;
-  type: string;
-}
+import { useUserRole } from '@/hooks/useUserRole';
+import { EmptyState } from '@/components/shared/EmptyState';
+import {
+  usePublishedListings,
+  useMyListings,
+  useMyPurchases,
+  useCreateListing,
+  usePublishListing,
+  type MarketplaceListing,
+} from '@/hooks/useMarketplace';
 
 export default function Marketplace() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [priceRange, setPriceRange] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
-  const [aiMatches, setAiMatches] = useState<Course[]>([]);
   const [savedCourses, setSavedCourses] = useState<string[]>([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newListing, setNewListing] = useState({
+    title: '', description: '', short_description: '', price_cents: 0, category: 'technology', cover_image_url: '',
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { role } = useUserRole();
   const m = t.marketplace;
 
-  // Mock data for demonstration
-  const mockCourses: Course[] = [
-    {
-      id: '1',
-      title: 'Advanced Cybersecurity Training',
-      description: 'Comprehensive security training covering threat detection, incident response, and security frameworks.',
-      trainer: 'Dr. Sarah Johnson',
-      rating: 4.8,
-      duration: '40 hours',
-      price: 2500,
-      category: 'cybersecurity',
-      skills: ['threat-detection', 'incident-response', 'security-frameworks'],
-      participants: 25,
-      location: 'Casablanca',
-      type: 'hybrid'
-    },
-    {
-      id: '2',
-      title: 'Digital Marketing Mastery',
-      description: 'Complete digital marketing course including SEO, social media, and analytics.',
-      trainer: 'Ahmed Benali',
-      rating: 4.6,
-      duration: '30 hours',
-      price: 1800,
-      category: 'marketing',
-      skills: ['seo', 'social-media', 'analytics'],
-      participants: 30,
-      location: 'Online',
-      type: 'online'
-    },
-    {
-      id: '3',
-      title: 'Project Management Professional',
-      description: 'PMP certification preparation with real-world project scenarios.',
-      trainer: 'Fatima El Mansouri',
-      rating: 4.9,
-      duration: '60 hours',
-      price: 3200,
-      category: 'management',
-      skills: ['project-planning', 'risk-management', 'agile'],
-      participants: 20,
-      location: 'Rabat',
-      type: 'onsite'
-    }
-  ];
+  const { data: listings = [], isLoading } = usePublishedListings(categoryFilter);
+  const { data: myListings = [] } = useMyListings();
+  const { data: myPurchases = [] } = useMyPurchases();
+  const createListing = useCreateListing();
+  const publishListing = usePublishListing();
 
-  useEffect(() => {
-    setCourses(mockCourses);
-    setFilteredCourses(mockCourses);
-  }, []);
+  const canSell = role === 'trainer' || role === 'admin';
 
-  useEffect(() => {
-    let filtered = courses;
-    if (searchTerm) {
-      filtered = filtered.filter(course =>
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.trainer.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(course => course.category === categoryFilter);
-    }
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(course => course.type === typeFilter);
-    }
-    if (priceRange !== 'all') {
-      const [min, max] = priceRange.split('-').map(Number);
-      filtered = filtered.filter(course => {
-        if (max) return course.price >= min && course.price <= max;
-        return course.price >= min;
-      });
-    }
-    setFilteredCourses(filtered);
-  }, [searchTerm, categoryFilter, typeFilter, priceRange, courses]);
+  const filtered = listings.filter(l =>
+    !searchTerm || l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (l.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleAIMatch = async () => {
-    setIsLoading(true);
-    try {
-      const matchRequest: AIMatchRequest = {
-        skills: ['cybersecurity', 'management'],
-        budget: 3000,
-        duration: '40 hours',
-        type: 'hybrid'
-      };
-      const { data, error } = await supabase.functions.invoke('ai-match', { body: matchRequest });
-      if (error) throw error;
-      setAiMatches(data.matches || []);
-      toast({ title: "AI Matches Found", description: `Found ${data.matches?.length || 0} courses matching your criteria.` });
-    } catch (error) {
-      console.error('AI matching error:', error);
-      toast({ title: "AI Matching Failed", description: "Could not find AI matches. Please try again.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
+  const toggleSaveCourse = (id: string) => {
+    const isCurrentlySaved = savedCourses.includes(id);
+    setSavedCourses(prev => isCurrentlySaved ? prev.filter(x => x !== id) : [...prev, id]);
+    toast({ title: isCurrentlySaved ? m.courseRemovedWishlist : m.courseAddedWishlist });
   };
 
-  const toggleSaveCourse = (courseId: string) => {
-    setSavedCourses(prev => prev.includes(courseId) ? prev.filter(id => id !== courseId) : [...prev, courseId]);
-    const action = savedCourses.includes(courseId) ? m.courseRemovedWishlist : m.courseAddedWishlist;
-    toast({ title: action });
-  };
-
-  const shareCourse = (course: Course) => {
+  const shareCourse = (listing: MarketplaceListing) => {
     if (navigator.share) {
-      navigator.share({ title: course.title, text: course.description, url: window.location.href });
+      navigator.share({ title: listing.title, text: listing.short_description || '', url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast({ title: m.linkCopied, description: m.linkCopiedDesc });
     }
   };
 
-  const CourseCard = ({ course, isAIMatch = false }: { course: Course; isAIMatch?: boolean }) => (
-    <Card className={`h-full ${isAIMatch ? 'ring-2 ring-primary' : ''}`}>
+  const handleCreateListing = async () => {
+    await createListing.mutateAsync(newListing);
+    setShowCreateDialog(false);
+    setNewListing({ title: '', description: '', short_description: '', price_cents: 0, category: 'technology', cover_image_url: '' });
+  };
+
+  const formatPrice = (cents: number) => {
+    if (cents === 0) return m.free;
+    return `${(cents / 100).toLocaleString()} MAD`;
+  };
+
+  const statusBadge = (status: string) => {
+    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+      draft: { label: m.draft, variant: 'secondary' },
+      published: { label: m.published, variant: 'default' },
+      pending_review: { label: m.pendingReview, variant: 'outline' },
+      suspended: { label: m.suspended, variant: 'destructive' },
+      archived: { label: m.archived, variant: 'secondary' },
+    };
+    const s = map[status] || map.draft;
+    return <Badge variant={s.variant}>{s.label}</Badge>;
+  };
+
+  const ListingCard = ({ listing }: { listing: MarketplaceListing }) => (
+    <Card className="h-full hover:shadow-lg transition-shadow">
+      {listing.cover_image_url && (
+        <div className="h-40 bg-muted rounded-t-lg overflow-hidden">
+          <img src={listing.cover_image_url} alt={listing.title} className="w-full h-full object-cover" />
+        </div>
+      )}
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{course.title}</CardTitle>
-          {isAIMatch && <Badge variant="secondary">{m.aiMatch}</Badge>}
-        </div>
-        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span>{course.rating}</span>
-          <span>•</span>
-          <span>{course.trainer}</span>
-        </div>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1"><Clock className="h-4 w-4" /><span>{course.duration}</span></div>
-          <div className="flex items-center gap-1"><Users className="h-4 w-4" /><span>{course.participants}</span></div>
-          <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /><span>{course.location}</span></div>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {course.skills.slice(0, 3).map((skill) => (
-            <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
-          ))}
-          {course.skills.length > 3 && (
-            <Badge variant="outline" className="text-xs">+{course.skills.length - 3} {t.common.more}</Badge>
+        <div className="flex justify-between items-start gap-2">
+          <CardTitle className="text-lg line-clamp-2">{listing.title}</CardTitle>
+          {listing.rating_count > 0 && (
+            <div className="flex items-center gap-1 shrink-0">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-medium">{listing.rating_avg}</span>
+            </div>
           )}
         </div>
-        <div className="flex justify-between items-center pt-4">
-          <div className="text-2xl font-bold">{course.price.toLocaleString()} MAD</div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => toggleSaveCourse(course.id)}>
-              <Heart className={`h-4 w-4 ${savedCourses.includes(course.id) ? 'fill-red-500 text-red-500' : ''}`} />
+        <CardDescription className="line-clamp-2">{listing.short_description || listing.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <Badge variant="outline">{listing.category}</Badge>
+          {listing.purchase_count > 0 && (
+            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{listing.purchase_count}</span>
+          )}
+        </div>
+        <div className="flex justify-between items-center pt-2">
+          <span className="text-xl font-bold">{formatPrice(listing.price_cents)}</span>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => toggleSaveCourse(listing.id)}>
+              <Heart className={`h-4 w-4 ${savedCourses.includes(listing.id) ? 'fill-red-500 text-red-500' : ''}`} />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => shareCourse(course)}>
+            <Button variant="ghost" size="icon" onClick={() => shareCourse(listing)}>
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button size="sm">{t.common.viewDetails}</Button>
+            <Button size="sm">{m.buyNow}</Button>
           </div>
         </div>
       </CardContent>
@@ -205,95 +130,194 @@ export default function Marketplace() {
   );
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t.common.back}
+    <div className="container mx-auto py-8 space-y-6">
+      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-2">
+        <ArrowLeft className="mr-2 h-4 w-4" />{t.common.back}
       </Button>
 
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold">{m.title}</h1>
-        <p className="text-xl text-muted-foreground">{m.subtitle}</p>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">{m.title}</h1>
+        <p className="text-muted-foreground">{m.subtitle}</p>
       </div>
 
-      {/* AI Match Section */}
-      <Card className="bg-gradient-to-r from-primary/10 to-secondary/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5" />
-            {m.aiCourseMatching}
-          </CardTitle>
-          <CardDescription>{m.aiCourseMatchingDesc}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={handleAIMatch} disabled={isLoading} className="w-full sm:w-auto">
-            {isLoading ? m.findingMatches : m.findBestMatches}
-          </Button>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="browse">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="browse" className="gap-2"><ShoppingBag className="h-4 w-4" />{m.browse}</TabsTrigger>
+          {canSell && <TabsTrigger value="sell" className="gap-2"><Store className="h-4 w-4" />{m.sell}</TabsTrigger>}
+          <TabsTrigger value="purchases" className="gap-2"><Package className="h-4 w-4" />{m.myPurchases}</TabsTrigger>
+        </TabsList>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            {t.common.filters}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder={m.searchCourses} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+        {/* Browse Tab */}
+        <TabsContent value="browse" className="space-y-6">
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative md:col-span-2">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder={m.searchCourses} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                </div>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger><SelectValue placeholder={m.category} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{m.allCategories}</SelectItem>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="management">Management</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="cybersecurity">Cybersecurity</SelectItem>
+                    <SelectItem value="soft-skills">Soft Skills</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">{t.common.loading}</div>
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={ShoppingBag}
+              title={m.emptyMarketplace}
+              description={m.emptyMarketplaceDesc}
+              actionLabel={canSell ? m.createListing : undefined}
+              onAction={canSell ? () => setShowCreateDialog(true) : undefined}
+              highlights={canSell ? (m.sellHighlights as unknown as string[]) : undefined}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map(listing => <ListingCard key={listing.id} listing={listing} />)}
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger><SelectValue placeholder={m.category} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{m.allCategories}</SelectItem>
-                <SelectItem value="cybersecurity">Cybersecurity</SelectItem>
-                <SelectItem value="marketing">Marketing</SelectItem>
-                <SelectItem value="management">Management</SelectItem>
-                <SelectItem value="technology">Technology</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger><SelectValue placeholder={m.deliveryType} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{m.allTypes}</SelectItem>
-                <SelectItem value="online">{m.online}</SelectItem>
-                <SelectItem value="onsite">{m.onsite}</SelectItem>
-                <SelectItem value="hybrid">{m.hybrid}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={priceRange} onValueChange={setPriceRange}>
-              <SelectTrigger><SelectValue placeholder={m.priceRange} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{m.allPrices}</SelectItem>
-                <SelectItem value="0-1000">0 - 1,000 MAD</SelectItem>
-                <SelectItem value="1000-2500">1,000 - 2,500 MAD</SelectItem>
-                <SelectItem value="2500-5000">2,500 - 5,000 MAD</SelectItem>
-                <SelectItem value="5000">5,000+ MAD</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </TabsContent>
 
-      {aiMatches.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">{m.aiRecommendedMatches}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aiMatches.map((course) => <CourseCard key={`ai-${course.id}`} course={course} isAIMatch />)}
-          </div>
-        </div>
-      )}
+        {/* Sell Tab */}
+        {canSell && (
+          <TabsContent value="sell" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">{m.myListings}</h2>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="h-4 w-4 mr-2" />{m.createListing}</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{m.createListing}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">{m.listingTitle}</label>
+                      <Input value={newListing.title} onChange={e => setNewListing(p => ({ ...p, title: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">{m.shortDescription}</label>
+                      <Input value={newListing.short_description} onChange={e => setNewListing(p => ({ ...p, short_description: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">{m.listingDescription}</label>
+                      <Textarea value={newListing.description} onChange={e => setNewListing(p => ({ ...p, description: e.target.value }))} rows={4} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">{m.price}</label>
+                        <Input type="number" min={0} value={newListing.price_cents / 100} onChange={e => setNewListing(p => ({ ...p, price_cents: Math.round(Number(e.target.value) * 100) }))} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">{m.category}</label>
+                        <Select value={newListing.category} onValueChange={v => setNewListing(p => ({ ...p, category: v }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="technology">Technology</SelectItem>
+                            <SelectItem value="management">Management</SelectItem>
+                            <SelectItem value="marketing">Marketing</SelectItem>
+                            <SelectItem value="cybersecurity">Cybersecurity</SelectItem>
+                            <SelectItem value="soft-skills">Soft Skills</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">{m.coverImage}</label>
+                      <Input value={newListing.cover_image_url} onChange={e => setNewListing(p => ({ ...p, cover_image_url: e.target.value }))} placeholder="https://..." />
+                    </div>
+                    <Button onClick={handleCreateListing} disabled={!newListing.title || createListing.isPending} className="w-full">
+                      {createListing.isPending ? t.common.loading : m.createListing}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
 
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">{m.availableCourses} ({filteredCourses.length})</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => <CourseCard key={course.id} course={course} />)}
-        </div>
-      </div>
+            {myListings.length === 0 ? (
+              <EmptyState
+                icon={Store}
+                title={m.noListingsYet}
+                description={m.noListingsDesc}
+                actionLabel={m.createListing}
+                onAction={() => setShowCreateDialog(true)}
+                highlights={m.sellHighlights as unknown as string[]}
+              />
+            ) : (
+              <div className="space-y-3">
+                {myListings.map(listing => (
+                  <Card key={listing.id} className="p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium truncate">{listing.title}</h3>
+                          {statusBadge(listing.status)}
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">{listing.short_description}</p>
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <div className="text-right">
+                          <p className="font-semibold">{formatPrice(listing.price_cents)}</p>
+                          <p className="text-xs text-muted-foreground">{listing.purchase_count} {m.sales}</p>
+                        </div>
+                        {listing.status === 'draft' && (
+                          <Button size="sm" onClick={() => publishListing.mutate(listing.id)}>
+                            {m.publishListing}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
+
+        {/* Purchases Tab */}
+        <TabsContent value="purchases" className="space-y-6">
+          {myPurchases.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title={m.noPurchasesYet}
+              description={m.noPurchasesDesc}
+              actionLabel={m.browse}
+              onAction={() => {
+                const el = document.querySelector('[data-value="browse"]') as HTMLElement;
+                el?.click();
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myPurchases.map(purchase => (
+                <Card key={purchase.id} className="p-4">
+                  <div className="space-y-2">
+                    <h3 className="font-medium">{purchase.listing?.title || 'Course'}</h3>
+                    <p className="text-sm text-muted-foreground">{purchase.listing?.short_description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{formatPrice(purchase.amount_cents)}</span>
+                      <Badge variant="secondary">{m.purchased}</Badge>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

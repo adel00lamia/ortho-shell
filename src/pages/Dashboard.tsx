@@ -8,13 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
-  ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle
+  ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle,
+  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useCompanyId } from '@/hooks/useCompanyId';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 import { motion } from 'framer-motion';
 
 const fadeIn = {
@@ -45,6 +47,8 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { stats, loading: statsLoading } = useDashboardStats(role);
   const { companyId } = useCompanyId();
+  const { widgets, toggleWidget, moveWidget, resetLayout, isVisible } = useDashboardLayout();
+  const [customizing, setCustomizing] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
 
   useEffect(() => {
@@ -175,10 +179,64 @@ const Dashboard = () => {
           </div>
           <p className="text-muted-foreground">{d.welcomeBack}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setCustomizing(!customizing)} className="gap-2">
+          <SlidersHorizontal className="h-4 w-4" />
+          {customizing ? (t.common.save) : (language === 'ar' ? 'تخصيص' : language === 'fr' ? 'Personnaliser' : 'Customize')}
+        </Button>
       </motion.div>
 
+      {/* Customization Panel */}
+      {customizing && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold">{language === 'ar' ? 'إدارة الأقسام' : language === 'fr' ? 'Gérer les sections' : 'Manage Sections'}</h3>
+            <Button variant="ghost" size="sm" onClick={resetLayout} className="gap-1 text-xs">
+              <RotateCcw className="h-3 w-3" />
+              {language === 'ar' ? 'إعادة تعيين' : language === 'fr' ? 'Réinitialiser' : 'Reset'}
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {widgets.map((w, i) => {
+              const labels: Record<string, Record<string, string>> = {
+                stats: { en: 'Statistics', fr: 'Statistiques', ar: 'الإحصائيات' },
+                profile: { en: 'Company Profile', fr: 'Profil entreprise', ar: 'ملف الشركة' },
+                workflow: { en: 'Workflow Steps', fr: 'Étapes du workflow', ar: 'خطوات سير العمل' },
+                actions: { en: 'Quick Actions', fr: 'Actions rapides', ar: 'إجراءات سريعة' },
+                activity: { en: 'Recent Activity', fr: 'Activité récente', ar: 'النشاط الأخير' },
+              };
+              const label = labels[w.id]?.[language] || w.id;
+              return (
+                <button
+                  key={w.id}
+                  onClick={() => toggleWidget(w.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                    w.visible
+                      ? 'bg-primary/10 border-primary/30 text-foreground'
+                      : 'bg-muted/50 border-border text-muted-foreground'
+                  }`}
+                >
+                  {w.visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                  {label}
+                  {i > 0 && (
+                    <span
+                      className="cursor-grab hover:text-primary"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (i > 0) moveWidget(i, i - 1);
+                      }}
+                    >
+                      <GripVertical className="h-3 w-3" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {isVisible('stats') && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {config.stats.map((stat, i) => {
           const StatIcon = stat.icon;
           return (
@@ -198,10 +256,10 @@ const Dashboard = () => {
             </motion.div>
           );
         })}
-      </div>
+      </div>}
 
       {/* Profile Completion */}
-      {profileCompletion && profileCompletion.percent < 100 && (role === 'hr_manager' || role === 'admin') && (
+      {isVisible('profile') && profileCompletion && profileCompletion.percent < 100 && (role === 'hr_manager' || role === 'admin') && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5}>
           <Card className="p-6 border-primary/20 bg-primary/5">
             <div className="flex items-start gap-4">
@@ -241,7 +299,7 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {profileCompletion && profileCompletion.percent === 100 && (role === 'hr_manager' || role === 'admin') && (
+      {isVisible('profile') && profileCompletion && profileCompletion.percent === 100 && (role === 'hr_manager' || role === 'admin') && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5}>
           <Card className="p-4 border-green-500/20 bg-green-500/5">
             <div className="flex items-center gap-3">
@@ -254,7 +312,7 @@ const Dashboard = () => {
       )}
 
       {/* Workflow Steps */}
-      {(role === 'hr_manager' || role === 'admin') && (
+      {isVisible('workflow') && (role === 'hr_manager' || role === 'admin') && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={6}>
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>
@@ -285,7 +343,7 @@ const Dashboard = () => {
       )}
 
       {/* Quick Actions */}
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={11}>
+      {isVisible('actions') && <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={11}>
         <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>{d.quickActions}</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {config.actions.map((action, i) => {
@@ -310,10 +368,10 @@ const Dashboard = () => {
             );
           })}
         </div>
-      </motion.div>
+      </motion.div>}
 
       {/* Recent Activity */}
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={16}>
+      {isVisible('activity') && <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={16}>
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>{d.recentActivity}</h2>
           <div className="space-y-1">
@@ -331,7 +389,7 @@ const Dashboard = () => {
             ))}
           </div>
         </Card>
-      </motion.div>
+      </motion.div>}
     </div>
   );
 };

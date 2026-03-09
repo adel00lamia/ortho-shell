@@ -1371,6 +1371,156 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_stripe_accounts: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_account_id: string
+          charges_enabled: boolean
+          payouts_enabled: boolean
+          onboarding_complete: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_account_id: string
+          charges_enabled?: boolean
+          payouts_enabled?: boolean
+          onboarding_complete?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          stripe_account_id?: string
+          charges_enabled?: boolean
+          payouts_enabled?: boolean
+          onboarding_complete?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_listings: {
+        Row: {
+          id: string
+          seller_id: string
+          module_id: string | null
+          title: string
+          description: string | null
+          short_description: string | null
+          price_cents: number
+          currency: string
+          category: string
+          tags: string[]
+          cover_image_url: string | null
+          preview_url: string | null
+          status: string
+          platform_fee_percent: number
+          rating_avg: number
+          rating_count: number
+          purchase_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          seller_id: string
+          module_id?: string | null
+          title: string
+          description?: string | null
+          short_description?: string | null
+          price_cents: number
+          currency?: string
+          category: string
+          tags?: string[]
+          cover_image_url?: string | null
+          preview_url?: string | null
+          status?: string
+          platform_fee_percent?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          title?: string
+          description?: string | null
+          short_description?: string | null
+          price_cents?: number
+          currency?: string
+          category?: string
+          tags?: string[]
+          cover_image_url?: string | null
+          preview_url?: string | null
+          status?: string
+          platform_fee_percent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_purchases: {
+        Row: {
+          id: string
+          listing_id: string
+          buyer_id: string
+          company_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          amount_cents: number
+          platform_fee_cents: number
+          seller_payout_cents: number
+          currency: string
+          status: string
+          purchased_at: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          buyer_id: string
+          company_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          amount_cents: number
+          platform_fee_cents: number
+          seller_payout_cents: number
+          currency?: string
+          status?: string
+          purchased_at?: string
+        }
+        Update: {
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      marketplace_reviews: {
+        Row: {
+          id: string
+          listing_id: string
+          reviewer_id: string
+          purchase_id: string
+          rating: number
+          title: string | null
+          body: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          reviewer_id: string
+          purchase_id: string
+          rating: number
+          title?: string | null
+          body?: string | null
+          created_at?: string
+        }
+        Update: {
+          rating?: number
+          title?: string | null
+          body?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
