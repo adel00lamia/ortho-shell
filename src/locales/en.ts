@@ -52,6 +52,7 @@ export const en = {
     myPlans: 'My Plans',
     moduleStudio: 'Module Studio',
     courseMarketplace: 'Course Marketplace',
+    managerDashboard: 'Manager Dashboard',
     analyticsROI: 'Analytics & ROI',
     progressTracking: 'Progress Tracking',
     certificates: 'Certificates',

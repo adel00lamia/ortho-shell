@@ -26,6 +26,7 @@ import TeamCollaboration from "./pages/TeamCollaboration";
 import PerformanceEvaluation from "./pages/PerformanceEvaluation";
 import Benchmark from "./pages/Benchmark";
 import OFPPTReimbursement from "./pages/OFPPTReimbursement";
+import ManagerDashboard from "./pages/ManagerDashboard";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
@@ -105,6 +106,9 @@ const App = () => (
               <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
               <Route path="/workflow/track/certificates" element={<ProtectedLayout featureName="Certificates"><CertificateGenerator /></ProtectedLayout>} />
               <Route path="/workflow/track/reimbursement" element={<ProtectedLayout featureName="OFPPT Reimbursement"><OFPPTReimbursement /></ProtectedLayout>} />
+
+              {/* Manager Dashboard */}
+              <Route path="/manager" element={<ProtectedLayout featureName="Manager Dashboard"><ManagerDashboard /></ProtectedLayout>} />
 
               {/* Management Routes */}
               <Route path="/manage/users" element={<ProtectedLayout featureName="User Management"><UserManagement /></ProtectedLayout>} />

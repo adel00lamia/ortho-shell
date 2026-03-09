@@ -23,6 +23,7 @@ import {
   Building2,
   UserCog,
   Languages,
+  Gauge,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -83,6 +84,7 @@ export const HierarchicalSidebar = () => {
     {
       titleKey: 'trackCertify',
       items: [
+        { path: '/manager', labelKey: 'managerDashboard', icon: Gauge, roles: ['admin', 'hr_manager'] },
         { path: '/workflow/track/analytics', labelKey: 'analyticsROI', icon: BarChart3 },
         { path: '/workflow/track/progress', labelKey: 'progressTracking', icon: TrendingUp },
         { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },

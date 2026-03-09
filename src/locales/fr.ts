@@ -52,6 +52,7 @@ export const fr: Translations = {
     myPlans: 'Mes plans',
     moduleStudio: 'Studio de modules',
     courseMarketplace: 'Marketplace de formations',
+    managerDashboard: 'Tableau de bord Manager',
     analyticsROI: 'Analytique & ROI',
     progressTracking: 'Suivi de progression',
     certificates: 'Certificats',
