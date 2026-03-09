@@ -33,6 +33,7 @@ import Index from "./pages/Index";
 import SubscriptionGate from "./components/SubscriptionGate";
 import CompanyProfile from "./pages/CompanyProfile";
 import { CommandPalette } from "./components/command-palette/CommandPalette";
+import { OnboardingChecklist } from "./components/onboarding/OnboardingChecklist";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <CommandPalette />
+            <OnboardingChecklist />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />

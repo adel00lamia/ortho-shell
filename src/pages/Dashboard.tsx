@@ -6,12 +6,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
   ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useCompanyId } from '@/hooks/useCompanyId';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
@@ -43,14 +44,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { stats, loading: statsLoading } = useDashboardStats(role);
+  const { companyId } = useCompanyId();
   const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!user) return;
-      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
-      if (!profile?.company_id) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
-      const { data: company } = await supabase.from('companies').select('*').eq('id', profile.company_id).single();
+      if (!companyId) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
+      const { data: company } = await supabase.from('companies').select('*').eq('id', companyId).single();
       if (!company) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
       const missing: string[] = [];
       PROFILE_FIELDS.forEach(f => { if (!(company as any)[f.key]) missing.push(f.label); });
@@ -58,7 +58,7 @@ const Dashboard = () => {
       setProfileCompletion({ percent: Math.round((filled / PROFILE_FIELDS.length) * 100), missing });
     };
     loadProfile();
-  }, [user]);
+  }, [companyId]);
 
   if (roleLoading || statsLoading) {
     return (
