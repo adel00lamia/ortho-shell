@@ -146,9 +146,6 @@ const Index = () => {
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {language === 'fr' ? 'Tarifs' : 'Pricing'}
               </a>
-              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                {language === 'fr' ? 'Tarifs' : 'Pricing'}
-              </a>
               <div className="flex gap-1 bg-muted rounded-lg p-0.5">
                 <button onClick={() => setLanguage('fr')} className={`text-xs px-2 py-1 rounded-md transition-all ${language === 'fr' ? 'bg-primary text-primary-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>FR</button>
                 <button onClick={() => setLanguage('en')} className={`text-xs px-2 py-1 rounded-md transition-all ${language === 'en' ? 'bg-primary text-primary-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>EN</button>

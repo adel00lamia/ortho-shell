@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,374 +7,287 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Users, 
-  UserPlus, 
-  Search, 
-  Filter, 
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Shield,
-  Mail,
-  Phone,
-  Calendar
+  Users, UserPlus, Search, Edit, Trash2, Shield, Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { motion } from 'framer-motion';
 
-interface User {
+interface UserProfile {
   id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'manager' | 'learner';
-  department: string;
-  status: 'active' | 'inactive' | 'pending';
-  lastActive: string;
-  coursesCompleted: number;
-  joinedDate: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+  created_at: string;
+  company_id: string | null;
 }
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.35, delay: i * 0.04 },
+  }),
+};
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { language } = useLanguage();
 
-  // Mock user data
-  const users: User[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@company.com',
-      role: 'admin',
-      department: 'IT',
-      status: 'active',
-      lastActive: '2024-01-15',
-      coursesCompleted: 12,
-      joinedDate: '2023-06-15'
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael.chen@company.com',
-      role: 'manager',
-      department: 'Marketing',
-      status: 'active',
-      lastActive: '2024-01-14',
-      coursesCompleted: 8,
-      joinedDate: '2023-08-20'
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      email: 'emily.rodriguez@company.com',
-      role: 'learner',
-      department: 'Sales',
-      status: 'active',
-      lastActive: '2024-01-12',
-      coursesCompleted: 15,
-      joinedDate: '2023-05-10'
-    },
-    {
-      id: '4',
-      name: 'David Wilson',
-      email: 'david.wilson@company.com',
-      role: 'learner',
-      department: 'HR',
-      status: 'pending',
-      lastActive: 'Never',
-      coursesCompleted: 0,
-      joinedDate: '2024-01-10'
+  useEffect(() => {
+    loadUsers();
+  }, [user]);
+
+  const loadUsers = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
+      if (!profile?.company_id) { setLoading(false); return; }
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('company_id', profile.company_id)
+        .order('created_at', { ascending: false });
+
+      setUsers(profiles || []);
+
+      // Try to load roles (admin only)
+      const { data: roles } = await supabase.from('user_roles').select('user_id, role');
+      if (roles) {
+        const roleMap: Record<string, string> = {};
+        roles.forEach(r => { roleMap[r.user_id] = r.role; });
+        setUserRoles(roleMap);
+      }
+    } catch (err) {
+      console.error('Error loading users:', err);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const [userList, setUserList] = useState(users);
+  const getUserRole = (userId: string, profileRole: string | null) => {
+    return userRoles[userId] || profileRole || 'employee';
+  };
 
-  const filteredUsers = userList.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-    
-    return matchesSearch && matchesRole && matchesStatus;
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin': return <Badge className="bg-destructive/10 text-destructive border-destructive/20">{language === 'fr' ? 'Admin' : 'Admin'}</Badge>;
+      case 'hr_manager': return <Badge className="bg-primary/10 text-primary border-primary/20">{language === 'fr' ? 'RH' : 'HR Manager'}</Badge>;
+      case 'trainer': return <Badge className="bg-accent/10 text-accent border-accent/20">{language === 'fr' ? 'Formateur' : 'Trainer'}</Badge>;
+      default: return <Badge variant="secondary">{language === 'fr' ? 'Employé' : 'Employee'}</Badge>;
+    }
+  };
+
+  const filteredUsers = users.filter(u => {
+    const name = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+    const matchesSearch = name.includes(searchTerm.toLowerCase());
+    const role = getUserRole(u.id, u.role);
+    const matchesRole = filterRole === 'all' || role === filterRole;
+    return matchesSearch && matchesRole;
   });
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'manager': return 'bg-blue-100 text-blue-800';
-      case 'learner': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const handleAddUser = () => {
-    toast({
-      title: "User added successfully",
-      description: "New user has been added to the system.",
-    });
+    toast({ title: language === 'fr' ? "Fonctionnalité bientôt disponible" : "Coming soon", description: language === 'fr' ? "L'invitation d'utilisateurs sera bientôt disponible." : "User invitation will be available soon." });
     setIsAddUserOpen(false);
   };
 
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    toast({
-      title: "Edit user",
-      description: `Editing ${user.name}`,
-    });
+  const handleDeleteUser = async (userId: string) => {
+    toast({ title: language === 'fr' ? "Suppression non autorisée" : "Deletion not allowed", description: language === 'fr' ? "Contactez un administrateur." : "Contact an administrator.", variant: "destructive" });
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUserList(userList.filter(user => user.id !== userId));
-    toast({
-      title: "User deleted",
-      description: "User has been removed from the system.",
-    });
+  const roleStats = {
+    total: users.length,
+    admins: users.filter(u => getUserRole(u.id, u.role) === 'admin').length,
+    hrManagers: users.filter(u => getUserRole(u.id, u.role) === 'hr_manager').length,
+    employees: users.filter(u => getUserRole(u.id, u.role) === 'employee').length,
   };
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={0} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">Manage users, roles, and permissions</p>
+          <h1 className="text-3xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+            {language === 'fr' ? 'Gestion des utilisateurs' : 'User Management'}
+          </h1>
+          <p className="text-muted-foreground">{language === 'fr' ? 'Gérez les utilisateurs et les rôles' : 'Manage users, roles, and permissions'}</p>
         </div>
         <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add User
+            <Button className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              {language === 'fr' ? 'Ajouter' : 'Add User'}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
+              <DialogTitle>{language === 'fr' ? 'Ajouter un utilisateur' : 'Add New User'}</DialogTitle>
               <DialogDescription>
-                Create a new user account with appropriate role and permissions.
+                {language === 'fr' ? 'Invitez un utilisateur à rejoindre votre organisation.' : 'Invite a user to join your organization.'}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Enter first name" />
+                  <Label>{language === 'fr' ? 'Prénom' : 'First Name'}</Label>
+                  <Input placeholder="John" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Enter last name" />
+                  <Label>{language === 'fr' ? 'Nom' : 'Last Name'}</Label>
+                  <Input placeholder="Doe" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="user@company.com" />
+                <Label>Email</Label>
+                <Input type="email" placeholder="user@company.com" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="learner">Learner</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="it">IT</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="sales">Sales</SelectItem>
-                      <SelectItem value="hr">HR</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>{language === 'fr' ? 'Rôle' : 'Role'}</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder={language === 'fr' ? 'Sélectionner' : 'Select role'} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="employee">{language === 'fr' ? 'Employé' : 'Employee'}</SelectItem>
+                    <SelectItem value="trainer">{language === 'fr' ? 'Formateur' : 'Trainer'}</SelectItem>
+                    <SelectItem value="hr_manager">{language === 'fr' ? 'RH' : 'HR Manager'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button onClick={handleAddUser} className="w-full">
-                Create User
+                {language === 'fr' ? 'Inviter' : 'Send Invitation'}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
+      </motion.div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: language === 'fr' ? 'Total' : 'Total Users', value: roleStats.total, icon: Users, color: 'text-primary' },
+          { label: 'Admins', value: roleStats.admins, icon: Shield, color: 'text-destructive' },
+          { label: language === 'fr' ? 'RH' : 'HR Managers', value: roleStats.hrManagers, icon: Users, color: 'text-primary' },
+          { label: language === 'fr' ? 'Employés' : 'Employees', value: roleStats.employees, icon: Users, color: 'text-muted-foreground' },
+        ].map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div key={stat.label} initial="hidden" animate="visible" variants={fadeIn} custom={i + 1}>
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+                    <Icon className={`h-4 w-4 ${stat.color}`} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans' }}>{stat.value}</div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5}>
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
-            </div>
+          <CardHeader>
+            <CardTitle>{language === 'fr' ? 'Utilisateurs' : 'Users'}</CardTitle>
+            <CardDescription>{language === 'fr' ? 'Gérez les accès de votre organisation' : "Manage your organization's users and their access"}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{userList.length}</div>
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={language === 'fr' ? 'Rechercher...' : 'Search users...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={filterRole} onValueChange={setFilterRole}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{language === 'fr' ? 'Tous les rôles' : 'All Roles'}</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="hr_manager">{language === 'fr' ? 'RH' : 'HR Manager'}</SelectItem>
+                  <SelectItem value="trainer">{language === 'fr' ? 'Formateur' : 'Trainer'}</SelectItem>
+                  <SelectItem value="employee">{language === 'fr' ? 'Employé' : 'Employee'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">{language === 'fr' ? 'Aucun utilisateur trouvé' : 'No users found'}</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{language === 'fr' ? 'Utilisateur' : 'User'}</TableHead>
+                    <TableHead>{language === 'fr' ? 'Rôle' : 'Role'}</TableHead>
+                    <TableHead>{language === 'fr' ? 'Inscrit le' : 'Joined'}</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((u) => {
+                    const role = getUserRole(u.id, u.role);
+                    return (
+                      <TableRow key={u.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+                              {(u.first_name || '?')[0]}{(u.last_name || '')[0]}
+                            </div>
+                            <div>
+                              <div className="font-medium">{u.first_name || ''} {u.last_name || ''}</div>
+                              <div className="text-xs text-muted-foreground">{u.id.slice(0, 8)}…</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getRoleBadge(role)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(u.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-              <Users className="h-4 w-4 text-green-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {userList.filter(u => u.status === 'active').length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Pending Users</CardTitle>
-              <Users className="h-4 w-4 text-yellow-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {userList.filter(u => u.status === 'pending').length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Admins</CardTitle>
-              <Shield className="h-4 w-4 text-red-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {userList.filter(u => u.role === 'admin').length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Manage your organization's users and their access</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Filters */}
-          <div className="flex gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={filterRole} onValueChange={setFilterRole}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="learner">Learner</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Users Table */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Courses</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-muted-foreground">{user.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getRoleColor(user.role)}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.department}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(user.status)}>
-                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.coursesCompleted}</TableCell>
-                  <TableCell>{user.lastActive}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      </motion.div>
     </div>
   );
 };

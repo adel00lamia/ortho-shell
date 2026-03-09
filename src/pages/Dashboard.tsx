@@ -14,6 +14,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { motion } from 'framer-motion';
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.4, delay: i * 0.05, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+  }),
+};
 
 const PROFILE_FIELDS = [
   { key: 'name', label: 'fieldName' },
@@ -44,9 +53,7 @@ const Dashboard = () => {
       const { data: company } = await supabase.from('companies').select('*').eq('id', profile.company_id).single();
       if (!company) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
       const missing: string[] = [];
-      PROFILE_FIELDS.forEach(f => {
-        if (!(company as any)[f.key]) missing.push(f.label);
-      });
+      PROFILE_FIELDS.forEach(f => { if (!(company as any)[f.key]) missing.push(f.label); });
       const filled = PROFILE_FIELDS.length - missing.length;
       setProfileCompletion({ percent: Math.round((filled / PROFILE_FIELDS.length) * 100), missing });
     };
@@ -58,8 +65,11 @@ const Dashboard = () => {
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-12 w-64" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
         </div>
+        <Skeleton className="h-48 rounded-xl" />
       </div>
     );
   }
@@ -141,10 +151,10 @@ const Dashboard = () => {
   const RoleIcon = config.icon;
 
   const workflowSteps = [
-    { step: '1', title: t.nav.assess, desc: d.skillsNeeds, icon: ClipboardCheck, path: '/workflow/assess/diagnostic' },
-    { step: '2', title: t.nav.plan, desc: d.trainingStrategy, icon: Lightbulb, path: '/workflow/plan/builder' },
-    { step: '3', title: t.nav.execute, desc: d.createContentShort, icon: PlayCircle, path: '/workflow/execute/modules' },
-    { step: '4', title: t.nav.trackCertify.split(' ')[0], desc: d.monitorResults, icon: BarChart3, path: '/workflow/track/analytics' },
+    { step: '1', title: t.nav.assess, desc: d.skillsNeeds, icon: ClipboardCheck, path: '/workflow/assess/diagnostic', color: 'from-blue-500 to-cyan-400' },
+    { step: '2', title: t.nav.plan, desc: d.trainingStrategy, icon: Lightbulb, path: '/workflow/plan/builder', color: 'from-purple-500 to-pink-400' },
+    { step: '3', title: t.nav.execute, desc: d.createContentShort, icon: PlayCircle, path: '/workflow/execute/modules', color: 'from-orange-500 to-amber-400' },
+    { step: '4', title: t.nav.trackCertify.split(' ')[0], desc: d.monitorResults, icon: BarChart3, path: '/workflow/track/analytics', color: 'from-green-500 to-emerald-400' },
   ];
 
   const activities = stats?.recentActivity?.length ? stats.recentActivity : [
@@ -154,160 +164,174 @@ const Dashboard = () => {
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={0} className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">{config.title}</h1>
-            <Badge variant="secondary" className="text-sm">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{config.title}</h1>
+            <Badge variant="secondary" className="text-sm hidden sm:flex">
               <RoleIcon className="w-3 h-3 mr-1" />
               {config.badge}
             </Badge>
           </div>
           <p className="text-muted-foreground">{d.welcomeBack}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {config.stats.map((stat) => {
+        {config.stats.map((stat, i) => {
           const StatIcon = stat.icon;
           return (
-            <Card key={stat.label} className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  {stat.trend && <p className="text-xs text-primary">{stat.trend}</p>}
+            <motion.div key={stat.label} initial="hidden" animate="visible" variants={fadeIn} custom={i + 1}>
+              <Card className="p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <p className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{stat.value}</p>
+                    {stat.trend && <p className="text-xs text-primary">{stat.trend}</p>}
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <StatIcon className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <StatIcon className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Profile Completion */}
       {profileCompletion && profileCompletion.percent < 100 && (role === 'hr_manager' || role === 'admin') && (
-        <Card className="p-6 border-primary/20 bg-primary/5">
-          <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-foreground">{d.profileCompletion}</h3>
-                  <p className="text-sm text-muted-foreground">{d.completeProfile}</p>
-                </div>
-                <Button size="sm" onClick={() => navigate('/company-profile')}>
-                  {d.completeNow} <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5}>
+          <Card className="p-6 border-primary/20 bg-primary/5">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Building2 className="h-5 w-5 text-primary" />
               </div>
-              <div className="flex items-center gap-3">
-                <Progress value={profileCompletion.percent} className="flex-1 h-2" />
-                <span className="text-sm font-semibold text-foreground whitespace-nowrap">{profileCompletion.percent}%</span>
-              </div>
-              {profileCompletion.missing.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" /> {d.missingFields}
-                  </span>
-                  {profileCompletion.missing.slice(0, 4).map(field => (
-                    <Badge key={field} variant="outline" className="text-xs">{(d as any)[field] || field}</Badge>
-                  ))}
-                  {profileCompletion.missing.length > 4 && (
-                    <Badge variant="outline" className="text-xs">+{profileCompletion.missing.length - 4} {t.common.more}</Badge>
-                  )}
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h3 className="font-semibold text-foreground">{d.profileCompletion}</h3>
+                    <p className="text-sm text-muted-foreground">{d.completeProfile}</p>
+                  </div>
+                  <Button size="sm" onClick={() => navigate('/company-profile')}>
+                    {d.completeNow} <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </div>
-              )}
+                <div className="flex items-center gap-3">
+                  <Progress value={profileCompletion.percent} className="flex-1 h-2" />
+                  <span className="text-sm font-semibold text-foreground whitespace-nowrap">{profileCompletion.percent}%</span>
+                </div>
+                {profileCompletion.missing.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {d.missingFields}
+                    </span>
+                    {profileCompletion.missing.slice(0, 4).map(field => (
+                      <Badge key={field} variant="outline" className="text-xs">{(d as any)[field] || field}</Badge>
+                    ))}
+                    {profileCompletion.missing.length > 4 && (
+                      <Badge variant="outline" className="text-xs">+{profileCompletion.missing.length - 4} {t.common.more}</Badge>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
       )}
 
       {profileCompletion && profileCompletion.percent === 100 && (role === 'hr_manager' || role === 'admin') && (
-        <Card className="p-4 border-green-500/20 bg-green-500/5">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-green-700">{d.profileComplete}</span>
-            <Progress value={100} className="flex-1 h-2 max-w-[200px]" />
-          </div>
-        </Card>
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5}>
+          <Card className="p-4 border-green-500/20 bg-green-500/5">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <span className="text-sm font-medium text-green-700">{d.profileComplete}</span>
+              <Progress value={100} className="flex-1 h-2 max-w-[200px]" />
+            </div>
+          </Card>
+        </motion.div>
       )}
 
       {/* Workflow Steps */}
       {(role === 'hr_manager' || role === 'admin') && (
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <LayoutDashboard className="h-5 w-5" />
-            {d.trainingWorkflow}
-          </h2>
-          <div className="grid gap-4 md:grid-cols-4">
-            {workflowSteps.map((workflow) => {
-              const WorkflowIcon = workflow.icon;
-              return (
-                <Button key={workflow.step} variant="outline" className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-primary/5" onClick={() => navigate(workflow.path)}>
-                  <div className="flex items-center gap-2 w-full">
-                    <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">{workflow.step}</div>
-                    <WorkflowIcon className="h-4 w-4 ml-auto text-muted-foreground" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold text-foreground">{workflow.title}</p>
-                    <p className="text-xs text-muted-foreground">{workflow.desc}</p>
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        </Card>
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={6}>
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+              <LayoutDashboard className="h-5 w-5 text-primary" />
+              {d.trainingWorkflow}
+            </h2>
+            <div className="grid gap-4 md:grid-cols-4">
+              {workflowSteps.map((workflow, i) => {
+                const WorkflowIcon = workflow.icon;
+                return (
+                  <motion.div key={workflow.step} initial="hidden" animate="visible" variants={fadeIn} custom={7 + i}>
+                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-3 hover:bg-primary/5 hover:border-primary/30 transition-all w-full" onClick={() => navigate(workflow.path)}>
+                      <div className="flex items-center gap-2 w-full">
+                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${workflow.color} text-white flex items-center justify-center text-sm font-bold`}>{workflow.step}</div>
+                        <WorkflowIcon className="h-4 w-4 ml-auto text-muted-foreground" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold text-foreground">{workflow.title}</p>
+                        <p className="text-xs text-muted-foreground">{workflow.desc}</p>
+                      </div>
+                    </Button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </Card>
+        </motion.div>
       )}
 
       {/* Quick Actions */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">{d.quickActions}</h2>
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={11}>
+        <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>{d.quickActions}</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {config.actions.map((action) => {
+          {config.actions.map((action, i) => {
             const ActionIcon = action.icon;
             return (
-              <Card key={action.title} className="p-6 hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate(action.path)}>
-                <div className="space-y-3">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <ActionIcon className="h-6 w-6" />
+              <motion.div key={action.title} initial="hidden" animate="visible" variants={fadeIn} custom={12 + i}>
+                <Card className="p-6 hover:shadow-lg transition-all cursor-pointer group hover:border-primary/20" onClick={() => navigate(action.path)}>
+                  <div className="space-y-3">
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <ActionIcon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">{action.title}</h3>
+                      <p className="text-sm text-muted-foreground">{action.desc}</p>
+                    </div>
+                    <div className="flex items-center text-sm text-primary font-medium group-hover:translate-x-1 transition-transform">
+                      {t.common.getStarted} <ArrowRight className="ml-1 h-4 w-4" />
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-1">{action.title}</h3>
-                    <p className="text-sm text-muted-foreground">{action.desc}</p>
-                  </div>
-                  <div className="flex items-center text-sm text-primary group-hover:translate-x-1 transition-transform">
-                    {t.common.getStarted} <ArrowRight className="ml-1 h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
       {/* Recent Activity */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">{d.recentActivity}</h2>
-        <div className="space-y-4">
-          {activities.map((activity, index) => (
-            <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
-              <div className="flex items-center gap-3">
-                <div className={`h-2 w-2 rounded-full ${
-                  activity.type === 'success' ? 'bg-green-500' : 
-                  activity.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-                }`} />
-                <p className="text-sm text-foreground">{activity.title}</p>
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={16}>
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>{d.recentActivity}</h2>
+          <div className="space-y-1">
+            {activities.map((activity, index) => (
+              <div key={index} className="flex items-center justify-between py-3 px-3 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0 border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2.5 w-2.5 rounded-full ${
+                    activity.type === 'success' ? 'bg-green-500' : 
+                    activity.type === 'warning' ? 'bg-amber-500' : 'bg-primary'
+                  }`} />
+                  <p className="text-sm text-foreground">{activity.title}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{activity.time}</span>
               </div>
-              <span className="text-xs text-muted-foreground">{activity.time}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 };
