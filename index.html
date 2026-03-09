@@ -16,10 +16,25 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="TrainPro Academy — Formation IA pour Entreprises" />
     <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TrainPro" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

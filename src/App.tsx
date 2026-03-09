@@ -35,6 +35,7 @@ import SubscriptionGate from "./components/SubscriptionGate";
 import CompanyProfile from "./pages/CompanyProfile";
 import { CommandPalette } from "./components/command-palette/CommandPalette";
 import { OnboardingChecklist } from "./components/onboarding/OnboardingChecklist";
+import { PWAInstallBanner } from "./components/pwa/PWAInstallBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,7 @@ const App = () => (
           <BrowserRouter>
             <CommandPalette />
             <OnboardingChecklist />
+            <PWAInstallBanner />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />

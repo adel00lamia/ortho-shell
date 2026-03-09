@@ -1,0 +1,29 @@
+{
+  "name": "TrainPro Academy",
+  "short_name": "TrainPro",
+  "description": "Plateforme de gestion de la formation pour les entreprises marocaines",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "orientation": "any",
+  "categories": ["education", "business", "productivity"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
