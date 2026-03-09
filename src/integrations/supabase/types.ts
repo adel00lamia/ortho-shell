@@ -127,6 +127,66 @@ export type Database = {
         }
         Relationships: []
       }
+      discussions: {
+        Row: {
+          id: string
+          company_id: string
+          user_id: string
+          module_id: string | null
+          plan_id: string | null
+          parent_id: string | null
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          user_id: string
+          module_id?: string | null
+          plan_id?: string | null
+          parent_id?: string | null
+          content: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          user_id?: string
+          module_id?: string | null
+          plan_id?: string | null
+          parent_id?: string | null
+          content?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reactions: {
+        Row: {
+          id: string
+          discussion_id: string
+          user_id: string
+          emoji: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          discussion_id: string
+          user_id: string
+          emoji: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          discussion_id?: string
+          user_id?: string
+          emoji?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           budget: number | null

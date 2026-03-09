@@ -22,6 +22,7 @@ import { QuizEditor } from "@/components/module-studio/QuizEditor";
 import { PresentationMode } from "@/components/module-studio/PresentationMode";
 import { ScormPlayer } from "@/components/module-studio/ScormPlayer";
 import { XAPIActivityLog } from "@/components/module-studio/XAPIActivityLog";
+import { DiscussionThread } from "@/components/collaboration/DiscussionThread";
 import { exportModuleToPDF } from "@/components/module-studio/ModulePDFExport";
 import { useModuleProgress } from "@/hooks/useModuleProgress";
 import { useTrackEvent } from "@/hooks/useXAPIEvents";
@@ -411,6 +412,7 @@ export default function ModuleStudio() {
               <TabsTrigger value="details">Module Details</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="certificates">Certificates</TabsTrigger>
+              <TabsTrigger value="discussion">Discussion</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
@@ -629,6 +631,17 @@ export default function ModuleStudio() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Discussion Tab */}
+            <TabsContent value="discussion">
+              {moduleId ? (
+                <DiscussionThread moduleId={moduleId} />
+              ) : (
+                <Card className="p-8 text-center">
+                  <p className="text-sm text-muted-foreground">Save the module first to enable discussions</p>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Preview Tab */}

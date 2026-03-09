@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target, PlusCircle, ArrowLeft } from "lucide-react";
 import MarketplaceIntegration from "@/components/MarketplaceIntegration";
+import { DiscussionThread } from "@/components/collaboration/DiscussionThread";
 
 export default function TrainingPlan() {
   const { id } = useParams();
@@ -203,6 +204,7 @@ export default function TrainingPlan() {
             <TabsTrigger value="modules">Modules</TabsTrigger>
             <TabsTrigger value="marketplace">External Courses</TabsTrigger>
             <TabsTrigger value="kpis">KPIs & Progress</TabsTrigger>
+            <TabsTrigger value="discussion">Discussion</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
 
@@ -398,6 +400,10 @@ export default function TrainingPlan() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="discussion">
+            <DiscussionThread planId={id} />
           </TabsContent>
 
           <TabsContent value="details" className="space-y-6">
