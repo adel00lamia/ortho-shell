@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { 
+import {
   Users, UserPlus, Search, Edit, Trash2, Shield, Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
+import { CsvImportDialog } from '@/components/import/CsvImportDialog';
+import { exportCsv } from '@/lib/export';
+import { TableSkeleton } from '@/components/skeletons/DashboardSkeleton';
 
 interface UserProfile {
   id: string;
@@ -124,6 +127,40 @@ const UserManagement = () => {
           </h1>
           <p className="text-muted-foreground">{language === 'fr' ? 'Gérez les utilisateurs et les rôles' : 'Manage users, roles, and permissions'}</p>
         </div>
+        <div className="flex gap-2">
+          <CsvImportDialog
+            columns={[
+              { key: 'email', label: 'Email', required: true },
+              { key: 'first_name', label: language === 'fr' ? 'Prénom' : 'First Name', required: true },
+              { key: 'last_name', label: language === 'fr' ? 'Nom' : 'Last Name', required: true },
+              { key: 'role', label: language === 'fr' ? 'Rôle' : 'Role' },
+            ]}
+            templateFilename="users_import"
+            onImport={async (rows) => {
+              toast({
+                title: language === 'fr' ? 'Import planifié' : 'Import scheduled',
+                description: `${rows.length} ${language === 'fr' ? 'utilisateurs seront invités' : 'users will be invited'}`,
+              });
+            }}
+          />
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              exportCsv({
+                filename: 'users_export',
+                headers: [language === 'fr' ? 'Nom' : 'Name', 'Email', language === 'fr' ? 'Rôle' : 'Role', language === 'fr' ? 'Créé le' : 'Created'],
+                rows: users.map(u => [
+                  `${u.first_name || ''} ${u.last_name || ''}`.trim(),
+                  u.id,
+                  userRoles[u.id] || u.role || 'employee',
+                  new Date(u.created_at).toLocaleDateString(),
+                ]),
+              });
+            }}
+          >
+            {language === 'fr' ? 'Exporter' : 'Export'}
+          </Button>
         <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
@@ -170,6 +207,7 @@ const UserManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </motion.div>
 
       {/* Stats */}

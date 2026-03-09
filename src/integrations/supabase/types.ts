@@ -1401,6 +1401,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          company_id: string | null
+          type: string
+          title: string
+          body: string | null
+          link: string | null
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          company_id?: string | null
+          type: string
+          title: string
+          body?: string | null
+          link?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          company_id?: string | null
+          type?: string
+          title?: string
+          body?: string | null
+          link?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       marketplace_listings: {
         Row: {
           id: string
@@ -1559,6 +1595,9 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_hr: { Args: { _user_id: string }; Returns: boolean }
+      mark_all_notifications_read: { Args: { p_user_id: string }; Returns: undefined }
+      generate_referral_code: { Args: Record<string, never>; Returns: string }
+      get_current_user_company_id: { Args: Record<string, never>; Returns: string }
     }
     Enums: {
       app_role: "admin" | "hr_manager" | "employee" | "trainer"

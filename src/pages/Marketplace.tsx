@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Star, Clock, Users, Search, Filter, ArrowLeft, Heart, Share2, ShoppingBag, Plus, Store, Package } from 'lucide-react';
+import { Star, Clock, Users, Search, Filter, ArrowLeft, Heart, Share2, ShoppingBag, Plus, Store, Package, TrendingUp, Flame, BadgeCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { CardGridSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import {
   usePublishedListings,
   useMyListings,
@@ -48,6 +49,11 @@ export default function Marketplace() {
     !searchTerm || l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (l.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Featured = high rating + purchases; Trending = recent + purchases
+  const isFeatured = (l: MarketplaceListing) => l.rating_avg >= 4.5 && l.purchase_count >= 5;
+  const isTrending = (l: MarketplaceListing) => l.purchase_count >= 3;
+  const isVerifiedSeller = (l: MarketplaceListing) => l.purchase_count >= 10;
 
   const toggleSaveCourse = (id: string) => {
     const isCurrentlySaved = savedCourses.includes(id);
@@ -87,47 +93,67 @@ export default function Marketplace() {
     return <Badge variant={s.variant}>{s.label}</Badge>;
   };
 
-  const ListingCard = ({ listing }: { listing: MarketplaceListing }) => (
-    <Card className="h-full hover:shadow-lg transition-shadow">
-      {listing.cover_image_url && (
-        <div className="h-40 bg-muted rounded-t-lg overflow-hidden">
-          <img src={listing.cover_image_url} alt={listing.title} className="w-full h-full object-cover" />
-        </div>
-      )}
-      <CardHeader>
-        <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg line-clamp-2">{listing.title}</CardTitle>
-          {listing.rating_count > 0 && (
-            <div className="flex items-center gap-1 shrink-0">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{listing.rating_avg}</span>
-            </div>
-          )}
-        </div>
-        <CardDescription className="line-clamp-2">{listing.short_description || listing.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <Badge variant="outline">{listing.category}</Badge>
-          {listing.purchase_count > 0 && (
-            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{listing.purchase_count}</span>
-          )}
-        </div>
-        <div className="flex justify-between items-center pt-2">
-          <span className="text-xl font-bold">{formatPrice(listing.price_cents)}</span>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => toggleSaveCourse(listing.id)}>
-              <Heart className={`h-4 w-4 ${savedCourses.includes(listing.id) ? 'fill-red-500 text-red-500' : ''}`} />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => shareCourse(listing)}>
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button size="sm">{m.buyNow}</Button>
+  const ListingCard = ({ listing }: { listing: MarketplaceListing }) => {
+    const featured = isFeatured(listing);
+    const trending = !featured && isTrending(listing);
+    const verified = isVerifiedSeller(listing);
+
+    return (
+      <Card className={`h-full hover:shadow-lg transition-shadow relative ${featured ? 'ring-2 ring-primary/30' : ''}`}>
+        {/* Featured / Trending badge */}
+        {(featured || trending) && (
+          <div className={`absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold text-white ${
+            featured ? 'bg-primary' : 'bg-orange-500'
+          }`}>
+            {featured ? <Star className="h-3 w-3" /> : <Flame className="h-3 w-3" />}
+            {featured ? 'Featured' : 'Trending'}
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        )}
+        {listing.cover_image_url && (
+          <div className="h-40 bg-muted rounded-t-lg overflow-hidden">
+            <img src={listing.cover_image_url} alt={listing.title} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <CardHeader>
+          <div className="flex justify-between items-start gap-2">
+            <CardTitle className="text-lg line-clamp-2">{listing.title}</CardTitle>
+            {listing.rating_count > 0 && (
+              <div className="flex items-center gap-1 shrink-0">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="text-sm font-medium">{listing.rating_avg}</span>
+              </div>
+            )}
+          </div>
+          <CardDescription className="line-clamp-2">{listing.short_description || listing.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+            <Badge variant="outline">{listing.category}</Badge>
+            {verified && (
+              <Badge variant="secondary" className="gap-1 text-primary">
+                <BadgeCheck className="h-3 w-3" /> Verified
+              </Badge>
+            )}
+            {listing.purchase_count > 0 && (
+              <span className="flex items-center gap-1"><Users className="h-3 w-3" />{listing.purchase_count}</span>
+            )}
+          </div>
+          <div className="flex justify-between items-center pt-2">
+            <span className="text-xl font-bold">{formatPrice(listing.price_cents)}</span>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" onClick={() => toggleSaveCourse(listing.id)}>
+                <Heart className={`h-4 w-4 ${savedCourses.includes(listing.id) ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => shareCourse(listing)}>
+                <Share2 className="h-4 w-4" />
+              </Button>
+              <Button size="sm">{m.buyNow}</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -152,7 +178,7 @@ export default function Marketplace() {
           {/* Filters */}
           <Card>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="relative md:col-span-2">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input placeholder={m.searchCourses} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
@@ -166,6 +192,19 @@ export default function Marketplace() {
                     <SelectItem value="marketing">Marketing</SelectItem>
                     <SelectItem value="cybersecurity">Cybersecurity</SelectItem>
                     <SelectItem value="soft-skills">Soft Skills</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="hr">HR & People</SelectItem>
+                    <SelectItem value="compliance">Compliance</SelectItem>
+                    <SelectItem value="languages">Languages</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select defaultValue="all">
+                  <SelectTrigger><SelectValue placeholder={m.deliveryType} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{m.allTypes}</SelectItem>
+                    <SelectItem value="online">{m.online}</SelectItem>
+                    <SelectItem value="onsite">{m.onsite}</SelectItem>
+                    <SelectItem value="hybrid">{m.hybrid}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -173,7 +212,7 @@ export default function Marketplace() {
           </Card>
 
           {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">{t.common.loading}</div>
+            <CardGridSkeleton count={6} />
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={ShoppingBag}

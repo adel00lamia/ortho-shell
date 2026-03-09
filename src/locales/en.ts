@@ -739,6 +739,14 @@ export const en = {
     },
   },
 
+  // Notifications
+  notifications: {
+    title: 'Notifications',
+    markAllRead: 'Mark all read',
+    empty: 'No notifications yet',
+    justNow: 'Just now',
+  },
+
   // Language
   language: {
     label: 'Language',

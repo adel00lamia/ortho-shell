@@ -13,6 +13,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
+import { exportCsv, exportPdf } from '@/lib/export';
+import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 16 },
@@ -83,9 +85,22 @@ const Analytics = () => {
     loadRealData();
   }, [user]);
 
-  const exportReport = () => {
+  const exportReport = (format: 'csv' | 'pdf' = 'csv') => {
     setExporting(true);
-    setTimeout(() => setExporting(false), 2000);
+    const headers = [a.totalLearners, a.activeCourses, a.completionRate, a.averageScore, a.certificates];
+    const rows = [[
+      realStats.totalEvaluations,
+      realStats.totalModules,
+      `${completionRate}%`,
+      realStats.avgRating ? `${realStats.avgRating}/5` : '-',
+      realStats.certificates,
+    ]];
+    if (format === 'pdf') {
+      exportPdf({ title: a.title, subtitle: a.subtitle, headers, rows });
+    } else {
+      exportCsv({ filename: `analytics_${timeRange}`, headers, rows });
+    }
+    setExporting(false);
   };
 
   const completionRate = realStats.totalModules > 0
@@ -120,17 +135,19 @@ const Analytics = () => {
               <SelectItem value="1y">{a.lastYear}</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={exportReport} disabled={exporting} className="gap-2">
+          <Button onClick={() => exportReport('csv')} disabled={exporting} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            CSV
+          </Button>
+          <Button onClick={() => exportReport('pdf')} disabled={exporting} className="gap-2">
             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {exporting ? a.exporting : a.exportReport}
+            PDF
           </Button>
         </div>
       </motion.div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <DashboardSkeleton />
       ) : (
         <>
           {/* Overview Cards */}

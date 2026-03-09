@@ -36,6 +36,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import { CommandPalette } from "./components/command-palette/CommandPalette";
 import { OnboardingChecklist } from "./components/onboarding/OnboardingChecklist";
 import { PWAInstallBanner } from "./components/pwa/PWAInstallBanner";
+import { TrialBanner } from "./components/billing/TrialBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,7 @@ const ProtectedLayout = ({ children, featureName }: { children: React.ReactNode;
     <div className="flex w-full min-h-screen">
       <HierarchicalSidebar />
       <div className="flex-1 overflow-auto flex flex-col">
+        <TrialBanner />
         <Breadcrumbs />
         <main className="flex-1">
           <FeatureErrorBoundary featureName={featureName}>

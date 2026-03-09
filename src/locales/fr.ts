@@ -727,6 +727,13 @@ export const fr: Translations = {
     },
   },
 
+  notifications: {
+    title: 'Notifications',
+    markAllRead: 'Tout marquer lu',
+    empty: 'Aucune notification',
+    justNow: "À l'instant",
+  },
+
   language: {
     label: 'Langue',
     en: 'English',

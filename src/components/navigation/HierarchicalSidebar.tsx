@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 interface NavItem {
   path: string;
@@ -180,6 +181,7 @@ export const HierarchicalSidebar = () => {
               <span className="text-xs text-sidebar-foreground/60 truncate">{shellLabel}</span>
             </div>
           </div>
+          <NotificationCenter />
         </div>
       </div>
 
