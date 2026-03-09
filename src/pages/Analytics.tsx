@@ -174,7 +174,7 @@ const Analytics = () => {
                     {realStats.totalModules === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                        <p className="text-sm">{t.common.noData || 'No data yet'}</p>
+                        <p className="text-sm">{'No data yet'}</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
