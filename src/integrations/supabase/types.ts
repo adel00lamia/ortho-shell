@@ -190,6 +190,45 @@ export type Database = {
           },
         ]
       }
+      employee_skills: {
+        Row: {
+          id: string
+          company_id: string
+          employee_name: string
+          employee_email: string | null
+          skill_id: string
+          current_level: number
+          target_level: number
+          assessed_at: string
+          assessed_by: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          employee_name: string
+          employee_email?: string | null
+          skill_id: string
+          current_level?: number
+          target_level?: number
+          assessed_at?: string
+          assessed_by?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          employee_name?: string
+          employee_email?: string | null
+          skill_id?: string
+          current_level?: number
+          target_level?: number
+          assessed_at?: string
+          assessed_by?: string | null
+          notes?: string | null
+        }
+        Relationships: []
+      }
       job_descriptions: {
         Row: {
           company_id: string
@@ -814,6 +853,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      skill_categories: {
+        Row: {
+          id: string
+          company_id: string
+          name_fr: string
+          name_en: string
+          ofppt_sector_code: string | null
+          icon: string
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name_fr: string
+          name_en: string
+          ofppt_sector_code?: string | null
+          icon?: string
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name_fr?: string
+          name_en?: string
+          ofppt_sector_code?: string | null
+          icon?: string
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          id: string
+          company_id: string
+          category_id: string
+          name_fr: string
+          name_en: string
+          description: string | null
+          max_level: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          category_id: string
+          name_fr: string
+          name_en: string
+          description?: string | null
+          max_level?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          category_id?: string
+          name_fr?: string
+          name_en?: string
+          description?: string | null
+          max_level?: number
+          created_at?: string
+        }
+        Relationships: []
       }
       skills_catalog: {
         Row: {

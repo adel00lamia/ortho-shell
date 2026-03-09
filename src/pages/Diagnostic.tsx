@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2, Building2, BarChart3, ClipboardCheck } from "lucide-react";
+import { Briefcase, Users, Target, Upload, Plus, X, FileText, Sparkles, Loader2, Building2, BarChart3, ClipboardCheck, GraduationCap } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import PerformanceEvaluationForm from "@/components/PerformanceEvaluationForm";
 import EmployeeBulkUpload from "@/components/diagnostic/EmployeeBulkUpload";
@@ -24,6 +24,9 @@ import { JDTemplateLibrary } from '@/components/assessment/JDTemplateLibrary';
 import { OrgChartView } from '@/components/assessment/OrgChartView';
 import { SkillsMatrixView } from '@/components/assessment/SkillsMatrixView';
 import { AssessmentReport } from '@/components/assessment/AssessmentReport';
+import { SkillsTaxonomyEditor } from '@/components/skills/SkillsTaxonomyEditor';
+import { SkillsHeatmap } from '@/components/skills/SkillsHeatmap';
+import { GapAnalysisPanel } from '@/components/skills/GapAnalysisPanel';
 import type { JDTemplate } from '@/data/jobDescriptionTemplates';
 
 interface Employee {
@@ -558,6 +561,7 @@ export default function Diagnostic() {
             <TabsTrigger value="orgchart" className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> Org Chart</TabsTrigger>
             <TabsTrigger value="evaluations" className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {d.performanceEvaluations}</TabsTrigger>
             <TabsTrigger value="skills" className="flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Skills Matrix</TabsTrigger>
+            <TabsTrigger value="taxonomy" className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> {d.overview === 'Overview' ? 'Skills Taxonomy' : 'Taxonomie'}</TabsTrigger>
             <TabsTrigger value="report" className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> AI Report</TabsTrigger>
             <TabsTrigger value="diagnostic" className="flex items-center gap-1"><Target className="h-3.5 w-3.5" /> {d.diagnostic}</TabsTrigger>
           </TabsList>
@@ -866,6 +870,26 @@ export default function Diagnostic() {
               evaluations={performanceEvaluations}
               jobDescriptions={jobDescriptions}
             />
+          </TabsContent>
+
+          {/* Skills Taxonomy Tab */}
+          <TabsContent value="taxonomy" className="space-y-6">
+            <Tabs defaultValue="editor" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="editor">{d.overview === 'Overview' ? 'Taxonomy Editor' : 'Editeur'}</TabsTrigger>
+                <TabsTrigger value="heatmap">{d.overview === 'Overview' ? 'Skills Heatmap' : 'Carte thermique'}</TabsTrigger>
+                <TabsTrigger value="gaps">{d.overview === 'Overview' ? 'Gap Analysis' : 'Analyse des gaps'}</TabsTrigger>
+              </TabsList>
+              <TabsContent value="editor">
+                <SkillsTaxonomyEditor />
+              </TabsContent>
+              <TabsContent value="heatmap">
+                <SkillsHeatmap />
+              </TabsContent>
+              <TabsContent value="gaps">
+                <GapAnalysisPanel />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* AI Assessment Report Tab */}
