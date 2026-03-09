@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Resume extract error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal error" }),
+      JSON.stringify({ error: "An error occurred during resume extraction. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

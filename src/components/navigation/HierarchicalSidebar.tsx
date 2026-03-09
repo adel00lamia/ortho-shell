@@ -141,6 +141,17 @@ export const HierarchicalSidebar = () => {
         </div>
       </div>
 
+      {/* Search hint */}
+      <div className="px-6 py-2">
+        <button
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+          className="flex items-center gap-2 w-full px-3 py-2 text-xs text-sidebar-foreground/50 bg-sidebar-accent/30 rounded-lg hover:bg-sidebar-accent/50 transition-colors"
+        >
+          <span>Search...</span>
+          <kbd className="ml-auto text-[10px] bg-sidebar-accent px-1.5 py-0.5 rounded font-mono">Ctrl+K</kbd>
+        </button>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {/* Dashboard */}

@@ -192,7 +192,7 @@ Provide a comprehensive skills analysis.`;
   } catch (error) {
     console.error("Skills analysis error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal error" }),
+      JSON.stringify({ error: "An error occurred during skills analysis. Please try again." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

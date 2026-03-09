@@ -1,11 +1,13 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { FeatureErrorBoundary } from "@/components/error-boundaries/FeatureErrorBoundary";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -30,15 +32,28 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import SubscriptionGate from "./components/SubscriptionGate";
 import CompanyProfile from "./pages/CompanyProfile";
+import { CommandPalette } from "./components/command-palette/CommandPalette";
 
-const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const ProtectedLayout = ({ children, featureName }: { children: React.ReactNode; featureName?: string }) => (
   <ProtectedRoute>
     <div className="flex w-full min-h-screen">
       <HierarchicalSidebar />
       <div className="flex-1 overflow-auto flex flex-col">
         <Breadcrumbs />
         <main className="flex-1">
-          {children}
+          <FeatureErrorBoundary featureName={featureName}>
+            {children}
+          </FeatureErrorBoundary>
         </main>
       </div>
     </div>
@@ -46,13 +61,14 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => (
-  <LanguageProvider>
-    <AuthProvider>
-      
+  <QueryClientProvider client={queryClient}>
+    <LanguageProvider>
+      <AuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CommandPalette />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
@@ -61,40 +77,40 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               
               {/* Protected routes with sidebar */}
-              <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
-              
+              <Route path="/dashboard" element={<ProtectedLayout featureName="Dashboard"><Dashboard /></ProtectedLayout>} />
+
               {/* Company Profile - pre-diagnostic */}
-              <Route path="/company-profile" element={<ProtectedLayout><CompanyProfile /></ProtectedLayout>} />
-              
+              <Route path="/company-profile" element={<ProtectedLayout featureName="Company Profile"><CompanyProfile /></ProtectedLayout>} />
+
               {/* Workflow Routes - Assess */}
-              <Route path="/workflow/assess/diagnostic" element={<ProtectedLayout><Diagnostic /></ProtectedLayout>} />
-              <Route path="/workflow/assess/performance" element={<ProtectedLayout><PerformanceEvaluation /></ProtectedLayout>} />
-              <Route path="/workflow/assess/benchmark" element={<ProtectedLayout><Benchmark /></ProtectedLayout>} />
+              <Route path="/workflow/assess/diagnostic" element={<ProtectedLayout featureName="Diagnostic"><Diagnostic /></ProtectedLayout>} />
+              <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
+              <Route path="/workflow/assess/benchmark" element={<ProtectedLayout featureName="Benchmark"><Benchmark /></ProtectedLayout>} />
               
               {/* Workflow Routes - Plan */}
-              <Route path="/workflow/plan/builder" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
-              <Route path="/workflow/plan/plans" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
-              <Route path="/workflow/plan/plans/:id" element={<ProtectedLayout><TrainingPlan /></ProtectedLayout>} />
-              
+              <Route path="/workflow/plan/builder" element={<ProtectedLayout featureName="AI Plan Builder"><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/plan/plans" element={<ProtectedLayout featureName="Training Plans"><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/plan/plans/:id" element={<ProtectedLayout featureName="Training Plan"><TrainingPlan /></ProtectedLayout>} />
+
               {/* Workflow Routes - Execute */}
-              <Route path="/workflow/execute/modules" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
-              <Route path="/workflow/execute/modules/:planId" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
-              <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ProtectedLayout><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
-              <Route path="/workflow/execute/marketplace" element={<ProtectedLayout><Marketplace /></ProtectedLayout>} />
-              
+              <Route path="/workflow/execute/modules" element={<ProtectedLayout featureName="Module Studio"><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules/:planId" element={<ProtectedLayout featureName="Module Studio"><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/execute/modules/:planId/:moduleId" element={<ProtectedLayout featureName="Module Studio"><SubscriptionGate requiredPlan="starter"><ModuleStudio /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/execute/marketplace" element={<ProtectedLayout featureName="Marketplace"><Marketplace /></ProtectedLayout>} />
+
               {/* Workflow Routes - Track */}
-              <Route path="/workflow/track/analytics" element={<ProtectedLayout><SubscriptionGate requiredPlan="professional"><Analytics /></SubscriptionGate></ProtectedLayout>} />
+              <Route path="/workflow/track/analytics" element={<ProtectedLayout featureName="Analytics"><SubscriptionGate requiredPlan="professional"><Analytics /></SubscriptionGate></ProtectedLayout>} />
               <Route path="/workflow/track/progress" element={<Navigate to="/workflow/track/analytics" replace />} />
-              <Route path="/workflow/track/certificates" element={<ProtectedLayout><CertificateGenerator /></ProtectedLayout>} />
-              <Route path="/workflow/track/reimbursement" element={<ProtectedLayout><OFPPTReimbursement /></ProtectedLayout>} />
-              
+              <Route path="/workflow/track/certificates" element={<ProtectedLayout featureName="Certificates"><CertificateGenerator /></ProtectedLayout>} />
+              <Route path="/workflow/track/reimbursement" element={<ProtectedLayout featureName="OFPPT Reimbursement"><OFPPTReimbursement /></ProtectedLayout>} />
+
               {/* Management Routes */}
-              <Route path="/manage/users" element={<ProtectedLayout><UserManagement /></ProtectedLayout>} />
-              <Route path="/manage/team" element={<ProtectedLayout><TeamCollaboration /></ProtectedLayout>} />
-              <Route path="/manage/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
-              
+              <Route path="/manage/users" element={<ProtectedLayout featureName="User Management"><UserManagement /></ProtectedLayout>} />
+              <Route path="/manage/team" element={<ProtectedLayout featureName="Team"><TeamCollaboration /></ProtectedLayout>} />
+              <Route path="/manage/settings" element={<ProtectedLayout featureName="Settings"><Settings /></ProtectedLayout>} />
+
               {/* Billing */}
-              <Route path="/billing" element={<ProtectedLayout><Billing /></ProtectedLayout>} />
+              <Route path="/billing" element={<ProtectedLayout featureName="Billing"><Billing /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
               <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />
@@ -118,10 +134,10 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-          </TooltipProvider>
-        
+        </TooltipProvider>
       </AuthProvider>
     </LanguageProvider>
+  </QueryClientProvider>
 );
 
 export default App;

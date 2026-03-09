@@ -9,7 +9,7 @@ export const useUserRole = () => {
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
 
-  const DISCOVERY_MODE = true;
+  const DISCOVERY_MODE = import.meta.env.DEV && import.meta.env.VITE_DISCOVERY_MODE === 'true';
 
   useEffect(() => {
     if (!user) {
