@@ -19,6 +19,7 @@ import {
   Trash2, Eye, Download, FolderOpen, Send, XCircle, DollarSign, Calculator, BarChart3
 } from 'lucide-react';
 import ReimbursementDashboard from '@/components/ofppt/ReimbursementDashboard';
+import { AnnualReportGenerator } from '@/components/ofppt/AnnualReportGenerator';
 
 const DOCUMENT_TYPES = [
   { value: 'modele_1_recap_actions', label: 'Modèle 1 - Récapitulatif des actions' },
@@ -399,11 +400,16 @@ export default function OFPPTReimbursement() {
         <TabsList>
           <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />{(r as any).dashboardTab || 'Dashboard'}</TabsTrigger>
           <TabsTrigger value="dossiers">{r.allDossiers}</TabsTrigger>
+          <TabsTrigger value="annual-report"><FileText className="h-4 w-4 mr-1.5" />{language === 'fr' ? 'Bilan Annuel' : 'Annual Report'}</TabsTrigger>
           {selectedDossier && <TabsTrigger value="details">{r.dossierDetails}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="dashboard">
           <ReimbursementDashboard dossiers={dossiers} />
+        </TabsContent>
+
+        <TabsContent value="annual-report">
+          <AnnualReportGenerator />
         </TabsContent>
 
         {/* Dossier List */}
