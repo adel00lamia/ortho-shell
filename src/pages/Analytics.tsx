@@ -258,7 +258,7 @@ const Analytics = () => {
                   {realStats.totalModules === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Target className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">{t.common.noData || 'No skills data yet. Create training modules to track progress.'}</p>
+                      <p className="text-sm">{'No skills data yet. Create training modules to track progress.'}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
