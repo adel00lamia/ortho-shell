@@ -20,8 +20,11 @@ import { ContextualActions } from "@/components/ContextualActions";
 import { SlideEditor } from "@/components/module-studio/SlideEditor";
 import { QuizEditor } from "@/components/module-studio/QuizEditor";
 import { PresentationMode } from "@/components/module-studio/PresentationMode";
+import { ScormPlayer } from "@/components/module-studio/ScormPlayer";
+import { XAPIActivityLog } from "@/components/module-studio/XAPIActivityLog";
 import { exportModuleToPDF } from "@/components/module-studio/ModulePDFExport";
 import { useModuleProgress } from "@/hooks/useModuleProgress";
+import { useTrackEvent } from "@/hooks/useXAPIEvents";
 import { Progress } from "@/components/ui/progress";
 
 interface ModuleContent {
@@ -54,8 +57,14 @@ export default function ModuleStudio() {
     content_type: "ai_generated",
     skills_covered: [] as string[],
     target_audience: [] as string[],
-    content: {} as ModuleContent
+    content: {} as ModuleContent,
+    scorm_url: "",
+    scorm_version: "" as string,
+    scorm_entry_point: "index.html",
   });
+
+  const [showScormPlayer, setShowScormPlayer] = useState(false);
+  const trackEvent = useTrackEvent();
 
   useEffect(() => {
     const init = async () => {
@@ -103,7 +112,10 @@ export default function ModuleStudio() {
         content_type: data.content_type || "ai_generated",
         skills_covered: data.skills_covered || [],
         target_audience: data.target_audience || [],
-        content: (data.content as ModuleContent) || {}
+        content: (data.content as ModuleContent) || {},
+        scorm_url: (data as any).scorm_url || "",
+        scorm_version: (data as any).scorm_version || "",
+        scorm_entry_point: (data as any).scorm_entry_point || "index.html",
       });
     } catch (error: any) {
       console.error('Error fetching module:', error);
@@ -176,7 +188,7 @@ export default function ModuleStudio() {
     }
 
     try {
-      const moduleData = {
+      const moduleData: Record<string, any> = {
         title: formData.title,
         description: formData.description,
         duration_hours: formData.duration_hours,
@@ -185,7 +197,10 @@ export default function ModuleStudio() {
         target_audience: formData.target_audience,
         content: formData.content as any,
         training_plan_id: targetPlanId,
-        ai_generated: formData.content_type === 'ai_generated'
+        ai_generated: formData.content_type === 'ai_generated',
+        scorm_url: formData.scorm_url || null,
+        scorm_version: formData.scorm_version || null,
+        scorm_entry_point: formData.scorm_entry_point || 'index.html',
       };
 
       if (moduleId) {
@@ -256,9 +271,37 @@ export default function ModuleStudio() {
         <PresentationMode
           slides={slides}
           moduleTitle={formData.title || "Module Preview"}
-          onClose={() => setShowPresentation(false)}
-          onSlideViewed={moduleId ? markSlideCompleted : undefined}
+          onClose={() => {
+            setShowPresentation(false);
+            if (moduleId) {
+              trackEvent.mutate({ module_id: moduleId, verb: 'suspended', object_type: 'module' });
+            }
+          }}
+          onSlideViewed={(idx) => {
+            if (moduleId) {
+              markSlideCompleted(idx);
+              trackEvent.mutate({
+                module_id: moduleId,
+                verb: 'progressed',
+                object_type: 'slide',
+                object_id: String(idx),
+              });
+            }
+          }}
           completedSlides={learnerProgress.completedSlides}
+        />
+      )}
+
+      {showScormPlayer && formData.scorm_url && moduleId && (
+        <ScormPlayer
+          moduleId={moduleId}
+          moduleTitle={formData.title || 'SCORM Module'}
+          scormUrl={formData.scorm_url}
+          entryPoint={formData.scorm_entry_point}
+          onClose={() => setShowScormPlayer(false)}
+          onComplete={(score, passed) => {
+            toast.success(passed ? 'Module completed!' : 'Module finished');
+          }}
         />
       )}
 
@@ -403,9 +446,48 @@ export default function ModuleStudio() {
                         <SelectItem value="ai_generated">AI Generated</SelectItem>
                         <SelectItem value="manual">Manual Creation</SelectItem>
                         <SelectItem value="imported">Imported Content</SelectItem>
+                        <SelectItem value="scorm">SCORM Package</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* SCORM configuration fields */}
+                  {formData.content_type === 'scorm' && (
+                    <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                        <MonitorPlay className="h-4 w-4" /> SCORM Package Configuration
+                      </h4>
+                      <div className="space-y-2">
+                        <Label>SCORM Content URL *</Label>
+                        <Input
+                          value={formData.scorm_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, scorm_url: e.target.value }))}
+                          placeholder="https://your-storage.com/scorm-packages/course1/"
+                        />
+                        <p className="text-xs text-muted-foreground">URL to the extracted SCORM package folder (must contain imsmanifest.xml)</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label>SCORM Version</Label>
+                          <Select value={formData.scorm_version} onValueChange={(v) => setFormData(prev => ({ ...prev, scorm_version: v }))}>
+                            <SelectTrigger><SelectValue placeholder="Select version" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1.2">SCORM 1.2</SelectItem>
+                              <SelectItem value="2004">SCORM 2004</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Entry Point</Label>
+                          <Input
+                            value={formData.scorm_entry_point}
+                            onChange={(e) => setFormData(prev => ({ ...prev, scorm_entry_point: e.target.value }))}
+                            placeholder="index.html"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <Label>Skills Covered</Label>
@@ -617,6 +699,18 @@ export default function ModuleStudio() {
                     </div>
                   </div>
 
+                  {/* SCORM Launch */}
+                  {formData.content_type === 'scorm' && formData.scorm_url && (
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg border text-center space-y-3">
+                      <h4 className="font-medium">SCORM Content</h4>
+                      <p className="text-sm text-muted-foreground">This module uses an external SCORM {formData.scorm_version || ''} package</p>
+                      <Button onClick={() => setShowScormPlayer(true)} size="lg">
+                        <MonitorPlay className="w-5 h-5 mr-2" />
+                        Launch SCORM Player
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Mini slide preview strip with completion indicators */}
                   {slides.length > 0 && (
                     <div className="mt-6">
@@ -643,6 +737,11 @@ export default function ModuleStudio() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* xAPI Activity Log */}
+              {moduleId && (
+                <XAPIActivityLog moduleId={moduleId} />
+              )}
             </TabsContent>
           </Tabs>
 

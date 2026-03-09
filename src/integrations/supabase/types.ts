@@ -1125,6 +1125,9 @@ export type Database = {
           description: string | null
           duration_hours: number | null
           id: string
+          scorm_url: string | null
+          scorm_version: string | null
+          scorm_entry_point: string | null
           skills_covered: string[] | null
           target_audience: string[] | null
           title: string
@@ -1141,6 +1144,9 @@ export type Database = {
           description?: string | null
           duration_hours?: number | null
           id?: string
+          scorm_url?: string | null
+          scorm_version?: string | null
+          scorm_entry_point?: string | null
           skills_covered?: string[] | null
           target_audience?: string[] | null
           title: string
@@ -1157,6 +1163,9 @@ export type Database = {
           description?: string | null
           duration_hours?: number | null
           id?: string
+          scorm_url?: string | null
+          scorm_version?: string | null
+          scorm_entry_point?: string | null
           skills_covered?: string[] | null
           target_audience?: string[] | null
           title?: string
@@ -1253,6 +1262,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      xapi_events: {
+        Row: {
+          id: string
+          company_id: string
+          user_id: string
+          module_id: string | null
+          verb: string
+          object_type: string
+          object_id: string | null
+          result_score: number | null
+          result_success: boolean | null
+          result_duration: string | null
+          result_response: string | null
+          context_data: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          user_id: string
+          module_id?: string | null
+          verb: string
+          object_type: string
+          object_id?: string | null
+          result_score?: number | null
+          result_success?: boolean | null
+          result_duration?: string | null
+          result_response?: string | null
+          context_data?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          user_id?: string
+          module_id?: string | null
+          verb?: string
+          object_type?: string
+          object_id?: string | null
+          result_score?: number | null
+          result_success?: boolean | null
+          result_duration?: string | null
+          result_response?: string | null
+          context_data?: Json
+          created_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
