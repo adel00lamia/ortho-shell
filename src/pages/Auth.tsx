@@ -9,12 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('employee');
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -49,7 +51,7 @@ const Auth = () => {
     const password = formData.get('password') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
-    const { error } = await signUp(email, password, firstName, lastName);
+    const { error } = await signUp(email, password, firstName, lastName, selectedRole);
     if (error) {
       toast({
         variant: "destructive",
@@ -196,6 +198,20 @@ const Auth = () => {
                       <Label htmlFor="signup-password">{language === 'fr' ? 'Mot de passe' : 'Password'}</Label>
                       <Input id="signup-password" name="password" type="password" required minLength={6} />
                       <p className="text-xs text-muted-foreground">{language === 'fr' ? '6 caractères minimum' : 'At least 6 characters'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{language === 'fr' ? 'Rôle' : 'Role'}</Label>
+                      <Select value={selectedRole} onValueChange={setSelectedRole}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">{language === 'fr' ? 'Administrateur' : 'Administrator'}</SelectItem>
+                          <SelectItem value="hr_manager">{language === 'fr' ? 'Responsable RH' : 'HR Manager'}</SelectItem>
+                          <SelectItem value="trainer">{language === 'fr' ? 'Formateur' : 'Trainer'}</SelectItem>
+                          <SelectItem value="employee">{language === 'fr' ? 'Employé' : 'Employee'}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Button type="submit" className="w-full gap-2" disabled={isLoading}>
                       {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}

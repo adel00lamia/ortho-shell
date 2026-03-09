@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, Calendar, CreditCard, Users, User, Save, Building2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertCircle, Calendar, CreditCard, Users, User, Save, Building2, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,10 +53,19 @@ const Settings = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [billingLoading, setBillingLoading] = useState(true);
 
+  // Team roles state
+  const [teamMembers, setTeamMembers] = useState<{ user_id: string; email: string; role: string; first_name: string; last_name: string }[]>([]);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+
   useEffect(() => {
     loadProfile();
     loadSubscription();
   }, [user]);
+
+  useEffect(() => {
+    if (profile.company_id) loadTeamMembers();
+  }, [profile.company_id]);
 
   const loadProfile = async () => {
     if (!user) {
@@ -119,6 +129,75 @@ const Settings = () => {
       console.error('Error fetching subscription:', error);
     } finally {
       setBillingLoading(false);
+    }
+  };
+
+  const loadTeamMembers = async () => {
+    if (!user || !profile.company_id) {
+      setTeamLoading(false);
+      return;
+    }
+    try {
+      // Get all profiles in the same company
+      const { data: profiles, error: profErr } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('company_id', profile.company_id);
+      if (profErr) throw profErr;
+
+      // Get all roles
+      const userIds = (profiles || []).map(p => p.id);
+      if (userIds.length === 0) { setTeamLoading(false); return; }
+
+      const { data: roles, error: roleErr } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+      if (roleErr) throw roleErr;
+
+      // Get emails from auth (via profiles join isn't possible, use the user's own email for self, otherwise show name)
+      const roleMap = new Map((roles || []).map(r => [r.user_id, r.role]));
+
+      const members = (profiles || []).map(p => ({
+        user_id: p.id,
+        email: p.id === user.id ? (user.email || '') : '',
+        role: roleMap.get(p.id) || 'employee',
+        first_name: p.first_name || '',
+        last_name: p.last_name || '',
+      }));
+
+      setTeamMembers(members);
+    } catch (err) {
+      console.error('Error loading team:', err);
+    } finally {
+      setTeamLoading(false);
+    }
+  };
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    setUpdatingRole(userId);
+    try {
+      // Upsert the role
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({ user_id: userId, role: newRole }, { onConflict: 'user_id,role' });
+
+      if (error) {
+        // If upsert fails (different role exists), delete old and insert new
+        await supabase.from('user_roles').delete().eq('user_id', userId);
+        const { error: insertErr } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: newRole });
+        if (insertErr) throw insertErr;
+      }
+
+      setTeamMembers(prev => prev.map(m => m.user_id === userId ? { ...m, role: newRole } : m));
+      toast({ title: isFr ? 'Rôle mis à jour' : 'Role updated' });
+    } catch (err) {
+      console.error('Error updating role:', err);
+      toast({ variant: 'destructive', title: isFr ? 'Erreur' : 'Error updating role' });
+    } finally {
+      setUpdatingRole(null);
     }
   };
 
@@ -208,6 +287,10 @@ const Settings = () => {
             <TabsTrigger value="billing" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               {isFr ? 'Facturation' : 'Billing'}
+            </TabsTrigger>
+            <TabsTrigger value="team" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              {isFr ? 'Équipe & Rôles' : 'Team & Roles'}
             </TabsTrigger>
           </TabsList>
 
@@ -398,6 +481,61 @@ const Settings = () => {
                 </Card>
               </div>
             )}
+          </TabsContent>
+
+          {/* Team & Roles Tab */}
+          <TabsContent value="team">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  {isFr ? 'Gestion des rôles' : 'Role Management'}
+                </CardTitle>
+                <CardDescription>
+                  {isFr ? 'Modifiez les rôles des membres de votre équipe' : 'Change your team members\' roles'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {teamLoading ? (
+                  <p className="text-sm text-muted-foreground">{isFr ? 'Chargement...' : 'Loading...'}</p>
+                ) : teamMembers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{isFr ? 'Aucun membre trouvé' : 'No team members found'}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {teamMembers.map(member => (
+                      <div key={member.user_id} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {member.first_name || member.last_name
+                              ? `${member.first_name} ${member.last_name}`.trim()
+                              : (member.email || member.user_id.slice(0, 8))}
+                          </p>
+                          {member.email && <p className="text-xs text-muted-foreground">{member.email}</p>}
+                          {member.user_id === user?.id && (
+                            <Badge variant="outline" className="text-xs mt-1">{isFr ? 'Vous' : 'You'}</Badge>
+                          )}
+                        </div>
+                        <Select
+                          value={member.role}
+                          onValueChange={(val) => handleUpdateRole(member.user_id, val)}
+                          disabled={updatingRole === member.user_id}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">{isFr ? 'Administrateur' : 'Administrator'}</SelectItem>
+                            <SelectItem value="hr_manager">{isFr ? 'Responsable RH' : 'HR Manager'}</SelectItem>
+                            <SelectItem value="trainer">{isFr ? 'Formateur' : 'Trainer'}</SelectItem>
+                            <SelectItem value="employee">{isFr ? 'Employé' : 'Employee'}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
