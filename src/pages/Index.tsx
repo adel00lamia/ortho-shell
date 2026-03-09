@@ -146,7 +146,6 @@ const Index = () => {
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {language === 'fr' ? 'Tarifs' : 'Pricing'}
               </a>
-              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {language === 'fr' ? 'Tarifs' : 'Pricing'}
               </a>
               <div className="flex gap-1 bg-muted rounded-lg p-0.5">
