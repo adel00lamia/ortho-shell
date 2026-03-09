@@ -27,10 +27,8 @@ interface Step {
   id: string;
   label: string;
   labelFr: string;
-  labelAr: string;
   description: string;
   descriptionFr: string;
-  descriptionAr: string;
   icon: React.ElementType;
   path: string;
   roles?: string[];
@@ -53,10 +51,8 @@ export const OnboardingChecklist = () => {
       id: 'company',
       label: 'Set up company profile',
       labelFr: 'Configurer le profil entreprise',
-      labelAr: 'إعداد ملف الشركة',
       description: 'Add your company details, CNSS, and industry',
-      descriptionFr: 'Ajoutez les details de votre entreprise, CNSS, et secteur',
-      descriptionAr: 'أضف تفاصيل شركتك، CNSS، والقطاع',
+      descriptionFr: 'Ajoutez les détails de votre entreprise, CNSS, et secteur',
       icon: Building2,
       path: '/company-profile',
       roles: ['admin', 'hr_manager'],
@@ -70,10 +66,8 @@ export const OnboardingChecklist = () => {
       id: 'diagnostic',
       label: 'Run first diagnostic',
       labelFr: 'Lancer le premier diagnostic',
-      labelAr: 'تشغيل أول تشخيص',
       description: 'Create job descriptions and evaluate skills',
-      descriptionFr: 'Creez des fiches de poste et evaluez les competences',
-      descriptionAr: 'إنشاء الأوصاف الوظيفية وتقييم المهارات',
+      descriptionFr: 'Créez des fiches de poste et évaluez les compétences',
       icon: ClipboardCheck,
       path: '/workflow/assess/diagnostic',
       roles: ['admin', 'hr_manager'],
@@ -86,11 +80,9 @@ export const OnboardingChecklist = () => {
     {
       id: 'plan',
       label: 'Generate a training plan',
-      labelFr: 'Generer un plan de formation',
-      labelAr: 'إنشاء خطة تدريب',
+      labelFr: 'Générer un plan de formation',
       description: 'Use AI to build your annual training plan',
-      descriptionFr: 'Utilisez l\'IA pour creer votre plan de formation annuel',
-      descriptionAr: 'استخدم الذكاء الاصطناعي لبناء خطة التدريب السنوية',
+      descriptionFr: 'Utilisez l\'IA pour créer votre plan de formation annuel',
       icon: Lightbulb,
       path: '/workflow/plan/builder',
       roles: ['admin', 'hr_manager'],
@@ -104,10 +96,8 @@ export const OnboardingChecklist = () => {
       id: 'team',
       label: 'Invite team members',
       labelFr: 'Inviter des membres',
-      labelAr: 'دعوة أعضاء الفريق',
       description: 'Add HR managers and trainers to your team',
-      descriptionFr: 'Ajoutez des responsables RH et formateurs a votre equipe',
-      descriptionAr: 'أضف مديري الموارد البشرية والمدربين إلى فريقك',
+      descriptionFr: 'Ajoutez des responsables RH et formateurs à votre équipe',
       icon: Users,
       path: '/manage/users',
       roles: ['admin', 'hr_manager'],
@@ -121,10 +111,8 @@ export const OnboardingChecklist = () => {
       id: 'first_module',
       label: 'Create your first module',
       labelFr: 'Créer votre premier module',
-      labelAr: 'إنشاء أول وحدة تعليمية',
       description: 'Build training content for your team',
       descriptionFr: 'Créez du contenu de formation pour votre équipe',
-      descriptionAr: 'أنشئ محتوى تدريبي لفريقك',
       icon: BookOpen,
       path: '/workflow/execute/modules',
       roles: ['trainer'],
@@ -138,10 +126,8 @@ export const OnboardingChecklist = () => {
       id: 'explore_courses',
       label: 'Explore available courses',
       labelFr: 'Explorer les cours disponibles',
-      labelAr: 'استكشاف الدورات المتاحة',
       description: 'Browse and start learning',
       descriptionFr: 'Parcourez et commencez à apprendre',
-      descriptionAr: 'تصفح وابدأ التعلم',
       icon: ShoppingBag,
       path: '/workflow/execute/marketplace',
       roles: ['employee'],
@@ -151,10 +137,8 @@ export const OnboardingChecklist = () => {
       id: 'billing',
       label: 'Choose a plan',
       labelFr: 'Choisir un abonnement',
-      labelAr: 'اختيار خطة اشتراك',
       description: 'Start your 14-day free trial',
       descriptionFr: 'Commencez votre essai gratuit de 14 jours',
-      descriptionAr: 'ابدأ فترة التجربة المجانية لمدة 14 يومًا',
       icon: CreditCard,
       path: '/pricing',
       roles: ['admin', 'hr_manager'],
@@ -208,24 +192,21 @@ export const OnboardingChecklist = () => {
   if (checking || !user) return null;
 
   const percent = Math.round((completedSteps.length / steps.length) * 100);
-  const isAr = language === 'ar';
   const fr = language === 'fr';
 
-  const getStepLabel = (step: Step) => isAr ? step.labelAr : fr ? step.labelFr : step.label;
-  const getStepDesc = (step: Step) => isAr ? step.descriptionAr : fr ? step.descriptionFr : step.description;
+  const getStepLabel = (step: Step) => fr ? step.labelFr : step.label;
+  const getStepDesc = (step: Step) => fr ? step.descriptionFr : step.description;
 
   const handleDismiss = () => {
     localStorage.setItem(`onboarding_dismissed_${user.id}`, 'true');
     setDismissed(true);
   };
 
-  const welcomeTitle = isAr ? 'مرحبًا بك في TrainPro Academy!' : fr ? 'Bienvenue sur TrainPro Academy !' : 'Welcome to TrainPro Academy!';
-  const welcomeDesc = isAr
-    ? 'منصتك الذكية لإدارة التدريب. اتبع الخطوات للبدء.'
-    : fr
+  const welcomeTitle = fr ? 'Bienvenue sur TrainPro Academy !' : 'Welcome to TrainPro Academy!';
+  const welcomeDesc = fr
     ? 'Votre plateforme intelligente de gestion de formation. Suivez les étapes pour commencer.'
     : 'Your intelligent training management platform. Follow the steps to get started.';
-  const welcomeBtn = isAr ? 'هيا نبدأ' : fr ? 'C\'est parti' : 'Let\'s go';
+  const welcomeBtn = fr ? 'C\'est parti' : 'Let\'s go';
 
   // Welcome modal
   if (showWelcome) {
@@ -250,13 +231,13 @@ export const OnboardingChecklist = () => {
   if (dismissed) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 w-80">
+    <div className="fixed bottom-6 right-6 z-50 w-80">
       <Card className="shadow-lg border-primary/20">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">
-              {isAr ? 'البدء السريع' : fr ? 'Démarrage rapide' : 'Quick Start'}
+              {fr ? 'Démarrage rapide' : 'Quick Start'}
             </span>
             <span className="text-xs text-muted-foreground">
               {completedSteps.length}/{steps.length}

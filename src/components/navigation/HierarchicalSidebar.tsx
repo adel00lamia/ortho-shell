@@ -28,11 +28,11 @@ interface NavSection {
 }
 
 // Role shell configurations
-const SHELL_CONFIG: Record<string, { icon: any; color: string; label: string; labelFr: string; labelAr: string }> = {
-  admin: { icon: ShieldCheck, color: 'from-red-500 to-orange-500', label: 'Admin', labelFr: 'Admin', labelAr: 'مدير' },
-  hr_manager: { icon: Target, color: 'from-blue-500 to-cyan-500', label: 'HR Manager', labelFr: 'Resp. RH', labelAr: 'مسؤول الموارد البشرية' },
-  trainer: { icon: GraduationCap, color: 'from-purple-500 to-pink-500', label: 'Trainer', labelFr: 'Formateur', labelAr: 'مدرب' },
-  employee: { icon: BookOpen, color: 'from-green-500 to-emerald-500', label: 'Learner', labelFr: 'Apprenant', labelAr: 'متعلم' },
+const SHELL_CONFIG: Record<string, { icon: any; color: string; label: string; labelFr: string }> = {
+  admin: { icon: ShieldCheck, color: 'from-red-500 to-orange-500', label: 'Admin', labelFr: 'Admin' },
+  hr_manager: { icon: Target, color: 'from-blue-500 to-cyan-500', label: 'HR Manager', labelFr: 'Resp. RH' },
+  trainer: { icon: GraduationCap, color: 'from-purple-500 to-pink-500', label: 'Trainer', labelFr: 'Formateur' },
+  employee: { icon: BookOpen, color: 'from-green-500 to-emerald-500', label: 'Learner', labelFr: 'Apprenant' },
 };
 
 export const HierarchicalSidebar = () => {
@@ -49,7 +49,7 @@ export const HierarchicalSidebar = () => {
 
   const shell = SHELL_CONFIG[role || 'employee'];
   const ShellIcon = shell.icon;
-  const shellLabel = language === 'ar' ? shell.labelAr : language === 'fr' ? shell.labelFr : shell.label;
+  const shellLabel = language === 'fr' ? shell.labelFr : shell.label;
 
   // Role-specific navigation structures
   const getNavSections = (): NavSection[] => {
@@ -166,7 +166,7 @@ export const HierarchicalSidebar = () => {
   const getItemLabel = (key: string) => (t.nav as any)[key] || key;
 
   return (
-    <aside className="w-64 h-screen bg-sidebar border-r rtl:border-r-0 rtl:border-l border-sidebar-border flex flex-col overflow-y-auto sticky top-0">
+    <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-y-auto sticky top-0">
       {/* Header with role shell indicator */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ export const HierarchicalSidebar = () => {
           className="flex items-center gap-2 w-full px-3 py-2 text-xs text-sidebar-foreground/50 bg-sidebar-accent/30 rounded-lg hover:bg-sidebar-accent/50 transition-colors"
         >
           <span>{t.common.search}...</span>
-          <kbd className="ml-auto rtl:mr-auto rtl:ml-0 text-[10px] bg-sidebar-accent px-1.5 py-0.5 rounded font-mono">Ctrl+K</kbd>
+          <kbd className="ml-auto text-[10px] bg-sidebar-accent px-1.5 py-0.5 rounded font-mono">Ctrl+K</kbd>
         </button>
       </div>
 
@@ -231,7 +231,7 @@ export const HierarchicalSidebar = () => {
                     }`}
                   />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-0.5 pl-3 rtl:pl-0 rtl:pr-3 mt-1">
+                <CollapsibleContent className="space-y-0.5 pl-3 mt-1">
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -295,7 +295,7 @@ export const HierarchicalSidebar = () => {
         <div className="flex items-center gap-2 px-3 py-2">
           <Languages className="h-4 w-4 text-sidebar-foreground/60" />
           <div className="flex gap-1">
-            {(['fr', 'en', 'ar'] as const).map((lang) => (
+            {(['fr', 'en'] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
@@ -324,7 +324,7 @@ export const HierarchicalSidebar = () => {
           className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50"
           onClick={signOut}
         >
-          <LogOut className="h-4 w-4 mr-3 rtl:mr-0 rtl:ml-3" />
+          <LogOut className="h-4 w-4 mr-3" />
           {t.common.signOut}
         </Button>
         <p className="text-xs text-sidebar-foreground/40 text-center pt-1">{t.common.version}</p>

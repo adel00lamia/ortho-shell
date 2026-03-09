@@ -42,7 +42,7 @@ const PROFILE_FIELDS = [
 
 const Dashboard = () => {
   const { role, loading: roleLoading } = useUserRole();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { stats, loading: statsLoading } = useDashboardStats(role);
@@ -181,7 +181,7 @@ const Dashboard = () => {
         </div>
         <Button variant="outline" size="sm" onClick={() => setCustomizing(!customizing)} className="gap-2">
           <SlidersHorizontal className="h-4 w-4" />
-          {customizing ? (t.common.save) : (language === 'ar' ? 'تخصيص' : language === 'fr' ? 'Personnaliser' : 'Customize')}
+          {customizing ? (t.common.save) : (language === 'fr' ? 'Personnaliser' : 'Customize')}
         </Button>
       </motion.div>
 
@@ -189,20 +189,20 @@ const Dashboard = () => {
       {customizing && (
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold">{language === 'ar' ? 'إدارة الأقسام' : language === 'fr' ? 'Gérer les sections' : 'Manage Sections'}</h3>
+            <h3 className="text-sm font-semibold">{language === 'fr' ? 'Gérer les sections' : 'Manage Sections'}</h3>
             <Button variant="ghost" size="sm" onClick={resetLayout} className="gap-1 text-xs">
               <RotateCcw className="h-3 w-3" />
-              {language === 'ar' ? 'إعادة تعيين' : language === 'fr' ? 'Réinitialiser' : 'Reset'}
+              {language === 'fr' ? 'Réinitialiser' : 'Reset'}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {widgets.map((w, i) => {
               const labels: Record<string, Record<string, string>> = {
-                stats: { en: 'Statistics', fr: 'Statistiques', ar: 'الإحصائيات' },
-                profile: { en: 'Company Profile', fr: 'Profil entreprise', ar: 'ملف الشركة' },
-                workflow: { en: 'Workflow Steps', fr: 'Étapes du workflow', ar: 'خطوات سير العمل' },
-                actions: { en: 'Quick Actions', fr: 'Actions rapides', ar: 'إجراءات سريعة' },
-                activity: { en: 'Recent Activity', fr: 'Activité récente', ar: 'النشاط الأخير' },
+                stats: { en: 'Statistics', fr: 'Statistiques' },
+                profile: { en: 'Company Profile', fr: 'Profil entreprise' },
+                workflow: { en: 'Workflow Steps', fr: 'Étapes du workflow' },
+                actions: { en: 'Quick Actions', fr: 'Actions rapides' },
+                activity: { en: 'Recent Activity', fr: 'Activité récente' },
               };
               const label = labels[w.id]?.[language] || w.id;
               return (

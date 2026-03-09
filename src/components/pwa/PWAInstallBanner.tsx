@@ -7,7 +7,6 @@ import { Download, X, WifiOff } from 'lucide-react';
 export function PWAInstallBanner() {
   const { language } = useLanguage();
   const fr = language === 'fr';
-  const isAr = language === 'ar';
   const { canInstall, isOnline, promptInstall } = usePWA();
   const [dismissed, setDismissed] = useState(false);
 
@@ -16,7 +15,7 @@ export function PWAInstallBanner() {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-2 text-sm">
         <WifiOff className="h-4 w-4" />
-        {isAr ? 'وضع عدم الاتصال — بعض الميزات محدودة' : fr ? 'Mode hors ligne — certaines fonctionnalités sont limitées' : 'Offline mode — some features are limited'}
+        {fr ? 'Mode hors ligne — certaines fonctionnalités sont limitées' : 'Offline mode — some features are limited'}
       </div>
     );
   }
@@ -31,15 +30,15 @@ export function PWAInstallBanner() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">
-          {isAr ? 'تثبيت TrainPro Academy' : fr ? 'Installer TrainPro Academy' : 'Install TrainPro Academy'}
+          {fr ? 'Installer TrainPro Academy' : 'Install TrainPro Academy'}
         </p>
         <p className="text-xs text-muted-foreground">
-          {isAr ? 'الوصول إلى تدريباتك بدون اتصال' : fr ? 'Accédez à vos formations hors ligne' : 'Access your training offline'}
+          {fr ? 'Accédez à vos formations hors ligne' : 'Access your training offline'}
         </p>
       </div>
       <div className="flex gap-1">
         <Button size="sm" onClick={promptInstall}>
-          {isAr ? 'تثبيت' : fr ? 'Installer' : 'Install'}
+          {fr ? 'Installer' : 'Install'}
         </Button>
         <Button size="sm" variant="ghost" onClick={() => setDismissed(true)}>
           <X className="h-4 w-4" />
