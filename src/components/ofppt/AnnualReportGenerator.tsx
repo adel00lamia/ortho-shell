@@ -95,7 +95,7 @@ export function AnnualReportGenerator() {
         .eq('company_id', companyId);
 
       // Calculate metrics
-      const uniqueEmployees = [...new Set(employeeSkills.map((es: any) => es.employee_name))];
+      const uniqueEmployees = [...new Set((employeeSkills || []).map((es: any) => es.employee_name))];
       const completedProgress = progress.filter((p: any) => p.completed_at);
       const quizScores = progress.filter((p: any) => p.quiz_score !== null).map((p: any) => p.quiz_score);
 

@@ -107,7 +107,7 @@ export function useAIJobStatus(jobId: string | null) {
       return 2000;
     },
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_jobs')
         .select('*')
         .eq('id', jobId!)
