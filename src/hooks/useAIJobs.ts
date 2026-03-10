@@ -57,7 +57,7 @@ export function useCreateAIJob() {
       inputData: Record<string, any>;
       companyId: string;
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_jobs')
         .insert({
           user_id: user!.id,
