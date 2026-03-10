@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Building2, Save, Upload, Loader2, CheckCircle2, Image,
   FileText, Palette, MapPin, Phone, Mail, Users, Factory,
-  Hash, Shield, Globe
+  Hash, Shield, Globe, Sparkles, AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { useRef } from 'react';
 
 const INDUSTRIES = [
   'Technology', 'Healthcare', 'Finance', 'Manufacturing', 'Retail',
