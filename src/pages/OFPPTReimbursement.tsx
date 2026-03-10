@@ -217,15 +217,15 @@ export default function OFPPTReimbursement() {
       return;
     }
 
-    const { error } = await supabase.from('ofppt_dossier_documents').insert({
+    const { error } = await supabase.from('ofppt_dossier_documents').insert([{
       dossier_id: selectedDossier.id,
-      document_type: uploadDocType,
+      document_type: uploadDocType as any,
       file_name: uploadFile.name,
       file_path: filePath,
       file_size: uploadFile.size,
-      uploaded_by: user?.id,
+      uploaded_by: user?.id ?? '',
       notes: uploadNotes || null,
-    });
+    }]);
 
     if (error) {
       toast({ title: r.errorSavingDoc, variant: 'destructive' });
