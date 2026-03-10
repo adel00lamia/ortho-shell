@@ -179,7 +179,7 @@ export default function Diagnostic() {
           .select('*')
           .eq('company_id', profile.company_id);
 
-        if (evals) setPerformanceEvaluations(evals);
+        if (evals) setPerformanceEvaluations(evals as any);
 
         // Load departments
         const { data: depts } = await supabase

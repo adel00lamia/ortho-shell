@@ -16,17 +16,11 @@ export async function initSentry() {
   if (!dsn || sentryInitialized) return;
 
   try {
-    const Sentry = await import('@sentry/react');
+    const Sentry = await import(/* @vite-ignore */ '@sentry/react');
     Sentry.init({
       dsn,
       environment: import.meta.env.MODE,
       tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-      replaysSessionSampleRate: 0,
-      replaysOnErrorSampleRate: 1.0,
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
-      ],
     });
     sentryInitialized = true;
   } catch {
@@ -39,7 +33,8 @@ export async function initPostHog() {
   if (!key || posthogInitialized) return;
 
   try {
-    const { default: posthog } = await import('posthog-js');
+    const mod = await import(/* @vite-ignore */ 'posthog-js');
+    const posthog = mod.default;
     posthog.init(key, {
       api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com',
       capture_pageview: true,
@@ -58,23 +53,23 @@ export function captureError(error: Error, context?: Record<string, any>) {
     console.error('[monitoring]', error, context);
     return;
   }
-  import('@sentry/react').then(Sentry => {
+  import(/* @vite-ignore */ '@sentry/react').then(Sentry => {
     Sentry.captureException(error, { extra: context });
-  });
+  }).catch(() => {});
 }
 
 export function trackEvent(event: string, properties?: Record<string, any>) {
   if (!posthogInitialized) return;
-  import('posthog-js').then(({ default: posthog }) => {
+  import(/* @vite-ignore */ 'posthog-js').then(({ default: posthog }) => {
     posthog.capture(event, properties);
-  });
+  }).catch(() => {});
 }
 
 export function identifyUser(userId: string, traits?: Record<string, any>) {
   if (!posthogInitialized) return;
-  import('posthog-js').then(({ default: posthog }) => {
+  import(/* @vite-ignore */ 'posthog-js').then(({ default: posthog }) => {
     posthog.identify(userId, traits);
-  });
+  }).catch(() => {});
 }
 
 export async function initMonitoring() {

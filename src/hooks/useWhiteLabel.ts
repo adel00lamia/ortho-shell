@@ -62,7 +62,7 @@ export function useUpdateWhiteLabel() {
 
   return useMutation({
     mutationFn: async (config: Partial<WhiteLabelConfig>) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('white_label_config')
         .upsert({
           company_id: companyId!,

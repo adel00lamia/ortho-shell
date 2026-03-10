@@ -209,7 +209,7 @@ export default function ModuleStudio() {
         if (error) throw error;
         toast.success('Module updated successfully!');
       } else {
-        const { data, error } = await supabase.from('training_modules').insert([moduleData]).select().single();
+        const { data, error } = await supabase.from('training_modules').insert([moduleData as any]).select().single();
         if (error) throw error;
         navigate(`/workflow/execute/modules/${targetPlanId}/${data.id}`);
         toast.success('Module created successfully!');
