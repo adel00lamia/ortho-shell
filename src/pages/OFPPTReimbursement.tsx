@@ -156,7 +156,7 @@ export default function OFPPTReimbursement() {
     const { data } = await supabase
       .from('profiles')
       .select('company_id')
-      .eq('id', user?.id)
+      .eq('id', user?.id ?? '')
       .single();
     return data;
   };
