@@ -407,6 +407,63 @@ export default function CompanyProfile() {
             </CardContent>
           </Card>
 
+          {/* CNSS Document Upload */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                {fr ? 'Extraction IA depuis document CNSS' : 'AI Extraction from CNSS Document'}
+              </CardTitle>
+              <CardDescription>
+                {fr
+                  ? 'Uploadez votre attestation CNSS ou bordereau de déclaration pour remplir automatiquement les champs'
+                  : 'Upload your CNSS certificate or declaration form to auto-fill fields'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => cnssInputRef.current?.click()}
+              >
+                {cnssUploading || cnssExtracting ? (
+                  <div className="space-y-2">
+                    <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                    <p className="text-sm font-medium">
+                      {cnssExtracting
+                        ? (fr ? 'Extraction IA en cours...' : 'AI extraction in progress...')
+                        : (fr ? 'Upload en cours...' : 'Uploading...')}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <FileText className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">
+                      {fr ? 'Cliquez pour uploader un document CNSS' : 'Click to upload a CNSS document'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, PNG, JPG · Max 10 Mo
+                    </p>
+                  </>
+                )}
+                <input
+                  ref={cnssInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={handleCnssUpload}
+                />
+              </div>
+              <div className="flex items-start gap-2 mt-3 p-2 rounded bg-muted text-xs text-muted-foreground">
+                <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  {fr
+                    ? "L'IA extraira automatiquement le numéro CNSS, ICE, RC, la raison sociale, l'adresse et d'autres informations du document."
+                    : 'AI will automatically extract CNSS number, ICE, RC, company name, address and other information from the document.'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Industry & Size */}
           <Card>
             <CardHeader>
