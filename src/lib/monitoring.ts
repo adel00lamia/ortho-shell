@@ -13,41 +13,45 @@ let posthogInitialized = false;
 let _sentry: any = null;
 let _posthog: any = null;
 
+async function tryImport(module: string): Promise<any> {
+  try {
+    return await (Function('m', 'return import(m)')(module));
+  } catch {
+    return null;
+  }
+}
+
 export async function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn || sentryInitialized) return;
 
-  try {
-    _sentry = await import(/* @vite-ignore */ '@sentry/react');
-    _sentry.init({
-      dsn,
-      environment: import.meta.env.MODE,
-      tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-    });
-    sentryInitialized = true;
-  } catch {
-    // Sentry package not installed — skip silently
-  }
+  _sentry = await tryImport('@sentry/react');
+  if (!_sentry) return;
+
+  _sentry.init({
+    dsn,
+    environment: import.meta.env.MODE,
+    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+  });
+  sentryInitialized = true;
 }
 
 export async function initPostHog() {
   const key = import.meta.env.VITE_POSTHOG_KEY;
   if (!key || posthogInitialized) return;
 
-  try {
-    const mod = await import(/* @vite-ignore */ 'posthog-js');
-    _posthog = mod.default;
-    _posthog.init(key, {
-      api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com',
-      capture_pageview: true,
-      capture_pageleave: true,
-      autocapture: true,
-      persistence: 'localStorage',
-    });
-    posthogInitialized = true;
-  } catch {
-    // PostHog package not installed — skip silently
-  }
+  const mod = await tryImport('posthog-js');
+  if (!mod) return;
+
+  _posthog = mod.default || mod;
+  _posthog.init(key, {
+    api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com',
+    capture_pageview: true,
+    capture_pageleave: true,
+    autocapture: true,
+    persistence: 'localStorage',
+  });
+  posthogInitialized = true;
 }
 
 export function captureError(error: Error, context?: Record<string, any>) {
