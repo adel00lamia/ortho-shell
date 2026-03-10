@@ -23,7 +23,7 @@ export function useWhiteLabel() {
     queryKey: ['white-label', companyId],
     enabled: !!companyId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('white_label_config')
         .select('*')
         .eq('company_id', companyId!)
