@@ -205,7 +205,7 @@ export default function ModuleStudio() {
       };
 
       if (moduleId) {
-        const { error } = await supabase.from('training_modules').update(moduleData).eq('id', moduleId);
+        const { error } = await supabase.from('training_modules').update(moduleData as any).eq('id', moduleId);
         if (error) throw error;
         toast.success('Module updated successfully!');
       } else {
