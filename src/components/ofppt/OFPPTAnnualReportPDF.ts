@@ -186,7 +186,7 @@ export function generateOFPPTAnnualReport(data: AnnualReportData) {
       [fr ? 'Remboursement approuvé' : 'Reimbursement Approved', `${data.totalReimbursementApproved.toLocaleString()} MAD`],
     ],
     theme: 'grid',
-    headStyles: { fillColor: PRIMARY as unknown as number[], fontStyle: 'bold', fontSize: 10 },
+    headStyles: { fillColor: PRIMARY as unknown as [number, number, number], fontStyle: 'bold', fontSize: 10 },
     bodyStyles: { fontSize: 9 },
     alternateRowStyles: { fillColor: [245, 245, 255] },
     margin: { left: margin, right: margin },
