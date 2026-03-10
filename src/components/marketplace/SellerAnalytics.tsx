@@ -60,12 +60,8 @@ export const SellerAnalytics = () => {
     queryKey: ['seller-listings', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('marketplace_listings')
-        .select('id, title, price, status, rating')
-        .eq('seller_id', user.id);
-      if (error) throw error;
-      return (data ?? []) as ListingRow[];
+      // marketplace_listings table not yet created - return empty
+      return [] as ListingRow[];
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
