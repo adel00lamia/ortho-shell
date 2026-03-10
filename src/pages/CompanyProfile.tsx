@@ -45,10 +45,9 @@ export default function CompanyProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [cnssUploading, setCnssUploading] = useState(false);
-  const [cnssExtracting, setCnssExtracting] = useState(false);
+  const [docExtracting, setDocExtracting] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const cnssInputRef = useRef<HTMLInputElement>(null);
+  const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const [form, setForm] = useState({
     name: '',
