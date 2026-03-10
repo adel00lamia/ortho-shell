@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import {
   Building2, Save, Upload, Loader2, CheckCircle2, Image,
   FileText, Palette, MapPin, Phone, Mail, Users, Factory,
@@ -305,6 +306,23 @@ export default function CompanyProfile() {
 
   const isProfileComplete = form.name && form.industry && form.city;
 
+  // Calculate completion percentage
+  const completionFields = [
+    { filled: !!form.name, label: fr ? 'Raison sociale' : 'Company Name' },
+    { filled: !!form.cnss_number, label: 'CNSS' },
+    { filled: !!form.rc_number, label: 'RC' },
+    { filled: !!form.ice_number, label: 'ICE' },
+    { filled: !!form.industry, label: fr ? 'Secteur' : 'Industry' },
+    { filled: !!form.company_size, label: fr ? 'Taille' : 'Size' },
+    { filled: !!form.address, label: fr ? 'Adresse' : 'Address' },
+    { filled: !!form.city, label: fr ? 'Ville' : 'City' },
+    { filled: !!form.contact_email, label: 'Email' },
+    { filled: !!form.logo_url, label: 'Logo' },
+  ];
+  const filledCount = completionFields.filter(f => f.filled).length;
+  const completionPercent = Math.round((filledCount / completionFields.length) * 100);
+  const missingFields = completionFields.filter(f => !f.filled);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -333,7 +351,8 @@ export default function CompanyProfile() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
+      {/* Header with progress */}
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Building2 className="h-8 w-8 text-primary" />
@@ -346,8 +365,8 @@ export default function CompanyProfile() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {isProfileComplete && (
-            <Badge className="bg-green-500">
+          {completionPercent === 100 && (
+            <Badge className="bg-green-500/90 text-white">
               <CheckCircle2 className="h-3 w-3 mr-1" />
               {fr ? 'Profil complet' : 'Profile complete'}
             </Badge>
@@ -358,6 +377,35 @@ export default function CompanyProfile() {
           </Button>
         </div>
       </div>
+
+      {/* Completion progress bar */}
+      <Card className="p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-foreground">
+                {fr ? 'Complétion du profil' : 'Profile completion'}
+              </span>
+              <span className="text-sm font-bold text-primary">{completionPercent}%</span>
+            </div>
+            <Progress value={completionPercent} className="h-2" />
+          </div>
+          {missingFields.length > 0 && missingFields.length <= 4 && (
+            <div className="flex gap-1.5 flex-wrap">
+              {missingFields.map(f => (
+                <Badge key={f.label} variant="outline" className="text-xs text-muted-foreground">
+                  {f.label}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {missingFields.length > 4 && (
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              {missingFields.length} {fr ? 'champs manquants' : 'fields missing'}
+            </Badge>
+          )}
+        </div>
+      </Card>
 
       <Tabs defaultValue="identification" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
