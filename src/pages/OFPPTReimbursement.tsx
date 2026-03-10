@@ -379,7 +379,7 @@ export default function OFPPTReimbursement() {
         {[
           { label: r.totalDossiers, value: dossiers.length, icon: FolderOpen },
           { label: r.pending, value: dossiers.filter(d => ['submitted', 'under_review'].includes(d.status)).length, icon: Clock },
-          { label: r.approved, value: dossiers.filter(d => d.status === 'approved').includes ? dossiers.filter(d => d.status === 'approved' || d.status === 'reimbursed').length : 0, icon: CheckCircle2 },
+          { label: r.approved, value: dossiers.filter(d => d.status === 'approved' || d.status === 'reimbursed').length, icon: CheckCircle2 },
           { label: r.totalReimbursed, value: `${dossiers.filter(d => d.status === 'reimbursed').reduce((s, d) => s + (d.reimbursement_amount || 0), 0).toLocaleString()} MAD`, icon: DollarSign },
         ].map((stat, i) => (
           <Card key={i}>
