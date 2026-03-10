@@ -3,6 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCompanyId } from '@/hooks/useCompanyId';
 import { supabase } from '@/integrations/supabase/client';
 
+const db = supabase as any;
+
 export interface Discussion {
   id: string;
   company_id: string;
@@ -13,7 +15,6 @@ export interface Discussion {
   content: string;
   created_at: string;
   updated_at: string;
-  // Joined
   user_name?: string;
   replies?: Discussion[];
   reactions?: ReactionSummary[];
@@ -22,7 +23,7 @@ export interface Discussion {
 export interface ReactionSummary {
   emoji: string;
   count: number;
-  reacted: boolean; // current user reacted
+  reacted: boolean;
 }
 
 export function useDiscussions(moduleId?: string, planId?: string) {
@@ -32,7 +33,7 @@ export function useDiscussions(moduleId?: string, planId?: string) {
   return useQuery({
     queryKey: ['discussions', moduleId, planId],
     queryFn: async () => {
-      let query = supabase
+      let query = db
         .from('discussions')
         .select('*')
         .eq('company_id', companyId!)
@@ -45,11 +46,10 @@ export function useDiscussions(moduleId?: string, planId?: string) {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch replies for all discussions
-      const ids = (data || []).map(d => d.id);
+      const ids = (data || []).map((d: any) => d.id);
       let replies: any[] = [];
       if (ids.length > 0) {
-        const { data: replyData } = await supabase
+        const { data: replyData } = await db
           .from('discussions')
           .select('*')
           .in('parent_id', ids)
@@ -57,34 +57,32 @@ export function useDiscussions(moduleId?: string, planId?: string) {
         replies = replyData || [];
       }
 
-      // Fetch reactions
-      const allIds = [...ids, ...replies.map(r => r.id)];
+      const allIds = [...ids, ...replies.map((r: any) => r.id)];
       let reactions: any[] = [];
       if (allIds.length > 0) {
-        const { data: reactionData } = await supabase
+        const { data: reactionData } = await db
           .from('reactions')
           .select('*')
           .in('discussion_id', allIds);
         reactions = reactionData || [];
       }
 
-      // Fetch user names
-      const userIds = [...new Set([...(data || []).map(d => d.user_id), ...replies.map(r => r.user_id)])];
+      const userIds = [...new Set([...(data || []).map((d: any) => d.user_id), ...replies.map((r: any) => r.user_id)])];
       let profiles: Record<string, string> = {};
       if (userIds.length > 0) {
         const { data: profileData } = await supabase
           .from('profiles')
           .select('id, first_name, last_name')
-          .in('id', userIds);
-        (profileData || []).forEach(p => {
+          .in('id', userIds as string[]);
+        (profileData || []).forEach((p) => {
           profiles[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'User';
         });
       }
 
       const buildReactions = (discussionId: string): ReactionSummary[] => {
-        const discReactions = reactions.filter(r => r.discussion_id === discussionId);
+        const discReactions = reactions.filter((r: any) => r.discussion_id === discussionId);
         const emojiMap = new Map<string, { count: number; reacted: boolean }>();
-        discReactions.forEach(r => {
+        discReactions.forEach((r: any) => {
           const existing = emojiMap.get(r.emoji) || { count: 0, reacted: false };
           existing.count++;
           if (r.user_id === user?.id) existing.reacted = true;
@@ -96,12 +94,12 @@ export function useDiscussions(moduleId?: string, planId?: string) {
         }));
       };
 
-      return (data || []).map(d => ({
+      return (data || []).map((d: any) => ({
         ...d,
         user_name: profiles[d.user_id] || 'User',
         replies: replies
-          .filter(r => r.parent_id === d.id)
-          .map(r => ({
+          .filter((r: any) => r.parent_id === d.id)
+          .map((r: any) => ({
             ...r,
             user_name: profiles[r.user_id] || 'User',
             reactions: buildReactions(r.id),
@@ -125,7 +123,7 @@ export function useAddDiscussion() {
       parent_id?: string;
       content: string;
     }) => {
-      const { error } = await supabase.from('discussions').insert({
+      const { error } = await db.from('discussions').insert({
         company_id: companyId!,
         user_id: user!.id,
         module_id: data.module_id || null,
@@ -146,7 +144,7 @@ export function useDeleteDiscussion() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('discussions').delete().eq('id', id);
+      const { error } = await db.from('discussions').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -161,8 +159,7 @@ export function useToggleReaction() {
 
   return useMutation({
     mutationFn: async ({ discussionId, emoji }: { discussionId: string; emoji: string }) => {
-      // Check if already reacted
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('reactions')
         .select('id')
         .eq('discussion_id', discussionId)
@@ -171,9 +168,9 @@ export function useToggleReaction() {
         .maybeSingle();
 
       if (existing) {
-        await supabase.from('reactions').delete().eq('id', existing.id);
+        await db.from('reactions').delete().eq('id', existing.id);
       } else {
-        await supabase.from('reactions').insert({
+        await db.from('reactions').insert({
           discussion_id: discussionId,
           user_id: user!.id,
           emoji,

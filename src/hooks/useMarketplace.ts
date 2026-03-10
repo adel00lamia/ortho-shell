@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
+const db = supabase as any;
+
 export interface MarketplaceListing {
   id: string;
   seller_id: string;
@@ -39,7 +41,7 @@ export function usePublishedListings(category?: string) {
   return useQuery({
     queryKey: ['marketplace-listings', category],
     queryFn: async () => {
-      let query = supabase
+      let query = db
         .from('marketplace_listings')
         .select('*')
         .eq('status', 'published')
@@ -62,7 +64,7 @@ export function useMyListings() {
     queryKey: ['my-listings', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('marketplace_listings')
         .select('*')
         .eq('seller_id', user!.id)
@@ -79,7 +81,7 @@ export function useMyPurchases() {
     queryKey: ['my-purchases', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('marketplace_purchases')
         .select('*, listing:marketplace_listings(*)')
         .eq('buyer_id', user!.id)
@@ -97,7 +99,7 @@ export function useHasPurchased(listingId: string) {
     queryKey: ['has-purchased', listingId, user?.id],
     enabled: !!user && !!listingId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await db
         .from('marketplace_purchases')
         .select('id')
         .eq('listing_id', listingId)
@@ -126,7 +128,7 @@ export function useCreateListing() {
       cover_image_url?: string;
       module_id?: string;
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('marketplace_listings')
         .insert({
           ...listing,
@@ -154,7 +156,7 @@ export function useUpdateListing() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<MarketplaceListing> & { id: string }) => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('marketplace_listings')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
@@ -177,7 +179,7 @@ export function usePublishListing() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await db
         .from('marketplace_listings')
         .update({ status: 'published', updated_at: new Date().toISOString() })
         .eq('id', id);
@@ -197,7 +199,7 @@ export function useStripeAccount() {
     queryKey: ['stripe-account', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await db
         .from('trainer_stripe_accounts')
         .select('*')
         .eq('user_id', user!.id)
@@ -212,7 +214,7 @@ export function useListingReviews(listingId: string) {
     queryKey: ['listing-reviews', listingId],
     enabled: !!listingId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('marketplace_reviews')
         .select('*')
         .eq('listing_id', listingId)

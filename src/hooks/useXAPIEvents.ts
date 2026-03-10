@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanyId } from '@/hooks/useCompanyId';
 
+const db = supabase as any;
+
 export type XAPIVerb =
   | 'launched'
   | 'completed'
@@ -46,7 +48,7 @@ export function useTrackEvent() {
       context_data?: Record<string, unknown>;
     }) => {
       if (!user || !companyId) return;
-      const { error } = await supabase.from('xapi_events').insert({
+      const { error } = await db.from('xapi_events').insert({
         company_id: companyId,
         user_id: user.id,
         module_id: event.module_id || null,
@@ -70,7 +72,7 @@ export function useModuleEvents(moduleId: string | undefined) {
   return useQuery({
     queryKey: ['xapi-events', moduleId, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('xapi_events')
         .select('*')
         .eq('module_id', moduleId!)
@@ -90,7 +92,7 @@ export function useModuleEventsSummary(moduleId: string | undefined) {
   return useQuery({
     queryKey: ['xapi-summary', moduleId, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('xapi_events')
         .select('verb, result_score, result_success, created_at')
         .eq('module_id', moduleId!)
@@ -99,16 +101,16 @@ export function useModuleEventsSummary(moduleId: string | undefined) {
       if (error) throw error;
 
       const events = data || [];
-      const launched = events.find(e => e.verb === 'launched');
-      const completed = events.find(e => e.verb === 'completed');
-      const lastScore = events.find(e => e.result_score !== null);
-      const attempts = events.filter(e => e.verb === 'launched').length;
+      const launched = events.find((e: any) => e.verb === 'launched');
+      const completed = events.find((e: any) => e.verb === 'completed');
+      const lastScore = events.find((e: any) => e.result_score !== null);
+      const attempts = events.filter((e: any) => e.verb === 'launched').length;
 
       return {
         hasStarted: !!launched,
         hasCompleted: !!completed,
         lastScore: lastScore?.result_score ?? null,
-        passed: events.some(e => e.verb === 'passed'),
+        passed: events.some((e: any) => e.verb === 'passed'),
         attempts,
         firstLaunch: launched?.created_at ?? null,
         completedAt: completed?.created_at ?? null,
