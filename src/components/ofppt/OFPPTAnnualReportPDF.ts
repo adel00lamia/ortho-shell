@@ -217,7 +217,7 @@ export function generateOFPPTAnnualReport(data: AnnualReportData) {
         p.ofpptCompliant ? '✓' : '—',
       ]),
       theme: 'grid',
-      headStyles: { fillColor: PRIMARY as unknown as number[], fontStyle: 'bold', fontSize: 9 },
+      headStyles: { fillColor: PRIMARY as unknown as [number, number, number], fontStyle: 'bold', fontSize: 9 },
       bodyStyles: { fontSize: 8 },
       columnStyles: { 5: { halign: 'center' } },
       margin: { left: margin, right: margin },
