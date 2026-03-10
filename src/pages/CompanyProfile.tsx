@@ -233,7 +233,14 @@ export default function CompanyProfile() {
     }
   };
 
-  const handleCnssUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const LEGAL_DOC_TYPES = [
+    { key: 'cnss', label: fr ? 'Attestation CNSS' : 'CNSS Certificate', icon: '🏛️', desc: fr ? 'Attestation d\'affiliation ou bordereau' : 'Affiliation certificate or statement' },
+    { key: 'rc', label: fr ? 'Registre de Commerce (RC)' : 'Trade Register (RC)', icon: '📋', desc: fr ? 'Extrait du registre de commerce' : 'Trade register extract' },
+    { key: 'ice', label: fr ? 'Attestation ICE' : 'ICE Certificate', icon: '🔖', desc: fr ? 'Identifiant Commun de l\'Entreprise' : 'Common Business Identifier' },
+    { key: 'patente', label: fr ? 'Patente' : 'Business License', icon: '📄', desc: fr ? 'Taxe professionnelle / patente' : 'Professional tax / business license' },
+  ];
+
+  const handleDocUpload = async (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !companyId) return;
 
@@ -247,10 +254,10 @@ export default function CompanyProfile() {
       return;
     }
 
-    setCnssUploading(true);
+    setDocExtracting(docType);
     try {
       const ext = file.name.split('.').pop();
-      const filePath = `${companyId}/cnss-document.${ext}`;
+      const filePath = `${companyId}/${docType}-document.${ext}`;
 
       const { data, error: uploadError } = await supabase.storage
         .from('employee-cvs')
@@ -258,38 +265,37 @@ export default function CompanyProfile() {
 
       if (uploadError) throw uploadError;
 
-      toast.success(fr ? 'Document CNSS uploadé, extraction en cours...' : 'CNSS document uploaded, extracting...');
+      toast.success(fr ? `Document ${docType.toUpperCase()} uploadé, extraction en cours...` : `${docType.toUpperCase()} document uploaded, extracting...`);
 
-      setCnssExtracting(true);
       const { data: extractData, error: extractError } = await supabase.functions.invoke('cnss-extract', {
-        body: { filePath: data.path },
+        body: { filePath: data.path, documentType: docType },
       });
 
       if (extractError) throw extractError;
 
       if (extractData?.extracted) {
-        const ext = extractData.extracted;
+        const d = extractData.extracted;
         setForm(prev => ({
           ...prev,
-          cnss_number: ext.cnss_number || prev.cnss_number,
-          name: ext.company_name || prev.name,
-          ice_number: ext.ice_number || prev.ice_number,
-          rc_number: ext.rc_number || prev.rc_number,
-          address: ext.address || prev.address,
-          city: ext.city || prev.city,
-          phone: ext.phone || prev.phone,
-          contact_email: ext.email || prev.contact_email,
-          industry: ext.industry || prev.industry,
-          employee_count: ext.employee_count?.toString() || prev.employee_count,
+          cnss_number: d.cnss_number || prev.cnss_number,
+          name: d.company_name || prev.name,
+          ice_number: d.ice_number || prev.ice_number,
+          rc_number: d.rc_number || prev.rc_number,
+          address: d.address || prev.address,
+          city: d.city || prev.city,
+          phone: d.phone || prev.phone,
+          contact_email: d.email || prev.contact_email,
+          industry: d.industry || prev.industry,
+          employee_count: d.employee_count?.toString() || prev.employee_count,
         }));
         toast.success(fr ? 'Informations extraites avec succès !' : 'Information extracted successfully!');
       }
     } catch (error: any) {
       toast.error(error.message || (fr ? "Erreur lors de l'extraction" : 'Extraction failed'));
     } finally {
-      setCnssUploading(false);
-      setCnssExtracting(false);
-      if (cnssInputRef.current) cnssInputRef.current.value = '';
+      setDocExtracting(null);
+      const ref = docInputRefs.current[docType];
+      if (ref) ref.value = '';
     }
   };
 
