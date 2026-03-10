@@ -174,7 +174,7 @@ export default function OFPPTReimbursement() {
     const costPerHourPerson = parseFloat(newCostPerHourPerson) || 0;
     const calc = calculateReimbursement(hours, participants, costPerHourPerson);
 
-    const { error } = await supabase.from('ofppt_reimbursement_dossiers').insert({
+    const { error } = await supabase.from('ofppt_reimbursement_dossiers').insert([{
       title: newTitle,
       exercise_year: parseInt(newYear),
       total_amount: parseFloat(newTotalAmount) || calc.totalEligible,
@@ -184,8 +184,8 @@ export default function OFPPTReimbursement() {
       cost_per_hour_per_person: costPerHourPerson,
       notes: newNotes || null,
       company_id: profile.company_id,
-      created_by: user?.id,
-    });
+      created_by: user?.id ?? '',
+    }]);
 
     if (error) {
       toast({ title: r.errorCreating, variant: 'destructive' });
