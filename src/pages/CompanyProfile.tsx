@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Building2, Save, Upload, Loader2, CheckCircle2, Image,
   FileText, Palette, MapPin, Phone, Mail, Users, Factory,
-  Hash, Shield, Globe
+  Hash, Shield, Globe, Sparkles, AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { useRef } from 'react';
 
 const INDUSTRIES = [
   'Technology', 'Healthcare', 'Finance', 'Manufacturing', 'Retail',
@@ -44,7 +45,10 @@ export default function CompanyProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cnssUploading, setCnssUploading] = useState(false);
+  const [cnssExtracting, setCnssExtracting] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const cnssInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -230,6 +234,66 @@ export default function CompanyProfile() {
     }
   };
 
+  const handleCnssUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !companyId) return;
+
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(fr ? 'Format non supporté. Utilisez PDF, PNG ou JPG.' : 'Unsupported format. Use PDF, PNG or JPG.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(fr ? 'Fichier trop volumineux (max 10 Mo)' : 'File too large (max 10 MB)');
+      return;
+    }
+
+    setCnssUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${companyId}/cnss-document.${ext}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('employee-cvs')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      toast.success(fr ? 'Document CNSS uploadé, extraction en cours...' : 'CNSS document uploaded, extracting...');
+
+      setCnssExtracting(true);
+      const { data: extractData, error: extractError } = await supabase.functions.invoke('cnss-extract', {
+        body: { filePath: data.path },
+      });
+
+      if (extractError) throw extractError;
+
+      if (extractData?.extracted) {
+        const ext = extractData.extracted;
+        setForm(prev => ({
+          ...prev,
+          cnss_number: ext.cnss_number || prev.cnss_number,
+          name: ext.company_name || prev.name,
+          ice_number: ext.ice_number || prev.ice_number,
+          rc_number: ext.rc_number || prev.rc_number,
+          address: ext.address || prev.address,
+          city: ext.city || prev.city,
+          phone: ext.phone || prev.phone,
+          contact_email: ext.email || prev.contact_email,
+          industry: ext.industry || prev.industry,
+          employee_count: ext.employee_count?.toString() || prev.employee_count,
+        }));
+        toast.success(fr ? 'Informations extraites avec succès !' : 'Information extracted successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.message || (fr ? "Erreur lors de l'extraction" : 'Extraction failed'));
+    } finally {
+      setCnssUploading(false);
+      setCnssExtracting(false);
+      if (cnssInputRef.current) cnssInputRef.current.value = '';
+    }
+  };
+
   const updateField = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
@@ -339,6 +403,63 @@ export default function CompanyProfile() {
               <div>
                 <Label className="flex items-center gap-1"><Globe className="h-3 w-3" /> {fr ? 'Site web' : 'Website'}</Label>
                 <Input value={form.domain} onChange={e => updateField('domain', e.target.value)} placeholder="www.example.com" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CNSS Document Upload */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                {fr ? 'Extraction IA depuis document CNSS' : 'AI Extraction from CNSS Document'}
+              </CardTitle>
+              <CardDescription>
+                {fr
+                  ? 'Uploadez votre attestation CNSS ou bordereau de déclaration pour remplir automatiquement les champs'
+                  : 'Upload your CNSS certificate or declaration form to auto-fill fields'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => cnssInputRef.current?.click()}
+              >
+                {cnssUploading || cnssExtracting ? (
+                  <div className="space-y-2">
+                    <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                    <p className="text-sm font-medium">
+                      {cnssExtracting
+                        ? (fr ? 'Extraction IA en cours...' : 'AI extraction in progress...')
+                        : (fr ? 'Upload en cours...' : 'Uploading...')}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <FileText className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">
+                      {fr ? 'Cliquez pour uploader un document CNSS' : 'Click to upload a CNSS document'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, PNG, JPG · Max 10 Mo
+                    </p>
+                  </>
+                )}
+                <input
+                  ref={cnssInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={handleCnssUpload}
+                />
+              </div>
+              <div className="flex items-start gap-2 mt-3 p-2 rounded bg-muted text-xs text-muted-foreground">
+                <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  {fr
+                    ? "L'IA extraira automatiquement le numéro CNSS, ICE, RC, la raison sociale, l'adresse et d'autres informations du document."
+                    : 'AI will automatically extract CNSS number, ICE, RC, company name, address and other information from the document.'}
+                </span>
               </div>
             </CardContent>
           </Card>
