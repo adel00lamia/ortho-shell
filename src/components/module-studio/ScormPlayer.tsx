@@ -78,7 +78,7 @@ export function ScormPlayer({
               module_id: moduleId,
               verb: 'completed',
               object_type: 'scorm_package',
-              result_score: score,
+              result_score: score ?? undefined,
               result_success: true,
             });
           }
