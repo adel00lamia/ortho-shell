@@ -234,6 +234,66 @@ export default function CompanyProfile() {
     }
   };
 
+  const handleCnssUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !companyId) return;
+
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(fr ? 'Format non supporté. Utilisez PDF, PNG ou JPG.' : 'Unsupported format. Use PDF, PNG or JPG.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(fr ? 'Fichier trop volumineux (max 10 Mo)' : 'File too large (max 10 MB)');
+      return;
+    }
+
+    setCnssUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${companyId}/cnss-document.${ext}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('employee-cvs')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      toast.success(fr ? 'Document CNSS uploadé, extraction en cours...' : 'CNSS document uploaded, extracting...');
+
+      setCnssExtracting(true);
+      const { data: extractData, error: extractError } = await supabase.functions.invoke('cnss-extract', {
+        body: { filePath: data.path },
+      });
+
+      if (extractError) throw extractError;
+
+      if (extractData?.extracted) {
+        const ext = extractData.extracted;
+        setForm(prev => ({
+          ...prev,
+          cnss_number: ext.cnss_number || prev.cnss_number,
+          name: ext.company_name || prev.name,
+          ice_number: ext.ice_number || prev.ice_number,
+          rc_number: ext.rc_number || prev.rc_number,
+          address: ext.address || prev.address,
+          city: ext.city || prev.city,
+          phone: ext.phone || prev.phone,
+          contact_email: ext.email || prev.contact_email,
+          industry: ext.industry || prev.industry,
+          employee_count: ext.employee_count?.toString() || prev.employee_count,
+        }));
+        toast.success(fr ? 'Informations extraites avec succès !' : 'Information extracted successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.message || (fr ? "Erreur lors de l'extraction" : 'Extraction failed'));
+    } finally {
+      setCnssUploading(false);
+      setCnssExtracting(false);
+      if (cnssInputRef.current) cnssInputRef.current.value = '';
+    }
+  };
+
   const updateField = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
