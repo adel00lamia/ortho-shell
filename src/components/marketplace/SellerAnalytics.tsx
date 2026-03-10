@@ -73,12 +73,8 @@ export const SellerAnalytics = () => {
     queryKey: ['seller-purchases', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('marketplace_purchases')
-        .select('id, listing_id, amount, created_at, marketplace_listings(id, title, rating)')
-        .eq('marketplace_listings.seller_id', user.id);
-      if (error) throw error;
-      return (data ?? []) as unknown as PurchaseRow[];
+      // marketplace_purchases table not yet created - return empty
+      return [] as PurchaseRow[];
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
