@@ -254,7 +254,7 @@ export function generateOFPPTAnnualReport(data: AnnualReportData) {
         (c.avgTarget - c.avgLevel).toFixed(1),
       ]),
       theme: 'grid',
-      headStyles: { fillColor: ACCENT as unknown as number[], fontStyle: 'bold', fontSize: 9 },
+      headStyles: { fillColor: ACCENT as unknown as [number, number, number], fontStyle: 'bold', fontSize: 9 },
       bodyStyles: { fontSize: 8 },
       margin: { left: margin, right: margin },
     });
