@@ -305,6 +305,23 @@ export default function CompanyProfile() {
 
   const isProfileComplete = form.name && form.industry && form.city;
 
+  // Calculate completion percentage
+  const completionFields = [
+    { filled: !!form.name, label: fr ? 'Raison sociale' : 'Company Name' },
+    { filled: !!form.cnss_number, label: 'CNSS' },
+    { filled: !!form.rc_number, label: 'RC' },
+    { filled: !!form.ice_number, label: 'ICE' },
+    { filled: !!form.industry, label: fr ? 'Secteur' : 'Industry' },
+    { filled: !!form.company_size, label: fr ? 'Taille' : 'Size' },
+    { filled: !!form.address, label: fr ? 'Adresse' : 'Address' },
+    { filled: !!form.city, label: fr ? 'Ville' : 'City' },
+    { filled: !!form.contact_email, label: 'Email' },
+    { filled: !!form.logo_url, label: 'Logo' },
+  ];
+  const filledCount = completionFields.filter(f => f.filled).length;
+  const completionPercent = Math.round((filledCount / completionFields.length) * 100);
+  const missingFields = completionFields.filter(f => !f.filled);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">

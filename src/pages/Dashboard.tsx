@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
   ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle,
-  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical,
+  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical, Sun, Moon, Sunset,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -40,6 +40,13 @@ const PROFILE_FIELDS = [
   { key: 'logo_url', label: 'fieldLogo' },
 ] as const;
 
+function getGreeting(fr: boolean): { text: string; icon: typeof Sun } {
+  const hour = new Date().getHours();
+  if (hour < 12) return { text: fr ? 'Bonjour' : 'Good morning', icon: Sun };
+  if (hour < 18) return { text: fr ? 'Bon après-midi' : 'Good afternoon', icon: Sunset };
+  return { text: fr ? 'Bonsoir' : 'Good evening', icon: Moon };
+}
+
 const Dashboard = () => {
   const { role, loading: roleLoading } = useUserRole();
   const { t, language } = useLanguage();
@@ -50,6 +57,11 @@ const Dashboard = () => {
   const { widgets, toggleWidget, moveWidget, resetLayout, isVisible } = useDashboardLayout();
   const [customizing, setCustomizing] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
+
+  const fr = language === 'fr';
+  const greeting = getGreeting(fr);
+  const GreetingIcon = greeting.icon;
+  const firstName = user?.user_metadata?.first_name || '';
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -165,13 +177,25 @@ const Dashboard = () => {
     { title: d.newDiagnosticCompleted || 'No recent activity', time: '', type: 'info' as const },
   ];
 
+  const STAT_COLORS = [
+    'from-primary/20 to-primary/5',
+    'from-accent/20 to-accent/5',
+    'from-blue-500/20 to-blue-500/5',
+    'from-amber-500/20 to-amber-500/5',
+  ];
+
   return (
     <div className="container mx-auto p-6 space-y-8">
-      {/* Header */}
+      {/* Header with personalized greeting */}
       <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={0} className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{config.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+              <span className="inline-flex items-center gap-2">
+                <GreetingIcon className="h-7 w-7 text-amber-500" />
+                {greeting.text}{firstName ? `, ${firstName}` : ''}
+              </span>
+            </h1>
             <Badge variant="secondary" className="text-sm hidden sm:flex">
               <RoleIcon className="w-3 h-3 mr-1" />
               {config.badge}
@@ -181,7 +205,7 @@ const Dashboard = () => {
         </div>
         <Button variant="outline" size="sm" onClick={() => setCustomizing(!customizing)} className="gap-2">
           <SlidersHorizontal className="h-4 w-4" />
-          {customizing ? (t.common.save) : (language === 'fr' ? 'Personnaliser' : 'Customize')}
+          {customizing ? (t.common.save) : (fr ? 'Personnaliser' : 'Customize')}
         </Button>
       </motion.div>
 
@@ -189,10 +213,10 @@ const Dashboard = () => {
       {customizing && (
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold">{language === 'fr' ? 'Gérer les sections' : 'Manage Sections'}</h3>
+            <h3 className="text-sm font-semibold">{fr ? 'Gérer les sections' : 'Manage Sections'}</h3>
             <Button variant="ghost" size="sm" onClick={resetLayout} className="gap-1 text-xs">
               <RotateCcw className="h-3 w-3" />
-              {language === 'fr' ? 'Réinitialiser' : 'Reset'}
+              {fr ? 'Réinitialiser' : 'Reset'}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -235,20 +259,21 @@ const Dashboard = () => {
         </Card>
       )}
 
-      {/* Stats Grid */}
+      {/* Stats Grid — enhanced with gradient backgrounds */}
       {isVisible('stats') && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {config.stats.map((stat, i) => {
           const StatIcon = stat.icon;
           return (
             <motion.div key={stat.label} initial="hidden" animate="visible" variants={fadeIn} custom={i + 1}>
-              <Card className="p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
+              <Card className="p-6 hover:shadow-md transition-all group relative overflow-hidden">
+                <div className={`absolute inset-0 bg-gradient-to-br ${STAT_COLORS[i % STAT_COLORS.length]} opacity-50 group-hover:opacity-70 transition-opacity`} />
+                <div className="relative flex items-center justify-between">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">{stat.label}</p>
                     <p className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{stat.value}</p>
                     {stat.trend && <p className="text-xs text-primary">{stat.trend}</p>}
                   </div>
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
                     <StatIcon className="h-6 w-6 text-primary" />
                   </div>
                 </div>
