@@ -73,17 +73,17 @@ export function AnnualReportGenerator() {
         .eq('exercise_year', parseInt(year));
 
       // Fetch skill categories and employee skills
-      const { data: skillCategories = [] } = await supabase
+      const { data: skillCategories = [] } = await (supabase as any)
         .from('skill_categories')
         .select('*')
         .eq('company_id', companyId);
 
-      const { data: skills = [] } = await supabase
+      const { data: skills = [] } = await (supabase as any)
         .from('skills')
         .select('*')
         .eq('company_id', companyId);
 
-      const { data: employeeSkills = [] } = await supabase
+      const { data: employeeSkills } = await (supabase as any)
         .from('employee_skills')
         .select('*')
         .eq('company_id', companyId);
