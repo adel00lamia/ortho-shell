@@ -171,7 +171,7 @@ export default function Diagnostic() {
           .select('*')
           .eq('company_id', profile.company_id);
 
-        if (jobs) setJobDescriptions(jobs);
+        if (jobs) setJobDescriptions(jobs as any);
 
         // Load performance evaluations
         const { data: evals } = await supabase
