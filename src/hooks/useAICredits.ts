@@ -26,7 +26,7 @@ export function useMonthlyUsage() {
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_credit_usage')
         .select('action, credits_used')
         .eq('company_id', companyId!)
