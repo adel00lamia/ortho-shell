@@ -283,7 +283,7 @@ export function generateOFPPTAnnualReport(data: AnnualReportData) {
         `${d.hours}h`,
       ]),
       theme: 'grid',
-      headStyles: { fillColor: PRIMARY as unknown as number[], fontStyle: 'bold', fontSize: 9 },
+      headStyles: { fillColor: PRIMARY as unknown as [number, number, number], fontStyle: 'bold', fontSize: 9 },
       bodyStyles: { fontSize: 8 },
       margin: { left: margin, right: margin },
     });
