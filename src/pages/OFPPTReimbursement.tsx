@@ -400,7 +400,7 @@ export default function OFPPTReimbursement() {
         <TabsList>
           <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />{(r as any).dashboardTab || 'Dashboard'}</TabsTrigger>
           <TabsTrigger value="dossiers">{r.allDossiers}</TabsTrigger>
-          <TabsTrigger value="annual-report"><FileText className="h-4 w-4 mr-1.5" />{t.reimbursement?.annualReport || 'Annual Report'}</TabsTrigger>
+          <TabsTrigger value="annual-report"><FileText className="h-4 w-4 mr-1.5" />{'Bilan Annuel'}</TabsTrigger>
           {selectedDossier && <TabsTrigger value="details">{r.dossierDetails}</TabsTrigger>}
         </TabsList>
 

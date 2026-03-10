@@ -10,14 +10,16 @@
 
 let sentryInitialized = false;
 let posthogInitialized = false;
+let _sentry: any = null;
+let _posthog: any = null;
 
 export async function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn || sentryInitialized) return;
 
   try {
-    const Sentry = await import(/* @vite-ignore */ '@sentry/react');
-    Sentry.init({
+    _sentry = await import(/* @vite-ignore */ '@sentry/react');
+    _sentry.init({
       dsn,
       environment: import.meta.env.MODE,
       tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
@@ -34,8 +36,8 @@ export async function initPostHog() {
 
   try {
     const mod = await import(/* @vite-ignore */ 'posthog-js');
-    const posthog = mod.default;
-    posthog.init(key, {
+    _posthog = mod.default;
+    _posthog.init(key, {
       api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com',
       capture_pageview: true,
       capture_pageleave: true,
@@ -49,27 +51,21 @@ export async function initPostHog() {
 }
 
 export function captureError(error: Error, context?: Record<string, any>) {
-  if (!sentryInitialized) {
+  if (!sentryInitialized || !_sentry) {
     console.error('[monitoring]', error, context);
     return;
   }
-  import(/* @vite-ignore */ '@sentry/react').then(Sentry => {
-    Sentry.captureException(error, { extra: context });
-  }).catch(() => {});
+  _sentry.captureException(error, { extra: context });
 }
 
 export function trackEvent(event: string, properties?: Record<string, any>) {
-  if (!posthogInitialized) return;
-  import(/* @vite-ignore */ 'posthog-js').then(({ default: posthog }) => {
-    posthog.capture(event, properties);
-  }).catch(() => {});
+  if (!posthogInitialized || !_posthog) return;
+  _posthog.capture(event, properties);
 }
 
 export function identifyUser(userId: string, traits?: Record<string, any>) {
-  if (!posthogInitialized) return;
-  import(/* @vite-ignore */ 'posthog-js').then(({ default: posthog }) => {
-    posthog.identify(userId, traits);
-  }).catch(() => {});
+  if (!posthogInitialized || !_posthog) return;
+  _posthog.identify(userId, traits);
 }
 
 export async function initMonitoring() {
