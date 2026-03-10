@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+const db = supabase as any;
+
 export interface Referral {
   id: string;
   referrer_id: string;
@@ -21,7 +23,7 @@ export function useMyReferrals() {
     queryKey: ['referrals', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('referrals')
         .select('*')
         .eq('referrer_id', user!.id)
@@ -38,7 +40,7 @@ export function useGenerateReferralCode() {
 
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('generate_referral_code', {
+      const { data, error } = await db.rpc('generate_referral_code', {
         p_user_id: user!.id,
       });
       if (error) throw error;

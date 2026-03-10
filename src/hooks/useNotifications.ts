@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+const db = supabase as any;
+
 export interface Notification {
   id: string;
   user_id: string;
@@ -20,17 +22,17 @@ export function useNotifications() {
   return useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('notifications')
         .select('*')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data as Notification[];
+      return (data || []) as Notification[];
     },
     enabled: !!user,
-    refetchInterval: 30_000, // poll every 30s
+    refetchInterval: 30_000,
   });
 }
 
@@ -40,7 +42,7 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: ['notifications-unread-count', user?.id],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { count, error } = await db
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user!.id)
@@ -59,7 +61,7 @@ export function useMarkRead() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
+      const { error } = await db
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
@@ -78,7 +80,7 @@ export function useMarkAllRead() {
 
   return useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('mark_all_notifications_read', {
+      const { error } = await db.rpc('mark_all_notifications_read', {
         p_user_id: user!.id,
       });
       if (error) throw error;

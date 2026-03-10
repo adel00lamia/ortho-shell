@@ -73,17 +73,17 @@ export function AnnualReportGenerator() {
         .eq('exercise_year', parseInt(year));
 
       // Fetch skill categories and employee skills
-      const { data: skillCategories = [] } = await supabase
+      const { data: skillCategories = [] } = await (supabase as any)
         .from('skill_categories')
         .select('*')
         .eq('company_id', companyId);
 
-      const { data: skills = [] } = await supabase
+      const { data: skills = [] } = await (supabase as any)
         .from('skills')
         .select('*')
         .eq('company_id', companyId);
 
-      const { data: employeeSkills = [] } = await supabase
+      const { data: employeeSkills } = await (supabase as any)
         .from('employee_skills')
         .select('*')
         .eq('company_id', companyId);
@@ -95,7 +95,7 @@ export function AnnualReportGenerator() {
         .eq('company_id', companyId);
 
       // Calculate metrics
-      const uniqueEmployees = [...new Set(employeeSkills.map((es: any) => es.employee_name))];
+      const uniqueEmployees = [...new Set((employeeSkills || []).map((es: any) => es.employee_name))];
       const completedProgress = progress.filter((p: any) => p.completed_at);
       const quizScores = progress.filter((p: any) => p.quiz_score !== null).map((p: any) => p.quiz_score);
 

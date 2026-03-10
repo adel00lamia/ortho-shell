@@ -78,7 +78,7 @@ export function ScormPlayer({
               module_id: moduleId,
               verb: 'completed',
               object_type: 'scorm_package',
-              result_score: score,
+              result_score: score ?? undefined,
               result_success: true,
             });
           }
@@ -87,7 +87,7 @@ export function ScormPlayer({
               module_id: moduleId,
               verb: 'passed',
               object_type: 'scorm_package',
-              result_score: score,
+              result_score: score ?? undefined,
               result_success: true,
             });
           }
@@ -96,7 +96,7 @@ export function ScormPlayer({
               module_id: moduleId,
               verb: 'failed',
               object_type: 'scorm_package',
-              result_score: score,
+              result_score: score ?? undefined,
               result_success: false,
             });
           }
@@ -124,7 +124,7 @@ export function ScormPlayer({
         module_id: moduleId,
         verb: finalStatus === 'incomplete' ? 'suspended' : 'completed',
         object_type: 'scorm_package',
-        result_score: finalScore,
+        result_score: finalScore ?? undefined,
         result_success: passed,
         context_data: {
           bookmark: event.data['cmi.core.lesson_location'],

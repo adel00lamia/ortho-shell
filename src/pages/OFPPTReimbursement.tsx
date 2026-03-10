@@ -137,7 +137,7 @@ export default function OFPPTReimbursement() {
     if (error) {
       toast({ title: r.errorLoading, variant: 'destructive' });
     } else {
-      setDossiers(data || []);
+      setDossiers((data || []) as any);
     }
     setLoading(false);
   };
@@ -156,7 +156,7 @@ export default function OFPPTReimbursement() {
     const { data } = await supabase
       .from('profiles')
       .select('company_id')
-      .eq('id', user?.id)
+      .eq('id', user?.id ?? '')
       .single();
     return data;
   };
@@ -174,7 +174,7 @@ export default function OFPPTReimbursement() {
     const costPerHourPerson = parseFloat(newCostPerHourPerson) || 0;
     const calc = calculateReimbursement(hours, participants, costPerHourPerson);
 
-    const { error } = await supabase.from('ofppt_reimbursement_dossiers').insert({
+    const { error } = await supabase.from('ofppt_reimbursement_dossiers').insert([{
       title: newTitle,
       exercise_year: parseInt(newYear),
       total_amount: parseFloat(newTotalAmount) || calc.totalEligible,
@@ -184,8 +184,8 @@ export default function OFPPTReimbursement() {
       cost_per_hour_per_person: costPerHourPerson,
       notes: newNotes || null,
       company_id: profile.company_id,
-      created_by: user?.id,
-    });
+      created_by: user?.id ?? '',
+    }]);
 
     if (error) {
       toast({ title: r.errorCreating, variant: 'destructive' });
@@ -217,15 +217,15 @@ export default function OFPPTReimbursement() {
       return;
     }
 
-    const { error } = await supabase.from('ofppt_dossier_documents').insert({
+    const { error } = await supabase.from('ofppt_dossier_documents').insert([{
       dossier_id: selectedDossier.id,
-      document_type: uploadDocType,
+      document_type: uploadDocType as any,
       file_name: uploadFile.name,
       file_path: filePath,
       file_size: uploadFile.size,
-      uploaded_by: user?.id,
+      uploaded_by: user?.id ?? '',
       notes: uploadNotes || null,
-    });
+    }]);
 
     if (error) {
       toast({ title: r.errorSavingDoc, variant: 'destructive' });
@@ -379,7 +379,7 @@ export default function OFPPTReimbursement() {
         {[
           { label: r.totalDossiers, value: dossiers.length, icon: FolderOpen },
           { label: r.pending, value: dossiers.filter(d => ['submitted', 'under_review'].includes(d.status)).length, icon: Clock },
-          { label: r.approved, value: dossiers.filter(d => d.status === 'approved').includes ? dossiers.filter(d => d.status === 'approved' || d.status === 'reimbursed').length : 0, icon: CheckCircle2 },
+          { label: r.approved, value: dossiers.filter(d => d.status === 'approved' || d.status === 'reimbursed').length, icon: CheckCircle2 },
           { label: r.totalReimbursed, value: `${dossiers.filter(d => d.status === 'reimbursed').reduce((s, d) => s + (d.reimbursement_amount || 0), 0).toLocaleString()} MAD`, icon: DollarSign },
         ].map((stat, i) => (
           <Card key={i}>
@@ -400,7 +400,7 @@ export default function OFPPTReimbursement() {
         <TabsList>
           <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />{(r as any).dashboardTab || 'Dashboard'}</TabsTrigger>
           <TabsTrigger value="dossiers">{r.allDossiers}</TabsTrigger>
-          <TabsTrigger value="annual-report"><FileText className="h-4 w-4 mr-1.5" />{language === 'fr' ? 'Bilan Annuel' : 'Annual Report'}</TabsTrigger>
+          <TabsTrigger value="annual-report"><FileText className="h-4 w-4 mr-1.5" />{'Bilan Annuel'}</TabsTrigger>
           {selectedDossier && <TabsTrigger value="details">{r.dossierDetails}</TabsTrigger>}
         </TabsList>
 

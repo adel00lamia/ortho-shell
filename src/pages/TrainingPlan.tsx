@@ -65,7 +65,7 @@ export default function TrainingPlan() {
           budget: editedPlan.budget,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', id!);
 
       if (error) throw error;
       

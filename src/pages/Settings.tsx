@@ -180,14 +180,13 @@ const Settings = () => {
       // Upsert the role
       const { error } = await supabase
         .from('user_roles')
-        .upsert({ user_id: userId, role: newRole }, { onConflict: 'user_id,role' });
+        .upsert([{ user_id: userId, role: newRole as any }], { onConflict: 'user_id,role' });
 
       if (error) {
-        // If upsert fails (different role exists), delete old and insert new
         await supabase.from('user_roles').delete().eq('user_id', userId);
         const { error: insertErr } = await supabase
           .from('user_roles')
-          .insert({ user_id: userId, role: newRole });
+          .insert([{ user_id: userId, role: newRole as any }]);
         if (insertErr) throw insertErr;
       }
 

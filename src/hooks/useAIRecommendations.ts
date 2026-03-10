@@ -41,7 +41,7 @@ export function useAIRecommendations() {
       });
 
       // 2. Get published marketplace listings
-      const { data: listings } = await supabase
+      const { data: listings } = await (supabase as any)
         .from('marketplace_listings')
         .select('id, title, description, short_description, category, price_cents')
         .eq('status', 'published')

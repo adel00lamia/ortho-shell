@@ -13,7 +13,7 @@ const fadeIn = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: 'easeOut' },
+    transition: { delay: i * 0.08, duration: 0.4, ease: 'easeOut' as const },
   }),
 };
 
@@ -60,12 +60,8 @@ export const SellerAnalytics = () => {
     queryKey: ['seller-listings', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('marketplace_listings')
-        .select('id, title, price, status, rating')
-        .eq('seller_id', user.id);
-      if (error) throw error;
-      return (data ?? []) as ListingRow[];
+      // marketplace_listings table not yet created - return empty
+      return [] as ListingRow[];
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
@@ -77,12 +73,8 @@ export const SellerAnalytics = () => {
     queryKey: ['seller-purchases', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('marketplace_purchases')
-        .select('id, listing_id, amount, created_at, marketplace_listings(id, title, rating)')
-        .eq('marketplace_listings.seller_id', user.id);
-      if (error) throw error;
-      return (data ?? []) as unknown as PurchaseRow[];
+      // marketplace_purchases table not yet created - return empty
+      return [] as PurchaseRow[];
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,

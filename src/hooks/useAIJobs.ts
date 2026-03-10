@@ -34,7 +34,7 @@ export function useAIJobs() {
       return false;
     },
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_jobs')
         .select('*')
         .eq('user_id', user!.id)
@@ -57,7 +57,7 @@ export function useCreateAIJob() {
       inputData: Record<string, any>;
       companyId: string;
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_jobs')
         .insert({
           user_id: user!.id,
@@ -84,7 +84,7 @@ export function useCancelAIJob() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ai_jobs')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
         .eq('id', jobId);
@@ -107,7 +107,7 @@ export function useAIJobStatus(jobId: string | null) {
       return 2000;
     },
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_jobs')
         .select('*')
         .eq('id', jobId!)
