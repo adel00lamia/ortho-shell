@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
                 },
                 {
                   type: "text",
-                  text: "Extrais toutes les informations de ce document CNSS. Identifie le numéro CNSS, la raison sociale, l'adresse, la ville, le secteur d'activité, l'effectif, le numéro ICE, le numéro RC, le téléphone, l'email, et tout autre identifiant légal présent.",
+                  text: `Extrais toutes les informations de ce document (${docLabel}). Identifie le numéro CNSS, la raison sociale, l'adresse, la ville, le secteur d'activité, l'effectif, le numéro ICE, le numéro RC, le téléphone, l'email, et tout autre identifiant légal présent.`,
                 },
               ],
             },
