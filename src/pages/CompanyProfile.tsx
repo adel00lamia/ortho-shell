@@ -350,7 +350,8 @@ export default function CompanyProfile() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
+      {/* Header with progress */}
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Building2 className="h-8 w-8 text-primary" />
@@ -363,8 +364,8 @@ export default function CompanyProfile() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {isProfileComplete && (
-            <Badge className="bg-green-500">
+          {completionPercent === 100 && (
+            <Badge className="bg-green-500/90 text-white">
               <CheckCircle2 className="h-3 w-3 mr-1" />
               {fr ? 'Profil complet' : 'Profile complete'}
             </Badge>
@@ -375,6 +376,35 @@ export default function CompanyProfile() {
           </Button>
         </div>
       </div>
+
+      {/* Completion progress bar */}
+      <Card className="p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-foreground">
+                {fr ? 'Complétion du profil' : 'Profile completion'}
+              </span>
+              <span className="text-sm font-bold text-primary">{completionPercent}%</span>
+            </div>
+            <Progress value={completionPercent} className="h-2" />
+          </div>
+          {missingFields.length > 0 && missingFields.length <= 4 && (
+            <div className="flex gap-1.5 flex-wrap">
+              {missingFields.map(f => (
+                <Badge key={f.label} variant="outline" className="text-xs text-muted-foreground">
+                  {f.label}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {missingFields.length > 4 && (
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              {missingFields.length} {fr ? 'champs manquants' : 'fields missing'}
+            </Badge>
+          )}
+        </div>
+      </Card>
 
       <Tabs defaultValue="identification" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
