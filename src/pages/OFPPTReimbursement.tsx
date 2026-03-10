@@ -137,7 +137,7 @@ export default function OFPPTReimbursement() {
     if (error) {
       toast({ title: r.errorLoading, variant: 'destructive' });
     } else {
-      setDossiers(data || []);
+      setDossiers((data || []) as any);
     }
     setLoading(false);
   };
