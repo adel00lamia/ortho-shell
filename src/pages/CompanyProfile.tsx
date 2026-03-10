@@ -45,10 +45,9 @@ export default function CompanyProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [cnssUploading, setCnssUploading] = useState(false);
-  const [cnssExtracting, setCnssExtracting] = useState(false);
+  const [docExtracting, setDocExtracting] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const cnssInputRef = useRef<HTMLInputElement>(null);
+  const docInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const [form, setForm] = useState({
     name: '',
@@ -234,7 +233,14 @@ export default function CompanyProfile() {
     }
   };
 
-  const handleCnssUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const LEGAL_DOC_TYPES = [
+    { key: 'cnss', label: fr ? 'Attestation CNSS' : 'CNSS Certificate', icon: '🏛️', desc: fr ? 'Attestation d\'affiliation ou bordereau' : 'Affiliation certificate or statement' },
+    { key: 'rc', label: fr ? 'Registre de Commerce (RC)' : 'Trade Register (RC)', icon: '📋', desc: fr ? 'Extrait du registre de commerce' : 'Trade register extract' },
+    { key: 'ice', label: fr ? 'Attestation ICE' : 'ICE Certificate', icon: '🔖', desc: fr ? 'Identifiant Commun de l\'Entreprise' : 'Common Business Identifier' },
+    { key: 'patente', label: fr ? 'Patente' : 'Business License', icon: '📄', desc: fr ? 'Taxe professionnelle / patente' : 'Professional tax / business license' },
+  ];
+
+  const handleDocUpload = async (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !companyId) return;
 
@@ -248,10 +254,10 @@ export default function CompanyProfile() {
       return;
     }
 
-    setCnssUploading(true);
+    setDocExtracting(docType);
     try {
       const ext = file.name.split('.').pop();
-      const filePath = `${companyId}/cnss-document.${ext}`;
+      const filePath = `${companyId}/${docType}-document.${ext}`;
 
       const { data, error: uploadError } = await supabase.storage
         .from('employee-cvs')
@@ -259,38 +265,37 @@ export default function CompanyProfile() {
 
       if (uploadError) throw uploadError;
 
-      toast.success(fr ? 'Document CNSS uploadé, extraction en cours...' : 'CNSS document uploaded, extracting...');
+      toast.success(fr ? `Document ${docType.toUpperCase()} uploadé, extraction en cours...` : `${docType.toUpperCase()} document uploaded, extracting...`);
 
-      setCnssExtracting(true);
       const { data: extractData, error: extractError } = await supabase.functions.invoke('cnss-extract', {
-        body: { filePath: data.path },
+        body: { filePath: data.path, documentType: docType },
       });
 
       if (extractError) throw extractError;
 
       if (extractData?.extracted) {
-        const ext = extractData.extracted;
+        const d = extractData.extracted;
         setForm(prev => ({
           ...prev,
-          cnss_number: ext.cnss_number || prev.cnss_number,
-          name: ext.company_name || prev.name,
-          ice_number: ext.ice_number || prev.ice_number,
-          rc_number: ext.rc_number || prev.rc_number,
-          address: ext.address || prev.address,
-          city: ext.city || prev.city,
-          phone: ext.phone || prev.phone,
-          contact_email: ext.email || prev.contact_email,
-          industry: ext.industry || prev.industry,
-          employee_count: ext.employee_count?.toString() || prev.employee_count,
+          cnss_number: d.cnss_number || prev.cnss_number,
+          name: d.company_name || prev.name,
+          ice_number: d.ice_number || prev.ice_number,
+          rc_number: d.rc_number || prev.rc_number,
+          address: d.address || prev.address,
+          city: d.city || prev.city,
+          phone: d.phone || prev.phone,
+          contact_email: d.email || prev.contact_email,
+          industry: d.industry || prev.industry,
+          employee_count: d.employee_count?.toString() || prev.employee_count,
         }));
         toast.success(fr ? 'Informations extraites avec succès !' : 'Information extracted successfully!');
       }
     } catch (error: any) {
       toast.error(error.message || (fr ? "Erreur lors de l'extraction" : 'Extraction failed'));
     } finally {
-      setCnssUploading(false);
-      setCnssExtracting(false);
-      if (cnssInputRef.current) cnssInputRef.current.value = '';
+      setDocExtracting(null);
+      const ref = docInputRefs.current[docType];
+      if (ref) ref.value = '';
     }
   };
 
@@ -407,58 +412,64 @@ export default function CompanyProfile() {
             </CardContent>
           </Card>
 
-          {/* CNSS Document Upload */}
+          {/* Legal Document Upload with AI Extraction */}
           <Card className="border-primary/20">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                {fr ? 'Extraction IA depuis document CNSS' : 'AI Extraction from CNSS Document'}
+                {fr ? 'Extraction IA depuis documents légaux' : 'AI Extraction from Legal Documents'}
               </CardTitle>
               <CardDescription>
                 {fr
-                  ? 'Uploadez votre attestation CNSS ou bordereau de déclaration pour remplir automatiquement les champs'
-                  : 'Upload your CNSS certificate or declaration form to auto-fill fields'}
+                  ? 'Uploadez vos documents légaux pour remplir automatiquement les champs du profil'
+                  : 'Upload your legal documents to auto-fill profile fields'}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div
-                className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => cnssInputRef.current?.click()}
-              >
-                {cnssUploading || cnssExtracting ? (
-                  <div className="space-y-2">
-                    <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
-                    <p className="text-sm font-medium">
-                      {cnssExtracting
-                        ? (fr ? 'Extraction IA en cours...' : 'AI extraction in progress...')
-                        : (fr ? 'Upload en cours...' : 'Uploading...')}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <FileText className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">
-                      {fr ? 'Cliquez pour uploader un document CNSS' : 'Click to upload a CNSS document'}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      PDF, PNG, JPG · Max 10 Mo
-                    </p>
-                  </>
-                )}
-                <input
-                  ref={cnssInputRef}
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  className="hidden"
-                  onChange={handleCnssUpload}
-                />
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {LEGAL_DOC_TYPES.map((doc) => {
+                  const isActive = docExtracting === doc.key;
+                  return (
+                    <div
+                      key={doc.key}
+                      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                        isActive
+                          ? 'border-primary bg-primary/5'
+                          : 'border-muted-foreground/30 hover:border-primary/50'
+                      }`}
+                      onClick={() => !docExtracting && docInputRefs.current[doc.key]?.click()}
+                    >
+                      {isActive ? (
+                        <div className="space-y-1">
+                          <Loader2 className="h-6 w-6 mx-auto animate-spin text-primary" />
+                          <p className="text-xs font-medium">
+                            {fr ? 'Extraction IA...' : 'AI extracting...'}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-2xl block mb-1">{doc.icon}</span>
+                          <p className="text-sm font-medium">{doc.label}</p>
+                          <p className="text-xs text-muted-foreground">{doc.desc}</p>
+                        </>
+                      )}
+                      <input
+                        ref={(el) => { docInputRefs.current[doc.key] = el; }}
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        className="hidden"
+                        onChange={(e) => handleDocUpload(doc.key, e)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex items-start gap-2 mt-3 p-2 rounded bg-muted text-xs text-muted-foreground">
+              <div className="flex items-start gap-2 p-2 rounded bg-muted text-xs text-muted-foreground">
                 <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span>
                   {fr
-                    ? "L'IA extraira automatiquement le numéro CNSS, ICE, RC, la raison sociale, l'adresse et d'autres informations du document."
-                    : 'AI will automatically extract CNSS number, ICE, RC, company name, address and other information from the document.'}
+                    ? "L'IA extraira automatiquement les identifiants légaux (CNSS, ICE, RC), la raison sociale, l'adresse et d'autres informations de vos documents."
+                    : 'AI will automatically extract legal identifiers (CNSS, ICE, RC), company name, address and other information from your documents.'}
                 </span>
               </div>
             </CardContent>

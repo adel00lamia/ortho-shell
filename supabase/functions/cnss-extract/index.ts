@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const { filePath } = await req.json();
+    const { filePath, documentType } = await req.json();
 
     if (!filePath) {
       return new Response(JSON.stringify({ error: "filePath is required" }), {
@@ -58,6 +58,14 @@ Deno.serve(async (req) => {
       ? "image/jpeg"
       : "application/octet-stream";
 
+    const docTypeLabels: Record<string, string> = {
+      cnss: "CNSS (attestation d'affiliation, bordereau de déclaration)",
+      rc: "Registre de Commerce (extrait RC, certificat d'immatriculation)",
+      ice: "ICE (attestation d'Identifiant Commun de l'Entreprise)",
+      patente: "Patente (taxe professionnelle, attestation fiscale)",
+    };
+    const docLabel = docTypeLabels[documentType || "cnss"] || "document légal marocain";
+
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -71,8 +79,7 @@ Deno.serve(async (req) => {
           messages: [
             {
               role: "system",
-              content:
-                "Tu es un expert en documents administratifs marocains. Extrais les informations d'un document CNSS (attestation d'affiliation, bordereau de déclaration, etc.). Sois précis et retourne uniquement les données trouvées dans le document.",
+              content: `Tu es un expert en documents administratifs marocains. Extrais les informations d'un document de type ${docLabel}. Sois précis et retourne uniquement les données trouvées dans le document.`,
             },
             {
               role: "user",
@@ -86,7 +93,7 @@ Deno.serve(async (req) => {
                 },
                 {
                   type: "text",
-                  text: "Extrais toutes les informations de ce document CNSS. Identifie le numéro CNSS, la raison sociale, l'adresse, la ville, le secteur d'activité, l'effectif, le numéro ICE, le numéro RC, le téléphone, l'email, et tout autre identifiant légal présent.",
+                  text: `Extrais toutes les informations de ce document (${docLabel}). Identifie le numéro CNSS, la raison sociale, l'adresse, la ville, le secteur d'activité, l'effectif, le numéro ICE, le numéro RC, le téléphone, l'email, et tout autre identifiant légal présent.`,
                 },
               ],
             },
