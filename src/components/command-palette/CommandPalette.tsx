@@ -66,6 +66,7 @@ export const CommandPalette = () => {
     { path: '/manage/users', label: t.nav.userManagement, icon: Users, keywords: ['users', 'utilisateurs', 'manage', 'admin'], group: 'Management' },
     { path: '/manage/settings', label: t.common.settings, icon: Settings, keywords: ['settings', 'parametres', 'config'], group: 'Management' },
     { path: '/billing', label: 'Billing', icon: FileText, keywords: ['billing', 'facturation', 'subscription', 'payment'], group: 'Management' },
+    { path: '/referrals', label: 'Referrals', icon: FileText, keywords: ['referral', 'parrainage', 'invite', 'reward'], group: 'Management' },
   ];
 
   const handleSelect = useCallback(

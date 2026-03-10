@@ -1596,7 +1596,7 @@ export type Database = {
       }
       is_admin_or_hr: { Args: { _user_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: { p_user_id: string }; Returns: undefined }
-      generate_referral_code: { Args: Record<string, never>; Returns: string }
+      generate_referral_code: { Args: { p_user_id: string }; Returns: string }
       get_current_user_company_id: { Args: Record<string, never>; Returns: string }
     }
     Enums: {

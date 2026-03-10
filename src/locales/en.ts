@@ -60,6 +60,8 @@ export const en = {
     companyProfile: 'Company Profile',
     userManagement: 'User Management',
     teamCollaboration: 'Team Collaboration',
+    billing: 'Billing',
+    referrals: 'Referral Program',
   },
 
   // Breadcrumbs
@@ -84,6 +86,8 @@ export const en = {
     settings: 'Settings',
     profile: 'Profile',
     'company-profile': 'Company Profile',
+    billing: 'Billing',
+    referrals: 'Referral Program',
   },
 
   // Dashboard

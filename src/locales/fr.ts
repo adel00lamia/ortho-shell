@@ -60,6 +60,8 @@ export const fr: Translations = {
     companyProfile: 'Profil Entreprise',
     userManagement: 'Gestion des utilisateurs',
     teamCollaboration: 'Collaboration d\'équipe',
+    billing: 'Facturation',
+    referrals: 'Programme de parrainage',
   },
 
   breadcrumbs: {
@@ -83,6 +85,8 @@ export const fr: Translations = {
     settings: 'Paramètres',
     profile: 'Profil',
     'company-profile': 'Profil Entreprise',
+    billing: 'Facturation',
+    referrals: 'Programme de parrainage',
   },
 
   dashboard: {

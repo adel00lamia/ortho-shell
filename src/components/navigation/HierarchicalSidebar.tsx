@@ -8,7 +8,7 @@ import {
   LayoutDashboard, ClipboardCheck, Target, TrendingUp, Lightbulb, BookOpen,
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
-  GraduationCap,
+  GraduationCap, Gift, CreditCard,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -135,12 +135,16 @@ export const HierarchicalSidebar = () => {
       return [
         { path: '/manage/users', labelKey: 'userManagement', icon: Users },
         { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
+        { path: '/billing', labelKey: 'billing', icon: CreditCard },
+        { path: '/referrals', labelKey: 'referrals', icon: Gift },
         { path: '/manage/settings', labelKey: 'settings', icon: Settings },
       ];
     }
     if (role === 'hr_manager') {
       return [
         { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
+        { path: '/billing', labelKey: 'billing', icon: CreditCard },
+        { path: '/referrals', labelKey: 'referrals', icon: Gift },
         { path: '/manage/settings', labelKey: 'settings', icon: Settings },
       ];
     }

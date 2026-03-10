@@ -27,6 +27,7 @@ import PerformanceEvaluation from "./pages/PerformanceEvaluation";
 import Benchmark from "./pages/Benchmark";
 import OFPPTReimbursement from "./pages/OFPPTReimbursement";
 import ManagerDashboard from "./pages/ManagerDashboard";
+import Referrals from "./pages/Referrals";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
@@ -119,8 +120,9 @@ const App = () => (
               <Route path="/manage/team" element={<ProtectedLayout featureName="Team"><TeamCollaboration /></ProtectedLayout>} />
               <Route path="/manage/settings" element={<ProtectedLayout featureName="Settings"><Settings /></ProtectedLayout>} />
 
-              {/* Billing */}
+              {/* Billing & Growth */}
               <Route path="/billing" element={<ProtectedLayout featureName="Billing"><Billing /></ProtectedLayout>} />
+              <Route path="/referrals" element={<ProtectedLayout featureName="Referrals"><Referrals /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
               <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />

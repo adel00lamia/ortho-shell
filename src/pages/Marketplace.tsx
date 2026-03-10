@@ -8,12 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Star, Clock, Users, Search, Filter, ArrowLeft, Heart, Share2, ShoppingBag, Plus, Store, Package, TrendingUp, Flame, BadgeCheck } from 'lucide-react';
+import { Star, Clock, Users, Search, Filter, ArrowLeft, Heart, Share2, ShoppingBag, Plus, Store, Package, TrendingUp, Flame, BadgeCheck, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { CardGridSkeleton } from '@/components/skeletons/DashboardSkeleton';
+import { SellerAnalytics } from '@/components/marketplace/SellerAnalytics';
 import {
   usePublishedListings,
   useMyListings,
@@ -170,6 +171,7 @@ export default function Marketplace() {
         <TabsList className="w-full justify-start">
           <TabsTrigger value="browse" className="gap-2"><ShoppingBag className="h-4 w-4" />{m.browse}</TabsTrigger>
           {canSell && <TabsTrigger value="sell" className="gap-2"><Store className="h-4 w-4" />{m.sell}</TabsTrigger>}
+          {canSell && <TabsTrigger value="analytics" className="gap-2"><BarChart3 className="h-4 w-4" />{m.earnings}</TabsTrigger>}
           <TabsTrigger value="purchases" className="gap-2"><Package className="h-4 w-4" />{m.myPurchases}</TabsTrigger>
         </TabsList>
 
@@ -323,6 +325,13 @@ export default function Marketplace() {
                 ))}
               </div>
             )}
+          </TabsContent>
+        )}
+
+        {/* Seller Analytics Tab */}
+        {canSell && (
+          <TabsContent value="analytics">
+            <SellerAnalytics />
           </TabsContent>
         )}
 
