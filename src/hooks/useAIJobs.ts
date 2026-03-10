@@ -84,7 +84,7 @@ export function useCancelAIJob() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ai_jobs')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
         .eq('id', jobId);
