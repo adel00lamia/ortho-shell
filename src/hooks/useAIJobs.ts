@@ -34,7 +34,7 @@ export function useAIJobs() {
       return false;
     },
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_jobs')
         .select('*')
         .eq('user_id', user!.id)
