@@ -127,66 +127,6 @@ export type Database = {
         }
         Relationships: []
       }
-      discussions: {
-        Row: {
-          id: string
-          company_id: string
-          user_id: string
-          module_id: string | null
-          plan_id: string | null
-          parent_id: string | null
-          content: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          user_id: string
-          module_id?: string | null
-          plan_id?: string | null
-          parent_id?: string | null
-          content: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          user_id?: string
-          module_id?: string | null
-          plan_id?: string | null
-          parent_id?: string | null
-          content?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      reactions: {
-        Row: {
-          id: string
-          discussion_id: string
-          user_id: string
-          emoji: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          discussion_id: string
-          user_id: string
-          emoji: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          discussion_id?: string
-          user_id?: string
-          emoji?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
       departments: {
         Row: {
           budget: number | null
@@ -249,45 +189,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      employee_skills: {
-        Row: {
-          id: string
-          company_id: string
-          employee_name: string
-          employee_email: string | null
-          skill_id: string
-          current_level: number
-          target_level: number
-          assessed_at: string
-          assessed_by: string | null
-          notes: string | null
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          employee_name: string
-          employee_email?: string | null
-          skill_id: string
-          current_level?: number
-          target_level?: number
-          assessed_at?: string
-          assessed_by?: string | null
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          employee_name?: string
-          employee_email?: string | null
-          skill_id?: string
-          current_level?: number
-          target_level?: number
-          assessed_at?: string
-          assessed_by?: string | null
-          notes?: string | null
-        }
-        Relationships: []
       }
       job_descriptions: {
         Row: {
@@ -914,72 +815,6 @@ export type Database = {
           },
         ]
       }
-      skill_categories: {
-        Row: {
-          id: string
-          company_id: string
-          name_fr: string
-          name_en: string
-          ofppt_sector_code: string | null
-          icon: string
-          sort_order: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          name_fr: string
-          name_en: string
-          ofppt_sector_code?: string | null
-          icon?: string
-          sort_order?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          name_fr?: string
-          name_en?: string
-          ofppt_sector_code?: string | null
-          icon?: string
-          sort_order?: number
-          created_at?: string
-        }
-        Relationships: []
-      }
-      skills: {
-        Row: {
-          id: string
-          company_id: string
-          category_id: string
-          name_fr: string
-          name_en: string
-          description: string | null
-          max_level: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          category_id: string
-          name_fr: string
-          name_en: string
-          description?: string | null
-          max_level?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          category_id?: string
-          name_fr?: string
-          name_en?: string
-          description?: string | null
-          max_level?: number
-          created_at?: string
-        }
-        Relationships: []
-      }
       skills_catalog: {
         Row: {
           category: string
@@ -1185,9 +1020,6 @@ export type Database = {
           description: string | null
           duration_hours: number | null
           id: string
-          scorm_url: string | null
-          scorm_version: string | null
-          scorm_entry_point: string | null
           skills_covered: string[] | null
           target_audience: string[] | null
           title: string
@@ -1204,9 +1036,6 @@ export type Database = {
           description?: string | null
           duration_hours?: number | null
           id?: string
-          scorm_url?: string | null
-          scorm_version?: string | null
-          scorm_entry_point?: string | null
           skills_covered?: string[] | null
           target_audience?: string[] | null
           title: string
@@ -1223,9 +1052,6 @@ export type Database = {
           description?: string | null
           duration_hours?: number | null
           id?: string
-          scorm_url?: string | null
-          scorm_version?: string | null
-          scorm_entry_point?: string | null
           skills_covered?: string[] | null
           target_audience?: string[] | null
           title?: string
@@ -1323,240 +1149,6 @@ export type Database = {
           },
         ]
       }
-      xapi_events: {
-        Row: {
-          id: string
-          company_id: string
-          user_id: string
-          module_id: string | null
-          verb: string
-          object_type: string
-          object_id: string | null
-          result_score: number | null
-          result_success: boolean | null
-          result_duration: string | null
-          result_response: string | null
-          context_data: Json
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          user_id: string
-          module_id?: string | null
-          verb: string
-          object_type: string
-          object_id?: string | null
-          result_score?: number | null
-          result_success?: boolean | null
-          result_duration?: string | null
-          result_response?: string | null
-          context_data?: Json
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          user_id?: string
-          module_id?: string | null
-          verb?: string
-          object_type?: string
-          object_id?: string | null
-          result_score?: number | null
-          result_success?: boolean | null
-          result_duration?: string | null
-          result_response?: string | null
-          context_data?: Json
-          created_at?: string
-        }
-        Relationships: []
-      }
-      trainer_stripe_accounts: {
-        Row: {
-          id: string
-          user_id: string
-          stripe_account_id: string
-          charges_enabled: boolean
-          payouts_enabled: boolean
-          onboarding_complete: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          stripe_account_id: string
-          charges_enabled?: boolean
-          payouts_enabled?: boolean
-          onboarding_complete?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          stripe_account_id?: string
-          charges_enabled?: boolean
-          payouts_enabled?: boolean
-          onboarding_complete?: boolean
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      notifications: {
-        Row: {
-          id: string
-          user_id: string
-          company_id: string | null
-          type: string
-          title: string
-          body: string | null
-          link: string | null
-          read: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          company_id?: string | null
-          type: string
-          title: string
-          body?: string | null
-          link?: string | null
-          read?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          company_id?: string | null
-          type?: string
-          title?: string
-          body?: string | null
-          link?: string | null
-          read?: boolean
-          created_at?: string
-        }
-        Relationships: []
-      }
-      marketplace_listings: {
-        Row: {
-          id: string
-          seller_id: string
-          module_id: string | null
-          title: string
-          description: string | null
-          short_description: string | null
-          price_cents: number
-          currency: string
-          category: string
-          tags: string[]
-          cover_image_url: string | null
-          preview_url: string | null
-          status: string
-          platform_fee_percent: number
-          rating_avg: number
-          rating_count: number
-          purchase_count: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          seller_id: string
-          module_id?: string | null
-          title: string
-          description?: string | null
-          short_description?: string | null
-          price_cents: number
-          currency?: string
-          category: string
-          tags?: string[]
-          cover_image_url?: string | null
-          preview_url?: string | null
-          status?: string
-          platform_fee_percent?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          title?: string
-          description?: string | null
-          short_description?: string | null
-          price_cents?: number
-          currency?: string
-          category?: string
-          tags?: string[]
-          cover_image_url?: string | null
-          preview_url?: string | null
-          status?: string
-          platform_fee_percent?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      marketplace_purchases: {
-        Row: {
-          id: string
-          listing_id: string
-          buyer_id: string
-          company_id: string | null
-          stripe_payment_intent_id: string | null
-          stripe_transfer_id: string | null
-          amount_cents: number
-          platform_fee_cents: number
-          seller_payout_cents: number
-          currency: string
-          status: string
-          purchased_at: string
-        }
-        Insert: {
-          id?: string
-          listing_id: string
-          buyer_id: string
-          company_id?: string | null
-          stripe_payment_intent_id?: string | null
-          stripe_transfer_id?: string | null
-          amount_cents: number
-          platform_fee_cents: number
-          seller_payout_cents: number
-          currency?: string
-          status?: string
-          purchased_at?: string
-        }
-        Update: {
-          stripe_payment_intent_id?: string | null
-          stripe_transfer_id?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
-      marketplace_reviews: {
-        Row: {
-          id: string
-          listing_id: string
-          reviewer_id: string
-          purchase_id: string
-          rating: number
-          title: string | null
-          body: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          listing_id: string
-          reviewer_id: string
-          purchase_id: string
-          rating: number
-          title?: string | null
-          body?: string | null
-          created_at?: string
-        }
-        Update: {
-          rating?: number
-          title?: string | null
-          body?: string | null
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1595,9 +1187,6 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_hr: { Args: { _user_id: string }; Returns: boolean }
-      mark_all_notifications_read: { Args: { p_user_id: string }; Returns: undefined }
-      generate_referral_code: { Args: { p_user_id: string }; Returns: string }
-      get_current_user_company_id: { Args: Record<string, never>; Returns: string }
     }
     Enums: {
       app_role: "admin" | "hr_manager" | "employee" | "trainer"
