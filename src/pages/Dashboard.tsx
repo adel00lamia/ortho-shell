@@ -56,6 +56,7 @@ const Dashboard = () => {
   const { stats, loading: statsLoading } = useDashboardStats(role);
   const { companyId } = useCompanyId();
   const { widgets, toggleWidget, moveWidget, resetLayout, isVisible } = useDashboardLayout();
+  const { seedDemoData, isSeeding, progress: seedProgress } = useSeedDemoData();
   const [customizing, setCustomizing] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
 
