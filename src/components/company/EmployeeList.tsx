@@ -104,7 +104,7 @@ export default function EmployeeList({ companyId, fr }: EmployeeListProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('company_employees').delete().eq('id', id);
+      const { error } = await (supabase as any).from('company_employees').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
