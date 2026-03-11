@@ -409,17 +409,21 @@ export default function CompanyProfile() {
       </Card>
 
       <Tabs defaultValue="identification" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="identification">
             <Shield className="h-4 w-4 mr-2" />
             {fr ? 'Identification' : 'Identification'}
+          </TabsTrigger>
+          <TabsTrigger value="employees">
+            <Users className="h-4 w-4 mr-2" />
+            {fr ? 'Employés' : 'Employees'}
           </TabsTrigger>
           <TabsTrigger value="branding">
             <Palette className="h-4 w-4 mr-2" />
             {fr ? 'Branding' : 'Branding'}
           </TabsTrigger>
           <TabsTrigger value="orgchart">
-            <Users className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 mr-2" />
             {fr ? 'Organigramme' : 'Org Chart'}
           </TabsTrigger>
         </TabsList>
