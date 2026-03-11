@@ -80,13 +80,13 @@ export default function EmployeeList({ companyId, fr }: EmployeeListProps) {
   const saveMutation = useMutation({
     mutationFn: async (emp: Omit<CompanyEmployee, 'id' | 'status'>) => {
       if (editingId) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('company_employees')
           .update({ ...emp, updated_at: new Date().toISOString() })
           .eq('id', editingId);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('company_employees')
           .insert({ ...emp, company_id: companyId, created_by: user!.id, status: 'active' });
         if (error) throw error;
