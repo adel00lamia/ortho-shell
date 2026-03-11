@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
   ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle,
-  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical, Sun, Moon, Sunset,
+  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical, Sun, Moon, Sunset, Database, Loader2,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -17,6 +17,7 @@ import { useCompanyId } from '@/hooks/useCompanyId';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
+import { useSeedDemoData } from '@/hooks/useSeedDemoData';
 import { motion } from 'framer-motion';
 
 const fadeIn = {
@@ -55,6 +56,7 @@ const Dashboard = () => {
   const { stats, loading: statsLoading } = useDashboardStats(role);
   const { companyId } = useCompanyId();
   const { widgets, toggleWidget, moveWidget, resetLayout, isVisible } = useDashboardLayout();
+  const { seedDemoData, isSeeding, progress: seedProgress } = useSeedDemoData();
   const [customizing, setCustomizing] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
 
@@ -284,7 +286,31 @@ const Dashboard = () => {
       </div>}
 
       {/* Profile Completion */}
-      {isVisible('profile') && profileCompletion && profileCompletion.percent < 100 && (role === 'hr_manager' || role === 'admin') && (
+      {isVisible('profile') && !companyId && (role === 'hr_manager' || role === 'admin' || role === 'employee') && (
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={4.5}>
+          <Card className="p-6 border-dashed border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Database className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h3 className="font-semibold text-foreground">{fr ? 'Charger des données démo' : 'Load Demo Data'}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {fr
+                    ? 'Créez une entreprise fictive complète (Atlas Industries Maroc) avec 15 employés, 7 départements, fiches de poste et évaluations pour tester toutes les fonctionnalités.'
+                    : 'Create a complete fictitious company (Atlas Industries Maroc) with 15 employees, 7 departments, job descriptions, and evaluations to test all features.'}
+                </p>
+                {seedProgress && <p className="text-xs text-primary font-medium flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />{seedProgress}</p>}
+                <Button onClick={seedDemoData} disabled={isSeeding} className="mt-1">
+                  {isSeeding ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{fr ? 'Chargement...' : 'Loading...'}</> : <><Database className="h-4 w-4 mr-2" />{fr ? 'Charger les données démo' : 'Load Demo Data'}</>}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {isVisible('profile') && profileCompletion && profileCompletion.percent < 100 && companyId && (role === 'hr_manager' || role === 'admin') && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5}>
           <Card className="p-6 border-primary/20 bg-primary/5">
             <div className="flex items-start gap-4">
