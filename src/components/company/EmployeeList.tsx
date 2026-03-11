@@ -186,7 +186,7 @@ export default function EmployeeList({ companyId, fr }: EmployeeListProps) {
       if (rows.length === 0) throw new Error(fr ? 'Aucun employé valide' : 'No valid employees');
 
       const insertData = rows.map(r => ({ ...r, company_id: companyId, created_by: user!.id, status: 'active' }));
-      const { error } = await supabase.from('company_employees').insert(insertData);
+      const { error } = await (supabase as any).from('company_employees').insert(insertData);
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['company-employees', companyId] });
