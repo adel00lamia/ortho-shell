@@ -127,6 +127,65 @@ export type Database = {
         }
         Relationships: []
       }
+      company_employees: {
+        Row: {
+          company_id: string
+          contract_type: string | null
+          created_at: string
+          created_by: string
+          department: string | null
+          email: string | null
+          full_name: string
+          hire_date: string | null
+          id: string
+          matricule: string | null
+          phone: string | null
+          position: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          contract_type?: string | null
+          created_at?: string
+          created_by: string
+          department?: string | null
+          email?: string | null
+          full_name: string
+          hire_date?: string | null
+          id?: string
+          matricule?: string | null
+          phone?: string | null
+          position?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string
+          department?: string | null
+          email?: string | null
+          full_name?: string
+          hire_date?: string | null
+          id?: string
+          matricule?: string | null
+          phone?: string | null
+          position?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           budget: number | null
