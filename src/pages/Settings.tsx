@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, Calendar, CreditCard, Users, User, Save, Building2, Shield } from 'lucide-react';
+import { AlertCircle, Calendar, CreditCard, Users, User, Save, Building2, Shield, FileText, Download } from 'lucide-react';
+import { exportAppFeaturesPDF } from '@/lib/appFeaturesPDF';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -291,6 +292,10 @@ const Settings = () => {
               <Shield className="h-4 w-4" />
               {isFr ? 'Équipe & Rôles' : 'Team & Roles'}
             </TabsTrigger>
+            <TabsTrigger value="features" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              {isFr ? 'Guide App' : 'App Guide'}
+            </TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
@@ -533,6 +538,42 @@ const Settings = () => {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* App Guide Tab */}
+          <TabsContent value="features">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {isFr ? 'Guide des fonctionnalités' : 'Feature Guide'}
+                </CardTitle>
+                <CardDescription>
+                  {isFr
+                    ? 'Téléchargez un PDF complet décrivant toutes les fonctionnalités de la plateforme TrainPro Academy.'
+                    : 'Download a comprehensive PDF describing all TrainPro Academy platform features.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-border bg-muted/30 p-6 text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Download className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{isFr ? 'Guide complet de la plateforme' : 'Complete Platform Guide'}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {isFr
+                        ? '13 sections • Tableau de bord, Profil, Évaluations, Plans, Modules, Diagnostic, Benchmark, Marketplace et plus'
+                        : '13 sections • Dashboard, Profile, Evaluations, Plans, Modules, Diagnostic, Benchmark, Marketplace and more'}
+                    </p>
+                  </div>
+                  <Button onClick={() => exportAppFeaturesPDF(isFr ? 'fr' : 'en')} className="gap-2">
+                    <Download className="h-4 w-4" />
+                    {isFr ? 'Télécharger le PDF' : 'Download PDF'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
