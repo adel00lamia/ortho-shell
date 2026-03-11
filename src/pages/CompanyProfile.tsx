@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import EmployeeList from '@/components/company/EmployeeList';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -408,17 +409,21 @@ export default function CompanyProfile() {
       </Card>
 
       <Tabs defaultValue="identification" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="identification">
             <Shield className="h-4 w-4 mr-2" />
             {fr ? 'Identification' : 'Identification'}
+          </TabsTrigger>
+          <TabsTrigger value="employees">
+            <Users className="h-4 w-4 mr-2" />
+            {fr ? 'Employés' : 'Employees'}
           </TabsTrigger>
           <TabsTrigger value="branding">
             <Palette className="h-4 w-4 mr-2" />
             {fr ? 'Branding' : 'Branding'}
           </TabsTrigger>
           <TabsTrigger value="orgchart">
-            <Users className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 mr-2" />
             {fr ? 'Organigramme' : 'Org Chart'}
           </TabsTrigger>
         </TabsList>
@@ -589,6 +594,12 @@ export default function CompanyProfile() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ── Employees Tab ── */}
+        <TabsContent value="employees">
+          <EmployeeList companyId={companyId} fr={fr} />
+        </TabsContent>
+
 
         {/* ── Branding Tab ── */}
         <TabsContent value="branding" className="space-y-6">
