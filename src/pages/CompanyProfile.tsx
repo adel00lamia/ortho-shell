@@ -595,6 +595,12 @@ export default function CompanyProfile() {
           </Card>
         </TabsContent>
 
+        {/* ── Employees Tab ── */}
+        <TabsContent value="employees">
+          <EmployeeList companyId={companyId} fr={fr} />
+        </TabsContent>
+
+
         {/* ── Branding Tab ── */}
         <TabsContent value="branding" className="space-y-6">
           <Card>
