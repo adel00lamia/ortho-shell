@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   LayoutDashboard, Users, Target, TrendingUp, BookOpen, Award, BarChart3, Settings,
   ClipboardCheck, Lightbulb, PlayCircle, CheckCircle2, ArrowRight, Building2, GraduationCap, ShieldCheck, AlertCircle,
-  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical, Sun, Moon, Sunset,
+  SlidersHorizontal, RotateCcw, Eye, EyeOff, GripVertical, Sun, Moon, Sunset, Database, Loader2,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -17,6 +17,7 @@ import { useCompanyId } from '@/hooks/useCompanyId';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
+import { useSeedDemoData } from '@/hooks/useSeedDemoData';
 import { motion } from 'framer-motion';
 
 const fadeIn = {
