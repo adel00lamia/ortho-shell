@@ -66,13 +66,13 @@ export default function EmployeeList({ companyId, fr }: EmployeeListProps) {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['company-employees', companyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('company_employees')
         .select('*')
         .eq('company_id', companyId)
         .order('full_name');
       if (error) throw error;
-      return data as CompanyEmployee[];
+      return (data || []) as CompanyEmployee[];
     },
     enabled: !!companyId,
   });
