@@ -27,6 +27,7 @@ import { AssessmentReport } from '@/components/assessment/AssessmentReport';
 import { SkillsTaxonomyEditor } from '@/components/skills/SkillsTaxonomyEditor';
 import { SkillsHeatmap } from '@/components/skills/SkillsHeatmap';
 import { GapAnalysisPanel } from '@/components/skills/GapAnalysisPanel';
+import { EmployeeSkillProfiler } from '@/components/diagnostic/EmployeeSkillProfiler';
 import type { JDTemplate } from '@/data/jobDescriptionTemplates';
 
 interface Employee {
