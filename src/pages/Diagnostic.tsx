@@ -563,6 +563,7 @@ export default function Diagnostic() {
             <TabsTrigger value="evaluations" className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {d.performanceEvaluations}</TabsTrigger>
             <TabsTrigger value="skills" className="flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Skills Matrix</TabsTrigger>
             <TabsTrigger value="taxonomy" className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> {d.overview === 'Overview' ? 'Skills Taxonomy' : 'Taxonomie'}</TabsTrigger>
+            <TabsTrigger value="profiler" className="flex items-center gap-1"><Brain className="h-3.5 w-3.5" /> {d.overview === 'Overview' ? 'AI Profiler' : 'Profilage IA'}</TabsTrigger>
             <TabsTrigger value="report" className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> AI Report</TabsTrigger>
             <TabsTrigger value="diagnostic" className="flex items-center gap-1"><Target className="h-3.5 w-3.5" /> {d.diagnostic}</TabsTrigger>
           </TabsList>
