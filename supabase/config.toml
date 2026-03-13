@@ -49,3 +49,6 @@ verify_jwt = false
 
 [functions.cnss-extract]
 verify_jwt = false
+
+[functions.ai-employee-profiler]
+verify_jwt = false
