@@ -1115,6 +1115,11 @@ export default function Diagnostic() {
               </div>
             </form>
           </TabsContent>
+
+          {/* AI Employee Profiler Tab */}
+          <TabsContent value="profiler">
+            <EmployeeSkillProfiler />
+          </TabsContent>
         </Tabs>
 
         {activeTab === 'diagnostic' && employees.length > 0 && (
