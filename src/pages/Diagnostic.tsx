@@ -877,6 +877,7 @@ export default function Diagnostic() {
 
           {/* Skills Taxonomy Tab */}
           <TabsContent value="taxonomy" className="space-y-6">
+            <CompanyProfileSync />
             <Tabs defaultValue="editor" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="editor">{d.overview === 'Overview' ? 'Taxonomy Editor' : 'Editeur'}</TabsTrigger>
