@@ -27,6 +27,7 @@ import { AssessmentReport } from '@/components/assessment/AssessmentReport';
 import { SkillsTaxonomyEditor } from '@/components/skills/SkillsTaxonomyEditor';
 import { SkillsHeatmap } from '@/components/skills/SkillsHeatmap';
 import { GapAnalysisPanel } from '@/components/skills/GapAnalysisPanel';
+import { CompanyProfileSync } from '@/components/skills/CompanyProfileSync';
 import { EmployeeSkillProfiler } from '@/components/diagnostic/EmployeeSkillProfiler';
 import type { JDTemplate } from '@/data/jobDescriptionTemplates';
 
@@ -876,6 +877,7 @@ export default function Diagnostic() {
 
           {/* Skills Taxonomy Tab */}
           <TabsContent value="taxonomy" className="space-y-6">
+            <CompanyProfileSync />
             <Tabs defaultValue="editor" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="editor">{d.overview === 'Overview' ? 'Taxonomy Editor' : 'Editeur'}</TabsTrigger>
