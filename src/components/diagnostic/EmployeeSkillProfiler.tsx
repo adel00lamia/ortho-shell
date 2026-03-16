@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployeeProfiles, type WorkforceProfile, type EmployeeProfile, type DepartmentRollup } from '@/hooks/useEmployeeProfiles';
-import { Loader2, Users, Building2, AlertTriangle, TrendingUp, Brain, ChevronDown, ChevronUp, Sparkles, Target, GraduationCap } from 'lucide-react';
+import { Loader2, Users, Building2, AlertTriangle, TrendingUp, Brain, ChevronDown, ChevronUp, Sparkles, Target, GraduationCap, FileText, Briefcase, Network } from 'lucide-react';
 
 const levelColors: Record<string, string> = {
   junior: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -70,7 +70,6 @@ function EmployeeCard({ emp, language }: { emp: EmployeeProfile; language: strin
 
       {expanded && (
         <CardContent className="space-y-4 pt-0">
-          {/* Strengths */}
           {emp.strengths?.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
@@ -85,7 +84,6 @@ function EmployeeCard({ emp, language }: { emp: EmployeeProfile; language: strin
             </div>
           )}
 
-          {/* Skill Levels */}
           {emp.skillLevels?.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
@@ -124,7 +122,6 @@ function EmployeeCard({ emp, language }: { emp: EmployeeProfile; language: strin
             </div>
           )}
 
-          {/* Gaps & Training */}
           {emp.gaps?.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
@@ -209,8 +206,20 @@ function DepartmentCard({ dept, language }: { dept: DepartmentRollup; language: 
 
 export function EmployeeSkillProfiler() {
   const { language } = useLanguage();
-  const { profile, loading, runProfiling } = useEmployeeProfiles();
+  const { profile, loading, runProfiling, dataStats, loadDataStats } = useEmployeeProfiles();
   const fr = language === 'fr';
+
+  useEffect(() => {
+    loadDataStats();
+  }, []);
+
+  const dataSourceItems = dataStats ? [
+    { icon: <Users className="h-4 w-4 text-primary" />, label: fr ? 'Employés' : 'Employees', count: dataStats.employees, ok: dataStats.employees > 0 },
+    { icon: <Briefcase className="h-4 w-4 text-primary" />, label: fr ? 'Fiches de poste' : 'Job Descriptions', count: dataStats.jobDescriptions, ok: dataStats.jobDescriptions > 0 },
+    { icon: <FileText className="h-4 w-4 text-primary" />, label: fr ? 'Évaluations' : 'Evaluations', count: dataStats.evaluations, ok: dataStats.evaluations > 0 },
+    { icon: <Building2 className="h-4 w-4 text-primary" />, label: fr ? 'Départements' : 'Departments', count: dataStats.departments, ok: dataStats.departments > 0 },
+    { icon: <Network className="h-4 w-4 text-primary" />, label: fr ? 'Postes (organigramme)' : 'Positions (Org Chart)', count: dataStats.positions, ok: dataStats.positions > 0 },
+  ] : null;
 
   return (
     <div className="space-y-6">
@@ -225,11 +234,11 @@ export function EmployeeSkillProfiler() {
               </CardTitle>
               <CardDescription>
                 {fr
-                  ? 'Analyse automatique des niveaux de compétences basée sur CV, expérience, évaluations et certifications. Agrégation par département pour la stratégie de formation.'
-                  : 'Automatic skill level detection from CV, experience, performance scores & certifications. Department rollup for company-wide training strategy.'}
+                  ? 'Analyse automatique des niveaux de compétences basée sur le profil entreprise : employés, organigramme, CV, évaluations et fiches de poste.'
+                  : 'Automatic skill level detection from company profile data: employees, org chart, CVs, evaluations & job descriptions.'}
               </CardDescription>
             </div>
-            <Button onClick={runProfiling} disabled={loading} size="lg">
+            <Button onClick={runProfiling} disabled={loading || (dataStats?.employees === 0)} size="lg">
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -244,6 +253,35 @@ export function EmployeeSkillProfiler() {
             </Button>
           </div>
         </CardHeader>
+
+        {/* Data sources summary */}
+        {dataSourceItems && (
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {dataSourceItems.map((item, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-2 p-3 rounded-lg border ${
+                    item.ok ? 'bg-primary/5 border-primary/20' : 'bg-muted/50 border-border'
+                  }`}
+                >
+                  {item.icon}
+                  <div>
+                    <div className="text-lg font-bold">{item.count}</div>
+                    <div className="text-[11px] text-muted-foreground leading-tight">{item.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {dataStats?.employees === 0 && (
+              <p className="text-sm text-destructive mt-3">
+                {fr
+                  ? '⚠️ Aucun employé trouvé. Ajoutez des employés dans le Profil Entreprise avant de lancer le profilage.'
+                  : '⚠️ No employees found. Add employees in Company Profile before running profiling.'}
+              </p>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {!profile && !loading && (
@@ -255,15 +293,16 @@ export function EmployeeSkillProfiler() {
             </h3>
             <p className="text-sm text-muted-foreground max-w-md mb-4">
               {fr
-                ? 'L\'IA analysera les données de chaque employé (CV, ancienneté, évaluations, certifications) pour détecter les niveaux de compétence et identifier les écarts par rapport aux fiches de poste.'
-                : 'AI will analyze each employee\'s data (CV, tenure, evaluations, certifications) to detect skill levels and identify gaps against job descriptions.'}
+                ? 'L\'IA analysera les données du profil entreprise (employés, organigramme, CV, ancienneté, évaluations, certifications) pour détecter les niveaux de compétence et identifier les écarts par rapport aux fiches de poste.'
+                : 'AI will analyze company profile data (employees, org chart, CVs, tenure, evaluations, certifications) to detect skill levels and identify gaps against job descriptions.'}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-muted-foreground">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs text-muted-foreground">
               {[
                 { icon: <Target className="h-4 w-4" />, label: fr ? 'CV / Résumé' : 'CV / Resume' },
                 { icon: <TrendingUp className="h-4 w-4" />, label: fr ? 'Ancienneté' : 'Experience' },
                 { icon: <Users className="h-4 w-4" />, label: fr ? 'Évaluations' : 'Evaluations' },
                 { icon: <GraduationCap className="h-4 w-4" />, label: fr ? 'Certifications' : 'Certifications' },
+                { icon: <Network className="h-4 w-4" />, label: fr ? 'Organigramme' : 'Org Chart' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-1 p-2 rounded-md bg-muted/50">
                   {item.icon}
@@ -292,7 +331,6 @@ export function EmployeeSkillProfiler() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Summary */}
           {profile.summary && (
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="py-4">
@@ -301,7 +339,6 @@ export function EmployeeSkillProfiler() {
             </Card>
           )}
 
-          {/* Department Rollup */}
           <TabsContent value="departments" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {profile.departmentRollup?.map((dept, i) => (
@@ -310,14 +347,12 @@ export function EmployeeSkillProfiler() {
             </div>
           </TabsContent>
 
-          {/* Employee Profiles */}
           <TabsContent value="employees" className="space-y-3">
             {profile.employeeProfiles?.map((emp, i) => (
               <EmployeeCard key={i} emp={emp} language={language} />
             ))}
           </TabsContent>
 
-          {/* Company-Wide Priorities */}
           <TabsContent value="priorities" className="space-y-4">
             {profile.companyWidePriorities?.map((p, i) => (
               <Card key={i}>

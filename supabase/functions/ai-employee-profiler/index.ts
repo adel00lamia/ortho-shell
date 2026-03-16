@@ -18,31 +18,127 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { employees, jobDescriptions, language = "en" } = await req.json();
+    const { employees, jobDescriptions, orgChart, language = "en" } = await req.json();
 
     const langInstruction =
       language === "fr"
         ? "\n\nCRITICAL: Tu DOIS écrire TOUT le contenu en français. Seules les clés JSON restent en anglais."
         : "";
 
-    const systemPrompt = `You are an expert HR skills analyst and workforce planner. Analyze employee profiles holistically using all available data sources (CV/resume, years of experience, performance scores, certifications, education) to detect skill levels and match against job requirements.${langInstruction}`;
+    const systemPrompt = `You are an expert HR skills analyst and workforce planner. Analyze employee profiles holistically using all available data sources (CV/resume, years of experience, performance scores, certifications, education, org chart position data) to detect skill levels and match against job requirements.${langInstruction}`;
+
+    const orgChartSection = orgChart
+      ? `\n\nORGANIZATION CHART:\nDepartments: ${JSON.stringify(orgChart.departments, null, 2)}\nPositions: ${JSON.stringify(orgChart.positions, null, 2)}\n\nUse org chart data to understand hierarchy, critical positions, existing match scores, and required vs current skills at each position.`
+      : "";
 
     const userPrompt = `Analyze the following employees and their associated job descriptions to produce a comprehensive workforce skill profile:
 
-EMPLOYEES:
+EMPLOYEES (including evaluation data, resume summaries, org chart position, and department info):
 ${JSON.stringify(employees, null, 2)}
 
 JOB DESCRIPTIONS:
-${JSON.stringify(jobDescriptions, null, 2)}
+${JSON.stringify(jobDescriptions, null, 2)}${orgChartSection}
 
 For each employee, analyze:
-1. CV/Resume data (skills, experience, education, certifications)
+1. CV/Resume data (skills, experience, education, certifications) from evaluation.resumeSummary
 2. Years of experience (from hire_date to now)
 3. Performance evaluation scores and competency ratings
 4. Education level and certifications
 5. Current position vs job description requirements
+6. Org chart position data: match scores, current vs required skills, critical role flags
+7. Department hierarchy and reporting structure
 
-Then produce a department-level rollup showing aggregate gaps and training priorities.`;
+Then produce a department-level rollup showing aggregate gaps and training priorities, informed by the org chart structure.`;
+
+    const toolSchema = {
+      type: "object",
+      properties: {
+        employeeProfiles: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              employeeName: { type: "string" },
+              detectedLevel: { type: "string", enum: ["junior", "mid", "senior", "lead", "expert"] },
+              overallMatchScore: { type: "number", description: "0-100 match to current JD" },
+              skillLevels: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    skill: { type: "string" },
+                    currentLevel: { type: "number", description: "1-5 scale" },
+                    requiredLevel: { type: "number", description: "1-5 scale" },
+                    source: { type: "string", description: "cv, experience, performance, certification, org-chart" },
+                    confidence: { type: "string", enum: ["high", "medium", "low"] },
+                  },
+                  required: ["skill", "currentLevel", "requiredLevel", "source", "confidence"],
+                },
+              },
+              strengths: { type: "array", items: { type: "string" } },
+              gaps: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    skill: { type: "string" },
+                    gap: { type: "number" },
+                    priority: { type: "string", enum: ["critical", "high", "medium", "low"] },
+                    suggestedTraining: { type: "string" },
+                    estimatedDuration: { type: "string" },
+                  },
+                  required: ["skill", "gap", "priority", "suggestedTraining"],
+                },
+              },
+              trainingUrgency: { type: "string", enum: ["immediate", "short-term", "medium-term", "long-term"] },
+            },
+            required: ["employeeName", "detectedLevel", "overallMatchScore", "skillLevels", "strengths", "gaps", "trainingUrgency"],
+          },
+        },
+        departmentRollup: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              department: { type: "string" },
+              employeeCount: { type: "number" },
+              avgMatchScore: { type: "number" },
+              criticalGaps: { type: "array", items: { type: "string" } },
+              topTrainingNeeds: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    skill: { type: "string" },
+                    affectedEmployees: { type: "number" },
+                    avgGap: { type: "number" },
+                    recommendedAction: { type: "string" },
+                  },
+                  required: ["skill", "affectedEmployees", "avgGap", "recommendedAction"],
+                },
+              },
+              overallReadiness: { type: "string", enum: ["ready", "needs-development", "critical-gaps"] },
+            },
+            required: ["department", "employeeCount", "avgMatchScore", "criticalGaps", "topTrainingNeeds", "overallReadiness"],
+          },
+        },
+        summary: { type: "string" },
+        companyWidePriorities: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              priority: { type: "string" },
+              description: { type: "string" },
+              impactedDepartments: { type: "array", items: { type: "string" } },
+              estimatedInvestment: { type: "string" },
+            },
+            required: ["priority", "description"],
+          },
+        },
+      },
+      required: ["employeeProfiles", "departmentRollup", "summary", "companyWidePriorities"],
+    };
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -64,95 +160,7 @@ Then produce a department-level rollup showing aggregate gaps and training prior
               function: {
                 name: "provide_workforce_profile",
                 description: "Provide structured workforce skill profiles and department rollup",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    employeeProfiles: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          employeeName: { type: "string" },
-                          detectedLevel: { type: "string", enum: ["junior", "mid", "senior", "lead", "expert"] },
-                          overallMatchScore: { type: "number", description: "0-100 match to current JD" },
-                          skillLevels: {
-                            type: "array",
-                            items: {
-                              type: "object",
-                              properties: {
-                                skill: { type: "string" },
-                                currentLevel: { type: "number", description: "1-5 scale" },
-                                requiredLevel: { type: "number", description: "1-5 scale" },
-                                source: { type: "string", description: "cv, experience, performance, certification" },
-                                confidence: { type: "string", enum: ["high", "medium", "low"] },
-                              },
-                              required: ["skill", "currentLevel", "requiredLevel", "source", "confidence"],
-                            },
-                          },
-                          strengths: { type: "array", items: { type: "string" } },
-                          gaps: {
-                            type: "array",
-                            items: {
-                              type: "object",
-                              properties: {
-                                skill: { type: "string" },
-                                gap: { type: "number" },
-                                priority: { type: "string", enum: ["critical", "high", "medium", "low"] },
-                                suggestedTraining: { type: "string" },
-                                estimatedDuration: { type: "string" },
-                              },
-                              required: ["skill", "gap", "priority", "suggestedTraining"],
-                            },
-                          },
-                          trainingUrgency: { type: "string", enum: ["immediate", "short-term", "medium-term", "long-term"] },
-                        },
-                        required: ["employeeName", "detectedLevel", "overallMatchScore", "skillLevels", "strengths", "gaps", "trainingUrgency"],
-                      },
-                    },
-                    departmentRollup: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          department: { type: "string" },
-                          employeeCount: { type: "number" },
-                          avgMatchScore: { type: "number" },
-                          criticalGaps: { type: "array", items: { type: "string" } },
-                          topTrainingNeeds: {
-                            type: "array",
-                            items: {
-                              type: "object",
-                              properties: {
-                                skill: { type: "string" },
-                                affectedEmployees: { type: "number" },
-                                avgGap: { type: "number" },
-                                recommendedAction: { type: "string" },
-                              },
-                              required: ["skill", "affectedEmployees", "avgGap", "recommendedAction"],
-                            },
-                          },
-                          overallReadiness: { type: "string", enum: ["ready", "needs-development", "critical-gaps"] },
-                        },
-                        required: ["department", "employeeCount", "avgMatchScore", "criticalGaps", "topTrainingNeeds", "overallReadiness"],
-                      },
-                    },
-                    summary: { type: "string" },
-                    companyWidePriorities: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          priority: { type: "string" },
-                          description: { type: "string" },
-                          impactedDepartments: { type: "array", items: { type: "string" } },
-                          estimatedInvestment: { type: "string" },
-                        },
-                        required: ["priority", "description"],
-                      },
-                    },
-                  },
-                  required: ["employeeProfiles", "departmentRollup", "summary", "companyWidePriorities"],
-                },
+                parameters: toolSchema,
               },
             },
           ],
