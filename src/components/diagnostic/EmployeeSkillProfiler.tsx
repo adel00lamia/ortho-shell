@@ -273,7 +273,7 @@ export function EmployeeSkillProfiler() {
                 </div>
               ))}
             </div>
-            {dataStats.employees === 0 && (
+            {dataStats?.employees === 0 && (
               <p className="text-sm text-destructive mt-3">
                 {fr
                   ? '⚠️ Aucun employé trouvé. Ajoutez des employés dans le Profil Entreprise avant de lancer le profilage.'
