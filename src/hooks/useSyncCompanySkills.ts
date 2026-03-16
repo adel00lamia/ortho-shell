@@ -92,7 +92,9 @@ export function useSyncCompanySkills() {
 
         // Map competency scores from evaluation → employee_skills
         if (eval_?.competency_scores && Array.isArray(eval_.competency_scores)) {
-          for (const score of eval_.competency_scores) {
+          for (const rawScore of eval_.competency_scores) {
+            const score = rawScore as any;
+            if (!score) continue;
             const scoreName = (score.name || score.skill || '').toLowerCase();
             const matchedSkill = skillByName.get(scoreName);
             if (matchedSkill && !existingSet.has(`${emp.full_name}::${matchedSkill.id}`)) {
@@ -102,7 +104,7 @@ export function useSyncCompanySkills() {
                 employee_email: emp.email || null,
                 skill_id: matchedSkill.id,
                 current_level: Math.min(5, Math.max(1, Math.round(score.score || score.level || 1))),
-                target_level: Math.min(5, Math.max(1, Math.round(score.target || score.score + 1 || 3))),
+                target_level: Math.min(5, Math.max(1, Math.round(score.target || (score.score || 0) + 1 || 3))),
                 assessed_at: new Date().toISOString(),
                 notes: fr ? 'Synchronisé depuis évaluation de performance' : 'Synced from performance evaluation',
               });
