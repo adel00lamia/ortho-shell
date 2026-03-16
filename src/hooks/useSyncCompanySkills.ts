@@ -127,7 +127,9 @@ export function useSyncCompanySkills() {
             currentMap.set(name, level);
           });
 
-          for (const req of reqSkills) {
+          for (const rawReq of reqSkills) {
+            const req = rawReq as any;
+            if (!req) continue;
             const reqName = (typeof req === 'string' ? req : req.name || req.skill || '').toLowerCase();
             const reqLevel = typeof req === 'string' ? 3 : (req.level || req.score || 3);
             const matchedSkill = skillByName.get(reqName);
