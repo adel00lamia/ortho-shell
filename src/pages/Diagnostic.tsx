@@ -159,13 +159,21 @@ export default function Diagnostic() {
       if (profile?.company_id) {
         setCompanyId(profile.company_id);
 
-        // Load company name
+        // Load company profile data
         const { data: company } = await supabase
           .from('companies')
-          .select('name')
+          .select('name, industry, company_size, employee_count')
           .eq('id', profile.company_id)
           .single();
-        if (company) setCompanyName(company.name);
+        if (company) {
+          setCompanyName(company.name);
+          // Auto-fill diagnostic form from company profile
+          setFormData(prev => ({
+            ...prev,
+            industry: company.industry || prev.industry,
+            companySize: company.company_size || prev.companySize,
+          }));
+        }
 
         // Load job descriptions
         const { data: jobs } = await supabase
