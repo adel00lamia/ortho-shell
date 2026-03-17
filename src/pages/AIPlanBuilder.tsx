@@ -724,22 +724,46 @@ export default function AIPlanBuilder() {
     return matchesSearch && matchesCategory;
   });
 
-  // Load saved templates from database
+  // Load saved templates and company profile from database
   useEffect(() => {
-    const loadTemplates = async () => {
+    const loadInitialData = async () => {
       if (!user) return;
       try {
-        const { data, error } = await supabase
+        // Load templates
+        const { data: templates, error } = await supabase
           .from('plan_templates')
           .select('*')
           .order('created_at', { ascending: false });
-        if (error) throw error;
-        setSavedTemplates(data || []);
+        if (!error) setSavedTemplates(templates || []);
+
+        // Load company profile to auto-fill requirements
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.company_id) {
+          const { data: company } = await supabase
+            .from('companies')
+            .select('name, industry, company_size, employee_count')
+            .eq('id', profile.company_id)
+            .single();
+
+          if (company) {
+            setRequirements(prev => ({
+              ...prev,
+              company: company.name || prev.company,
+              industry: company.industry || prev.industry,
+              companySize: company.company_size || prev.companySize,
+            }));
+          }
+        }
       } catch (err) {
-        console.error('Error loading templates:', err);
+        console.error('Error loading initial data:', err);
       }
     };
-    loadTemplates();
+    loadInitialData();
   }, [user]);
 
   useEffect(() => {
