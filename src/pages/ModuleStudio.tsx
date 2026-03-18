@@ -27,6 +27,8 @@ import { exportModuleToPDF } from "@/components/module-studio/ModulePDFExport";
 import { useModuleProgress } from "@/hooks/useModuleProgress";
 import { useTrackEvent } from "@/hooks/useXAPIEvents";
 import { Progress } from "@/components/ui/progress";
+import { TrainingTemplateLibrary } from "@/components/module-studio/TrainingTemplateLibrary";
+import type { TrainingTemplate } from "@/data/trainingContentTemplates";
 
 interface ModuleContent {
   slides?: { title: string; content: string; type?: string; videoUrl?: string; exerciseInstructions?: string; resourceLinks?: string[] }[];
@@ -418,6 +420,25 @@ export default function ModuleStudio() {
 
             {/* Module Details Tab */}
             <TabsContent value="details" className="space-y-6">
+              {/* Template Library */}
+              {!moduleId && (
+                <TrainingTemplateLibrary onSelectTemplate={(template: TrainingTemplate) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    title: template.title,
+                    description: template.description,
+                    duration_hours: template.durationHours,
+                    skills_covered: template.skills,
+                    target_audience: template.targetAudience,
+                    content: {
+                      slides: template.slides,
+                      quiz: template.quiz,
+                      script: template.script,
+                    },
+                  }));
+                  toast.success("Template appliqué comme brouillon !");
+                }} />
+              )}
               <Card>
                 <CardHeader>
                   <CardTitle>Basic Information</CardTitle>
