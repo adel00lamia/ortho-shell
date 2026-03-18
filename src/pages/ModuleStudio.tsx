@@ -27,6 +27,8 @@ import { exportModuleToPDF } from "@/components/module-studio/ModulePDFExport";
 import { useModuleProgress } from "@/hooks/useModuleProgress";
 import { useTrackEvent } from "@/hooks/useXAPIEvents";
 import { Progress } from "@/components/ui/progress";
+import { TrainingTemplateLibrary } from "@/components/module-studio/TrainingTemplateLibrary";
+import type { TrainingTemplate } from "@/data/trainingContentTemplates";
 
 interface ModuleContent {
   slides?: { title: string; content: string; type?: string; videoUrl?: string; exerciseInstructions?: string; resourceLinks?: string[] }[];
