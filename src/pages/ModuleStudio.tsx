@@ -420,6 +420,25 @@ export default function ModuleStudio() {
 
             {/* Module Details Tab */}
             <TabsContent value="details" className="space-y-6">
+              {/* Template Library */}
+              {!moduleId && (
+                <TrainingTemplateLibrary onSelectTemplate={(template: TrainingTemplate) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    title: template.title,
+                    description: template.description,
+                    duration_hours: template.durationHours,
+                    skills_covered: template.skills,
+                    target_audience: template.targetAudience,
+                    content: {
+                      slides: template.slides,
+                      quiz: template.quiz,
+                      script: template.script,
+                    },
+                  }));
+                  toast.success("Template appliqué comme brouillon !");
+                }} />
+              )}
               <Card>
                 <CardHeader>
                   <CardTitle>Basic Information</CardTitle>
