@@ -8,8 +8,8 @@ interface SubscriptionGateProps {
   requiredPlan?: 'starter' | 'professional' | 'enterprise';
 }
 
-// DISCOVERY MODE: Temporarily bypass all plan restrictions during development
-const DISCOVERY_MODE = import.meta.env.DEV && import.meta.env.VITE_DISCOVERY_MODE === 'true';
+// FREE TRIAL: All features open to explore for all users
+const FREE_TRIAL_MODE = true;
 
 const SubscriptionGate = ({ children, requiredPlan = 'starter' }: SubscriptionGateProps) => {
   const { subscription, loading, hasAccess, trialDaysLeft } = useSubscription();
