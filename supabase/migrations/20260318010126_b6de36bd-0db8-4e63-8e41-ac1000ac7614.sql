@@ -1,0 +1,2 @@
+UPDATE public.user_roles SET role = 'hr_manager' WHERE user_id = '8f3fe2d0-78ed-4643-b6a1-afb162d31619';
+UPDATE public.profiles SET role = 'hr_manager' WHERE id = '8f3fe2d0-78ed-4643-b6a1-afb162d31619';
