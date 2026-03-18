@@ -14,7 +14,7 @@ const FREE_TRIAL_MODE = true;
 const SubscriptionGate = ({ children, requiredPlan = 'starter' }: SubscriptionGateProps) => {
   const { subscription, loading, hasAccess, trialDaysLeft } = useSubscription();
 
-  if (DISCOVERY_MODE) return <>{children}</>;
+  if (FREE_TRIAL_MODE) return <>{children}</>;
   if (loading) return null;
 
   // Show trial ending warning
