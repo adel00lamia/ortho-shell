@@ -249,8 +249,99 @@ export type Database = {
           },
         ]
       }
+      inferred_skills: {
+        Row: {
+          company_id: string
+          confidence: number
+          created_at: string
+          id: string
+          inferred_from: string
+          skill_id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          confidence?: number
+          created_at?: string
+          id?: string
+          inferred_from: string
+          skill_id: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          confidence?: number
+          created_at?: string
+          id?: string
+          inferred_from?: string
+          skill_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inferred_skills_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inferred_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          applied_at: string
+          company_id: string
+          id: string
+          job_description_id: string
+          match_score: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          company_id: string
+          id?: string
+          job_description_id: string
+          match_score?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          company_id?: string
+          id?: string
+          job_description_id?: string
+          match_score?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_job_description_id_fkey"
+            columns: ["job_description_id"]
+            isOneToOne: false
+            referencedRelation: "job_descriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_descriptions: {
         Row: {
+          closes_at: string | null
           company_id: string
           competencies: Json | null
           created_at: string | null
@@ -258,6 +349,7 @@ export type Database = {
           department: string | null
           description: string | null
           id: string
+          is_open: boolean
           level: string | null
           preferred_skills: Json | null
           required_skills: Json | null
@@ -266,6 +358,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          closes_at?: string | null
           company_id: string
           competencies?: Json | null
           created_at?: string | null
@@ -273,6 +366,7 @@ export type Database = {
           department?: string | null
           description?: string | null
           id?: string
+          is_open?: boolean
           level?: string | null
           preferred_skills?: Json | null
           required_skills?: Json | null
@@ -281,6 +375,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          closes_at?: string | null
           company_id?: string
           competencies?: Json | null
           created_at?: string | null
@@ -288,6 +383,7 @@ export type Database = {
           department?: string | null
           description?: string | null
           id?: string
+          is_open?: boolean
           level?: string | null
           preferred_skills?: Json | null
           required_skills?: Json | null
@@ -842,6 +938,7 @@ export type Database = {
           id: string
           last_name: string | null
           role: Database["public"]["Enums"]["app_role"] | null
+          skill_declaration_text: string | null
           updated_at: string
         }
         Insert: {
@@ -852,6 +949,7 @@ export type Database = {
           id: string
           last_name?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
+          skill_declaration_text?: string | null
           updated_at?: string
         }
         Update: {
@@ -862,6 +960,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
+          skill_declaration_text?: string | null
           updated_at?: string
         }
         Relationships: [

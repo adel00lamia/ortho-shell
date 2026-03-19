@@ -102,16 +102,22 @@ const Pricing = () => {
     setLoading(planId);
     
     try {
-      const response = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planId,
-          interval: isAnnual ? 'annual' : 'monthly'
-        })
-      });
+      const { data: { session } } = await (await import('@/integrations/supabase/client')).supabase.auth.getSession();
+      const response = await fetch(
+        `${(await import('@/config/env')).env.VITE_SUPABASE_URL}/functions/v1/billing-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': (await import('@/config/env')).env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            planId,
+            interval: isAnnual ? 'annual' : 'monthly'
+          })
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to create checkout session');
