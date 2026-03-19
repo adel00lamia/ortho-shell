@@ -219,7 +219,7 @@ export function useSeedDemoData() {
       step: number,
       label: string,
       table: string,
-      fn: () => Promise<{ data: T; error: any }>
+      fn: () => PromiseLike<{ data: T; error: any }>
     ): Promise<T> => {
       setProgress(`[${step}/${TOTAL}] ${label}`);
       const { data, error } = await fn();
