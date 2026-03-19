@@ -45,28 +45,30 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { stats, loading: statsLoading } = useDashboardStats(role);
   const { companyId } = useCompanyId();
+  const { context: companyContext } = useCompanyProfile();
   const { widgets, toggleWidget, moveWidget, resetLayout, isVisible } = useDashboardLayout();
   const { seedDemoData, isSeeding, progress: seedProgress } = useSeedDemoData();
   const [customizing, setCustomizing] = useState(false);
-  const [profileCompletion, setProfileCompletion] = useState<{ percent: number; missing: string[] } | null>(null);
 
   const fr = language === 'fr';
   const greeting = getGreeting(fr);
   const GreetingIcon = greeting.icon;
   const firstName = user?.user_metadata?.first_name || '';
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!companyId) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
-      const { data: company } = await supabase.from('companies').select('*').eq('id', companyId).single();
-      if (!company) { setProfileCompletion({ percent: 0, missing: PROFILE_FIELDS.map(f => f.label) }); return; }
-      const missing: string[] = [];
-      PROFILE_FIELDS.forEach(f => { if (!(company as any)[f.key]) missing.push(f.label); });
-      const filled = PROFILE_FIELDS.length - missing.length;
-      setProfileCompletion({ percent: Math.round((filled / PROFILE_FIELDS.length) * 100), missing });
-    };
-    loadProfile();
-  }, [companyId]);
+  // Derive profile completion from company context — no extra Supabase call
+  const profileCompletion = (() => {
+    if (!companyId) return { percent: 0, missing: PROFILE_FIELDS.map(f => f.label) };
+    const company = companyContext?.company;
+    if (!company) return { percent: 0, missing: PROFILE_FIELDS.map(f => f.label) };
+    const missing: string[] = [];
+    PROFILE_FIELDS.forEach(f => {
+      if (!(company as any)[f.key] && !(company as any)[f.key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())]) {
+        missing.push(f.label);
+      }
+    });
+    const filled = PROFILE_FIELDS.length - missing.length;
+    return { percent: Math.round((filled / PROFILE_FIELDS.length) * 100), missing };
+  })();
 
   if (roleLoading || statsLoading) {
     return (
