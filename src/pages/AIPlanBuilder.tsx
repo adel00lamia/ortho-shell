@@ -460,156 +460,16 @@ export default function AIPlanBuilder() {
     }
   ];
 
-  const aiModels = [
-    { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Fast)', description: 'Fast and efficient — best for most plans' },
-    { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash (Balanced)', description: 'Good balance of speed and quality' },
-    { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro (Advanced)', description: 'Most sophisticated reasoning' },
-    { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini (Quality)', description: 'Strong reasoning at lower cost' }
-  ];
+  // ── More shared constants ──
+  const {
+    AI_MODELS: aiModels,
+    INDUSTRIES: industries,
+    COUNTRIES: countries,
+    CURRENCY_MAP: currencyMap,
+    COMPANY_SIZES: companySizes,
+  } = require('@/data/diagnosticConstants');
 
-  // Enhanced detailed industry list
-  const industries = [
-    // Technology & Digital
-    'Software Development', 'Information Technology', 'Cybersecurity', 'AI & Machine Learning', 
-    'Cloud Computing', 'Data Analytics', 'Digital Marketing', 'E-commerce', 'Fintech',
-    'Gaming & Entertainment', 'Telecommunications', 'EdTech',
-    
-    // Financial Services
-    'Banking', 'Insurance', 'Investment Management', 'Real Estate', 'Accounting & Finance',
-    'Credit & Lending', 'Wealth Management', 'Financial Planning',
-    
-    // Healthcare & Life Sciences
-    'Hospitals & Healthcare', 'Pharmaceuticals', 'Medical Devices', 'Biotechnology',
-    'Mental Health Services', 'Dental Care', 'Veterinary Services', 'Health Insurance',
-    
-    // Manufacturing & Industrial
-    'Automotive', 'Aerospace & Defense', 'Heavy Machinery', 'Electronics Manufacturing',
-    'Chemical & Petrochemical', 'Food & Beverage', 'Textiles & Apparel', 'Construction Materials',
-    'Renewable Energy', 'Oil & Gas', 'Mining & Metals',
-    
-    // Retail & Consumer
-    'Fashion & Luxury', 'Grocery & Supermarkets', 'Home & Garden', 'Sports & Recreation',
-    'Beauty & Personal Care', 'Consumer Electronics', 'Furniture & Home Decor',
-    
-    // Services & Professional
-    'Management Consulting', 'Legal Services', 'Human Resources', 'Marketing & Advertising',
-    'Public Relations', 'Architecture & Design', 'Engineering Services', 'Research & Development',
-    
-    // Transportation & Logistics
-    'Airlines', 'Shipping & Maritime', 'Trucking & Freight', 'Public Transportation',
-    'Logistics & Supply Chain', 'Ride Sharing', 'Delivery Services',
-    
-    // Education & Training
-    'K-12 Education', 'Higher Education', 'Vocational Training', 'Corporate Training',
-    'Online Learning', 'Language Learning', 'Professional Certification',
-    
-    // Government & Public Sector
-    'Federal Government', 'State & Local Government', 'Military & Defense',
-    'Public Safety', 'Social Services', 'Regulatory Agencies',
-    
-    // Non-Profit & Social
-    'Non-Profit Organizations', 'Charities', 'Religious Organizations', 'Foundations',
-    'Social Impact', 'Environmental Organizations', 'International Development',
-    
-    // Media & Entertainment
-    'Publishing', 'Broadcasting', 'Film & Television', 'Music Industry',
-    'Social Media', 'Content Creation', 'News Media', 'Event Management',
-    
-    // Hospitality & Tourism
-    'Hotels & Resorts', 'Restaurants', 'Travel & Tourism', 'Event Planning',
-    'Cruise Lines', 'Theme Parks', 'Conference Centers',
-    
-    // Agriculture & Food
-    'Farming & Agriculture', 'Food Production', 'Beverage Industry', 'Organic Products',
-    'Agricultural Technology', 'Livestock', 'Fisheries & Aquaculture',
-    
-    // Other Industries
-    'Waste Management', 'Security Services', 'Cleaning Services', 'Maintenance Services',
-    'Photography', 'Art & Culture', 'Sports Organizations', 'Fitness & Wellness'
-  ];
-
-  const countries = [
-    // Africa
-    'Morocco', 'Tunisia', 'Algeria', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Ghana', 'Senegal', 'Ivory Coast', 'Cameroon', 'Ethiopia',
-    // Middle East
-    'UAE', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Jordan', 'Lebanon',
-    // Europe
-    'France', 'Germany', 'United Kingdom', 'Spain', 'Italy', 'Netherlands', 'Belgium', 'Switzerland', 'Portugal', 'Sweden', 'Norway', 'Denmark', 'Poland', 'Austria', 'Ireland',
-    // Americas
-    'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Colombia', 'Chile',
-    // Asia-Pacific
-    'China', 'Japan', 'India', 'South Korea', 'Singapore', 'Malaysia', 'Indonesia', 'Thailand', 'Vietnam', 'Philippines', 'Australia', 'New Zealand',
-    // Other
-    'Turkey', 'Russia', 'Pakistan', 'Bangladesh'
-  ];
-
-  const currencyMap: Record<string, { code: string; symbol: string }> = {
-    'Morocco': { code: 'MAD', symbol: 'MAD' },
-    'Tunisia': { code: 'TND', symbol: 'TND' },
-    'Algeria': { code: 'DZD', symbol: 'DZD' },
-    'Egypt': { code: 'EGP', symbol: 'EGP' },
-    'South Africa': { code: 'ZAR', symbol: 'R' },
-    'Nigeria': { code: 'NGN', symbol: '₦' },
-    'Kenya': { code: 'KES', symbol: 'KSh' },
-    'Ghana': { code: 'GHS', symbol: 'GH₵' },
-    'Senegal': { code: 'XOF', symbol: 'CFA' },
-    'Ivory Coast': { code: 'XOF', symbol: 'CFA' },
-    'Cameroon': { code: 'XAF', symbol: 'FCFA' },
-    'Ethiopia': { code: 'ETB', symbol: 'ETB' },
-    'UAE': { code: 'AED', symbol: 'AED' },
-    'Saudi Arabia': { code: 'SAR', symbol: 'SAR' },
-    'Qatar': { code: 'QAR', symbol: 'QAR' },
-    'Kuwait': { code: 'KWD', symbol: 'KWD' },
-    'Bahrain': { code: 'BHD', symbol: 'BHD' },
-    'Oman': { code: 'OMR', symbol: 'OMR' },
-    'Jordan': { code: 'JOD', symbol: 'JOD' },
-    'Lebanon': { code: 'LBP', symbol: 'LBP' },
-    'France': { code: 'EUR', symbol: '€' },
-    'Germany': { code: 'EUR', symbol: '€' },
-    'United Kingdom': { code: 'GBP', symbol: '£' },
-    'Spain': { code: 'EUR', symbol: '€' },
-    'Italy': { code: 'EUR', symbol: '€' },
-    'Netherlands': { code: 'EUR', symbol: '€' },
-    'Belgium': { code: 'EUR', symbol: '€' },
-    'Switzerland': { code: 'CHF', symbol: 'CHF' },
-    'Portugal': { code: 'EUR', symbol: '€' },
-    'Sweden': { code: 'SEK', symbol: 'kr' },
-    'Norway': { code: 'NOK', symbol: 'kr' },
-    'Denmark': { code: 'DKK', symbol: 'kr' },
-    'Poland': { code: 'PLN', symbol: 'zł' },
-    'Austria': { code: 'EUR', symbol: '€' },
-    'Ireland': { code: 'EUR', symbol: '€' },
-    'United States': { code: 'USD', symbol: '$' },
-    'Canada': { code: 'CAD', symbol: 'CA$' },
-    'Mexico': { code: 'MXN', symbol: 'MX$' },
-    'Brazil': { code: 'BRL', symbol: 'R$' },
-    'Argentina': { code: 'ARS', symbol: 'AR$' },
-    'Colombia': { code: 'COP', symbol: 'COL$' },
-    'Chile': { code: 'CLP', symbol: 'CLP' },
-    'China': { code: 'CNY', symbol: '¥' },
-    'Japan': { code: 'JPY', symbol: '¥' },
-    'India': { code: 'INR', symbol: '₹' },
-    'South Korea': { code: 'KRW', symbol: '₩' },
-    'Singapore': { code: 'SGD', symbol: 'S$' },
-    'Malaysia': { code: 'MYR', symbol: 'RM' },
-    'Indonesia': { code: 'IDR', symbol: 'Rp' },
-    'Thailand': { code: 'THB', symbol: '฿' },
-    'Vietnam': { code: 'VND', symbol: '₫' },
-    'Philippines': { code: 'PHP', symbol: '₱' },
-    'Australia': { code: 'AUD', symbol: 'A$' },
-    'New Zealand': { code: 'NZD', symbol: 'NZ$' },
-    'Turkey': { code: 'TRY', symbol: '₺' },
-    'Russia': { code: 'RUB', symbol: '₽' },
-    'Pakistan': { code: 'PKR', symbol: 'Rs' },
-    'Bangladesh': { code: 'BDT', symbol: '৳' },
-  };
-
-  const getCurrency = () => currencyMap[requirements.country] || { code: 'MAD', symbol: 'MAD' };
-
-  const companySizes = [
-    '1-10 employees', '11-50 employees', '51-200 employees', 
-    '201-500 employees', '501-1000 employees', '1000+ employees'
-  ];
+  const getCurrency = () => (currencyMap as Record<string, { code: string; symbol: string }>)[requirements.country] || { code: 'MAD', symbol: 'MAD' };
 
   const deliveryMethods = [
     { id: 'online', label: 'Online Learning', description: 'Virtual classrooms and e-learning', icon: <MonitorPlay className="h-4 w-4" /> },
