@@ -213,68 +213,72 @@ export function useSeedDemoData() {
     }
 
     setIsSeeding(true);
+    const TOTAL = 8;
+
+    const runStep = async <T,>(
+      step: number,
+      label: string,
+      table: string,
+      fn: () => Promise<{ data: T; error: any }>
+    ): Promise<T> => {
+      setProgress(`[${step}/${TOTAL}] ${label}`);
+      const { data, error } = await fn();
+      if (error) {
+        console.error(`Seed failed at step ${step} (${table}):`, error);
+        throw new Error(`Échec sur la table "${table}": ${error.message}`);
+      }
+      return data as T;
+    };
+
     try {
       // 1. Check if user already has a company
-      setProgress('Vérification du profil...');
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
+      const profile = await runStep<{ company_id: string | null } | null>(
+        1, 'Vérification du profil...', 'profiles',
+        () => supabase.from('profiles').select('company_id').eq('id', user.id).single()
+      );
 
       let companyId: string;
 
       if (profile?.company_id) {
-        // User already has a company — use it and update with demo info
         companyId = profile.company_id;
-        const { error: updateErr } = await supabase
-          .from('companies')
-          .update(DEMO_COMPANY)
-          .eq('id', companyId);
-        if (updateErr) throw updateErr;
+        await runStep(2, 'Mise à jour de l\'entreprise...', 'companies',
+          () => supabase.from('companies').update(DEMO_COMPANY).eq('id', companyId)
+        );
       } else {
-        // Create new company without selecting it back immediately.
-        // The new company's SELECT policy depends on profiles.company_id,
-        // so returning the inserted row before linking the profile triggers RLS.
         companyId = crypto.randomUUID();
-        setProgress('Création de l\'entreprise...');
-        const { error: companyErr } = await supabase
-          .from('companies')
-          .insert({ id: companyId, ...DEMO_COMPANY });
-        if (companyErr) throw companyErr;
+        await runStep(2, 'Création de l\'entreprise...', 'companies',
+          () => supabase.from('companies').insert({ id: companyId, ...DEMO_COMPANY })
+        );
       }
 
-      // 2. Link user to company
-      setProgress('Configuration du profil...');
-      const { error: profileErr } = await supabase
-        .from('profiles')
-        .update({ company_id: companyId })
-        .eq('id', user.id);
+      // 3. Link user to company
+      await runStep(3, 'Configuration du profil...', 'profiles',
+        () => supabase.from('profiles').update({ company_id: companyId }).eq('id', user.id)
+      );
 
-      if (profileErr) throw profileErr;
+      // 4. Create departments
+      const depts = await runStep<{ id: string; name: string }[] | null>(
+        4, 'Création des départements...', 'departments',
+        () => supabase.from('departments')
+          .insert(DEMO_DEPARTMENTS.map(d => ({ ...d, company_id: companyId })))
+          .select('id, name')
+      );
 
-      // 3. Create departments
-      setProgress('Création des départements...');
-      const { data: depts } = await supabase
-        .from('departments')
-        .insert(DEMO_DEPARTMENTS.map(d => ({ ...d, company_id: companyId })))
-        .select('id, name');
+      // 5. Create employees
+      await runStep(5, 'Ajout des employés...', 'company_employees',
+        () => supabase.from('company_employees')
+          .insert(DEMO_EMPLOYEES.map(e => ({ ...e, company_id: companyId, created_by: user.id })))
+      );
 
-      // 4. Create employees
-      setProgress('Ajout des employés...');
-      await supabase
-        .from('company_employees')
-        .insert(DEMO_EMPLOYEES.map(e => ({ ...e, company_id: companyId, created_by: user.id })));
+      // 6. Create job descriptions
+      const jds = await runStep<{ id: string; title: string }[] | null>(
+        6, 'Création des fiches de poste...', 'job_descriptions',
+        () => supabase.from('job_descriptions')
+          .insert(DEMO_JOB_DESCRIPTIONS.map(jd => ({ ...jd, company_id: companyId, created_by: user.id })))
+          .select('id, title')
+      );
 
-      // 5. Create job descriptions
-      setProgress('Création des fiches de poste...');
-      const { data: jds } = await supabase
-        .from('job_descriptions')
-        .insert(DEMO_JOB_DESCRIPTIONS.map(jd => ({ ...jd, company_id: companyId, created_by: user.id })))
-        .select('id, title');
-
-      // 6. Create positions
-      setProgress('Création de l\'organigramme...');
+      // 7. Create positions
       const deptMap = Object.fromEntries((depts || []).map(d => [d.name, d.id]));
       const jdMap = Object.fromEntries((jds || []).map(j => [j.title, j.id]));
 
@@ -292,10 +296,12 @@ export function useSeedDemoData() {
         { title: 'Responsable Export', department_id: deptMap['Commercial'], level: 'mid', status: 'open', is_critical: true },
       ];
 
-      await supabase.from('positions').insert(positions.map(p => ({ ...p, company_id: companyId })));
+      await runStep(7, 'Création de l\'organigramme...', 'positions',
+        () => supabase.from('positions').insert(positions.map(p => ({ ...p, company_id: companyId })))
+      );
 
-      // 7. Create performance evaluations
-      setProgress('Création des évaluations...');
+      // 8. Create performance evaluations
+      setProgress(`[8/${TOTAL}] Création des évaluations...`);
       for (const ev of DEMO_EVALUATIONS) {
         const jdId = jdMap[
           ev.department === 'Production' ? 'Directeur de Production' :
@@ -304,15 +310,17 @@ export function useSeedDemoData() {
           ev.department === 'Logistique' ? 'Responsable Logistique' : ''
         ] || null;
 
-        await supabase.from('performance_evaluations').insert({
-          ...ev,
-          company_id: companyId,
-          created_by: user.id,
-          job_description_id: jdId,
-        });
+        await runStep(8, `Évaluation: ${ev.employee_name}...`, 'performance_evaluations',
+          () => supabase.from('performance_evaluations').insert({
+            ...ev,
+            company_id: companyId,
+            created_by: user.id,
+            job_description_id: jdId,
+          })
+        );
       }
 
-      // 8. Refresh all queries
+      // Refresh all queries
       setProgress('Finalisation...');
       await queryClient.invalidateQueries();
 
