@@ -13,6 +13,15 @@ export interface DashboardStats {
   certificates: number;
   activeCourses: number;
   totalStudents: number;
+  // Company profile integration
+  totalEmployees: number;
+  totalDepartments: number;
+  totalEvaluations: number;
+  totalJDs: number;
+  avgRating: number;
+  criticalPositions: number;
+  topSkillGaps: string[];
+  topTrainingNeeds: string[];
   recentActivity: {
     title: string;
     time: string;
@@ -21,7 +30,6 @@ export interface DashboardStats {
 }
 
 async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
-  // Fetch profile to get company_id
   const { data: profile } = await supabase
     .from('profiles')
     .select('company_id')
@@ -30,52 +38,74 @@ async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
 
   const companyId = profile?.company_id;
 
-  // Fetch training plans count
-  let plansQuery = supabase.from('training_plans').select('id, status, modules', { count: 'exact' });
-  if (companyId) plansQuery = plansQuery.eq('company_id', companyId);
-  const { data: plans, count: plansCount } = await plansQuery;
+  // Fetch all data in parallel
+  const [plansRes, modulesRes, teamRes, evalsRes, employeesRes, deptsRes, positionsRes, jdsRes] = await Promise.all([
+    (() => {
+      let q = supabase.from('training_plans').select('id, status, modules', { count: 'exact' });
+      if (companyId) q = q.eq('company_id', companyId);
+      return q;
+    })(),
+    supabase.from('training_modules').select('id, completed', { count: 'exact' }),
+    companyId
+      ? supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
+    (() => {
+      let q = supabase.from('performance_evaluations').select('id, employee_name, overall_rating, areas_for_improvement, training_recommendations, created_at');
+      if (companyId) q = q.eq('company_id', companyId);
+      return q.order('created_at', { ascending: false }).limit(50);
+    })(),
+    companyId
+      ? supabase.from('company_employees').select('id', { count: 'exact', head: true }).eq('company_id', companyId).eq('status', 'active')
+      : Promise.resolve({ count: 0 }),
+    companyId
+      ? supabase.from('departments').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
+    companyId
+      ? supabase.from('positions').select('id, is_critical', { count: 'exact' }).eq('company_id', companyId)
+      : Promise.resolve({ data: null, count: 0 }),
+    companyId
+      ? supabase.from('job_descriptions').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
+  ]);
 
-  const activePlans = plans?.filter(p => p.status === 'active').length || 0;
-  const completedPlans = plans?.filter(p => p.status === 'completed').length || 0;
-  const totalPlans = plansCount || 0;
+  const plans = plansRes.data || [];
+  const activePlans = plans.filter(p => p.status === 'active').length;
+  const completedPlans = plans.filter(p => p.status === 'completed').length;
+  const totalPlans = plansRes.count || 0;
   const completionRate = totalPlans > 0 ? Math.round((completedPlans / totalPlans) * 100) : 0;
 
-  // Fetch training modules count
-  const modulesQuery = supabase.from('training_modules').select('id, completed', { count: 'exact' });
-  const { data: modules, count: modulesCount } = await modulesQuery;
-  const completedModules = modules?.filter(m => m.completed).length || 0;
+  const modules = modulesRes.data || [];
+  const completedModules = modules.filter(m => m.completed).length;
+  const modulesCount = modulesRes.count || 0;
+  const teamCount = teamRes.count || 0;
 
-  // Fetch team members (profiles in same company)
-  let teamCount = 0;
-  if (companyId) {
-    const { count } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', companyId);
-    teamCount = count || 0;
-  }
+  const evals = evalsRes.data || [];
+  const ratings = evals.filter(e => e.overall_rating).map(e => e.overall_rating!);
+  const avgRating = ratings.length > 0 ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
 
-  // Fetch evaluations for recent activity
-  let evalsQuery = supabase.from('performance_evaluations').select('id, employee_name, evaluation_date, created_at');
-  if (companyId) evalsQuery = evalsQuery.eq('company_id', companyId);
-  const { data: evals } = await evalsQuery.order('created_at', { ascending: false }).limit(4);
+  // Aggregate skill gaps & training needs from evaluations
+  const gapCounts: Record<string, number> = {};
+  const needsCounts: Record<string, number> = {};
+  evals.forEach(ev => {
+    (ev.areas_for_improvement || []).forEach((g: string) => { gapCounts[g] = (gapCounts[g] || 0) + 1; });
+    (ev.training_recommendations || []).forEach((t: string) => { needsCounts[t] = (needsCounts[t] || 0) + 1; });
+  });
+  const topSkillGaps = Object.entries(gapCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([g]) => g);
+  const topTrainingNeeds = Object.entries(needsCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([t]) => t);
 
-  // Build recent activity from real data
+  const criticalPositions = (positionsRes.data || []).filter((p: any) => p.is_critical).length;
+
+  // Build recent activity
   type ActivityType = 'success' | 'info' | 'warning';
-  const recentActivity: { title: string; time: string; type: ActivityType }[] = (evals || []).map(ev => ({
+  const recentActivity: { title: string; time: string; type: ActivityType }[] = evals.slice(0, 4).map(ev => ({
     title: `Evaluation: ${ev.employee_name}`,
     time: ev.created_at ? formatTimeAgo(new Date(ev.created_at)) : '',
     type: 'success' as ActivityType,
   }));
 
-  if (plans && recentActivity.length < 4) {
-    const recentPlans = plans.slice(0, 4 - recentActivity.length);
-    recentPlans.forEach(() => {
-      recentActivity.push({
-        title: 'Plan de formation cree',
-        time: '',
-        type: 'info' as ActivityType,
-      });
+  if (plans.length > 0 && recentActivity.length < 4) {
+    plans.slice(0, 4 - recentActivity.length).forEach(() => {
+      recentActivity.push({ title: 'Plan de formation cree', time: '', type: 'info' as ActivityType });
     });
   }
 
@@ -90,6 +120,14 @@ async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
     certificates: completedModules,
     activeCourses: modulesCount || 0,
     totalStudents: teamCount,
+    totalEmployees: employeesRes.count || 0,
+    totalDepartments: deptsRes.count || 0,
+    totalEvaluations: evals.length,
+    totalJDs: jdsRes.count || 0,
+    avgRating,
+    criticalPositions,
+    topSkillGaps,
+    topTrainingNeeds,
     recentActivity,
   };
 }
