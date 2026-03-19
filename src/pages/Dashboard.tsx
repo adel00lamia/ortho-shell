@@ -123,10 +123,10 @@ const Dashboard = () => {
         { title: d.teamManagement, desc: d.manageTeam, icon: Users, path: '/manage/team', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.teamMembers, value: String(stats?.teamMembers || 0), icon: Users, trend: '' },
+        { label: d.teamMembers, value: String(stats?.totalEmployees || stats?.teamMembers || 0), icon: Users, trend: '' },
         { label: d.activePlans, value: String(stats?.activePlans || 0), icon: Target, trend: '' },
         { label: d.avgProgress, value: `${stats?.avgProgress || 0}%`, icon: TrendingUp, trend: '' },
-        { label: t.nav.certificates, value: String(stats?.certificates || 0), icon: Award, trend: '' },
+        { label: fr ? 'Évaluations' : 'Evaluations', value: String(stats?.totalEvaluations || 0), icon: ClipboardCheck, trend: '' },
       ]
     },
     trainer: {
