@@ -98,17 +98,8 @@ export default function Diagnostic() {
 
   const [aiLoading, setAiLoading] = useState(false);
 
-  const { skillCategories, budgetRanges, languages, priorities, constraints, trainingTemplates } = (() => {
-    const { SKILL_CATEGORIES_SIMPLE, BUDGET_RANGES, TRAINING_LANGUAGES, PRIORITIES, CONSTRAINTS_SIMPLE, DIAGNOSTIC_TEMPLATES } = require('@/data/diagnosticConstants');
-    return {
-      skillCategories: SKILL_CATEGORIES_SIMPLE as readonly string[],
-      budgetRanges: BUDGET_RANGES as readonly string[],
-      languages: TRAINING_LANGUAGES as readonly string[],
-      priorities: PRIORITIES as readonly string[],
-      constraints: CONSTRAINTS_SIMPLE as readonly string[],
-      trainingTemplates: DIAGNOSTIC_TEMPLATES as readonly { name: string; objectives: string; priorities: string[] }[],
-    };
-  })();
+  // Shared constants — imported at top level would break hooks ordering, so we reference them here
+  // (imported at module level below)
 
   useEffect(() => {
     if (user) {
