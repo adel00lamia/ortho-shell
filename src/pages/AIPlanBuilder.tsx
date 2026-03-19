@@ -250,99 +250,14 @@ export default function AIPlanBuilder() {
   const [previousPlanFiles, setPreviousPlanFiles] = useState<PreviousPlanFile[]>([]);
   const [uploadingPlan, setUploadingPlan] = useState(false);
 
-  const predefinedObjectives = [
-    'Improve employee productivity and efficiency',
-    'Develop leadership and management skills',
-    'Enhance technical expertise and capabilities',
-    'Strengthen customer service excellence',
-    'Build effective communication skills',
-    'Foster innovation and creative thinking',
-    'Ensure regulatory compliance and risk management',
-    'Advance digital transformation initiatives',
-    'Develop sales and negotiation skills',
-    'Improve project management capabilities'
-  ];
-
-  const skillCategories = [
-    {
-      name: 'Leadership & Management',
-      skills: ['Leadership', 'Team Management', 'Strategic Planning', 'Decision Making', 'Conflict Resolution',
-        'Change Management', 'Delegation', 'Performance Management', 'Coaching & Mentoring']
-    },
-    {
-      name: 'Communication',
-      skills: ['Communication', 'Public Speaking', 'Presentation Skills', 'Written Communication', 'Negotiation',
-        'Active Listening', 'Cross-cultural Communication', 'Stakeholder Management']
-    },
-    {
-      name: 'Technical',
-      skills: ['Programming', 'Data Analysis', 'Cloud Computing', 'Cybersecurity', 'AI & Machine Learning',
-        'Software Development', 'Database Management', 'DevOps', 'Web Development', 'Mobile Development']
-    },
-    {
-      name: 'Business',
-      skills: ['Project Management', 'Agile/Scrum', 'Business Analysis', 'Financial Analysis', 'Risk Management',
-        'Process Improvement', 'Quality Assurance', 'Supply Chain Management', 'Operations Management']
-    },
-    {
-      name: 'Digital',
-      skills: ['Digital Marketing', 'SEO/SEM', 'Social Media Marketing', 'Content Creation', 'E-commerce',
-        'UX/UI Design', 'Data Visualization', 'CRM Systems', 'Marketing Automation']
-    },
-    {
-      name: 'Soft Skills',
-      skills: ['Problem Solving', 'Critical Thinking', 'Creativity', 'Emotional Intelligence', 'Time Management',
-        'Adaptability', 'Teamwork', 'Customer Service', 'Sales Techniques']
-    }
-  ];
-  
-  // Flatten for backwards compatibility
-  const predefinedSkills = skillCategories.flatMap(cat => cat.skills);
-
-  const constraintCategories = [
-    {
-      name: 'Budget',
-      constraints: ['Limited training budget', 'No external trainer budget', 'Cost-per-employee cap',
-        'Fixed annual training allocation', 'No budget for travel expenses', 'Shared budget with other departments']
-    },
-    {
-      name: 'Time',
-      constraints: ['Maximum 2 hours per week for training', 'Training only during work hours',
-        'No training during peak business periods', 'Must complete within 3 months',
-        'Employees cannot be absent for full-day sessions', 'Limited to after-hours training',
-        'Seasonal availability restrictions', 'Project deadline conflicts']
-    },
-    {
-      name: 'Location',
-      constraints: ['Remote employees only', 'Multiple geographic locations', 'No travel allowed',
-        'Limited physical training space', 'Distributed workforce across time zones',
-        'Field workers with no fixed location', 'International offices coordination']
-    },
-    {
-      name: 'Technology',
-      constraints: ['Limited internet connectivity', 'No access to external platforms',
-        'Mobile-only access for some employees', 'Legacy systems constraints',
-        'No video conferencing capabilities', 'Restricted software installation',
-        'BYOD (Bring Your Own Device) policy', 'No cloud storage access']
-    },
-    {
-      name: 'Organizational',
-      constraints: ['High employee turnover', 'Multilingual workforce', 'Shift workers availability',
-        'Union regulations on training time', 'Regulatory certification requirements',
-        'Accessibility requirements for disabled employees', 'Hierarchical approval processes',
-        'Cross-departmental coordination needed', 'Management buy-in required']
-    },
-    {
-      name: 'Resources',
-      constraints: ['No dedicated training department', 'Limited internal subject matter experts',
-        'Seasonal workforce variations', 'Part-time employee inclusion required',
-        'Contractors and temporary staff inclusion', 'No dedicated L&D team',
-        'Shared HR resources across locations', 'Limited administrative support']
-    }
-  ];
-
-  // Flatten for backwards compatibility
-  const predefinedConstraints = constraintCategories.flatMap(cat => cat.constraints);
+  // ── Shared constants from centralized file ──
+  const {
+    PREDEFINED_OBJECTIVES: predefinedObjectives,
+    SKILL_CATEGORIES_DETAILED: skillCategories,
+    PREDEFINED_SKILLS: predefinedSkills,
+    CONSTRAINT_CATEGORIES: constraintCategories,
+    PREDEFINED_CONSTRAINTS: predefinedConstraints,
+  } = require('@/data/diagnosticConstants');
   
   const { user } = useAuth();
   const { language } = useLanguage();

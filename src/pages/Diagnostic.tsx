@@ -98,46 +98,17 @@ export default function Diagnostic() {
 
   const [aiLoading, setAiLoading] = useState(false);
 
-  const skillCategories = [
-    "Leadership", "Communication", "Technical Skills", "Project Management",
-    "Sales", "Marketing", "Data Analysis", "Cybersecurity", "AI/ML",
-    "Customer Service", "Financial Management", "Operations"
-  ];
-
-  const budgetRanges = [
-    "10,000 - 50,000 MAD",
-    "50,000 - 100,000 MAD", 
-    "100,000 - 250,000 MAD",
-    "250,000 - 500,000 MAD",
-    "500,000+ MAD"
-  ];
-
-  const languages = ["Arabic", "French", "English", "Spanish"];
-  const priorities = ["Quick ROI", "Skill Certification", "Team Building", "Compliance", "Innovation"];
-  const constraints = ["Remote Only", "Limited Budget", "Time Constraints", "Location Specific"];
-
-  const trainingTemplates = [
-    {
-      name: "Digital Transformation",
-      objectives: "Upgrade team digital skills to modernize operations and improve efficiency through cloud, automation, and data analytics training.",
-      priorities: ["Innovation", "Quick ROI"]
-    },
-    {
-      name: "Leadership Development",
-      objectives: "Build strong management pipeline through leadership, strategic thinking, and team management training programs.",
-      priorities: ["Team Building", "Skill Certification"]
-    },
-    {
-      name: "Technical Skills Upskilling",
-      objectives: "Enhance technical capabilities in programming, cybersecurity, and AI/ML to stay competitive in the tech landscape.",
-      priorities: ["Innovation", "Skill Certification"]
-    },
-    {
-      name: "Customer Service Excellence",
-      objectives: "Improve customer satisfaction through communication, problem-solving, and service quality training.",
-      priorities: ["Quick ROI", "Team Building"]
-    }
-  ];
+  const { skillCategories, budgetRanges, languages, priorities, constraints, trainingTemplates } = (() => {
+    const { SKILL_CATEGORIES_SIMPLE, BUDGET_RANGES, TRAINING_LANGUAGES, PRIORITIES, CONSTRAINTS_SIMPLE, DIAGNOSTIC_TEMPLATES } = require('@/data/diagnosticConstants');
+    return {
+      skillCategories: SKILL_CATEGORIES_SIMPLE as readonly string[],
+      budgetRanges: BUDGET_RANGES as readonly string[],
+      languages: TRAINING_LANGUAGES as readonly string[],
+      priorities: PRIORITIES as readonly string[],
+      constraints: CONSTRAINTS_SIMPLE as readonly string[],
+      trainingTemplates: DIAGNOSTIC_TEMPLATES as readonly { name: string; objectives: string; priorities: string[] }[],
+    };
+  })();
 
   useEffect(() => {
     if (user) {
