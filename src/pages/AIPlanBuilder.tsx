@@ -469,14 +469,11 @@ export default function AIPlanBuilder() {
     }
   ];
 
-  // ── More shared constants ──
-  const {
-    AI_MODELS: aiModels,
-    INDUSTRIES: industries,
-    COUNTRIES: countries,
-    CURRENCY_MAP: currencyMap,
-    COMPANY_SIZES: companySizes,
-  } = require('@/data/diagnosticConstants');
+  const aiModels = AI_MODELS as readonly { value: string; label: string; description: string }[];
+  const industries = INDUSTRIES as readonly string[];
+  const countries = COUNTRIES as readonly string[];
+  const currencyMap = CURRENCY_MAP;
+  const companySizes = COMPANY_SIZES as readonly string[];
 
   const getCurrency = () => (currencyMap as Record<string, { code: string; symbol: string }>)[requirements.country] || { code: 'MAD', symbol: 'MAD' };
 
