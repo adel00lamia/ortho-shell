@@ -106,8 +106,6 @@ export default function Diagnostic() {
 
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Shared constants — imported at top level would break hooks ordering, so we reference them here
-  // (imported at module level below)
 
   useEffect(() => {
     if (user) {

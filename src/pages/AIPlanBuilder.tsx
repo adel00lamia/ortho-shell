@@ -87,6 +87,18 @@ import {
   MarketResearchView
 } from '@/components/plan';
 import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
+import {
+  PREDEFINED_OBJECTIVES,
+  SKILL_CATEGORIES_DETAILED,
+  PREDEFINED_SKILLS,
+  CONSTRAINT_CATEGORIES,
+  PREDEFINED_CONSTRAINTS,
+  AI_MODELS,
+  INDUSTRIES,
+  COUNTRIES,
+  CURRENCY_MAP,
+  COMPANY_SIZES,
+} from '@/data/diagnosticConstants';
 
 interface TrainingTemplate {
   id: string;
