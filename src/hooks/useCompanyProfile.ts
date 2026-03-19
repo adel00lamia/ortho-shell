@@ -10,11 +10,13 @@ export interface CompanyContext {
     companySize: string | null;
     employeeCount: number | null;
     city: string | null;
+    address: string | null;
     cnssNumber: string | null;
     rcNumber: string | null;
     iceNumber: string | null;
     contactEmail: string | null;
     domain: string | null;
+    logoUrl: string | null;
   } | null;
   employees: { id: string; fullName: string; email: string | null; department: string | null; position: string | null; contractType: string | null; hireDate: string | null }[];
   departments: { id: string; name: string; employeeCount: number; headName: string | null; level: number }[];
