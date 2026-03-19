@@ -214,15 +214,35 @@ export function useSeedDemoData() {
 
     setIsSeeding(true);
     try {
-      // 1. Create company
-      setProgress('Création de l\'entreprise...');
-      const { data: company, error: companyErr } = await supabase
-        .from('companies')
-        .insert(DEMO_COMPANY)
-        .select('id')
+      // 1. Check if user already has a company
+      setProgress('Vérification du profil...');
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
         .single();
-      if (companyErr) throw companyErr;
-      const companyId = company.id;
+
+      let companyId: string;
+
+      if (profile?.company_id) {
+        // User already has a company — use it and update with demo info
+        companyId = profile.company_id;
+        const { error: updateErr } = await supabase
+          .from('companies')
+          .update(DEMO_COMPANY)
+          .eq('id', companyId);
+        if (updateErr) throw updateErr;
+      } else {
+        // Create new company
+        setProgress('Création de l\'entreprise...');
+        const { data: company, error: companyErr } = await supabase
+          .from('companies')
+          .insert(DEMO_COMPANY)
+          .select('id')
+          .single();
+        if (companyErr) throw companyErr;
+        companyId = company.id;
+      }
 
       // 2. Link user to company + set admin role
       setProgress('Configuration du profil...');
