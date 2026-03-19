@@ -744,18 +744,42 @@ export default function AIPlanBuilder() {
           .single();
 
         if (profile?.company_id) {
-          const { data: company } = await supabase
-            .from('companies')
-            .select('name, industry, company_size, employee_count')
-            .eq('id', profile.company_id)
-            .single();
+          const [companyRes, employeesRes, evalsRes] = await Promise.all([
+            supabase.from('companies').select('name, industry, company_size, employee_count, city').eq('id', profile.company_id).single(),
+            supabase.from('company_employees').select('department, position', { count: 'exact', head: false }).eq('company_id', profile.company_id).eq('status', 'active'),
+            supabase.from('performance_evaluations').select('areas_for_improvement, training_recommendations').eq('company_id', profile.company_id),
+          ]);
 
+          const company = companyRes.data;
           if (company) {
+            // Aggregate training needs and skill gaps from evaluations
+            const needsCounts: Record<string, number> = {};
+            const gapCounts: Record<string, number> = {};
+            (evalsRes.data || []).forEach((ev: any) => {
+              (ev.training_recommendations || []).forEach((t: string) => { needsCounts[t] = (needsCounts[t] || 0) + 1; });
+              (ev.areas_for_improvement || []).forEach((g: string) => { gapCounts[g] = (gapCounts[g] || 0) + 1; });
+            });
+            const topNeeds = Object.entries(needsCounts).sort(([,a],[,b]) => b - a).slice(0, 5).map(([s]) => s);
+            const topGaps = Object.entries(gapCounts).sort(([,a],[,b]) => b - a).slice(0, 3).map(([g]) => g);
+
+            // Get unique departments for context
+            const departments = [...new Set((employeesRes.data || []).map((e: any) => e.department).filter(Boolean))];
+
             setRequirements(prev => ({
               ...prev,
               company: company.name || prev.company,
               industry: company.industry || prev.industry,
               companySize: company.company_size || prev.companySize,
+              country: prev.country || 'Morocco',
+              // Auto-populate objectives from evaluation gaps
+              objectives: prev.objectives.length === 0 && topGaps.length > 0
+                ? topGaps.map(g => `Address skill gap: ${g}`)
+                : prev.objectives,
+              // Auto-populate target skills from training recommendations
+              targetSkills: prev.targetSkills.length === 0 ? topNeeds : prev.targetSkills,
+              context: prev.context || (departments.length > 0
+                ? `Company has ${employeesRes.count || 0} employees across ${departments.length} departments: ${departments.join(', ')}.`
+                : ''),
             }));
           }
         }

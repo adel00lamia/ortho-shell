@@ -123,10 +123,10 @@ const Dashboard = () => {
         { title: d.teamManagement, desc: d.manageTeam, icon: Users, path: '/manage/team', variant: 'secondary' as const },
       ],
       stats: [
-        { label: d.teamMembers, value: String(stats?.teamMembers || 0), icon: Users, trend: '' },
+        { label: d.teamMembers, value: String(stats?.totalEmployees || stats?.teamMembers || 0), icon: Users, trend: '' },
         { label: d.activePlans, value: String(stats?.activePlans || 0), icon: Target, trend: '' },
         { label: d.avgProgress, value: `${stats?.avgProgress || 0}%`, icon: TrendingUp, trend: '' },
-        { label: t.nav.certificates, value: String(stats?.certificates || 0), icon: Award, trend: '' },
+        { label: fr ? 'Évaluations' : 'Evaluations', value: String(stats?.totalEvaluations || 0), icon: ClipboardCheck, trend: '' },
       ]
     },
     trainer: {
@@ -358,6 +358,63 @@ const Dashboard = () => {
               <span className="text-sm font-medium text-green-700">{d.profileComplete}</span>
               <Progress value={100} className="flex-1 h-2 max-w-[200px]" />
             </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Company Insights — HR/Admin only */}
+      {isVisible('profile') && (role === 'hr_manager' || role === 'admin') && companyId && stats && (stats.totalEmployees > 0 || stats.totalEvaluations > 0) && (
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5.5}>
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+              <BarChart3 className="h-5 w-5 text-primary" />
+              {fr ? 'Aperçu Entreprise' : 'Company Insights'}
+            </h2>
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+              {[
+                { label: fr ? 'Employés' : 'Employees', value: stats.totalEmployees, icon: Users },
+                { label: fr ? 'Départements' : 'Departments', value: stats.totalDepartments, icon: Building2 },
+                { label: fr ? 'Évaluations' : 'Evaluations', value: stats.totalEvaluations, icon: ClipboardCheck },
+                { label: fr ? 'Fiches de poste' : 'Job Descriptions', value: stats.totalJDs, icon: Target },
+                { label: fr ? 'Note moy.' : 'Avg Rating', value: stats.avgRating > 0 ? `${stats.avgRating}/5` : '-', icon: Award },
+                { label: fr ? 'Postes critiques' : 'Critical Positions', value: stats.criticalPositions, icon: AlertCircle },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">{item.label}</p>
+                      <p className="text-sm font-semibold text-foreground">{item.value}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {(stats.topSkillGaps.length > 0 || stats.topTrainingNeeds.length > 0) && (
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {stats.topSkillGaps.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{fr ? 'Principaux gaps de compétences' : 'Top Skill Gaps'}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {stats.topSkillGaps.map((g, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">{g}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {stats.topTrainingNeeds.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{fr ? 'Besoins de formation prioritaires' : 'Top Training Needs'}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {stats.topTrainingNeeds.map((t, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs">{t}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
         </motion.div>
       )}
