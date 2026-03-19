@@ -233,34 +233,25 @@ export function useSeedDemoData() {
           .eq('id', companyId);
         if (updateErr) throw updateErr;
       } else {
-        // Create new company
+        // Create new company without selecting it back immediately.
+        // The new company's SELECT policy depends on profiles.company_id,
+        // so returning the inserted row before linking the profile triggers RLS.
+        companyId = crypto.randomUUID();
         setProgress('Création de l\'entreprise...');
-        const { data: company, error: companyErr } = await supabase
+        const { error: companyErr } = await supabase
           .from('companies')
-          .insert(DEMO_COMPANY)
-          .select('id')
-          .single();
+          .insert({ id: companyId, ...DEMO_COMPANY });
         if (companyErr) throw companyErr;
-        companyId = company.id;
       }
 
-      // 2. Link user to company + set admin role
+      // 2. Link user to company
       setProgress('Configuration du profil...');
-      await supabase.from('profiles').update({ company_id: companyId }).eq('id', user.id);
+      const { error: profileErr } = await supabase
+        .from('profiles')
+        .update({ company_id: companyId })
+        .eq('id', user.id);
 
-      // Ensure admin role
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-      if (!existingRole) {
-        await supabase.from('user_roles').upsert(
-          { user_id: user.id, role: 'admin' as any },
-          { onConflict: 'user_id,role' }
-        );
-      }
+      if (profileErr) throw profileErr;
 
       // 3. Create departments
       setProgress('Création des départements...');
