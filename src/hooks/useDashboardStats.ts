@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { useCompanyProfile, CompanyContext } from '@/hooks/useCompanyProfile';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DashboardStats {
@@ -29,19 +30,19 @@ export interface DashboardStats {
   }[];
 }
 
-async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('company_id')
-    .eq('id', userId)
-    .maybeSingle();
-
-  const companyId = profile?.company_id;
-
-  // Fetch all data in parallel
-  const [plansRes, modulesRes, teamRes, evalsRes, employeesRes, deptsRes, positionsRes, jdsRes] = await Promise.all([
+/** Fetch only plan/module data that useCompanyProfile doesn't cover */
+async function fetchPlanStats(companyId: string | null): Promise<{
+  totalPlans: number;
+  activePlans: number;
+  completionRate: number;
+  modulesCount: number;
+  completedModules: number;
+  teamCount: number;
+  recentEvals: { employee_name: string; created_at: string | null }[];
+}> {
+  const [plansRes, modulesRes, teamRes, evalsRes] = await Promise.all([
     (() => {
-      let q = supabase.from('training_plans').select('id, status, modules', { count: 'exact' });
+      let q = supabase.from('training_plans').select('id, status', { count: 'exact' });
       if (companyId) q = q.eq('company_id', companyId);
       return q;
     })(),
@@ -50,22 +51,10 @@ async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
       ? supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
       : Promise.resolve({ count: 0 }),
     (() => {
-      let q = supabase.from('performance_evaluations').select('id, employee_name, overall_rating, areas_for_improvement, training_recommendations, created_at');
+      let q = supabase.from('performance_evaluations').select('employee_name, created_at');
       if (companyId) q = q.eq('company_id', companyId);
-      return q.order('created_at', { ascending: false }).limit(50);
+      return q.order('created_at', { ascending: false }).limit(4);
     })(),
-    companyId
-      ? supabase.from('company_employees').select('id', { count: 'exact', head: true }).eq('company_id', companyId).eq('status', 'active')
-      : Promise.resolve({ count: 0 }),
-    companyId
-      ? supabase.from('departments').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
-      : Promise.resolve({ count: 0 }),
-    companyId
-      ? supabase.from('positions').select('id, is_critical', { count: 'exact' }).eq('company_id', companyId)
-      : Promise.resolve({ data: null, count: 0 }),
-    companyId
-      ? supabase.from('job_descriptions').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
-      : Promise.resolve({ count: 0 }),
   ]);
 
   const plans = plansRes.data || [];
@@ -79,35 +68,36 @@ async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
   const modulesCount = modulesRes.count || 0;
   const teamCount = teamRes.count || 0;
 
-  const evals = evalsRes.data || [];
-  const ratings = evals.filter(e => e.overall_rating).map(e => e.overall_rating!);
-  const avgRating = ratings.length > 0 ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
+  return {
+    totalPlans,
+    activePlans,
+    completionRate,
+    modulesCount,
+    completedModules,
+    teamCount,
+    recentEvals: (evalsRes.data || []) as { employee_name: string; created_at: string | null }[],
+  };
+}
 
-  // Aggregate skill gaps & training needs from evaluations
-  const gapCounts: Record<string, number> = {};
-  const needsCounts: Record<string, number> = {};
-  evals.forEach(ev => {
-    (ev.areas_for_improvement || []).forEach((g: string) => { gapCounts[g] = (gapCounts[g] || 0) + 1; });
-    (ev.training_recommendations || []).forEach((t: string) => { needsCounts[t] = (needsCounts[t] || 0) + 1; });
-  });
-  const topSkillGaps = Object.entries(gapCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([g]) => g);
-  const topTrainingNeeds = Object.entries(needsCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([t]) => t);
+/** Merge useCompanyProfile context + plan stats into DashboardStats */
+function buildDashboardStats(
+  context: CompanyContext | null,
+  planStats: Awaited<ReturnType<typeof fetchPlanStats>>,
+  companyId: string | null,
+): DashboardStats {
+  const { totalPlans, activePlans, completionRate, modulesCount, completedModules, teamCount, recentEvals } = planStats;
 
-  const criticalPositions = (positionsRes.data || []).filter((p: any) => p.is_critical).length;
+  // Derive from company context (single source of truth)
+  const companyStats = context?.stats;
 
-  // Build recent activity
+  // Recent activity from evaluations
   type ActivityType = 'success' | 'info' | 'warning';
-  const recentActivity: { title: string; time: string; type: ActivityType }[] = evals.slice(0, 4).map(ev => ({
-    title: `Evaluation: ${ev.employee_name}`,
-    time: ev.created_at ? formatTimeAgo(new Date(ev.created_at)) : '',
-    type: 'success' as ActivityType,
-  }));
-
-  if (plans.length > 0 && recentActivity.length < 4) {
-    plans.slice(0, 4 - recentActivity.length).forEach(() => {
-      recentActivity.push({ title: 'Plan de formation cree', time: '', type: 'info' as ActivityType });
-    });
-  }
+  const recentActivity: { title: string; time: string; type: ActivityType }[] =
+    recentEvals.map(ev => ({
+      title: `Evaluation: ${ev.employee_name}`,
+      time: ev.created_at ? formatTimeAgo(new Date(ev.created_at)) : '',
+      type: 'success' as ActivityType,
+    }));
 
   return {
     totalUsers: teamCount,
@@ -120,29 +110,33 @@ async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
     certificates: completedModules,
     activeCourses: modulesCount || 0,
     totalStudents: teamCount,
-    totalEmployees: employeesRes.count || 0,
-    totalDepartments: deptsRes.count || 0,
-    totalEvaluations: evals.length,
-    totalJDs: jdsRes.count || 0,
-    avgRating,
-    criticalPositions,
-    topSkillGaps,
-    topTrainingNeeds,
+    // From centralized company context — no duplicate queries
+    totalEmployees: companyStats?.totalEmployees ?? 0,
+    totalDepartments: companyStats?.totalDepartments ?? 0,
+    totalEvaluations: companyStats?.totalEvaluations ?? 0,
+    totalJDs: companyStats?.totalJDs ?? 0,
+    avgRating: companyStats?.avgRating ?? 0,
+    criticalPositions: companyStats?.criticalPositions ?? 0,
+    topSkillGaps: companyStats?.skillGaps ?? [],
+    topTrainingNeeds: companyStats?.topTrainingNeeds ?? [],
     recentActivity,
   };
 }
 
 export const useDashboardStats = (role: string | null) => {
   const { user } = useAuth();
+  const { context, companyId } = useCompanyProfile();
 
-  const { data: stats = null, isLoading: loading } = useQuery({
-    queryKey: ['dashboard-stats', user?.id, role],
-    queryFn: () => fetchDashboardStats(user!.id),
+  const { data: planStats, isLoading: planLoading } = useQuery({
+    queryKey: ['dashboard-plan-stats', companyId, user?.id],
+    queryFn: () => fetchPlanStats(companyId),
     enabled: !!user && !!role,
     staleTime: 1000 * 60 * 2,
   });
 
-  return { stats, loading };
+  const stats = planStats ? buildDashboardStats(context, planStats, companyId) : null;
+
+  return { stats, loading: planLoading };
 };
 
 function formatTimeAgo(date: Date): string {

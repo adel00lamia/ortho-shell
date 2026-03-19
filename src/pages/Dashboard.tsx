@@ -14,10 +14,11 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useCompanyId } from '@/hooks/useCompanyId';
-import { supabase } from '@/integrations/supabase/client';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 import { useSeedDemoData } from '@/hooks/useSeedDemoData';
+import { PROFILE_FIELDS } from '@/data/diagnosticConstants';
 import { motion } from 'framer-motion';
 
 const fadeIn = {
