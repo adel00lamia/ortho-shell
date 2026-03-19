@@ -10,11 +10,13 @@ export interface CompanyContext {
     companySize: string | null;
     employeeCount: number | null;
     city: string | null;
+    address: string | null;
     cnssNumber: string | null;
     rcNumber: string | null;
     iceNumber: string | null;
     contactEmail: string | null;
     domain: string | null;
+    logoUrl: string | null;
   } | null;
   employees: { id: string; fullName: string; email: string | null; department: string | null; position: string | null; contractType: string | null; hireDate: string | null }[];
   departments: { id: string; name: string; employeeCount: number; headName: string | null; level: number }[];
@@ -98,8 +100,9 @@ async function fetchCompanyContext(companyId: string): Promise<CompanyContext> {
     company: company ? {
       id: company.id, name: company.name, industry: company.industry,
       companySize: company.company_size, employeeCount: company.employee_count,
-      city: company.city, cnssNumber: company.cnss_number, rcNumber: company.rc_number,
-      iceNumber: company.ice_number, contactEmail: company.contact_email, domain: company.domain,
+      city: company.city, address: company.address, cnssNumber: company.cnss_number,
+      rcNumber: company.rc_number, iceNumber: company.ice_number,
+      contactEmail: company.contact_email, domain: company.domain, logoUrl: company.logo_url,
     } : null,
     employees,
     departments,
