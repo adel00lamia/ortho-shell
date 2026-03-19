@@ -262,14 +262,11 @@ export default function AIPlanBuilder() {
   const [previousPlanFiles, setPreviousPlanFiles] = useState<PreviousPlanFile[]>([]);
   const [uploadingPlan, setUploadingPlan] = useState(false);
 
-  // ── Shared constants from centralized file ──
-  const {
-    PREDEFINED_OBJECTIVES: predefinedObjectives,
-    SKILL_CATEGORIES_DETAILED: skillCategories,
-    PREDEFINED_SKILLS: predefinedSkills,
-    CONSTRAINT_CATEGORIES: constraintCategories,
-    PREDEFINED_CONSTRAINTS: predefinedConstraints,
-  } = require('@/data/diagnosticConstants');
+  const predefinedObjectives = PREDEFINED_OBJECTIVES as readonly string[];
+  const skillCategories = SKILL_CATEGORIES_DETAILED as readonly { name: string; skills: readonly string[] }[];
+  const predefinedSkills = PREDEFINED_SKILLS as readonly string[];
+  const constraintCategories = CONSTRAINT_CATEGORIES as readonly { name: string; constraints: readonly string[] }[];
+  const predefinedConstraints = PREDEFINED_CONSTRAINTS as readonly string[];
   
   const { user } = useAuth();
   const { language } = useLanguage();

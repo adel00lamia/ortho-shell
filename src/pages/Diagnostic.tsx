@@ -203,11 +203,11 @@ export default function Diagnostic() {
     setEmployees(employees.map(e => e.id === id ? { ...e, ...updates } : e));
   };
 
-  const applyTemplate = (template: typeof trainingTemplates[0]) => {
+  const applyTemplate = (template: { name: string; objectives: string; priorities: readonly string[] }) => {
     setFormData(prev => ({
       ...prev,
       objectives: template.objectives,
-      priorities: template.priorities
+      priorities: [...template.priorities]
     }));
     toast.success(`Applied "${template.name}" template`);
   };
