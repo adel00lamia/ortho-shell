@@ -29,18 +29,7 @@ const fadeIn = {
   }),
 };
 
-const PROFILE_FIELDS = [
-  { key: 'name', label: 'fieldName' },
-  { key: 'cnss_number', label: 'fieldCnss' },
-  { key: 'rc_number', label: 'fieldRc' },
-  { key: 'ice_number', label: 'fieldIce' },
-  { key: 'industry', label: 'fieldIndustry' },
-  { key: 'company_size', label: 'fieldSize' },
-  { key: 'address', label: 'fieldAddress' },
-  { key: 'city', label: 'fieldCity' },
-  { key: 'contact_email', label: 'fieldContact' },
-  { key: 'logo_url', label: 'fieldLogo' },
-] as const;
+// PROFILE_FIELDS imported from diagnosticConstants
 
 function getGreeting(fr: boolean): { text: string; icon: typeof Sun } {
   const hour = new Date().getHours();
