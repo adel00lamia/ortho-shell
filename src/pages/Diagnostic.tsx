@@ -30,6 +30,14 @@ import { GapAnalysisPanel } from '@/components/skills/GapAnalysisPanel';
 import { CompanyProfileSync } from '@/components/skills/CompanyProfileSync';
 import { EmployeeSkillProfiler } from '@/components/diagnostic/EmployeeSkillProfiler';
 import type { JDTemplate } from '@/data/jobDescriptionTemplates';
+import {
+  SKILL_CATEGORIES_SIMPLE as skillCategories,
+  BUDGET_RANGES as budgetRanges,
+  TRAINING_LANGUAGES as languages,
+  PRIORITIES as priorities,
+  CONSTRAINTS_SIMPLE as constraints,
+  DIAGNOSTIC_TEMPLATES as trainingTemplates,
+} from '@/data/diagnosticConstants';
 
 interface Employee {
   id: string;
