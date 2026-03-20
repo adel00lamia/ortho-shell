@@ -109,7 +109,7 @@ const Dashboard = () => {
       badge: d.hrManager,
       icon: Target,
       actions: [
-        { title: d.skillsAssessment, desc: d.startDiagnostic, icon: ClipboardCheck, path: '/workflow/assess/diagnostic', variant: 'default' as const },
+        { title: d.skillsAssessment, desc: d.startDiagnostic, icon: ClipboardCheck, path: '/workflow/assess/skills', variant: 'default' as const },
         { title: d.buildTrainingPlan, desc: d.aiPlanGeneration, icon: Lightbulb, path: '/workflow/plan/builder', variant: 'default' as const },
         { title: d.trackProgress, desc: d.monitorTeam, icon: TrendingUp, path: '/workflow/track/analytics', variant: 'secondary' as const },
         { title: d.teamManagement, desc: d.manageTeam, icon: Users, path: '/manage/team', variant: 'secondary' as const },
