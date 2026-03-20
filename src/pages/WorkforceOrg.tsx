@@ -37,6 +37,69 @@ export default function WorkforceOrg() {
   const [showJobForm, setShowJobForm] = useState(false);
   const [editingJob, setEditingJob] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("employees");
+  const [fixingLanguage, setFixingLanguage] = useState(false);
+
+  const handleAILanguageFix = async () => {
+    if (!companyId) return;
+    setFixingLanguage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-language-fix', {
+        body: {
+          departments,
+          positions,
+          jobDescriptions,
+          targetLanguage: language,
+        },
+      });
+      if (error) throw error;
+      const result = data?.result;
+      if (!result) throw new Error('No result from AI');
+
+      let updated = 0;
+
+      // Apply department translations
+      for (const dept of result.departments || []) {
+        const updateData: any = { name: dept.name };
+        if (dept.description !== undefined) updateData.description = dept.description;
+        const { error: e } = await supabase.from('departments').update(updateData).eq('id', dept.id);
+        if (!e) updated++;
+      }
+
+      // Apply position translations
+      for (const pos of result.positions || []) {
+        const { error: e } = await supabase.from('positions').update({ title: pos.title }).eq('id', pos.id);
+        if (!e) updated++;
+      }
+
+      // Apply job description translations
+      for (const jd of result.jobDescriptions || []) {
+        const updateData: any = { title: jd.title };
+        if (jd.department) updateData.department = jd.department;
+        if (jd.description) updateData.description = jd.description;
+        const { error: e } = await supabase.from('job_descriptions').update(updateData).eq('id', jd.id);
+        if (!e) updated++;
+      }
+
+      if (updated > 0) {
+        toast.success(
+          language === 'fr'
+            ? `${updated} élément(s) traduit(s) en français`
+            : `${updated} item(s) translated to English`
+        );
+        loadData();
+      } else {
+        toast.info(
+          language === 'fr'
+            ? 'Tout est déjà en français !'
+            : 'Everything is already in English!'
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'AI language fix failed');
+    } finally {
+      setFixingLanguage(false);
+    }
+  };
 
   useEffect(() => {
     if (user) loadData();
