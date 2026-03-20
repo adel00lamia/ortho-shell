@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -60,6 +61,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const [newDept, setNewDept] = useState({ name: '', description: '', parentId: '' });
   const [addPosOpen, setAddPosOpen] = useState(false);
   const [newPos, setNewPos] = useState({ title: '', level: 'mid', status: 'filled', departmentId: '', holderName: '' });
+  const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
 
   const toggleExpand = (id: string) => {
     setExpandedDepts(prev => {
@@ -381,7 +383,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           <Button variant="outline" size="sm" onClick={() => setAddPosOpen(true)} className="h-8 gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" /> {fr ? 'Poste' : 'Position'}
           </Button>
-          <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="sm" className="h-8 gap-1.5 text-xs">
+          <Button onClick={() => setAiConfirmOpen(true)} disabled={aiDetecting} size="sm" className="h-8 gap-1.5 text-xs">
             {aiDetecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             {fr ? 'Détection AI' : 'AI Detect'}
           </Button>
@@ -642,6 +644,37 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AI Detect Confirmation */}
+      <AlertDialog open={aiConfirmOpen} onOpenChange={setAiConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              {fr ? 'Détection AI de l\'organigramme' : 'AI Org Chart Detection'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                {fr
+                  ? 'L\'IA va analyser vos fiches de poste et évaluations pour suggérer automatiquement des départements et postes.'
+                  : 'AI will analyze your job descriptions and evaluations to automatically suggest departments and positions.'}
+              </p>
+              <p className="font-medium text-foreground">
+                {fr
+                  ? '⚠️ De nouveaux départements et postes seront créés. Les départements existants ne seront pas dupliqués.'
+                  : '⚠️ New departments and positions will be created. Existing departments will not be duplicated.'}
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{fr ? 'Annuler' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setAiConfirmOpen(false); handleAIAutoDetect(); }}>
+              <Sparkles className="h-4 w-4 mr-1.5" />
+              {fr ? 'Lancer la détection' : 'Run Detection'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
