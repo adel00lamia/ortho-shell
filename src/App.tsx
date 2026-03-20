@@ -94,9 +94,13 @@ const App = () => (
               <Route path="/company-profile" element={<ProtectedLayout featureName="Company Profile"><CompanyProfile /></ProtectedLayout>} />
 
               {/* Workflow Routes - Assess */}
-              <Route path="/workflow/assess/diagnostic" element={<ProtectedLayout featureName="Diagnostic"><Diagnostic /></ProtectedLayout>} />
+              <Route path="/workflow/assess/workforce" element={<ProtectedLayout featureName="Workforce & Org"><WorkforceOrg /></ProtectedLayout>} />
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
-              <Route path="/workflow/assess/benchmark" element={<ProtectedLayout featureName="Benchmark"><Benchmark /></ProtectedLayout>} />
+              <Route path="/workflow/assess/skills" element={<ProtectedLayout featureName="Skills & Gaps"><SkillsGaps /></ProtectedLayout>} />
+              <Route path="/workflow/assess/report" element={<ProtectedLayout featureName="360° Report"><AssessmentReportPage /></ProtectedLayout>} />
+              {/* Legacy assess routes */}
+              <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
+              <Route path="/workflow/assess/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               
               {/* Workflow Routes - Plan */}
               <Route path="/workflow/plan/builder" element={<ProtectedLayout featureName="AI Plan Builder"><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
