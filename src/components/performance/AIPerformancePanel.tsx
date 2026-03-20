@@ -14,6 +14,7 @@ interface AIPerformancePanelProps {
   evaluation: any;
   allEvaluations: any[];
   onApplyAutoEval?: (result: AutoEvaluateResult) => void;
+  onSaveTrainingRecs?: (result: SmartRecommendationsResult) => void;
 }
 
 const typeIcons: Record<string, typeof BookOpen> = {
@@ -37,7 +38,7 @@ const standingColors = {
   behind: 'text-red-500',
 };
 
-export default function AIPerformancePanel({ evaluation, allEvaluations, onApplyAutoEval }: AIPerformancePanelProps) {
+export default function AIPerformancePanel({ evaluation, allEvaluations, onApplyAutoEval, onSaveTrainingRecs }: AIPerformancePanelProps) {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const { autoEvaluate, getSmartRecommendations, getPeerBenchmark, loading } = useAIPerformanceReview();
@@ -73,7 +74,8 @@ export default function AIPerformancePanel({ evaluation, allEvaluations, onApply
       const result = await getSmartRecommendations(evalParams);
       if (result) {
         setRecommendations(result);
-        toast.success(fr ? 'Recommandations générées' : 'Recommendations generated');
+        if (onSaveTrainingRecs) onSaveTrainingRecs(result);
+        toast.success(fr ? 'Recommandations générées et sauvegardées' : 'Recommendations generated & saved');
       }
     } catch {
       toast.error(fr ? 'Erreur lors de la génération' : 'Failed to generate recommendations');
