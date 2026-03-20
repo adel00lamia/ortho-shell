@@ -383,7 +383,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           <Button variant="outline" size="sm" onClick={() => setAddPosOpen(true)} className="h-8 gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" /> {fr ? 'Poste' : 'Position'}
           </Button>
-          <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="sm" className="h-8 gap-1.5 text-xs">
+          <Button onClick={() => setAiConfirmOpen(true)} disabled={aiDetecting} size="sm" className="h-8 gap-1.5 text-xs">
             {aiDetecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             {fr ? 'Détection AI' : 'AI Detect'}
           </Button>
