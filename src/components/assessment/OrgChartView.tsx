@@ -11,10 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import {
   Building2, Plus, Sparkles, Loader2, ChevronDown, ChevronRight,
   UserCircle, AlertTriangle, TrendingUp, Download, Network, GitBranch,
-  Users, Briefcase, Shield,
+  Users, Briefcase, Shield, GripVertical,
 } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
 import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
@@ -88,6 +89,50 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
 
   const tree = buildTree(departments);
 
+  // --- Drag and Drop handler ---
+  const handleDragEnd = async (result: DropResult) => {
+    const { draggableId, destination, source } = result;
+    if (!destination || !companyId) return;
+    // Same location — no-op
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    const newDeptId = destination.droppableId === 'unassigned' ? null : destination.droppableId;
+    const pos = positions.find(p => p.id === draggableId);
+    if (!pos) return;
+
+    // Optimistic: show toast immediately
+    const targetDeptName = newDeptId
+      ? departments.find(d => d.id === newDeptId)?.name || '?'
+      : (fr ? 'Non assigné' : 'Unassigned');
+
+    const { error } = await supabase
+      .from('positions')
+      .update({ department_id: newDeptId })
+      .eq('id', draggableId);
+
+    if (error) {
+      toast.error(fr ? 'Erreur lors du déplacement' : 'Failed to move position');
+      return;
+    }
+
+    toast.success(
+      fr
+        ? `"${pos.title}" déplacé vers ${targetDeptName}`
+        : `"${pos.title}" moved to ${targetDeptName}`
+    );
+
+    // Auto-expand target department
+    if (newDeptId) {
+      setExpandedDepts(prev => {
+        const next = new Set(prev);
+        next.add(newDeptId);
+        return next;
+      });
+    }
+
+    onRefresh();
+  };
+
   const handleAIAutoDetect = async () => {
     if (!companyId) { toast.error('Company not found'); return; }
     setAiDetecting(true);
@@ -106,10 +151,8 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
       if (result?.suggestedDepartments) {
         const existingNames = new Set(departments.map(d => d.name.toLowerCase()));
         for (const dept of result.suggestedDepartments) {
-          // Skip if department already exists
           if (existingNames.has(dept.name.toLowerCase())) continue;
           existingNames.add(dept.name.toLowerCase());
-          
           const { data: insertedDept } = await supabase.from('departments').insert({
             company_id: companyId, name: dept.name, description: dept.description,
             level: dept.level || 0, head_employee_name: dept.suggestedHead,
@@ -187,6 +230,91 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const filledCount = positions.filter(p => p.status === 'filled').length;
   const hasData = tree.length > 0 || unassignedPositions.length > 0;
 
+  // --- Render a single draggable position card ---
+  const renderPositionCard = (pos: Position, index: number) => (
+    <Draggable key={pos.id} draggableId={pos.id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          className={`
+            flex items-center gap-3 p-3 rounded-xl bg-card border transition-all duration-200 group/pos
+            ${snapshot.isDragging
+              ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/20 z-50'
+              : 'border-border/60 hover:border-primary/30 hover:shadow-sm'
+            }
+          `}
+        >
+          {/* Drag handle */}
+          <div
+            {...provided.dragHandleProps}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-accent/60 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+          >
+            <GripVertical className="h-4 w-4" />
+          </div>
+
+          {/* Avatar placeholder */}
+          <div className={`
+            flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
+            ${pos.status === 'open'
+              ? 'bg-destructive/10 text-destructive border border-dashed border-destructive/30'
+              : 'bg-secondary text-secondary-foreground'
+            }
+          `}>
+            {pos.current_holder_name
+              ? pos.current_holder_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+              : '?'}
+          </div>
+
+          {/* Position info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm truncate">{pos.title}</span>
+              {pos.is_critical && (
+                <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  <Shield className="h-3 w-3" /> {fr ? 'Critique' : 'Critical'}
+                </span>
+              )}
+              {pos.upskill_potential && (
+                <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <TrendingUp className="h-3 w-3" /> Upskill
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
+              {pos.current_holder_name && (
+                <>
+                  <span className="text-muted-foreground/30">•</span>
+                  <span className="text-[11px] text-muted-foreground">{pos.current_holder_name}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Status + score */}
+          <div className="flex items-center gap-2">
+            {getStatusBadge(pos.status)}
+            {pos.match_score != null && (
+              <div className={`
+                text-[10px] font-bold px-2 py-0.5 rounded-full
+                ${pos.match_score >= 70
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                  : pos.match_score >= 40
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    : 'bg-destructive/15 text-destructive'
+                }
+              `}>
+                {Math.round(pos.match_score)}%
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
+
+  // --- Render a department with droppable zone ---
   const renderDept = (dept: Department, depth: number = 0) => {
     const dPos = deptPositions(dept.id);
     const isExpanded = expandedDepts.has(dept.id);
@@ -200,7 +328,6 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
         transition={{ duration: 0.25, delay: depth * 0.05 }}
         className={depth > 0 ? 'ml-4 relative' : ''}
       >
-        {/* Connector line */}
         {depth > 0 && (
           <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary/30 to-transparent" />
         )}
@@ -214,12 +341,10 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           `}
           onClick={() => toggleExpand(dept.id)}
         >
-          {/* Horizontal connector */}
           {depth > 0 && (
             <div className="absolute -left-4 top-1/2 w-4 h-px bg-primary/20" />
           )}
 
-          {/* Expand icon */}
           <div className={`flex-shrink-0 p-1 rounded-md transition-colors ${hasChildren ? 'hover:bg-accent' : ''}`}>
             {hasChildren ? (
               isExpanded
@@ -228,12 +353,10 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             ) : <div className="w-4 h-4" />}
           </div>
 
-          {/* Department icon */}
           <div className="flex-shrink-0 p-2 rounded-xl bg-primary/10 ring-1 ring-primary/20">
             <Building2 className="h-4 w-4 text-primary" />
           </div>
 
-          {/* Department info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm truncate">{dept.name}</span>
@@ -255,7 +378,6 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             </div>
           </div>
 
-          {/* Head name */}
           {dept.head_employee_name && (
             <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/80 border border-border/50">
               <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
@@ -264,7 +386,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           )}
         </div>
 
-        {/* Expanded positions + children */}
+        {/* Expanded: droppable positions + children */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div
@@ -274,73 +396,27 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className={`${depth > 0 ? 'ml-4' : ''} ml-8 space-y-1.5 py-2`}>
-                {dPos.map((pos, i) => (
-                  <motion.div
-                    key={pos.id}
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group/pos"
+              <Droppable droppableId={dept.id}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`
+                      ${depth > 0 ? 'ml-4' : ''} ml-8 space-y-1.5 py-2 min-h-[40px] rounded-lg transition-colors duration-200
+                      ${snapshot.isDraggingOver ? 'bg-primary/5 ring-1 ring-primary/20 ring-dashed' : ''}
+                    `}
                   >
-                    {/* Avatar placeholder */}
-                    <div className={`
-                      flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
-                      ${pos.status === 'open'
-                        ? 'bg-destructive/10 text-destructive border border-dashed border-destructive/30'
-                        : 'bg-secondary text-secondary-foreground'
-                      }
-                    `}>
-                      {pos.current_holder_name
-                        ? pos.current_holder_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-                        : '?'}
-                    </div>
-
-                    {/* Position info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm truncate">{pos.title}</span>
-                        {pos.is_critical && (
-                          <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                            <Shield className="h-3 w-3" /> {fr ? 'Critique' : 'Critical'}
-                          </span>
-                        )}
-                        {pos.upskill_potential && (
-                          <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            <TrendingUp className="h-3 w-3" /> Upskill
-                          </span>
-                        )}
+                    {dPos.map((pos, i) => renderPositionCard(pos, i))}
+                    {provided.placeholder}
+                    {dPos.length === 0 && !snapshot.isDraggingOver && (
+                      <div className="text-xs text-muted-foreground/50 text-center py-2 italic">
+                        {fr ? 'Glissez des postes ici' : 'Drag positions here'}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
-                        {pos.current_holder_name && (
-                          <>
-                            <span className="text-muted-foreground/30">•</span>
-                            <span className="text-[11px] text-muted-foreground">{pos.current_holder_name}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Status + score */}
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(pos.status)}
-                      {pos.match_score != null && (
-                        <div className={`
-                          text-[10px] font-bold px-2 py-0.5 rounded-full
-                          ${pos.match_score >= 70
-                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                            : pos.match_score >= 40
-                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                              : 'bg-destructive/15 text-destructive'
-                          }
-                        `}>
-                          {Math.round(pos.match_score)}%
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                    )}
+                  </div>
+                )}
+              </Droppable>
+              <div className={`${depth > 0 ? 'ml-4' : ''} ml-8`}>
                 {dept.children?.map(child => renderDept(child, depth + 1))}
               </div>
             </motion.div>
@@ -358,7 +434,6 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-wrap items-center justify-between gap-3"
       >
-        {/* Mini stats */}
         <div className="flex items-center gap-3">
           {[
             { icon: Building2, value: departments.length, label: fr ? 'Dépts' : 'Depts', color: 'text-primary' },
@@ -375,7 +450,6 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setAddDeptOpen(true)} className="h-8 gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" /> {fr ? 'Département' : 'Department'}
@@ -409,7 +483,6 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
         transition={{ delay: 0.1 }}
       >
         <Card className="overflow-hidden border-border/60">
-          {/* Gradient header */}
           <div className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8" />
             <CardHeader className="relative pb-4">
@@ -422,7 +495,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                     {fr ? 'Organigramme' : 'Organization Chart'}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    {fr ? 'Structure hiérarchique de l\'entreprise' : 'Company hierarchical structure'}
+                    {fr ? 'Structure hiérarchique — glissez les postes entre départements' : 'Hierarchical structure — drag positions between departments'}
                   </CardDescription>
                 </div>
               </div>
@@ -433,13 +506,11 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             {!hasData ? (
               /* Empty state */
               <div className="relative py-16">
-                {/* Background decoration */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
                   <GitBranch className="h-64 w-64 rotate-180" />
                 </div>
 
                 <div className="relative text-center max-w-lg mx-auto">
-                  {/* Animated icon */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -450,7 +521,6 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                     <div className="relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 ring-1 ring-primary/20">
                       <Building2 className="h-9 w-9 text-primary" />
                     </div>
-                    {/* Orbiting dots */}
                     <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
                       <div className="w-2 h-2 rounded-full bg-primary" />
                     </div>
@@ -485,7 +555,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                     transition={{ delay: 0.4 }}
                     className="flex items-center justify-center gap-3"
                   >
-                    <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="lg" className="gap-2 shadow-md shadow-primary/20">
+                    <Button onClick={() => setAiConfirmOpen(true)} disabled={aiDetecting} size="lg" className="gap-2 shadow-md shadow-primary/20">
                       {aiDetecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                       {fr ? 'Détection AI automatique' : 'AI Auto-Detect'}
                     </Button>
@@ -494,32 +564,30 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                     </Button>
                   </motion.div>
 
-                  {/* Hint cards */}
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3"
+                    transition={{ delay: 0.6 }}
+                    className="mt-10 grid grid-cols-2 gap-3 max-w-sm mx-auto"
                   >
-                    {[
-                      { icon: Sparkles, title: fr ? 'Détection AI' : 'AI Detection', desc: fr ? 'Analyse automatique des JDs' : 'Auto-analyze job descriptions' },
-                      { icon: GitBranch, title: fr ? 'Hiérarchie' : 'Hierarchy', desc: fr ? 'Départements et sous-départements' : 'Departments & sub-departments' },
-                      { icon: Users, title: fr ? 'Postes & Rôles' : 'Positions & Roles', desc: fr ? 'Suivez chaque poste et occupant' : 'Track every role & holder' },
-                    ].map((hint, i) => (
-                      <div key={i} className="p-3 rounded-xl border border-border/50 bg-muted/30 text-left">
-                        <hint.icon className="h-4 w-4 text-primary mb-1.5" />
-                        <div className="text-xs font-semibold">{hint.title}</div>
-                        <div className="text-[10px] text-muted-foreground">{hint.desc}</div>
-                      </div>
-                    ))}
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border border-border/40">
+                      <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="text-[11px] text-muted-foreground">{fr ? 'AI analyse vos données' : 'AI analyzes your data'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border border-border/40">
+                      <GitBranch className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="text-[11px] text-muted-foreground">{fr ? 'Hiérarchie auto-générée' : 'Auto-generated hierarchy'}</span>
+                    </div>
                   </motion.div>
                 </div>
               </div>
             ) : (
-              /* Org tree */
-              <div className="space-y-1 pt-2">
-                {tree.map(dept => renderDept(dept))}
-                {unassignedPositions.length > 0 && (
+              /* Org chart tree wrapped in DragDropContext */
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="space-y-1 pt-2">
+                  {tree.map(dept => renderDept(dept))}
+
+                  {/* Unassigned positions droppable */}
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -532,23 +600,29 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                       </h4>
                       <Badge variant="outline" className="text-[10px] h-5">{unassignedPositions.length}</Badge>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {unassignedPositions.map(pos => (
-                        <div key={pos.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-dashed border-border/50">
-                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                            <UserCircle className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium truncate block">{pos.title}</span>
-                            <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
-                          </div>
-                          {getStatusBadge(pos.status)}
+                    <Droppable droppableId="unassigned">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`
+                            grid grid-cols-1 sm:grid-cols-2 gap-2 min-h-[48px] rounded-lg p-2 transition-colors duration-200
+                            ${snapshot.isDraggingOver ? 'bg-amber-500/5 ring-1 ring-amber-500/20 ring-dashed' : ''}
+                          `}
+                        >
+                          {unassignedPositions.map((pos, i) => renderPositionCard(pos, i))}
+                          {provided.placeholder}
+                          {unassignedPositions.length === 0 && !snapshot.isDraggingOver && (
+                            <div className="col-span-2 text-xs text-muted-foreground/50 text-center py-3 italic">
+                              {fr ? 'Glissez des postes ici pour les désassigner' : 'Drag positions here to unassign them'}
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </Droppable>
                   </motion.div>
-                )}
-              </div>
+                </div>
+              </DragDropContext>
             )}
           </CardContent>
         </Card>
@@ -578,8 +652,9 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 <Select value={newDept.parentId} onValueChange={v => setNewDept(p => ({ ...p, parentId: v }))}>
                   <SelectTrigger><SelectValue placeholder={fr ? 'Aucun (racine)' : 'None (root)'} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{fr ? 'Aucun' : 'None'}</SelectItem>
-                    {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    {departments.map(d => (
+                      <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -596,23 +671,14 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserCircle className="h-5 w-5 text-primary" />
+              <Briefcase className="h-5 w-5 text-primary" />
               {fr ? 'Ajouter un poste' : 'Add Position'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>{fr ? 'Titre' : 'Title'}</Label>
+              <Label>{fr ? 'Intitulé du poste' : 'Position Title'}</Label>
               <Input value={newPos.title} onChange={e => setNewPos(p => ({ ...p, title: e.target.value }))} placeholder={fr ? 'Ex: Chef de projet' : 'e.g., Project Manager'} />
-            </div>
-            <div>
-              <Label>{fr ? 'Département' : 'Department'}</Label>
-              <Select value={newPos.departmentId} onValueChange={v => setNewPos(p => ({ ...p, departmentId: v }))}>
-                <SelectTrigger><SelectValue placeholder={fr ? 'Choisir...' : 'Select...'} /></SelectTrigger>
-                <SelectContent>
-                  {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -620,23 +686,41 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 <Select value={newPos.level} onValueChange={v => setNewPos(p => ({ ...p, level: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {['junior','mid','senior','lead','manager','director','vp','c-level'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    <SelectItem value="junior">Junior</SelectItem>
+                    <SelectItem value="mid">Mid</SelectItem>
+                    <SelectItem value="senior">Senior</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Status</Label>
+                <Label>{fr ? 'Statut' : 'Status'}</Label>
                 <Select value={newPos.status} onValueChange={v => setNewPos(p => ({ ...p, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {POSITION_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{fr ? s.labelFr : s.label}</SelectItem>)}
+                    {POSITION_STATUSES.map(s => (
+                      <SelectItem key={s.value} value={s.value}>{fr ? s.labelFr : s.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+            {departments.length > 0 && (
+              <div>
+                <Label>{fr ? 'Département' : 'Department'}</Label>
+                <Select value={newPos.departmentId} onValueChange={v => setNewPos(p => ({ ...p, departmentId: v }))}>
+                  <SelectTrigger><SelectValue placeholder={fr ? 'Non assigné' : 'Unassigned'} /></SelectTrigger>
+                  <SelectContent>
+                    {departments.map(d => (
+                      <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
-              <Label>{fr ? 'Occupant actuel' : 'Current holder'}</Label>
-              <Input value={newPos.holderName} onChange={e => setNewPos(p => ({ ...p, holderName: e.target.value }))} placeholder={fr ? 'Nom complet' : 'Full name'} />
+              <Label>{fr ? 'Titulaire actuel' : 'Current Holder'}</Label>
+              <Input value={newPos.holderName} onChange={e => setNewPos(p => ({ ...p, holderName: e.target.value }))} placeholder={fr ? 'Nom du titulaire (optionnel)' : 'Holder name (optional)'} />
             </div>
             <Button onClick={handleAddPosition} className="w-full gap-2">
               <Plus className="h-4 w-4" /> {fr ? 'Ajouter' : 'Add Position'}
@@ -651,12 +735,12 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              {fr ? 'Détection AI de l\'organigramme' : 'AI Org Chart Detection'}
+              {fr ? "Détection AI de l'organigramme" : 'AI Org Chart Detection'}
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>
                 {fr
-                  ? 'L\'IA va analyser vos fiches de poste et évaluations pour suggérer automatiquement des départements et postes.'
+                  ? "L'IA va analyser vos fiches de poste et évaluations pour suggérer automatiquement des départements et postes."
                   : 'AI will analyze your job descriptions and evaluations to automatically suggest departments and positions.'}
               </p>
               <p className="font-medium text-foreground">
