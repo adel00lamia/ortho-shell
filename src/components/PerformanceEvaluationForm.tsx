@@ -216,12 +216,30 @@ export default function PerformanceEvaluationForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>{p.form.employeeName} *</Label>
-          <Input
-            value={formData.employeeName}
-            onChange={(e) => setFormData(prev => ({ ...prev, employeeName: e.target.value }))}
-            placeholder={p.form.fullName}
-            required
-          />
+          {employees.length > 0 ? (
+            <Select
+              value={employees.find(e => e.full_name === formData.employeeName)?.id || ""}
+              onValueChange={handleEmployeeSelect}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={language === 'fr' ? 'Sélectionner un employé' : 'Select an employee'} />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map(emp => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.full_name} {emp.position ? `— ${emp.position}` : ''} {emp.department ? `(${emp.department})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              value={formData.employeeName}
+              onChange={(e) => setFormData(prev => ({ ...prev, employeeName: e.target.value }))}
+              placeholder={p.form.fullName}
+              required
+            />
+          )}
         </div>
         <div>
           <Label>{p.form.email}</Label>
