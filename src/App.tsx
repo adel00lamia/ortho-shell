@@ -132,9 +132,9 @@ const App = () => (
               <Route path="/referrals" element={<ProtectedLayout featureName="Referrals"><Referrals /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
-              <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />
+              <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
               <Route path="/performance-evaluation" element={<Navigate to="/workflow/assess/performance" replace />} />
-              <Route path="/benchmark" element={<Navigate to="/workflow/assess/benchmark" replace />} />
+              <Route path="/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               <Route path="/ai-plan-builder" element={<Navigate to="/workflow/plan/builder" replace />} />
               <Route path="/module-studio" element={<Navigate to="/workflow/execute/modules" replace />} />
               <Route path="/marketplace" element={<Navigate to="/workflow/execute/marketplace" replace />} />
