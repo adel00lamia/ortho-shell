@@ -162,8 +162,6 @@ export const HierarchicalSidebar = () => {
         { path: '/referrals', labelKey: 'referrals', icon: Gift },
         { path: '/manage/settings', labelKey: 'settings', icon: Settings },
       ];
-        { path: '/manage/settings', labelKey: 'settings', icon: Settings },
-      ];
     }
     return [
       { path: '/manage/settings', labelKey: 'settings', icon: Settings },
