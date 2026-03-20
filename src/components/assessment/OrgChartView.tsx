@@ -476,6 +476,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 </>
               )}
             </div>
+            </div>
 
             {/* Succession planning panel */}
             {successionPosId === pos.id && pos.is_critical && (
