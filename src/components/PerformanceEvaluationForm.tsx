@@ -84,6 +84,7 @@ export default function PerformanceEvaluationForm({
 
   useEffect(() => {
     loadJobDescriptions();
+    loadEmployees();
   }, [companyId]);
 
   useEffect(() => {
