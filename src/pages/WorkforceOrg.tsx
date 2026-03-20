@@ -515,7 +515,6 @@ export default function WorkforceOrg() {
                         {language === "fr" ? "Ajouter" : "Add Job Description"}
                       </Button>
                     </div>
-                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
