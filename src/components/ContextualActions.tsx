@@ -65,7 +65,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: ca.performance.compareBenchmarkTitle,
         description: ca.performance.compareBenchmarkDesc,
         icon: TrendingUp,
-        action: () => navigate('/workflow/assess/benchmark'),
+        action: () => navigate('/workflow/assess/report'),
       }
     ],
     benchmark: [
