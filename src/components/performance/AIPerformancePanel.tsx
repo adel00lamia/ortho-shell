@@ -74,7 +74,8 @@ export default function AIPerformancePanel({ evaluation, allEvaluations, onApply
       const result = await getSmartRecommendations(evalParams);
       if (result) {
         setRecommendations(result);
-        toast.success(fr ? 'Recommandations générées' : 'Recommendations generated');
+        if (onSaveTrainingRecs) onSaveTrainingRecs(result);
+        toast.success(fr ? 'Recommandations générées et sauvegardées' : 'Recommendations generated & saved');
       }
     } catch {
       toast.error(fr ? 'Erreur lors de la génération' : 'Failed to generate recommendations');
