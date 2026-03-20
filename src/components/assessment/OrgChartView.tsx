@@ -15,7 +15,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import {
   Building2, Plus, Sparkles, Loader2, ChevronDown, ChevronRight,
   UserCircle, AlertTriangle, TrendingUp, Download, Network, GitBranch,
-  Users, Briefcase, Shield, GripVertical,
+  Users, Briefcase, Shield, GripVertical, Pencil, Check, X,
 } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
 import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
@@ -63,6 +63,33 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const [addPosOpen, setAddPosOpen] = useState(false);
   const [newPos, setNewPos] = useState({ title: '', level: 'mid', status: 'filled', departmentId: '', holderName: '' });
   const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
+  const [editingPosId, setEditingPosId] = useState<string | null>(null);
+  const [editPosData, setEditPosData] = useState({ title: '', level: '', holderName: '' });
+
+  const startEditPosition = (pos: Position, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPosId(pos.id);
+    setEditPosData({ title: pos.title, level: pos.level || 'mid', holderName: pos.current_holder_name || '' });
+  };
+
+  const cancelEditPosition = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPosId(null);
+  };
+
+  const saveEditPosition = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!editingPosId || !editPosData.title.trim()) return;
+    const { error } = await supabase.from('positions').update({
+      title: editPosData.title.trim(),
+      level: editPosData.level,
+      current_holder_name: editPosData.holderName.trim() || null,
+    }).eq('id', editingPosId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(fr ? 'Poste mis à jour' : 'Position updated');
+    setEditingPosId(null);
+    onRefresh();
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedDepts(prev => {
@@ -231,88 +258,148 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const hasData = tree.length > 0 || unassignedPositions.length > 0;
 
   // --- Render a single draggable position card ---
-  const renderPositionCard = (pos: Position, index: number) => (
-    <Draggable key={pos.id} draggableId={pos.id} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          className={`
-            flex items-center gap-3 p-3 rounded-xl bg-card border transition-all duration-200 group/pos
-            ${snapshot.isDragging
-              ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/20 z-50'
-              : 'border-border/60 hover:border-primary/30 hover:shadow-sm'
-            }
-          `}
-        >
-          {/* Drag handle */}
+  const renderPositionCard = (pos: Position, index: number) => {
+    const isEditing = editingPosId === pos.id;
+
+    return (
+      <Draggable key={pos.id} draggableId={pos.id} index={index}>
+        {(provided, snapshot) => (
           <div
-            {...provided.dragHandleProps}
-            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-accent/60 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            className={`
+              flex items-center gap-3 p-3 rounded-xl bg-card border transition-all duration-200 group/pos
+              ${snapshot.isDragging
+                ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/20 z-50'
+                : 'border-border/60 hover:border-primary/30 hover:shadow-sm'
+              }
+            `}
           >
-            <GripVertical className="h-4 w-4" />
-          </div>
-
-          {/* Avatar placeholder */}
-          <div className={`
-            flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
-            ${pos.status === 'open'
-              ? 'bg-destructive/10 text-destructive border border-dashed border-destructive/30'
-              : 'bg-secondary text-secondary-foreground'
-            }
-          `}>
-            {pos.current_holder_name
-              ? pos.current_holder_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-              : '?'}
-          </div>
-
-          {/* Position info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm truncate">{pos.title}</span>
-              {pos.is_critical && (
-                <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  <Shield className="h-3 w-3" /> {fr ? 'Critique' : 'Critical'}
-                </span>
-              )}
-              {pos.upskill_potential && (
-                <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <TrendingUp className="h-3 w-3" /> Upskill
-                </span>
-              )}
+            {/* Drag handle */}
+            <div
+              {...provided.dragHandleProps}
+              className="flex-shrink-0 cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-accent/60 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            >
+              <GripVertical className="h-4 w-4" />
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
-              {pos.current_holder_name && (
+
+            {/* Avatar placeholder */}
+            <div className={`
+              flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
+              ${pos.status === 'open'
+                ? 'bg-destructive/10 text-destructive border border-dashed border-destructive/30'
+                : 'bg-secondary text-secondary-foreground'
+              }
+            `}>
+              {isEditing
+                ? (editPosData.holderName ? editPosData.holderName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?')
+                : (pos.current_holder_name ? pos.current_holder_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?')
+              }
+            </div>
+
+            {/* Position info — inline edit mode */}
+            {isEditing ? (
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={editPosData.title}
+                    onChange={e => setEditPosData(p => ({ ...p, title: e.target.value }))}
+                    className="h-7 text-sm font-medium"
+                    placeholder={fr ? 'Intitulé' : 'Title'}
+                    autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') saveEditPosition(e as any); if (e.key === 'Escape') setEditingPosId(null); }}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select value={editPosData.level} onValueChange={v => setEditPosData(p => ({ ...p, level: v }))}>
+                    <SelectTrigger className="h-7 text-[11px] w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="junior">Junior</SelectItem>
+                      <SelectItem value="mid">Mid</SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
+                      <SelectItem value="executive">Executive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={editPosData.holderName}
+                    onChange={e => setEditPosData(p => ({ ...p, holderName: e.target.value }))}
+                    className="h-7 text-[11px] flex-1"
+                    placeholder={fr ? 'Titulaire' : 'Holder'}
+                    onKeyDown={e => { if (e.key === 'Enter') saveEditPosition(e as any); if (e.key === 'Escape') setEditingPosId(null); }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm truncate">{pos.title}</span>
+                  {pos.is_critical && (
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <Shield className="h-3 w-3" /> {fr ? 'Critique' : 'Critical'}
+                    </span>
+                  )}
+                  {pos.upskill_potential && (
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      <TrendingUp className="h-3 w-3" /> Upskill
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
+                  {pos.current_holder_name && (
+                    <>
+                      <span className="text-muted-foreground/30">•</span>
+                      <span className="text-[11px] text-muted-foreground">{pos.current_holder_name}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions: edit/save/cancel + status */}
+            <div className="flex items-center gap-2">
+              {isEditing ? (
                 <>
-                  <span className="text-muted-foreground/30">•</span>
-                  <span className="text-[11px] text-muted-foreground">{pos.current_holder_name}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600" onClick={saveEditPosition}>
+                    <Check className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={cancelEditPosition}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-7 w-7 opacity-0 group-hover/pos:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                    onClick={(e) => startEditPosition(pos, e)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  {getStatusBadge(pos.status)}
+                  {pos.match_score != null && (
+                    <div className={`
+                      text-[10px] font-bold px-2 py-0.5 rounded-full
+                      ${pos.match_score >= 70
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                        : pos.match_score >= 40
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                          : 'bg-destructive/15 text-destructive'
+                      }
+                    `}>
+                      {Math.round(pos.match_score)}%
+                    </div>
+                  )}
                 </>
               )}
             </div>
           </div>
-
-          {/* Status + score */}
-          <div className="flex items-center gap-2">
-            {getStatusBadge(pos.status)}
-            {pos.match_score != null && (
-              <div className={`
-                text-[10px] font-bold px-2 py-0.5 rounded-full
-                ${pos.match_score >= 70
-                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                  : pos.match_score >= 40
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                    : 'bg-destructive/15 text-destructive'
-                }
-              `}>
-                {Math.round(pos.match_score)}%
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </Draggable>
-  );
+        )}
+      </Draggable>
+    );
+  };
 
   // --- Render a department with droppable zone ---
   const renderDept = (dept: Department, depth: number = 0) => {
