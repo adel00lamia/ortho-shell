@@ -749,7 +749,7 @@ export default function CompanyProfile() {
                       : 'Build your org chart in the diagnostic tool'}
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/workflow/assess/diagnostic')}>
+                <Button variant="outline" size="sm" onClick={() => navigate('/workflow/assess/workforce')}>
                   {fr ? 'Ouvrir le builder' : 'Open Builder'}
                 </Button>
               </div>
@@ -778,7 +778,7 @@ export default function CompanyProfile() {
           <Button
             onClick={async () => {
               await handleSave();
-              navigate('/workflow/assess/diagnostic');
+              navigate('/workflow/assess/skills');
             }}
             disabled={!isProfileComplete || saving}
           >

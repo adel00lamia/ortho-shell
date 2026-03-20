@@ -26,7 +26,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: ca.diagnostic.viewBenchmarkTitle,
         description: ca.diagnostic.viewBenchmarkDesc,
         icon: TrendingUp,
-        action: () => navigate('/workflow/assess/benchmark'),
+        action: () => navigate('/workflow/assess/report'),
       }
     ],
     'plan-builder': [
@@ -65,7 +65,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: ca.performance.compareBenchmarkTitle,
         description: ca.performance.compareBenchmarkDesc,
         icon: TrendingUp,
-        action: () => navigate('/workflow/assess/benchmark'),
+        action: () => navigate('/workflow/assess/report'),
       }
     ],
     benchmark: [
@@ -73,7 +73,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: ca.benchmark.startDiagnosticTitle,
         description: ca.benchmark.startDiagnosticDesc,
         icon: Brain,
-        action: () => navigate('/workflow/assess/diagnostic'),
+        action: () => navigate('/workflow/assess/skills'),
         highlighted: true
       },
       {

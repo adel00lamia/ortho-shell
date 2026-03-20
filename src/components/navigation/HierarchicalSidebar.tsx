@@ -97,9 +97,10 @@ export const HierarchicalSidebar = () => {
         titleKey: 'assess',
         items: [
           { path: '/company-profile', labelKey: 'companyProfile', icon: Building2 },
-          { path: '/workflow/assess/diagnostic', labelKey: 'skillsDiagnostic', icon: ClipboardCheck },
+          { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
           { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
-          { path: '/workflow/assess/benchmark', labelKey: 'industryBenchmark', icon: TrendingUp },
+          { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },
+          { path: '/workflow/assess/report', labelKey: 'assessmentReport', icon: TrendingUp },
         ],
       },
       {

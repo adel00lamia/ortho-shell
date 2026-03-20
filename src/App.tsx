@@ -15,6 +15,9 @@ import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
 import Diagnostic from "./pages/Diagnostic";
+import WorkforceOrg from "./pages/WorkforceOrg";
+import SkillsGaps from "./pages/SkillsGaps";
+import AssessmentReportPage from "./pages/AssessmentReportPage";
 import TrainingPlan from "./pages/TrainingPlan";
 import ModuleStudio from "./pages/ModuleStudio";
 import CertificateGenerator from "./pages/CertificateGenerator";
@@ -91,9 +94,13 @@ const App = () => (
               <Route path="/company-profile" element={<ProtectedLayout featureName="Company Profile"><CompanyProfile /></ProtectedLayout>} />
 
               {/* Workflow Routes - Assess */}
-              <Route path="/workflow/assess/diagnostic" element={<ProtectedLayout featureName="Diagnostic"><Diagnostic /></ProtectedLayout>} />
+              <Route path="/workflow/assess/workforce" element={<ProtectedLayout featureName="Workforce & Org"><WorkforceOrg /></ProtectedLayout>} />
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
-              <Route path="/workflow/assess/benchmark" element={<ProtectedLayout featureName="Benchmark"><Benchmark /></ProtectedLayout>} />
+              <Route path="/workflow/assess/skills" element={<ProtectedLayout featureName="Skills & Gaps"><SkillsGaps /></ProtectedLayout>} />
+              <Route path="/workflow/assess/report" element={<ProtectedLayout featureName="360° Report"><AssessmentReportPage /></ProtectedLayout>} />
+              {/* Legacy assess routes */}
+              <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
+              <Route path="/workflow/assess/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               
               {/* Workflow Routes - Plan */}
               <Route path="/workflow/plan/builder" element={<ProtectedLayout featureName="AI Plan Builder"><SubscriptionGate requiredPlan="starter"><AIPlanBuilder /></SubscriptionGate></ProtectedLayout>} />
@@ -125,9 +132,9 @@ const App = () => (
               <Route path="/referrals" element={<ProtectedLayout featureName="Referrals"><Referrals /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
-              <Route path="/diagnostic" element={<Navigate to="/workflow/assess/diagnostic" replace />} />
+              <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
               <Route path="/performance-evaluation" element={<Navigate to="/workflow/assess/performance" replace />} />
-              <Route path="/benchmark" element={<Navigate to="/workflow/assess/benchmark" replace />} />
+              <Route path="/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               <Route path="/ai-plan-builder" element={<Navigate to="/workflow/plan/builder" replace />} />
               <Route path="/module-studio" element={<Navigate to="/workflow/execute/modules" replace />} />
               <Route path="/marketplace" element={<Navigate to="/workflow/execute/marketplace" replace />} />

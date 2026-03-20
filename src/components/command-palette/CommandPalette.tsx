@@ -53,9 +53,10 @@ export const CommandPalette = () => {
   const routes: CommandRoute[] = [
     { path: '/dashboard', label: t.nav.dashboard, icon: LayoutDashboard, keywords: ['home', 'accueil', 'tableau'], group: 'Navigation' },
     { path: '/company-profile', label: t.nav.companyProfile, icon: Building2, keywords: ['company', 'entreprise', 'profil'], group: 'Navigation' },
-    { path: '/workflow/assess/diagnostic', label: t.nav.skillsDiagnostic, icon: ClipboardCheck, keywords: ['diagnostic', 'skills', 'competences', 'assess'], group: 'Assess' },
+    { path: '/workflow/assess/workforce', label: t.nav.workforceOrg, icon: Building2, keywords: ['workforce', 'org', 'jobs', 'organigramme', 'effectifs'], group: 'Assess' },
     { path: '/workflow/assess/performance', label: t.nav.performanceReview, icon: FileText, keywords: ['performance', 'evaluation', 'review'], group: 'Assess' },
-    { path: '/workflow/assess/benchmark', label: t.nav.industryBenchmark, icon: TrendingUp, keywords: ['benchmark', 'industry', 'compare'], group: 'Assess' },
+    { path: '/workflow/assess/skills', label: t.nav.skillsGaps, icon: ClipboardCheck, keywords: ['skills', 'gaps', 'competences', 'diagnostic', 'assess'], group: 'Assess' },
+    { path: '/workflow/assess/report', label: t.nav.assessmentReport, icon: TrendingUp, keywords: ['report', 'benchmark', 'industry', '360', 'rapport'], group: 'Assess' },
     { path: '/workflow/plan/builder', label: t.nav.aiPlanBuilder, icon: Lightbulb, keywords: ['plan', 'ai', 'builder', 'generate', 'create'], group: 'Plan' },
     { path: '/workflow/plan/plans', label: t.nav.myPlans, icon: Target, keywords: ['plans', 'training', 'formation'], group: 'Plan' },
     { path: '/workflow/execute/modules', label: t.nav.moduleStudio, icon: BookOpen, keywords: ['module', 'studio', 'create', 'content'], group: 'Execute' },
