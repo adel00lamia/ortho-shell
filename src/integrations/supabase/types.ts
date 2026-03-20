@@ -852,6 +852,7 @@ export type Database = {
           skills_current: Json | null
           skills_required: Json | null
           status: string
+          succession_candidates: Json | null
           title: string
           updated_at: string
           upskill_potential: boolean | null
@@ -873,6 +874,7 @@ export type Database = {
           skills_current?: Json | null
           skills_required?: Json | null
           status?: string
+          succession_candidates?: Json | null
           title: string
           updated_at?: string
           upskill_potential?: boolean | null
@@ -894,6 +896,7 @@ export type Database = {
           skills_current?: Json | null
           skills_required?: Json | null
           status?: string
+          succession_candidates?: Json | null
           title?: string
           updated_at?: string
           upskill_potential?: boolean | null
