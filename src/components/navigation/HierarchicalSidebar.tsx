@@ -139,6 +139,12 @@ export const HierarchicalSidebar = () => {
           { path: '/workflow/track/reimbursement', labelKey: 'ofpptReimbursement', icon: FileText },
         ],
       },
+      {
+        titleKey: 'knowledge',
+        items: [
+          { path: '/hr-knowledge', labelKey: 'hrKnowledge', icon: Brain, badge: 'AI' },
+        ],
+      },
     ];
   };
 
