@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Plus, X, FileText, Building2, Upload } from "lucide-react";
+import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp } from "lucide-react";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { JDTemplateLibrary } from "@/components/assessment/JDTemplateLibrary";
 import { OrgChartView } from "@/components/assessment/OrgChartView";
+import EmployeeList from "@/components/company/EmployeeList";
 import type { JDTemplate } from "@/data/jobDescriptionTemplates";
 
 interface JobDescription {
@@ -31,9 +32,10 @@ export default function WorkforceOrg() {
   const [departments, setDepartments] = useState<any[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [showJobForm, setShowJobForm] = useState(false);
   const [editingJob, setEditingJob] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("jobs");
+  const [activeTab, setActiveTab] = useState("employees");
 
   useEffect(() => {
     if (user) loadData();
@@ -51,17 +53,19 @@ export default function WorkforceOrg() {
       if (profile?.company_id) {
         setCompanyId(profile.company_id);
 
-        const [jobsRes, deptsRes, posRes, evalsRes] = await Promise.all([
+        const [jobsRes, deptsRes, posRes, evalsRes, empRes] = await Promise.all([
           supabase.from("job_descriptions").select("*").eq("company_id", profile.company_id),
           supabase.from("departments").select("*").eq("company_id", profile.company_id),
           supabase.from("positions").select("*").eq("company_id", profile.company_id),
           supabase.from("performance_evaluations").select("*").eq("company_id", profile.company_id),
+          (supabase as any).from("company_employees").select("*").eq("company_id", profile.company_id),
         ]);
 
         if (jobsRes.data) setJobDescriptions(jobsRes.data as any);
         if (deptsRes.data) setDepartments(deptsRes.data);
         if (posRes.data) setPositions(posRes.data);
         if (evalsRes.data) setEvaluations(evalsRes.data);
+        if (empRes.data) setEmployees(empRes.data);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -128,6 +132,10 @@ export default function WorkforceOrg() {
     toast.success(language === "fr" ? "Template appliqué - modifiez et sauvegardez" : "Template applied - edit and save");
   };
 
+  const openPositions = positions.filter(p => p.status === 'open').length;
+  const criticalPositions = positions.filter(p => p.is_critical).length;
+  const activeEmployees = employees.filter(e => e.status === 'active').length;
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -137,13 +145,73 @@ export default function WorkforceOrg() {
           </h1>
           <p className="text-muted-foreground">
             {language === "fr"
-              ? "Gérez vos fiches de poste, organigramme et structure organisationnelle"
-              : "Manage job descriptions, org chart, and organizational structure"}
+              ? "Gérez vos employés, fiches de poste, organigramme et structure organisationnelle"
+              : "Manage employees, job descriptions, org chart, and organizational structure"}
           </p>
         </div>
 
+        {/* Summary Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="p-4 border-l-4 border-l-primary">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{activeEmployees}</div>
+                <div className="text-xs text-muted-foreground">
+                  {language === "fr" ? "Employés actifs" : "Active Employees"}
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 border-l-4 border-l-blue-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Briefcase className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{jobDescriptions.length}</div>
+                <div className="text-xs text-muted-foreground">
+                  {language === "fr" ? "Fiches de poste" : "Job Descriptions"}
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 border-l-4 border-l-amber-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{openPositions}</div>
+                <div className="text-xs text-muted-foreground">
+                  {language === "fr" ? "Postes ouverts" : "Open Positions"}
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 border-l-4 border-l-emerald-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <Building2 className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{departments.length}</div>
+                <div className="text-xs text-muted-foreground">
+                  {language === "fr" ? "Départements" : "Departments"}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
+          <TabsList className="grid w-full grid-cols-4 max-w-[700px]">
+            <TabsTrigger value="employees" className="flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" />
+              {language === "fr" ? "Employés" : "Employees"}
+            </TabsTrigger>
             <TabsTrigger value="jobs" className="flex items-center gap-1">
               <Briefcase className="h-3.5 w-3.5" />
               {language === "fr" ? "Fiches de poste" : "Job Descriptions"}
@@ -157,6 +225,24 @@ export default function WorkforceOrg() {
               {language === "fr" ? "Organigramme" : "Org Chart"}
             </TabsTrigger>
           </TabsList>
+
+          {/* Employees Tab */}
+          <TabsContent value="employees" className="space-y-4">
+            {companyId ? (
+              <EmployeeList companyId={companyId} fr={language === "fr"} />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    {language === "fr"
+                      ? "Configurez votre profil d'entreprise pour gérer les employés"
+                      : "Set up your company profile to manage employees"}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           {/* Job Descriptions Tab */}
           <TabsContent value="jobs" className="space-y-4">
@@ -173,6 +259,7 @@ export default function WorkforceOrg() {
                     onSave={handleSaveJobDescription}
                     onCancel={() => { setShowJobForm(false); setEditingJob(null); }}
                     initialData={editingJob}
+                    language={language}
                   />
                 </CardContent>
               </Card>
@@ -207,7 +294,7 @@ export default function WorkforceOrg() {
                   ) : (
                     <div className="space-y-4">
                       {jobDescriptions.map((job) => (
-                        <Card key={job.id}>
+                        <Card key={job.id} className="border">
                           <CardContent className="pt-6">
                             <div className="flex items-start justify-between mb-4">
                               <div>
@@ -234,7 +321,7 @@ export default function WorkforceOrg() {
                                 <div className="flex flex-wrap gap-2">
                                   {job.competencies.map((comp: any, idx: number) => (
                                     <Badge key={idx} variant="secondary">
-                                      {comp.name} (Level {comp.requiredLevel})
+                                      {comp.name} ({language === "fr" ? "Niveau" : "Level"} {comp.requiredLevel})
                                     </Badge>
                                   ))}
                                 </div>
