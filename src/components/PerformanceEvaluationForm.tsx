@@ -120,6 +120,18 @@ export default function PerformanceEvaluationForm({
         employeeEmail: emp.email || "",
         department: emp.department || prev.department,
       }));
+
+      // Auto-match job description by employee position
+      if (emp.position && jobDescriptions.length > 0) {
+        const posLower = emp.position.toLowerCase();
+        const matched = jobDescriptions.find(jd => {
+          const titleLower = (jd.title || '').toLowerCase();
+          return titleLower === posLower || titleLower.includes(posLower) || posLower.includes(titleLower);
+        });
+        if (matched) {
+          setSelectedJobId(matched.id);
+        }
+      }
     }
   };
 
