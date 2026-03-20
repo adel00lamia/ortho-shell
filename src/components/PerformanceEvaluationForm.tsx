@@ -40,6 +40,7 @@ export default function PerformanceEvaluationForm({
 }: PerformanceEvaluationFormProps) {
   const { language, t } = useLanguage();
   const [jobDescriptions, setJobDescriptions] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>(initialData?.job_description_id || "");
   const [formData, setFormData] = useState({
     employeeName: initialData?.employee_name || "",
@@ -83,6 +84,7 @@ export default function PerformanceEvaluationForm({
 
   useEffect(() => {
     loadJobDescriptions();
+    loadEmployees();
   }, [companyId]);
 
   useEffect(() => {
@@ -97,6 +99,28 @@ export default function PerformanceEvaluationForm({
       .select('*')
       .eq('company_id', companyId);
     if (data) setJobDescriptions(data);
+  };
+
+  const loadEmployees = async () => {
+    const { data } = await supabase
+      .from('company_employees')
+      .select('id, full_name, email, department, position')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .order('full_name');
+    if (data) setEmployees(data);
+  };
+
+  const handleEmployeeSelect = (employeeId: string) => {
+    const emp = employees.find(e => e.id === employeeId);
+    if (emp) {
+      setFormData(prev => ({
+        ...prev,
+        employeeName: emp.full_name,
+        employeeEmail: emp.email || "",
+        department: emp.department || prev.department,
+      }));
+    }
   };
 
   const loadCompetenciesFromJob = async () => {
@@ -192,12 +216,30 @@ export default function PerformanceEvaluationForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>{p.form.employeeName} *</Label>
-          <Input
-            value={formData.employeeName}
-            onChange={(e) => setFormData(prev => ({ ...prev, employeeName: e.target.value }))}
-            placeholder={p.form.fullName}
-            required
-          />
+          {employees.length > 0 ? (
+            <Select
+              value={employees.find(e => e.full_name === formData.employeeName)?.id || ""}
+              onValueChange={handleEmployeeSelect}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={language === 'fr' ? 'Sélectionner un employé' : 'Select an employee'} />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map(emp => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.full_name} {emp.position ? `— ${emp.position}` : ''} {emp.department ? `(${emp.department})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              value={formData.employeeName}
+              onChange={(e) => setFormData(prev => ({ ...prev, employeeName: e.target.value }))}
+              placeholder={p.form.fullName}
+              required
+            />
+          )}
         </div>
         <div>
           <Label>{p.form.email}</Label>
