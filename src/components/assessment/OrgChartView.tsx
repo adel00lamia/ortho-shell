@@ -990,6 +990,30 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(v) => { if (!v) setDeleteConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              {fr ? 'Confirmer la suppression' : 'Confirm Deletion'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {fr
+                ? `Voulez-vous vraiment supprimer "${deleteConfirm?.name}" ?${deleteConfirm?.type === 'dept' ? ' Les postes associés seront désassignés.' : ''}`
+                : `Are you sure you want to delete "${deleteConfirm?.name}"?${deleteConfirm?.type === 'dept' ? ' Associated positions will be unassigned.' : ''}`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{fr ? 'Annuler' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              {fr ? 'Supprimer' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
