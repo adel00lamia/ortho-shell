@@ -65,6 +65,10 @@ export const en = {
     teamCollaboration: 'Team Collaboration',
     billing: 'Billing',
     referrals: 'Referral Program',
+    career: 'Career',
+    myCareer: 'My Career',
+    jobBoard: 'Job Board',
+    talentPipeline: 'Talent Pipeline',
   },
 
   // Breadcrumbs
