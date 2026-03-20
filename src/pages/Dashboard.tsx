@@ -161,7 +161,7 @@ const Dashboard = () => {
   const RoleIcon = config.icon;
 
   const workflowSteps = [
-    { step: '1', title: t.nav.assess, desc: d.skillsNeeds, icon: ClipboardCheck, path: '/workflow/assess/diagnostic', color: 'from-blue-500 to-cyan-400' },
+    { step: '1', title: t.nav.assess, desc: d.skillsNeeds, icon: ClipboardCheck, path: '/workflow/assess/skills', color: 'from-blue-500 to-cyan-400' },
     { step: '2', title: t.nav.plan, desc: d.trainingStrategy, icon: Lightbulb, path: '/workflow/plan/builder', color: 'from-purple-500 to-pink-400' },
     { step: '3', title: t.nav.execute, desc: d.createContentShort, icon: PlayCircle, path: '/workflow/execute/modules', color: 'from-orange-500 to-amber-400' },
     { step: '4', title: t.nav.trackCertify.split(' ')[0], desc: d.monitorResults, icon: BarChart3, path: '/workflow/track/analytics', color: 'from-green-500 to-emerald-400' },

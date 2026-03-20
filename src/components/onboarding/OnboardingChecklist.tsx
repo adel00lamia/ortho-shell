@@ -69,7 +69,7 @@ export const OnboardingChecklist = () => {
       description: 'Create job descriptions and evaluate skills',
       descriptionFr: 'Créez des fiches de poste et évaluez les compétences',
       icon: ClipboardCheck,
-      path: '/workflow/assess/diagnostic',
+      path: '/workflow/assess/workforce',
       roles: ['admin', 'hr_manager'],
       checkFn: async () => {
         if (!companyId) return false;

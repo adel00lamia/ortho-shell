@@ -778,7 +778,7 @@ export default function CompanyProfile() {
           <Button
             onClick={async () => {
               await handleSave();
-              navigate('/workflow/assess/diagnostic');
+              navigate('/workflow/assess/skills');
             }}
             disabled={!isProfileComplete || saving}
           >

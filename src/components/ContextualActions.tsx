@@ -73,7 +73,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: ca.benchmark.startDiagnosticTitle,
         description: ca.benchmark.startDiagnosticDesc,
         icon: Brain,
-        action: () => navigate('/workflow/assess/diagnostic'),
+        action: () => navigate('/workflow/assess/skills'),
         highlighted: true
       },
       {
