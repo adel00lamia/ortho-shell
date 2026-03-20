@@ -40,6 +40,7 @@ export default function PerformanceEvaluationForm({
 }: PerformanceEvaluationFormProps) {
   const { language, t } = useLanguage();
   const [jobDescriptions, setJobDescriptions] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>(initialData?.job_description_id || "");
   const [formData, setFormData] = useState({
     employeeName: initialData?.employee_name || "",
