@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Building2, Users, Plus, Sparkles, Loader2, ChevronDown, ChevronRight, UserCircle, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Building2, Users, Plus, Sparkles, Loader2, ChevronDown, ChevronRight, UserCircle, AlertTriangle, TrendingUp, Download } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
+import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
 
 interface Department {
   id: string;
