@@ -34,6 +34,7 @@ import Referrals from "./pages/Referrals";
 import Career from "./pages/Career";
 import JobBoard from "./pages/JobBoard";
 import TalentPipeline from "./pages/TalentPipeline";
+import HRKnowledgeBase from "./pages/HRKnowledgeBase";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
