@@ -278,7 +278,7 @@ const Dashboard = () => {
       </div>}
 
       {/* Profile Completion */}
-      {isVisible('profile') && !companyId && (role === 'hr_manager' || role === 'admin' || role === 'employee') && (
+      {(role === 'hr_manager' || role === 'admin' || role === 'employee') && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={4.5}>
           <Card className="p-6 border-dashed border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
             <div className="flex items-start gap-4">
