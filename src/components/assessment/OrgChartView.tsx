@@ -60,6 +60,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const [newDept, setNewDept] = useState({ name: '', description: '', parentId: '' });
   const [addPosOpen, setAddPosOpen] = useState(false);
   const [newPos, setNewPos] = useState({ title: '', level: 'mid', status: 'filled', departmentId: '', holderName: '' });
+  const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
 
   const toggleExpand = (id: string) => {
     setExpandedDepts(prev => {
