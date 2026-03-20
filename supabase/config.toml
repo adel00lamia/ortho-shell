@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.ai-employee-profiler]
 verify_jwt = false
+
+[functions.ai-language-fix]
+verify_jwt = false
