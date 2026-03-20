@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp, Download } from "lucide-react";
+import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp, Download, Languages, Loader2 } from "lucide-react";
 import { exportJDToWord } from "@/lib/exportJDWord";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import { useLanguage } from "@/contexts/LanguageContext";
