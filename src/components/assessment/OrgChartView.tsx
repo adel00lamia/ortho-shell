@@ -252,6 +252,23 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           {aiDetecting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
           {language === 'fr' ? 'Détection AI de la structure' : 'AI Auto-Detect Structure'}
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            exportOrgChartPDF({
+              companyName: 'Company',
+              departments,
+              positions,
+              lang: language,
+            });
+            toast.success(language === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+          }}
+          disabled={departments.length === 0 && positions.length === 0}
+        >
+          <Download className="h-4 w-4 mr-1" />
+          {language === 'fr' ? 'Télécharger PDF' : 'Download PDF'}
+        </Button>
       </div>
 
       {/* Org Tree */}
