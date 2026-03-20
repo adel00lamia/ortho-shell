@@ -14,6 +14,7 @@ interface AIPerformancePanelProps {
   evaluation: any;
   allEvaluations: any[];
   onApplyAutoEval?: (result: AutoEvaluateResult) => void;
+  onSaveTrainingRecs?: (result: SmartRecommendationsResult) => void;
 }
 
 const typeIcons: Record<string, typeof BookOpen> = {
