@@ -67,8 +67,20 @@ export default function WorkforceOrg() {
     setAutoFilling(true);
     let created = 0;
     let linked = 0;
+    let reused = 0;
 
     try {
+      // Cache of already-created JDs by template id to avoid duplicates
+      const jdCache: Record<string, string> = {};
+
+      // Also index existing JDs by normalized title for reuse
+      for (const existingJd of jobDescriptions) {
+        const key = (existingJd.title || '').toLowerCase().trim();
+        if (key && existingJd.id) {
+          jdCache[`title:${key}`] = existingJd.id;
+        }
+      }
+
       for (const pos of vacantNoJD) {
         // Try to match by title similarity
         const posTitle = pos.title.toLowerCase().trim();
@@ -78,19 +90,16 @@ export default function WorkforceOrg() {
         for (const tpl of JD_TEMPLATES) {
           const tplTitle = tpl.title.toLowerCase();
           const tplTitleFr = tpl.titleFr.toLowerCase();
-          // Check if position title contains template title or vice versa
           let score = 0;
           if (posTitle.includes(tplTitle) || tplTitle.includes(posTitle)) score = 3;
           else if (posTitle.includes(tplTitleFr) || tplTitleFr.includes(posTitle)) score = 3;
           else {
-            // Word overlap scoring
             const posWords = posTitle.split(/\s+/);
             const tplWords = [...tplTitle.split(/\s+/), ...tplTitleFr.split(/\s+/)];
             for (const w of posWords) {
               if (w.length > 2 && tplWords.some(tw => tw.includes(w) || w.includes(tw))) score++;
             }
           }
-          // Bonus for matching department
           if (pos.department_id) {
             const dept = departments.find(d => d.id === pos.department_id);
             if (dept && tpl.department.toLowerCase().includes(dept.name.toLowerCase().split(' ')[0])) score += 1;
@@ -100,25 +109,43 @@ export default function WorkforceOrg() {
 
         if (bestMatch && bestScore >= 1) {
           const fr = language === "fr";
-          const { data: jd, error } = await supabase.from("job_descriptions").insert({
-            company_id: companyId,
-            created_by: user.id,
-            title: fr ? bestMatch.titleFr : bestMatch.title,
-            department: bestMatch.department,
-            level: bestMatch.level,
-            description: fr ? bestMatch.descriptionFr : bestMatch.description,
-            responsibilities: fr ? bestMatch.responsibilitiesFr : bestMatch.responsibilities,
-            required_skills: bestMatch.technicalSkills.map(s => ({ name: s })),
-            preferred_skills: bestMatch.softSkills.map(s => ({ name: s })),
-            competencies: bestMatch.competencies,
-          }).select().single();
+          const jdTitle = fr ? bestMatch.titleFr : bestMatch.title;
+          const titleKey = `title:${jdTitle.toLowerCase().trim()}`;
+          const templateKey = `tpl:${bestMatch.id}`;
 
-          if (!error && jd) {
-            created++;
-            // Link position to the new JD
+          // Check if we already have a JD for this template or title
+          let jdId = jdCache[templateKey] || jdCache[titleKey];
+
+          if (jdId) {
+            // Reuse existing JD — just link the position
+            reused++;
+          } else {
+            // Create new JD
+            const { data: jd, error } = await supabase.from("job_descriptions").insert({
+              company_id: companyId,
+              created_by: user.id,
+              title: jdTitle,
+              department: bestMatch.department,
+              level: bestMatch.level,
+              description: fr ? bestMatch.descriptionFr : bestMatch.description,
+              responsibilities: fr ? bestMatch.responsibilitiesFr : bestMatch.responsibilities,
+              required_skills: bestMatch.technicalSkills.map(s => ({ name: s })),
+              preferred_skills: bestMatch.softSkills.map(s => ({ name: s })),
+              competencies: bestMatch.competencies,
+            }).select().single();
+
+            if (!error && jd) {
+              jdId = jd.id;
+              jdCache[templateKey] = jd.id;
+              jdCache[titleKey] = jd.id;
+              created++;
+            }
+          }
+
+          if (jdId) {
             const { error: linkError } = await supabase
               .from("positions")
-              .update({ job_description_id: jd.id })
+              .update({ job_description_id: jdId })
               .eq("id", pos.id);
             if (!linkError) linked++;
           }
