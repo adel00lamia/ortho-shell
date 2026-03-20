@@ -26,7 +26,7 @@ export function ContextualActions({ currentPage, data }: ContextualActionsProps)
         title: ca.diagnostic.viewBenchmarkTitle,
         description: ca.diagnostic.viewBenchmarkDesc,
         icon: TrendingUp,
-        action: () => navigate('/workflow/assess/benchmark'),
+        action: () => navigate('/workflow/assess/report'),
       }
     ],
     'plan-builder': [
