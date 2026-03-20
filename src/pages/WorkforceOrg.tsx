@@ -501,10 +501,21 @@ export default function WorkforceOrg() {
               onRefresh={loadData}
               jobDescriptions={jobDescriptions}
               evaluations={evaluations}
+              employees={employees}
             />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Translation Preview Dialog */}
+      <TranslationPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        changes={translationChanges}
+        onApply={handleApplyTranslations}
+        fr={language === "fr"}
+        isApplying={applyingTranslations}
+      />
     </div>
   );
 }
