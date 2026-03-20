@@ -20,6 +20,7 @@ interface JobDescriptionFormProps {
   onSave: (data: any) => void;
   onCancel: () => void;
   initialData?: any;
+  language?: string;
 }
 
 const skillCategories = [
@@ -28,7 +29,27 @@ const skillCategories = [
   "Customer Service", "Financial Management", "Operations"
 ];
 
-export default function JobDescriptionForm({ onSave, onCancel, initialData }: JobDescriptionFormProps) {
+const levelOptions = [
+  { value: "entry", en: "Entry Level", fr: "Débutant" },
+  { value: "junior", en: "Junior", fr: "Junior" },
+  { value: "mid", en: "Mid-Level", fr: "Intermédiaire" },
+  { value: "senior", en: "Senior", fr: "Senior" },
+  { value: "lead", en: "Lead", fr: "Lead" },
+  { value: "manager", en: "Manager", fr: "Manager" },
+  { value: "director", en: "Director", fr: "Directeur" },
+];
+
+const competencyLevels = [
+  { value: 1, en: "Beginner", fr: "Débutant" },
+  { value: 2, en: "Basic", fr: "Base" },
+  { value: 3, en: "Intermediate", fr: "Intermédiaire" },
+  { value: 4, en: "Advanced", fr: "Avancé" },
+  { value: 5, en: "Expert", fr: "Expert" },
+];
+
+export default function JobDescriptionForm({ onSave, onCancel, initialData, language = "en" }: JobDescriptionFormProps) {
+  const fr = language === "fr";
+
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     department: initialData?.department || "",
@@ -63,7 +84,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
   const removeResponsibility = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      responsibilities: prev.responsibilities.filter((_, i) => i !== index)
+      responsibilities: prev.responsibilities.filter((_: any, i: number) => i !== index)
     }));
   };
 
@@ -80,7 +101,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
 
   const suggestWithAI = async (type: 'responsibilities' | 'competencies') => {
     if (!formData.title) {
-      toast.error("Please enter a job title first");
+      toast.error(fr ? "Veuillez d'abord entrer un titre de poste" : "Please enter a job title first");
       return;
     }
 
@@ -104,7 +125,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
           ...prev,
           responsibilities: [...prev.responsibilities, ...data.suggestions]
         }));
-        toast.success("AI suggestions added!");
+        toast.success(fr ? "Suggestions AI ajoutées !" : "AI suggestions added!");
       } else if (type === 'competencies' && data?.suggestions) {
         const newCompetencies = data.suggestions.map((suggestion: string) => {
           const parts = suggestion.split(' - ');
@@ -115,11 +136,11 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
           };
         });
         setCompetencies([...competencies, ...newCompetencies]);
-        toast.success("AI suggestions added!");
+        toast.success(fr ? "Suggestions AI ajoutées !" : "AI suggestions added!");
       }
     } catch (error: any) {
       console.error('AI suggestion error:', error);
-      toast.error(error.message || "Failed to generate suggestions");
+      toast.error(error.message || (fr ? "Échec de la génération" : "Failed to generate suggestions"));
     } finally {
       setAiLoading(false);
     }
@@ -137,38 +158,36 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>Job Title *</Label>
+          <Label>{fr ? "Titre du poste" : "Job Title"} *</Label>
           <Input
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="e.g., Senior Developer"
+            placeholder={fr ? "Ex: Développeur Senior" : "e.g., Senior Developer"}
             required
           />
         </div>
         <div>
-          <Label>Department</Label>
+          <Label>{fr ? "Département" : "Department"}</Label>
           <Input
             value={formData.department}
             onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-            placeholder="e.g., Engineering"
+            placeholder={fr ? "Ex: Ingénierie" : "e.g., Engineering"}
           />
         </div>
       </div>
 
       <div>
-        <Label>Level</Label>
+        <Label>{fr ? "Niveau" : "Level"}</Label>
         <Select value={formData.level} onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}>
           <SelectTrigger>
-            <SelectValue placeholder="Select level" />
+            <SelectValue placeholder={fr ? "Sélectionner le niveau" : "Select level"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="entry">Entry Level</SelectItem>
-            <SelectItem value="junior">Junior</SelectItem>
-            <SelectItem value="mid">Mid-Level</SelectItem>
-            <SelectItem value="senior">Senior</SelectItem>
-            <SelectItem value="lead">Lead</SelectItem>
-            <SelectItem value="manager">Manager</SelectItem>
-            <SelectItem value="director">Director</SelectItem>
+            {levelOptions.map(opt => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {fr ? opt.fr : opt.en}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -178,14 +197,14 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
         <Textarea
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="Brief overview of the role..."
+          placeholder={fr ? "Aperçu général du rôle..." : "Brief overview of the role..."}
           rows={3}
         />
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <Label>Key Responsibilities</Label>
+          <Label>{fr ? "Responsabilités clés" : "Key Responsibilities"}</Label>
           <Button
             type="button"
             variant="outline"
@@ -198,11 +217,11 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            AI Suggest
+            {fr ? "Suggestion AI" : "AI Suggest"}
           </Button>
         </div>
         <div className="space-y-2">
-          {formData.responsibilities.map((resp, idx) => (
+          {formData.responsibilities.map((resp: string, idx: number) => (
             <div key={idx} className="flex items-center gap-2">
               <div className="flex-1 text-sm p-2 bg-muted rounded">{resp}</div>
               <Button
@@ -219,7 +238,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
             <Input
               value={newResponsibility}
               onChange={(e) => setNewResponsibility(e.target.value)}
-              placeholder="Add a responsibility..."
+              placeholder={fr ? "Ajouter une responsabilité..." : "Add a responsibility..."}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addResponsibility())}
             />
             <Button type="button" onClick={addResponsibility} variant="outline">
@@ -232,7 +251,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
-            <Label className="text-base">Required Competencies</Label>
+            <Label className="text-base">{fr ? "Compétences requises" : "Required Competencies"}</Label>
             <Button
               type="button"
               variant="outline"
@@ -245,7 +264,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
               ) : (
                 <Sparkles className="w-4 h-4 mr-2" />
               )}
-              AI Suggest
+              {fr ? "Suggestion AI" : "AI Suggest"}
             </Button>
           </div>
           <div className="space-y-3 mb-4">
@@ -254,10 +273,10 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
                 <div className="flex-1">
                   <div className="font-medium">{comp.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {comp.category} • Level {comp.requiredLevel}
+                    {comp.category} • {fr ? "Niveau" : "Level"} {comp.requiredLevel}
                   </div>
                 </div>
-                <Badge variant="secondary">Required</Badge>
+                <Badge variant="secondary">{fr ? "Requis" : "Required"}</Badge>
                 <Button
                   type="button"
                   variant="ghost"
@@ -272,15 +291,15 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border rounded-lg">
             <div>
-              <Label className="text-xs">Competency Name</Label>
+              <Label className="text-xs">{fr ? "Nom de la compétence" : "Competency Name"}</Label>
               <Input
                 value={newCompetency.name || ""}
                 onChange={(e) => setNewCompetency(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Python Programming"
+                placeholder={fr ? "Ex: Programmation Python" : "e.g., Python Programming"}
               />
             </div>
             <div>
-              <Label className="text-xs">Category</Label>
+              <Label className="text-xs">{fr ? "Catégorie" : "Category"}</Label>
               <Select 
                 value={newCompetency.category} 
                 onValueChange={(value) => setNewCompetency(prev => ({ ...prev, category: value }))}
@@ -296,7 +315,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Required Level (1-5)</Label>
+              <Label className="text-xs">{fr ? "Niveau requis (1-5)" : "Required Level (1-5)"}</Label>
               <Select 
                 value={newCompetency.requiredLevel?.toString()} 
                 onValueChange={(value) => setNewCompetency(prev => ({ ...prev, requiredLevel: parseInt(value) }))}
@@ -305,9 +324,9 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[1,2,3,4,5].map(level => (
-                    <SelectItem key={level} value={level.toString()}>
-                      {level} - {['Beginner', 'Basic', 'Intermediate', 'Advanced', 'Expert'][level - 1]}
+                  {competencyLevels.map(level => (
+                    <SelectItem key={level.value} value={level.value.toString()}>
+                      {level.value} - {fr ? level.fr : level.en}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -316,7 +335,7 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
             <div className="md:col-span-3">
               <Button type="button" onClick={addCompetency} variant="outline" className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Competency
+                {fr ? "Ajouter une compétence" : "Add Competency"}
               </Button>
             </div>
           </div>
@@ -325,10 +344,12 @@ export default function JobDescriptionForm({ onSave, onCancel, initialData }: Jo
 
       <div className="flex gap-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {fr ? "Annuler" : "Cancel"}
         </Button>
         <Button type="submit" className="flex-1">
-          {initialData ? "Update" : "Create"} Job Description
+          {initialData
+            ? (fr ? "Mettre à jour la fiche de poste" : "Update Job Description")
+            : (fr ? "Créer la fiche de poste" : "Create Job Description")}
         </Button>
       </div>
     </form>
