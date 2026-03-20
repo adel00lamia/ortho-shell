@@ -337,6 +337,38 @@ export default function PerformanceEvaluation() {
                               loadEvaluations();
                             }
                           }}
+                          onSaveTrainingRecs={async (result) => {
+                            const updateData = {
+                              training_recommendations: result.recommendations.map(r => r.title),
+                              skills_analysis: {
+                                ...(evaluation.skills_analysis || {}),
+                                ai_training_recs: {
+                                  recommendations: result.recommendations,
+                                  developmentPath: result.developmentPath,
+                                  estimatedTimeToTarget: result.estimatedTimeToTarget,
+                                  generatedAt: new Date().toISOString(),
+                                },
+                              },
+                            };
+
+                            if (evaluation.id.startsWith('demo-')) {
+                              setEvaluations(prev => prev.map(e =>
+                                e.id === evaluation.id ? { ...e, ...updateData } : e
+                              ));
+                              return;
+                            }
+
+                            const { error } = await supabase
+                              .from('performance_evaluations')
+                              .update(updateData)
+                              .eq('id', evaluation.id);
+
+                            if (error) {
+                              toast.error(p.failedToSave);
+                            } else {
+                              loadEvaluations();
+                            }
+                          }}
                         />
                       </div>
                     )}
