@@ -152,12 +152,12 @@ export default function WorkforceOrg() {
         }
       }
 
-      if (created > 0) {
-        toast.success(
-          language === "fr"
-            ? `${created} fiche(s) de poste créée(s) et ${linked} poste(s) lié(s)`
-            : `${created} job description(s) created and ${linked} position(s) linked`
-        );
+      if (created > 0 || reused > 0) {
+        const parts: string[] = [];
+        if (created > 0) parts.push(language === "fr" ? `${created} fiche(s) créée(s)` : `${created} JD(s) created`);
+        if (reused > 0) parts.push(language === "fr" ? `${reused} réutilisée(s)` : `${reused} reused`);
+        parts.push(language === "fr" ? `${linked} poste(s) lié(s)` : `${linked} position(s) linked`);
+        toast.success(parts.join(", "));
         loadData();
       } else {
         toast.info(
