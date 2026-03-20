@@ -258,6 +258,14 @@ export default function PerformanceEvaluation() {
                         )}
                       </div>
                       <div className="flex gap-2 ml-4">
+                        <Button
+                          variant={selectedEvalId === evaluation.id ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedEvalId(selectedEvalId === evaluation.id ? null : evaluation.id)}
+                        >
+                          <Brain className="w-4 h-4 mr-1" />
+                          AI
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => handleEdit(evaluation)}>
                           {t.common.edit}
                         </Button>
@@ -266,6 +274,14 @@ export default function PerformanceEvaluation() {
                         </Button>
                       </div>
                     </div>
+                    {selectedEvalId === evaluation.id && (
+                      <div className="mt-4">
+                        <AIPerformancePanel
+                          evaluation={evaluation}
+                          allEvaluations={evaluations}
+                        />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
