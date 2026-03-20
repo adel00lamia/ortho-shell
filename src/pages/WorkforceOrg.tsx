@@ -497,9 +497,24 @@ export default function WorkforceOrg() {
                         {language === "fr" ? "Définissez les rôles et compétences requises" : "Define roles and required competencies"}
                       </CardDescription>
                     </div>
-                    <Button onClick={() => setShowJobForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      {language === "fr" ? "Ajouter" : "Add Job Description"}
+                    <div className="flex gap-2">
+                      {positions.filter(p => !p.job_description_id).length > 0 && (
+                        <Button
+                          variant="outline"
+                          onClick={handleAutoFillJDs}
+                          disabled={autoFilling}
+                        >
+                          {autoFilling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                          {language === "fr"
+                            ? `Auto-remplir (${positions.filter(p => !p.job_description_id).length})`
+                            : `Auto-fill (${positions.filter(p => !p.job_description_id).length})`}
+                        </Button>
+                      )}
+                      <Button onClick={() => setShowJobForm(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {language === "fr" ? "Ajouter" : "Add Job Description"}
+                      </Button>
+                    </div>
                     </Button>
                   </div>
                 </CardHeader>
