@@ -37,20 +37,36 @@ export default function PerformanceEvaluation() {
   }, [companyId]);
 
   const loadProfile = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+      if (data?.company_id) {
+        setCompanyId(data.company_id);
+        return;
+      }
     }
-    const { data } = await supabase
-      .from('profiles')
-      .select('company_id')
-      .eq('id', user.id)
-      .single();
-    
-    if (data?.company_id) {
-      setCompanyId(data.company_id);
+    // Discovery Mode fallback: find any company with demo data
+    const { data: companies } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('name', 'Atlas Industries Maroc')
+      .limit(1);
+    if (companies && companies.length > 0) {
+      setCompanyId(companies[0].id);
     } else {
-      setLoading(false);
+      // Try any company
+      const { data: anyCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .limit(1);
+      if (anyCompany && anyCompany.length > 0) {
+        setCompanyId(anyCompany[0].id);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
