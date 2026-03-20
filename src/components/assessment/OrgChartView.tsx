@@ -475,6 +475,59 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 </>
               )}
             </div>
+
+            {/* Succession planning panel */}
+            {successionPosId === pos.id && pos.is_critical && (
+              <div className="col-span-full mt-2 p-3 rounded-lg border border-border/60 bg-accent/20" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2 mb-2">
+                  <UserPlus className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-semibold">{fr ? 'Plan de succession' : 'Succession Plan'}</span>
+                </div>
+                {(pos.succession_candidates || []).length > 0 && (
+                  <div className="space-y-1 mb-2">
+                    {(pos.succession_candidates || []).map((c, ci) => {
+                      const rl = readinessLabel(c.readiness);
+                      return (
+                        <div key={ci} className="flex items-center justify-between gap-2 text-xs">
+                          <span className="font-medium">{c.name}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${rl.color}`}>
+                              {fr ? rl.fr : rl.en}
+                            </span>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleRemoveSuccessionCandidate(pos.id, ci)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newCandidate.name}
+                    onChange={e => setNewCandidate(p => ({ ...p, name: e.target.value }))}
+                    className="h-7 text-xs flex-1"
+                    placeholder={fr ? 'Nom du candidat' : 'Candidate name'}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddSuccessionCandidate(pos.id); }}
+                  />
+                  <Select value={newCandidate.readiness} onValueChange={v => setNewCandidate(p => ({ ...p, readiness: v }))}>
+                    <SelectTrigger className="h-7 text-[10px] w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ready_now">{fr ? 'Prêt' : 'Ready Now'}</SelectItem>
+                      <SelectItem value="ready_1_2_years">{fr ? '1-2 ans' : '1-2 Years'}</SelectItem>
+                      <SelectItem value="development_needed">{fr ? 'À développer' : 'Development'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="h-7 text-xs" onClick={() => handleAddSuccessionCandidate(pos.id)}>
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Draggable>
