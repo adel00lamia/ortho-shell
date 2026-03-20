@@ -441,6 +441,23 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
+                  {pos.is_critical && (
+                    <Button
+                      variant="ghost" size="icon"
+                      className="h-7 w-7 opacity-0 group-hover/pos:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                      onClick={(e) => { e.stopPropagation(); setSuccessionPosId(successionPosId === pos.id ? null : pos.id); }}
+                      title={fr ? 'Plan de succession' : 'Succession Plan'}
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-7 w-7 opacity-0 group-hover/pos:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'pos', id: pos.id, name: pos.title }); }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                   {getStatusBadge(pos.status)}
                   {pos.match_score != null && (
                     <div className={`
