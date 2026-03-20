@@ -57,6 +57,13 @@ export const HierarchicalSidebar = () => {
     if (role === 'employee') {
       return [
         {
+          titleKey: 'career',
+          items: [
+            { path: '/career', labelKey: 'myCareer', icon: UserCheck },
+            { path: '/career/jobs', labelKey: 'jobBoard', icon: Briefcase },
+          ],
+        },
+        {
           titleKey: 'execute',
           items: [
             { path: '/workflow/execute/modules', labelKey: 'moduleStudio', icon: BookOpen },
