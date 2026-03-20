@@ -534,6 +534,15 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
               <span className="text-xs font-medium text-muted-foreground">{dept.head_employee_name}</span>
             </div>
           )}
+
+          {/* Delete department button */}
+          <Button
+            variant="ghost" size="icon"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+            onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'dept', id: dept.id, name: dept.name }); }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
         {/* Expanded: droppable positions + children */}
