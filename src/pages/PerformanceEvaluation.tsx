@@ -295,6 +295,47 @@ export default function PerformanceEvaluation() {
                         <AIPerformancePanel
                           evaluation={evaluation}
                           allEvaluations={evaluations}
+                          onApplyAutoEval={async (result) => {
+                            // Save AI auto-eval results to the evaluation record
+                            const updateData = {
+                              overall_rating: result.suggestedRating,
+                              competency_scores: result.competencyScores,
+                              strengths: result.strengths,
+                              areas_for_improvement: result.areasForImprovement,
+                              training_recommendations: result.trainingRecommendations,
+                              skills_analysis: {
+                                ...(evaluation.skills_analysis || {}),
+                                ai_auto_eval: {
+                                  suggestedRating: result.suggestedRating,
+                                  confidence: result.confidence,
+                                  competencyScores: result.competencyScores,
+                                  summary: result.summary,
+                                  generatedAt: new Date().toISOString(),
+                                },
+                              },
+                            };
+
+                            if (evaluation.id.startsWith('demo-')) {
+                              // Update local demo data
+                              setEvaluations(prev => prev.map(e =>
+                                e.id === evaluation.id ? { ...e, ...updateData } : e
+                              ));
+                              toast.success(t.common.save + ' ✓');
+                              return;
+                            }
+
+                            const { error } = await supabase
+                              .from('performance_evaluations')
+                              .update(updateData)
+                              .eq('id', evaluation.id);
+
+                            if (error) {
+                              toast.error(p.failedToSave);
+                            } else {
+                              toast.success(fr ? 'Évaluation IA appliquée et sauvegardée' : 'AI evaluation applied & saved');
+                              loadEvaluations();
+                            }
+                          }}
                         />
                       </div>
                     )}
