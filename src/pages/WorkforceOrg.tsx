@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { JDTemplateLibrary } from "@/components/assessment/JDTemplateLibrary";
 import { OrgChartView } from "@/components/assessment/OrgChartView";
 import EmployeeList from "@/components/company/EmployeeList";
+import { TranslationPreviewDialog } from "@/components/workforce/TranslationPreviewDialog";
 import type { JDTemplate } from "@/data/jobDescriptionTemplates";
 
 interface JobDescription {
@@ -23,6 +24,15 @@ interface JobDescription {
   level: string;
   description: string;
   competencies: any;
+}
+
+interface TranslationChange {
+  id: string;
+  type: "department" | "position" | "jobDescription";
+  field: string;
+  original: string;
+  translated: string;
+  accepted: boolean;
 }
 
 export default function WorkforceOrg() {
@@ -38,61 +48,57 @@ export default function WorkforceOrg() {
   const [editingJob, setEditingJob] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("employees");
   const [fixingLanguage, setFixingLanguage] = useState(false);
+  const [translationChanges, setTranslationChanges] = useState<TranslationChange[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [applyingTranslations, setApplyingTranslations] = useState(false);
 
   const handleAILanguageFix = async () => {
     if (!companyId) return;
     setFixingLanguage(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-language-fix', {
-        body: {
-          departments,
-          positions,
-          jobDescriptions,
-          targetLanguage: language,
-        },
+        body: { departments, positions, jobDescriptions, targetLanguage: language },
       });
       if (error) throw error;
       const result = data?.result;
       if (!result) throw new Error('No result from AI');
 
-      let updated = 0;
+      // Build change list for preview
+      const changes: TranslationChange[] = [];
 
-      // Apply department translations
       for (const dept of result.departments || []) {
-        const updateData: any = { name: dept.name };
-        if (dept.description !== undefined) updateData.description = dept.description;
-        const { error: e } = await supabase.from('departments').update(updateData).eq('id', dept.id);
-        if (!e) updated++;
+        const orig = departments.find((d: any) => d.id === dept.id);
+        if (orig && dept.name !== orig.name) {
+          changes.push({ id: dept.id, type: "department", field: "name", original: orig.name, translated: dept.name, accepted: true });
+        }
+        if (orig && dept.description && dept.description !== orig.description) {
+          changes.push({ id: dept.id, type: "department", field: "description", original: orig.description || "", translated: dept.description, accepted: true });
+        }
       }
-
-      // Apply position translations
       for (const pos of result.positions || []) {
-        const { error: e } = await supabase.from('positions').update({ title: pos.title }).eq('id', pos.id);
-        if (!e) updated++;
+        const orig = positions.find((p: any) => p.id === pos.id);
+        if (orig && pos.title !== orig.title) {
+          changes.push({ id: pos.id, type: "position", field: "title", original: orig.title, translated: pos.title, accepted: true });
+        }
       }
-
-      // Apply job description translations
       for (const jd of result.jobDescriptions || []) {
-        const updateData: any = { title: jd.title };
-        if (jd.department) updateData.department = jd.department;
-        if (jd.description) updateData.description = jd.description;
-        const { error: e } = await supabase.from('job_descriptions').update(updateData).eq('id', jd.id);
-        if (!e) updated++;
+        const orig = jobDescriptions.find((j: any) => j.id === jd.id);
+        if (orig && jd.title !== orig.title) {
+          changes.push({ id: jd.id, type: "jobDescription", field: "title", original: orig.title, translated: jd.title, accepted: true });
+        }
+        if (orig && jd.department && jd.department !== orig.department) {
+          changes.push({ id: jd.id, type: "jobDescription", field: "department", original: orig.department || "", translated: jd.department, accepted: true });
+        }
+        if (orig && jd.description && jd.description !== orig.description) {
+          changes.push({ id: jd.id, type: "jobDescription", field: "description", original: orig.description || "", translated: jd.description, accepted: true });
+        }
       }
 
-      if (updated > 0) {
-        toast.success(
-          language === 'fr'
-            ? `${updated} élément(s) traduit(s) en français`
-            : `${updated} item(s) translated to English`
-        );
-        loadData();
+      if (changes.length === 0) {
+        toast.info(language === 'fr' ? 'Tout est déjà dans la bonne langue !' : 'Everything is already in the correct language!');
       } else {
-        toast.info(
-          language === 'fr'
-            ? 'Tout est déjà en français !'
-            : 'Everything is already in English!'
-        );
+        setTranslationChanges(changes);
+        setPreviewOpen(true);
       }
     } catch (err: any) {
       toast.error(err.message || 'AI language fix failed');
@@ -101,6 +107,54 @@ export default function WorkforceOrg() {
     }
   };
 
+  const handleApplyTranslations = async (accepted: TranslationChange[]) => {
+    setApplyingTranslations(true);
+    let updated = 0;
+    try {
+      // Group by id+type for batch updates
+      const deptUpdates = new Map<string, any>();
+      const posUpdates = new Map<string, any>();
+      const jdUpdates = new Map<string, any>();
+
+      for (const c of accepted) {
+        if (c.type === "department") {
+          const u = deptUpdates.get(c.id) || {};
+          u[c.field] = c.translated;
+          deptUpdates.set(c.id, u);
+        } else if (c.type === "position") {
+          const u = posUpdates.get(c.id) || {};
+          u[c.field] = c.translated;
+          posUpdates.set(c.id, u);
+        } else {
+          const u = jdUpdates.get(c.id) || {};
+          u[c.field] = c.translated;
+          jdUpdates.set(c.id, u);
+        }
+      }
+
+      for (const [id, data] of deptUpdates) {
+        const { error } = await supabase.from('departments').update(data).eq('id', id);
+        if (!error) updated++;
+      }
+      for (const [id, data] of posUpdates) {
+        const { error } = await supabase.from('positions').update(data).eq('id', id);
+        if (!error) updated++;
+      }
+      for (const [id, data] of jdUpdates) {
+        const { error } = await supabase.from('job_descriptions').update(data).eq('id', id);
+        if (!error) updated++;
+      }
+
+      toast.success(language === 'fr' ? `${updated} élément(s) mis à jour` : `${updated} item(s) updated`);
+      setPreviewOpen(false);
+      setTranslationChanges([]);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setApplyingTranslations(false);
+    }
+  };
   useEffect(() => {
     if (user) loadData();
   }, [user]);
@@ -447,10 +501,21 @@ export default function WorkforceOrg() {
               onRefresh={loadData}
               jobDescriptions={jobDescriptions}
               evaluations={evaluations}
+              employees={employees}
             />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Translation Preview Dialog */}
+      <TranslationPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        changes={translationChanges}
+        onApply={handleApplyTranslations}
+        fr={language === "fr"}
+        isApplying={applyingTranslations}
+      />
     </div>
   );
 }

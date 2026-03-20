@@ -15,7 +15,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import {
   Building2, Plus, Sparkles, Loader2, ChevronDown, ChevronRight,
   UserCircle, AlertTriangle, TrendingUp, Download, Network, GitBranch,
-  Users, Briefcase, Shield, GripVertical, Pencil, Check, X,
+  Users, Briefcase, Shield, GripVertical, Pencil, Check, X, Trash2, UserPlus,
 } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
 import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
@@ -42,6 +42,14 @@ interface Position {
   match_score: number | null;
   upskill_potential: boolean;
   reskill_candidate: boolean;
+  succession_candidates?: { name: string; readiness: string }[];
+}
+
+interface Employee {
+  id: string;
+  full_name: string;
+  department: string | null;
+  position: string | null;
 }
 
 interface OrgChartViewProps {
@@ -51,9 +59,10 @@ interface OrgChartViewProps {
   onRefresh: () => void;
   jobDescriptions: any[];
   evaluations: any[];
+  employees?: Employee[];
 }
 
-export const OrgChartView = ({ companyId, departments, positions, onRefresh, jobDescriptions, evaluations }: OrgChartViewProps) => {
+export const OrgChartView = ({ companyId, departments, positions, onRefresh, jobDescriptions, evaluations, employees = [] }: OrgChartViewProps) => {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set(departments.map(d => d.id)));
@@ -65,6 +74,9 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
   const [editingPosId, setEditingPosId] = useState<string | null>(null);
   const [editPosData, setEditPosData] = useState({ title: '', level: '', holderName: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'dept' | 'pos'; id: string; name: string } | null>(null);
+  const [successionPosId, setSuccessionPosId] = useState<string | null>(null);
+  const [newCandidate, setNewCandidate] = useState({ name: '', readiness: 'ready_1_2_years' });
 
   const startEditPosition = (pos: Position, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -89,6 +101,57 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
     toast.success(fr ? 'Poste mis à jour' : 'Position updated');
     setEditingPosId(null);
     onRefresh();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    const { type, id } = deleteConfirm;
+    if (type === 'dept') {
+      // Move positions to unassigned first
+      const deptPos = positions.filter(p => p.department_id === id);
+      for (const p of deptPos) {
+        await supabase.from('positions').update({ department_id: null }).eq('id', p.id);
+      }
+      const { error } = await supabase.from('departments').delete().eq('id', id);
+      if (error) { toast.error(error.message); setDeleteConfirm(null); return; }
+      toast.success(fr ? 'Département supprimé' : 'Department deleted');
+    } else {
+      const { error } = await supabase.from('positions').delete().eq('id', id);
+      if (error) { toast.error(error.message); setDeleteConfirm(null); return; }
+      toast.success(fr ? 'Poste supprimé' : 'Position deleted');
+    }
+    setDeleteConfirm(null);
+    onRefresh();
+  };
+
+  const handleAddSuccessionCandidate = async (posId: string) => {
+    if (!newCandidate.name.trim()) return;
+    const pos = positions.find(p => p.id === posId);
+    const current = pos?.succession_candidates || [];
+    const updated = [...current, { name: newCandidate.name.trim(), readiness: newCandidate.readiness }];
+    const { error } = await supabase.from('positions').update({ succession_candidates: updated }).eq('id', posId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(fr ? 'Candidat ajouté' : 'Candidate added');
+    setNewCandidate({ name: '', readiness: 'ready_1_2_years' });
+    onRefresh();
+  };
+
+  const handleRemoveSuccessionCandidate = async (posId: string, index: number) => {
+    const pos = positions.find(p => p.id === posId);
+    const current = pos?.succession_candidates || [];
+    const updated = current.filter((_, i) => i !== index);
+    const { error } = await supabase.from('positions').update({ succession_candidates: updated }).eq('id', posId);
+    if (error) { toast.error(error.message); return; }
+    onRefresh();
+  };
+
+  const readinessLabel = (r: string) => {
+    const map: Record<string, { en: string; fr: string; color: string }> = {
+      ready_now: { en: 'Ready Now', fr: 'Prêt', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+      ready_1_2_years: { en: '1-2 Years', fr: '1-2 ans', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+      development_needed: { en: 'Development', fr: 'À développer', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+    };
+    return map[r] || map.ready_1_2_years;
   };
 
   const toggleExpand = (id: string) => {
@@ -268,13 +331,14 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             ref={provided.innerRef}
             {...provided.draggableProps}
             className={`
-              flex items-center gap-3 p-3 rounded-xl bg-card border transition-all duration-200 group/pos
+              rounded-xl bg-card border transition-all duration-200 group/pos
               ${snapshot.isDragging
                 ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/20 z-50'
                 : 'border-border/60 hover:border-primary/30 hover:shadow-sm'
               }
             `}
           >
+            <div className="flex items-center gap-3 p-3">
             {/* Drag handle */}
             <div
               {...provided.dragHandleProps}
@@ -378,6 +442,23 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
+                  {pos.is_critical && (
+                    <Button
+                      variant="ghost" size="icon"
+                      className="h-7 w-7 opacity-0 group-hover/pos:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                      onClick={(e) => { e.stopPropagation(); setSuccessionPosId(successionPosId === pos.id ? null : pos.id); }}
+                      title={fr ? 'Plan de succession' : 'Succession Plan'}
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-7 w-7 opacity-0 group-hover/pos:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'pos', id: pos.id, name: pos.title }); }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                   {getStatusBadge(pos.status)}
                   {pos.match_score != null && (
                     <div className={`
@@ -395,6 +476,60 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 </>
               )}
             </div>
+            </div>
+
+            {/* Succession planning panel */}
+            {successionPosId === pos.id && pos.is_critical && (
+              <div className="col-span-full mt-2 p-3 rounded-lg border border-border/60 bg-accent/20" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2 mb-2">
+                  <UserPlus className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-semibold">{fr ? 'Plan de succession' : 'Succession Plan'}</span>
+                </div>
+                {(pos.succession_candidates || []).length > 0 && (
+                  <div className="space-y-1 mb-2">
+                    {(pos.succession_candidates || []).map((c, ci) => {
+                      const rl = readinessLabel(c.readiness);
+                      return (
+                        <div key={ci} className="flex items-center justify-between gap-2 text-xs">
+                          <span className="font-medium">{c.name}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${rl.color}`}>
+                              {fr ? rl.fr : rl.en}
+                            </span>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleRemoveSuccessionCandidate(pos.id, ci)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newCandidate.name}
+                    onChange={e => setNewCandidate(p => ({ ...p, name: e.target.value }))}
+                    className="h-7 text-xs flex-1"
+                    placeholder={fr ? 'Nom du candidat' : 'Candidate name'}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddSuccessionCandidate(pos.id); }}
+                  />
+                  <Select value={newCandidate.readiness} onValueChange={v => setNewCandidate(p => ({ ...p, readiness: v }))}>
+                    <SelectTrigger className="h-7 text-[10px] w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ready_now">{fr ? 'Prêt' : 'Ready Now'}</SelectItem>
+                      <SelectItem value="ready_1_2_years">{fr ? '1-2 ans' : '1-2 Years'}</SelectItem>
+                      <SelectItem value="development_needed">{fr ? 'À développer' : 'Development'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="h-7 text-xs" onClick={() => handleAddSuccessionCandidate(pos.id)}>
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Draggable>
@@ -471,6 +606,15 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
               <span className="text-xs font-medium text-muted-foreground">{dept.head_employee_name}</span>
             </div>
           )}
+
+          {/* Delete department button */}
+          <Button
+            variant="ghost" size="icon"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+            onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'dept', id: dept.id, name: dept.name }); }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
         {/* Expanded: droppable positions + children */}
@@ -842,6 +986,30 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             <AlertDialogAction onClick={() => { setAiConfirmOpen(false); handleAIAutoDetect(); }}>
               <Sparkles className="h-4 w-4 mr-1.5" />
               {fr ? 'Lancer la détection' : 'Run Detection'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(v) => { if (!v) setDeleteConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              {fr ? 'Confirmer la suppression' : 'Confirm Deletion'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {fr
+                ? `Voulez-vous vraiment supprimer "${deleteConfirm?.name}" ?${deleteConfirm?.type === 'dept' ? ' Les postes associés seront désassignés.' : ''}`
+                : `Are you sure you want to delete "${deleteConfirm?.name}"?${deleteConfirm?.type === 'dept' ? ' Associated positions will be unassigned.' : ''}`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{fr ? 'Annuler' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              {fr ? 'Supprimer' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
