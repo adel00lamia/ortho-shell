@@ -13,7 +13,7 @@ export function useSyncJobTitleSkills() {
 
   return useMutation({
     mutationFn: async () => {
-      if (!user?.email || !companyId) throw new Error('Missing context');
+      if (!user?.email || !user?.id || !companyId) throw new Error('Not authenticated or missing company context');
 
       // Get employee record
       const { data: emp } = await supabase

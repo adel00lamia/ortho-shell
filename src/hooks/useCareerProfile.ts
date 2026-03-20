@@ -43,10 +43,11 @@ export function useSkillDeclaration() {
   const { data: declarationText = '', isLoading } = useQuery({
     queryKey: ['skill-declaration', user?.id],
     queryFn: async () => {
+      if (!user) return '';
       const { data } = await supabase
         .from('profiles')
         .select('skill_declaration_text')
-        .eq('id', user!.id)
+        .eq('id', user.id)
         .single();
       return data?.skill_declaration_text || '';
     },
@@ -55,10 +56,11 @@ export function useSkillDeclaration() {
 
   const saveMutation = useMutation({
     mutationFn: async (text: string) => {
+      if (!user) throw new Error('Not authenticated');
       const { error } = await supabase
         .from('profiles')
         .update({ skill_declaration_text: text })
-        .eq('id', user!.id);
+        .eq('id', user.id);
       if (error) throw error;
     },
     onSuccess: () => {
