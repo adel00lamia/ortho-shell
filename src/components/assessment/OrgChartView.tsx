@@ -63,6 +63,33 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const [addPosOpen, setAddPosOpen] = useState(false);
   const [newPos, setNewPos] = useState({ title: '', level: 'mid', status: 'filled', departmentId: '', holderName: '' });
   const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
+  const [editingPosId, setEditingPosId] = useState<string | null>(null);
+  const [editPosData, setEditPosData] = useState({ title: '', level: '', holderName: '' });
+
+  const startEditPosition = (pos: Position, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPosId(pos.id);
+    setEditPosData({ title: pos.title, level: pos.level || 'mid', holderName: pos.current_holder_name || '' });
+  };
+
+  const cancelEditPosition = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPosId(null);
+  };
+
+  const saveEditPosition = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!editingPosId || !editPosData.title.trim()) return;
+    const { error } = await supabase.from('positions').update({
+      title: editPosData.title.trim(),
+      level: editPosData.level,
+      current_holder_name: editPosData.holderName.trim() || null,
+    }).eq('id', editingPosId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(fr ? 'Poste mis à jour' : 'Position updated');
+    setEditingPosId(null);
+    onRefresh();
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedDepts(prev => {
