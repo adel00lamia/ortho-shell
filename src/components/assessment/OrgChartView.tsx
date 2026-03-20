@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Building2, Users, Plus, Sparkles, Loader2, ChevronDown, ChevronRight, UserCircle, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Building2, Users, Plus, Sparkles, Loader2, ChevronDown, ChevronRight, UserCircle, AlertTriangle, TrendingUp, Download } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
+import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
 
 interface Department {
   id: string;
@@ -250,6 +251,23 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
         <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="sm">
           {aiDetecting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
           {language === 'fr' ? 'Détection AI de la structure' : 'AI Auto-Detect Structure'}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            exportOrgChartPDF({
+              companyName: 'Company',
+              departments,
+              positions,
+              lang: language,
+            });
+            toast.success(language === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+          }}
+          disabled={departments.length === 0 && positions.length === 0}
+        >
+          <Download className="h-4 w-4 mr-1" />
+          {language === 'fr' ? 'Télécharger PDF' : 'Download PDF'}
         </Button>
       </div>
 

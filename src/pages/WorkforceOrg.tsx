@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp } from "lucide-react";
+import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp, Download } from "lucide-react";
+import { exportJDToWord } from "@/lib/exportJDWord";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { JDTemplateLibrary } from "@/components/assessment/JDTemplateLibrary";
@@ -304,6 +305,26 @@ export default function WorkforceOrg() {
                                 </p>
                               </div>
                               <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    exportJDToWord({
+                                      title: job.title,
+                                      department: job.department,
+                                      level: job.level,
+                                      description: job.description,
+                                      responsibilities: (job as any).responsibilities,
+                                      required_skills: (job as any).required_skills,
+                                      preferred_skills: (job as any).preferred_skills,
+                                      competencies: job.competencies,
+                                    }, language);
+                                    toast.success(language === "fr" ? "Téléchargement Word en cours..." : "Downloading Word file...");
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  Word
+                                </Button>
                                 <Button variant="outline" size="sm" onClick={() => { setEditingJob(job); setShowJobForm(true); }}>
                                   {t.common.edit}
                                 </Button>
