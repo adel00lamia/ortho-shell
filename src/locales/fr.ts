@@ -65,6 +65,10 @@ export const fr: Translations = {
     teamCollaboration: 'Collaboration d\'équipe',
     billing: 'Facturation',
     referrals: 'Programme de parrainage',
+    career: 'Carrière',
+    myCareer: 'Ma carrière',
+    jobBoard: 'Postes ouverts',
+    talentPipeline: 'Pipeline de talents',
   },
 
   breadcrumbs: {
