@@ -135,7 +135,6 @@ export const HierarchicalSidebar = () => {
         items: [
           { path: '/manager', labelKey: 'managerDashboard', icon: Gauge },
           { path: '/workflow/track/analytics', labelKey: 'analyticsROI', icon: BarChart3 },
-          { path: '/workflow/track/progress', labelKey: 'progressTracking', icon: TrendingUp },
           { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },
           { path: '/workflow/track/reimbursement', labelKey: 'ofpptReimbursement', icon: FileText },
         ],
