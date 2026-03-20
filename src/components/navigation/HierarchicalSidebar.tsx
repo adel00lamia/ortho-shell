@@ -178,6 +178,7 @@ export const HierarchicalSidebar = () => {
       execute: t.nav.execute,
       trackCertify: t.nav.trackCertify,
       management: t.nav.management,
+      career: (t.nav as any).career || (language === 'fr' ? 'Carrière' : 'Career'),
     };
     return map[key] || key;
   };
