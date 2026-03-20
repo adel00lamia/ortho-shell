@@ -55,3 +55,6 @@ verify_jwt = false
 
 [functions.ai-language-fix]
 verify_jwt = false
+
+[functions.hr-knowledge-chat]
+verify_jwt = false

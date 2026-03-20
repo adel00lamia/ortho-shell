@@ -69,6 +69,7 @@ export const fr: Translations = {
     myCareer: 'Ma carrière',
     jobBoard: 'Postes ouverts',
     talentPipeline: 'Pipeline de talents',
+    hrKnowledge: 'Base de connaissances RH',
   },
 
   breadcrumbs: {
