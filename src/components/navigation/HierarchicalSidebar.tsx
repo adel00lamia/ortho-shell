@@ -146,6 +146,7 @@ export const HierarchicalSidebar = () => {
   const getManagementItems = (): NavItem[] => {
     if (role === 'admin') {
       return [
+        { path: '/manage/talent', labelKey: 'talentPipeline', icon: Briefcase },
         { path: '/manage/users', labelKey: 'userManagement', icon: Users },
         { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
         { path: '/billing', labelKey: 'billing', icon: CreditCard },
