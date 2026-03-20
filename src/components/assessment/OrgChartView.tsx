@@ -74,6 +74,9 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const [aiConfirmOpen, setAiConfirmOpen] = useState(false);
   const [editingPosId, setEditingPosId] = useState<string | null>(null);
   const [editPosData, setEditPosData] = useState({ title: '', level: '', holderName: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'dept' | 'pos'; id: string; name: string } | null>(null);
+  const [successionPosId, setSuccessionPosId] = useState<string | null>(null);
+  const [newCandidate, setNewCandidate] = useState({ name: '', readiness: 'ready_1_2_years' });
 
   const startEditPosition = (pos: Position, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -98,6 +101,57 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
     toast.success(fr ? 'Poste mis à jour' : 'Position updated');
     setEditingPosId(null);
     onRefresh();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    const { type, id } = deleteConfirm;
+    if (type === 'dept') {
+      // Move positions to unassigned first
+      const deptPos = positions.filter(p => p.department_id === id);
+      for (const p of deptPos) {
+        await supabase.from('positions').update({ department_id: null }).eq('id', p.id);
+      }
+      const { error } = await supabase.from('departments').delete().eq('id', id);
+      if (error) { toast.error(error.message); setDeleteConfirm(null); return; }
+      toast.success(fr ? 'Département supprimé' : 'Department deleted');
+    } else {
+      const { error } = await supabase.from('positions').delete().eq('id', id);
+      if (error) { toast.error(error.message); setDeleteConfirm(null); return; }
+      toast.success(fr ? 'Poste supprimé' : 'Position deleted');
+    }
+    setDeleteConfirm(null);
+    onRefresh();
+  };
+
+  const handleAddSuccessionCandidate = async (posId: string) => {
+    if (!newCandidate.name.trim()) return;
+    const pos = positions.find(p => p.id === posId);
+    const current = pos?.succession_candidates || [];
+    const updated = [...current, { name: newCandidate.name.trim(), readiness: newCandidate.readiness }];
+    const { error } = await supabase.from('positions').update({ succession_candidates: updated }).eq('id', posId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(fr ? 'Candidat ajouté' : 'Candidate added');
+    setNewCandidate({ name: '', readiness: 'ready_1_2_years' });
+    onRefresh();
+  };
+
+  const handleRemoveSuccessionCandidate = async (posId: string, index: number) => {
+    const pos = positions.find(p => p.id === posId);
+    const current = pos?.succession_candidates || [];
+    const updated = current.filter((_, i) => i !== index);
+    const { error } = await supabase.from('positions').update({ succession_candidates: updated }).eq('id', posId);
+    if (error) { toast.error(error.message); return; }
+    onRefresh();
+  };
+
+  const readinessLabel = (r: string) => {
+    const map: Record<string, { en: string; fr: string; color: string }> = {
+      ready_now: { en: 'Ready Now', fr: 'Prêt', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+      ready_1_2_years: { en: '1-2 Years', fr: '1-2 ans', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+      development_needed: { en: 'Development', fr: 'À développer', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+    };
+    return map[r] || map.ready_1_2_years;
   };
 
   const toggleExpand = (id: string) => {
