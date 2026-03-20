@@ -38,7 +38,7 @@ const standingColors = {
   behind: 'text-red-500',
 };
 
-export default function AIPerformancePanel({ evaluation, allEvaluations, onApplyAutoEval }: AIPerformancePanelProps) {
+export default function AIPerformancePanel({ evaluation, allEvaluations, onApplyAutoEval, onSaveTrainingRecs }: AIPerformancePanelProps) {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const { autoEvaluate, getSmartRecommendations, getPeerBenchmark, loading } = useAIPerformanceReview();
