@@ -102,7 +102,12 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
       if (error) throw error;
       const result = data?.result;
       if (result?.suggestedDepartments) {
+        const existingNames = new Set(departments.map(d => d.name.toLowerCase()));
         for (const dept of result.suggestedDepartments) {
+          // Skip if department already exists
+          if (existingNames.has(dept.name.toLowerCase())) continue;
+          existingNames.add(dept.name.toLowerCase());
+          
           const { data: insertedDept } = await supabase.from('departments').insert({
             company_id: companyId, name: dept.name, description: dept.description,
             level: dept.level || 0, head_employee_name: dept.suggestedHead,
