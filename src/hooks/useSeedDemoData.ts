@@ -256,7 +256,13 @@ export function useSeedDemoData() {
         () => supabase.from('profiles').update({ company_id: companyId }).eq('id', user.id)
       );
 
-      // 4. Create departments
+      // 4. Clean existing org data then create departments
+      setProgress(`[4/${TOTAL}] Nettoyage & création des départements...`);
+      await supabase.from('positions').delete().eq('company_id', companyId);
+      await supabase.from('departments').delete().eq('company_id', companyId);
+      await supabase.from('company_employees').delete().eq('company_id', companyId);
+      await supabase.from('performance_evaluations').delete().eq('company_id', companyId);
+
       const depts = await runStep<{ id: string; name: string }[] | null>(
         4, 'Création des départements...', 'departments',
         () => supabase.from('departments')
