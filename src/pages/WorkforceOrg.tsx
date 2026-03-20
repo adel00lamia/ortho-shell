@@ -204,9 +204,21 @@ export default function WorkforceOrg() {
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            {language === "fr" ? "Effectifs & Organisation" : "Workforce & Organization"}
-          </h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold">
+              {language === "fr" ? "Effectifs & Organisation" : "Workforce & Organization"}
+            </h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAILanguageFix}
+              disabled={fixingLanguage || (!departments.length && !positions.length && !jobDescriptions.length)}
+              className="gap-2"
+            >
+              {fixingLanguage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
+              {language === "fr" ? "Uniformiser la langue (AI)" : "Fix Language (AI)"}
+            </Button>
+          </div>
           <p className="text-muted-foreground">
             {language === "fr"
               ? "Gérez vos employés, fiches de poste, organigramme et structure organisationnelle"
