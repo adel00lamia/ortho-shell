@@ -156,9 +156,12 @@ export const HierarchicalSidebar = () => {
     }
     if (role === 'hr_manager') {
       return [
+        { path: '/manage/talent', labelKey: 'talentPipeline', icon: Briefcase },
         { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
         { path: '/billing', labelKey: 'billing', icon: CreditCard },
         { path: '/referrals', labelKey: 'referrals', icon: Gift },
+        { path: '/manage/settings', labelKey: 'settings', icon: Settings },
+      ];
         { path: '/manage/settings', labelKey: 'settings', icon: Settings },
       ];
     }
