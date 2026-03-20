@@ -69,6 +69,7 @@ export const en = {
     myCareer: 'My Career',
     jobBoard: 'Job Board',
     talentPipeline: 'Talent Pipeline',
+    hrKnowledge: 'HR Knowledge Base',
   },
 
   // Breadcrumbs

@@ -9,7 +9,7 @@ import {
   LayoutDashboard, ClipboardCheck, Target, TrendingUp, Lightbulb, BookOpen,
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
-  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck,
+  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -139,6 +139,12 @@ export const HierarchicalSidebar = () => {
           { path: '/workflow/track/reimbursement', labelKey: 'ofpptReimbursement', icon: FileText },
         ],
       },
+      {
+        titleKey: 'knowledge',
+        items: [
+          { path: '/hr-knowledge', labelKey: 'hrKnowledge', icon: Brain, badge: 'AI' },
+        ],
+      },
     ];
   };
 
@@ -178,6 +184,7 @@ export const HierarchicalSidebar = () => {
       trackCertify: t.nav.trackCertify,
       management: t.nav.management,
       career: (t.nav as any).career || (language === 'fr' ? 'Carrière' : 'Career'),
+      knowledge: language === 'fr' ? 'Connaissances' : 'Knowledge',
     };
     return map[key] || key;
   };

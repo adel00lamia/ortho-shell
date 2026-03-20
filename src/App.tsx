@@ -34,6 +34,7 @@ import Referrals from "./pages/Referrals";
 import Career from "./pages/Career";
 import JobBoard from "./pages/JobBoard";
 import TalentPipeline from "./pages/TalentPipeline";
+import HRKnowledgeBase from "./pages/HRKnowledgeBase";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
@@ -138,6 +139,7 @@ const App = () => (
               <Route path="/career" element={<ProtectedLayout featureName="Career"><Career /></ProtectedLayout>} />
               <Route path="/career/jobs" element={<ProtectedLayout featureName="Job Board"><JobBoard /></ProtectedLayout>} />
               <Route path="/manage/talent" element={<ProtectedLayout featureName="Talent Pipeline"><TalentPipeline /></ProtectedLayout>} />
+              <Route path="/hr-knowledge" element={<ProtectedLayout featureName="HR Knowledge Base"><HRKnowledgeBase /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
               <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
