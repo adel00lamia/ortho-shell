@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { ContextualActions } from "@/components/ContextualActions";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AIPerformancePanel from "@/components/performance/AIPerformancePanel";
 
 export default function PerformanceEvaluation() {
   const { user } = useAuth();
