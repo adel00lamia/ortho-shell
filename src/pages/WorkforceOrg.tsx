@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp, Download, Languages, Loader2 } from "lucide-react";
+import { Briefcase, Plus, X, FileText, Building2, Users, UserCheck, AlertTriangle, TrendingUp, Download, Languages, Loader2, Wand2 } from "lucide-react";
+import { JD_TEMPLATES } from "@/data/jobDescriptionTemplates";
 import { exportJDToWord } from "@/lib/exportJDWord";
 import JobDescriptionForm from "@/components/JobDescriptionForm";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -51,6 +52,99 @@ export default function WorkforceOrg() {
   const [translationChanges, setTranslationChanges] = useState<TranslationChange[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [applyingTranslations, setApplyingTranslations] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
+
+  const handleAutoFillJDs = async () => {
+    if (!companyId || !user) return;
+    
+    // Find positions without a job_description_id
+    const vacantNoJD = positions.filter(p => !p.job_description_id);
+    if (vacantNoJD.length === 0) {
+      toast.info(language === "fr" ? "Tous les postes ont déjà une fiche de poste" : "All positions already have a job description");
+      return;
+    }
+
+    setAutoFilling(true);
+    let created = 0;
+    let linked = 0;
+
+    try {
+      for (const pos of vacantNoJD) {
+        // Try to match by title similarity
+        const posTitle = pos.title.toLowerCase().trim();
+        let bestMatch: typeof JD_TEMPLATES[0] | null = null;
+        let bestScore = 0;
+
+        for (const tpl of JD_TEMPLATES) {
+          const tplTitle = tpl.title.toLowerCase();
+          const tplTitleFr = tpl.titleFr.toLowerCase();
+          // Check if position title contains template title or vice versa
+          let score = 0;
+          if (posTitle.includes(tplTitle) || tplTitle.includes(posTitle)) score = 3;
+          else if (posTitle.includes(tplTitleFr) || tplTitleFr.includes(posTitle)) score = 3;
+          else {
+            // Word overlap scoring
+            const posWords = posTitle.split(/\s+/);
+            const tplWords = [...tplTitle.split(/\s+/), ...tplTitleFr.split(/\s+/)];
+            for (const w of posWords) {
+              if (w.length > 2 && tplWords.some(tw => tw.includes(w) || w.includes(tw))) score++;
+            }
+          }
+          // Bonus for matching department
+          if (pos.department_id) {
+            const dept = departments.find(d => d.id === pos.department_id);
+            if (dept && tpl.department.toLowerCase().includes(dept.name.toLowerCase().split(' ')[0])) score += 1;
+          }
+          if (score > bestScore) { bestScore = score; bestMatch = tpl; }
+        }
+
+        if (bestMatch && bestScore >= 1) {
+          const fr = language === "fr";
+          const { data: jd, error } = await supabase.from("job_descriptions").insert({
+            company_id: companyId,
+            created_by: user.id,
+            title: fr ? bestMatch.titleFr : bestMatch.title,
+            department: bestMatch.department,
+            level: bestMatch.level,
+            description: fr ? bestMatch.descriptionFr : bestMatch.description,
+            responsibilities: fr ? bestMatch.responsibilitiesFr : bestMatch.responsibilities,
+            required_skills: bestMatch.technicalSkills.map(s => ({ name: s })),
+            preferred_skills: bestMatch.softSkills.map(s => ({ name: s })),
+            competencies: bestMatch.competencies,
+          }).select().single();
+
+          if (!error && jd) {
+            created++;
+            // Link position to the new JD
+            const { error: linkError } = await supabase
+              .from("positions")
+              .update({ job_description_id: jd.id })
+              .eq("id", pos.id);
+            if (!linkError) linked++;
+          }
+        }
+      }
+
+      if (created > 0) {
+        toast.success(
+          language === "fr"
+            ? `${created} fiche(s) de poste créée(s) et ${linked} poste(s) lié(s)`
+            : `${created} job description(s) created and ${linked} position(s) linked`
+        );
+        loadData();
+      } else {
+        toast.info(
+          language === "fr"
+            ? "Aucun template correspondant trouvé pour les postes vacants"
+            : "No matching templates found for vacant positions"
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setAutoFilling(false);
+    }
+  };
 
   const handleAILanguageFix = async () => {
     if (!companyId) return;
@@ -403,10 +497,24 @@ export default function WorkforceOrg() {
                         {language === "fr" ? "Définissez les rôles et compétences requises" : "Define roles and required competencies"}
                       </CardDescription>
                     </div>
-                    <Button onClick={() => setShowJobForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      {language === "fr" ? "Ajouter" : "Add Job Description"}
-                    </Button>
+                    <div className="flex gap-2">
+                      {positions.filter(p => !p.job_description_id).length > 0 && (
+                        <Button
+                          variant="outline"
+                          onClick={handleAutoFillJDs}
+                          disabled={autoFilling}
+                        >
+                          {autoFilling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                          {language === "fr"
+                            ? `Auto-remplir (${positions.filter(p => !p.job_description_id).length})`
+                            : `Auto-fill (${positions.filter(p => !p.job_description_id).length})`}
+                        </Button>
+                      )}
+                      <Button onClick={() => setShowJobForm(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {language === "fr" ? "Ajouter" : "Add Job Description"}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
