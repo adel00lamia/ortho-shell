@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Building2, Users, Plus, Sparkles, Loader2, ChevronDown, ChevronRight,
-  UserCircle, AlertTriangle, TrendingUp, Download, Network, CircleDot,
+  Building2, Plus, Sparkles, Loader2, ChevronDown, ChevronRight,
+  UserCircle, AlertTriangle, TrendingUp, Download, Network, GitBranch,
+  Users, Briefcase, Shield,
 } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
 import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
@@ -49,9 +50,6 @@ interface OrgChartViewProps {
   jobDescriptions: any[];
   evaluations: any[];
 }
-
-const fadeIn = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
-const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 
 export const OrgChartView = ({ companyId, departments, positions, onRefresh, jobDescriptions, evaluations }: OrgChartViewProps) => {
   const { language } = useLanguage();
@@ -161,7 +159,18 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
 
   const getStatusBadge = (status: string) => {
     const s = POSITION_STATUSES.find(p => p.value === status);
-    return <Badge className={`text-xs ${s?.color || ''}`}>{s?.[fr ? 'labelFr' : 'label'] || status}</Badge>;
+    const colorMap: Record<string, string> = {
+      filled: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      open: 'bg-destructive/15 text-destructive border-destructive/20',
+      planned: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      frozen: 'bg-muted text-muted-foreground border-muted',
+    };
+    return (
+      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${colorMap[status] || 'bg-secondary text-secondary-foreground border-border'}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${status === 'filled' ? 'bg-emerald-500' : status === 'open' ? 'bg-destructive' : status === 'planned' ? 'bg-blue-500' : 'bg-muted-foreground'}`} />
+        {s?.[fr ? 'labelFr' : 'label'] || status}
+      </span>
+    );
   };
 
   const deptPositions = (deptId: string) => positions.filter(p => p.department_id === deptId);
@@ -169,168 +178,370 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
   const openCount = positions.filter(p => p.status === 'open').length;
   const criticalCount = positions.filter(p => p.is_critical).length;
   const filledCount = positions.filter(p => p.status === 'filled').length;
-
   const hasData = tree.length > 0 || unassignedPositions.length > 0;
 
-  const renderDept = (dept: Department, depth: number = 0) => (
-    <motion.div
-      key={dept.id}
-      variants={fadeIn}
-      className={`${depth > 0 ? 'ml-5 border-l-2 border-primary/20 pl-4' : ''}`}
-    >
-      <div
-        className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-accent/50 cursor-pointer transition-all group"
-        onClick={() => toggleExpand(dept.id)}
+  const renderDept = (dept: Department, depth: number = 0) => {
+    const dPos = deptPositions(dept.id);
+    const isExpanded = expandedDepts.has(dept.id);
+    const hasChildren = (dept.children && dept.children.length > 0) || dPos.length > 0;
+
+    return (
+      <motion.div
+        key={dept.id}
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.25, delay: depth * 0.05 }}
+        className={depth > 0 ? 'ml-4 relative' : ''}
       >
-        {dept.children && dept.children.length > 0 ? (
-          expandedDepts.has(dept.id)
-            ? <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
-            : <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
-        ) : <CircleDot className="h-3 w-3 text-muted-foreground/50" />}
-        <div className="p-1.5 rounded-lg bg-primary/10">
-          <Building2 className="h-4 w-4 text-primary" />
-        </div>
-        <span className="font-semibold text-sm">{dept.name}</span>
-        <Badge variant="secondary" className="text-xs font-normal">
-          {deptPositions(dept.id).length} {fr ? 'postes' : 'positions'}
-        </Badge>
-        {dept.head_employee_name && (
-          <span className="text-xs text-muted-foreground flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-            <UserCircle className="h-3.5 w-3.5" /> {dept.head_employee_name}
-          </span>
+        {/* Connector line */}
+        {depth > 0 && (
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary/30 to-transparent" />
         )}
-      </div>
-      {expandedDepts.has(dept.id) && (
-        <motion.div variants={stagger} initial="hidden" animate="show" className="ml-5 space-y-1.5 mb-3">
-          {deptPositions(dept.id).map(pos => (
-            <motion.div
-              key={pos.id}
-              variants={fadeIn}
-              className="flex items-center gap-2.5 p-2.5 rounded-lg text-sm bg-card border border-border/50 hover:border-border hover:shadow-sm transition-all"
-            >
-              <UserCircle className="h-4 w-4 text-muted-foreground/70" />
-              <span className="font-medium">{pos.title}</span>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{pos.level}</Badge>
-              {getStatusBadge(pos.status)}
-              {pos.is_critical && (
-                <span className="flex items-center gap-0.5 text-[10px] text-amber-500 font-medium">
-                  <AlertTriangle className="h-3 w-3" /> {fr ? 'Critique' : 'Critical'}
+
+        <div
+          className={`
+            relative flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200 group
+            ${depth > 0 ? 'ml-4' : ''}
+            hover:bg-accent/40 hover:shadow-sm
+            ${isExpanded && hasChildren ? 'bg-accent/20' : ''}
+          `}
+          onClick={() => toggleExpand(dept.id)}
+        >
+          {/* Horizontal connector */}
+          {depth > 0 && (
+            <div className="absolute -left-4 top-1/2 w-4 h-px bg-primary/20" />
+          )}
+
+          {/* Expand icon */}
+          <div className={`flex-shrink-0 p-1 rounded-md transition-colors ${hasChildren ? 'hover:bg-accent' : ''}`}>
+            {hasChildren ? (
+              isExpanded
+                ? <ChevronDown className="h-4 w-4 text-primary" />
+                : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            ) : <div className="w-4 h-4" />}
+          </div>
+
+          {/* Department icon */}
+          <div className="flex-shrink-0 p-2 rounded-xl bg-primary/10 ring-1 ring-primary/20">
+            <Building2 className="h-4 w-4 text-primary" />
+          </div>
+
+          {/* Department info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm truncate">{dept.name}</span>
+              {dept.description && (
+                <span className="hidden md:inline text-xs text-muted-foreground truncate max-w-[200px]">
+                  — {dept.description}
                 </span>
               )}
-              {pos.upskill_potential && <TrendingUp className="h-3 w-3 text-emerald-500" />}
-              {pos.current_holder_name && (
-                <span className="text-xs text-muted-foreground ml-auto">— {pos.current_holder_name}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Briefcase className="h-3 w-3" /> {dPos.length} {fr ? 'postes' : 'positions'}
+              </span>
+              {dPos.filter(p => p.status === 'open').length > 0 && (
+                <span className="text-[10px] text-destructive font-medium">
+                  {dPos.filter(p => p.status === 'open').length} {fr ? 'ouvert(s)' : 'open'}
+                </span>
               )}
-              {pos.match_score != null && (
-                <Badge variant={pos.match_score >= 70 ? 'default' : 'destructive'} className="text-[10px] ml-auto">
-                  {Math.round(pos.match_score)}%
-                </Badge>
-              )}
+            </div>
+          </div>
+
+          {/* Head name */}
+          {dept.head_employee_name && (
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/80 border border-border/50">
+              <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">{dept.head_employee_name}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Expanded positions + children */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className={`${depth > 0 ? 'ml-4' : ''} ml-8 space-y-1.5 py-2`}>
+                {dPos.map((pos, i) => (
+                  <motion.div
+                    key={pos.id}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group/pos"
+                  >
+                    {/* Avatar placeholder */}
+                    <div className={`
+                      flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
+                      ${pos.status === 'open'
+                        ? 'bg-destructive/10 text-destructive border border-dashed border-destructive/30'
+                        : 'bg-secondary text-secondary-foreground'
+                      }
+                    `}>
+                      {pos.current_holder_name
+                        ? pos.current_holder_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                        : '?'}
+                    </div>
+
+                    {/* Position info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm truncate">{pos.title}</span>
+                        {pos.is_critical && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            <Shield className="h-3 w-3" /> {fr ? 'Critique' : 'Critical'}
+                          </span>
+                        )}
+                        {pos.upskill_potential && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <TrendingUp className="h-3 w-3" /> Upskill
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
+                        {pos.current_holder_name && (
+                          <>
+                            <span className="text-muted-foreground/30">•</span>
+                            <span className="text-[11px] text-muted-foreground">{pos.current_holder_name}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status + score */}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(pos.status)}
+                      {pos.match_score != null && (
+                        <div className={`
+                          text-[10px] font-bold px-2 py-0.5 rounded-full
+                          ${pos.match_score >= 70
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : pos.match_score >= 40
+                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                              : 'bg-destructive/15 text-destructive'
+                          }
+                        `}>
+                          {Math.round(pos.match_score)}%
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+                {dept.children?.map(child => renderDept(child, depth + 1))}
+              </div>
             </motion.div>
-          ))}
-          {dept.children?.map(child => renderDept(child, depth + 1))}
-        </motion.div>
-      )}
-    </motion.div>
-  );
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  };
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-5">
-      {/* Actions bar */}
-      <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => setAddDeptOpen(true)} className="gap-1.5">
-          <Plus className="h-4 w-4" /> {fr ? 'Département' : 'Department'}
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setAddPosOpen(true)} className="gap-1.5">
-          <Plus className="h-4 w-4" /> {fr ? 'Poste' : 'Position'}
-        </Button>
-        <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="sm" className="gap-1.5">
-          {aiDetecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {fr ? 'Détection AI' : 'AI Auto-Detect'}
-        </Button>
-        <div className="flex-1" />
-        <Button
-          variant="outline" size="sm"
-          onClick={() => {
-            exportOrgChartPDF({ companyName: 'Company', departments, positions, lang: language });
-            toast.success(fr ? 'PDF téléchargé' : 'PDF downloaded');
-          }}
-          disabled={!hasData}
-          className="gap-1.5"
-        >
-          <Download className="h-4 w-4" /> PDF
-        </Button>
+    <div className="space-y-5">
+      {/* Compact stats + actions bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
+        {/* Mini stats */}
+        <div className="flex items-center gap-3">
+          {[
+            { icon: Building2, value: departments.length, label: fr ? 'Dépts' : 'Depts', color: 'text-primary' },
+            { icon: Users, value: positions.length, label: fr ? 'Postes' : 'Positions', color: 'text-foreground' },
+            { icon: Briefcase, value: filledCount, label: fr ? 'Pourvus' : 'Filled', color: 'text-emerald-500' },
+            ...(openCount > 0 ? [{ icon: AlertTriangle, value: openCount, label: fr ? 'Ouverts' : 'Open', color: 'text-destructive' }] : []),
+            ...(criticalCount > 0 ? [{ icon: Shield, value: criticalCount, label: fr ? 'Critiques' : 'Critical', color: 'text-amber-500' }] : []),
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-sm">
+              <stat.icon className={`h-3.5 w-3.5 ${stat.color}`} />
+              <span className="font-bold">{stat.value}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setAddDeptOpen(true)} className="h-8 gap-1.5 text-xs">
+            <Plus className="h-3.5 w-3.5" /> {fr ? 'Département' : 'Department'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setAddPosOpen(true)} className="h-8 gap-1.5 text-xs">
+            <Plus className="h-3.5 w-3.5" /> {fr ? 'Poste' : 'Position'}
+          </Button>
+          <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="sm" className="h-8 gap-1.5 text-xs">
+            {aiDetecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {fr ? 'Détection AI' : 'AI Detect'}
+          </Button>
+          {hasData && (
+            <Button
+              variant="ghost" size="sm"
+              onClick={() => {
+                exportOrgChartPDF({ companyName: 'TrainPro Academy', departments, positions, lang: language });
+                toast.success(fr ? 'PDF téléchargé' : 'PDF downloaded');
+              }}
+              className="h-8 gap-1.5 text-xs"
+            >
+              <Download className="h-3.5 w-3.5" /> PDF
+            </Button>
+          )}
+        </div>
       </motion.div>
 
-      {/* Org Tree */}
-      <motion.div variants={fadeIn}>
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b bg-muted/30 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Network className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">{fr ? 'Organigramme' : 'Organization Chart'}</CardTitle>
-                <CardDescription>
-                  {fr ? 'Structure hiérarchique de l\'entreprise' : 'Company hierarchical structure'}
-                  {hasData && (
-                    <span className="ml-2 text-foreground/70">
-                      — {departments.length} {fr ? 'dépts' : 'depts'}, {positions.length} {fr ? 'postes' : 'positions'}
-                      {openCount > 0 && <span className="text-destructive"> ({openCount} {fr ? 'ouverts' : 'open'})</span>}
-                      {criticalCount > 0 && <span className="text-amber-500"> ({criticalCount} {fr ? 'critiques' : 'critical'})</span>}
-                    </span>
-                  )}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-5">
-            {!hasData ? (
-              <div className="text-center py-16">
-                <div className="mx-auto mb-5 p-4 rounded-2xl bg-muted/50 w-fit">
-                  <Building2 className="h-12 w-12 text-muted-foreground/40" />
+      {/* Main org chart card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="overflow-hidden border-border/60">
+          {/* Gradient header */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8" />
+            <CardHeader className="relative pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 ring-1 ring-primary/20 shadow-sm">
+                  <Network className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-1">
-                  {fr ? 'Aucune structure définie' : 'No structure defined'}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-                  {fr
-                    ? 'Utilisez la détection AI pour générer automatiquement votre organigramme à partir des fiches de poste, ou ajoutez manuellement.'
-                    : 'Use AI detection to auto-generate your org chart from job descriptions, or add departments and positions manually.'}
-                </p>
-                <div className="flex items-center justify-center gap-3">
-                  <Button onClick={handleAIAutoDetect} disabled={aiDetecting} className="gap-1.5">
-                    {aiDetecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    {fr ? 'Détection AI' : 'AI Auto-Detect'}
-                  </Button>
-                  <Button variant="outline" onClick={() => setAddDeptOpen(true)} className="gap-1.5">
-                    <Plus className="h-4 w-4" /> {fr ? 'Ajouter manuellement' : 'Add Manually'}
-                  </Button>
+                <div>
+                  <CardTitle className="text-lg font-bold">
+                    {fr ? 'Organigramme' : 'Organization Chart'}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {fr ? 'Structure hiérarchique de l\'entreprise' : 'Company hierarchical structure'}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </div>
+
+          <CardContent className="pt-2 pb-6">
+            {!hasData ? (
+              /* Empty state */
+              <div className="relative py-16">
+                {/* Background decoration */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                  <GitBranch className="h-64 w-64 rotate-180" />
+                </div>
+
+                <div className="relative text-center max-w-lg mx-auto">
+                  {/* Animated icon */}
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                    className="mx-auto mb-6 relative w-20 h-20"
+                  >
+                    <div className="absolute inset-0 rounded-2xl bg-primary/10 animate-pulse" />
+                    <div className="relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 ring-1 ring-primary/20">
+                      <Building2 className="h-9 w-9 text-primary" />
+                    </div>
+                    {/* Orbiting dots */}
+                    <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    </div>
+                    <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full bg-accent/30 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    </div>
+                  </motion.div>
+
+                  <motion.h3
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xl font-bold mb-2"
+                  >
+                    {fr ? 'Construisez votre organigramme' : 'Build Your Org Chart'}
+                  </motion.h3>
+
+                  <motion.p
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                    className="text-sm text-muted-foreground mb-8 leading-relaxed"
+                  >
+                    {fr
+                      ? 'Notre AI peut analyser vos fiches de poste et évaluations pour générer automatiquement votre structure organisationnelle complète.'
+                      : 'Our AI can analyze your job descriptions and evaluations to automatically generate your complete organizational structure.'}
+                  </motion.p>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex items-center justify-center gap-3"
+                  >
+                    <Button onClick={handleAIAutoDetect} disabled={aiDetecting} size="lg" className="gap-2 shadow-md shadow-primary/20">
+                      {aiDetecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      {fr ? 'Détection AI automatique' : 'AI Auto-Detect'}
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={() => setAddDeptOpen(true)} className="gap-2">
+                      <Plus className="h-4 w-4" /> {fr ? 'Ajout manuel' : 'Manual Setup'}
+                    </Button>
+                  </motion.div>
+
+                  {/* Hint cards */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3"
+                  >
+                    {[
+                      { icon: Sparkles, title: fr ? 'Détection AI' : 'AI Detection', desc: fr ? 'Analyse automatique des JDs' : 'Auto-analyze job descriptions' },
+                      { icon: GitBranch, title: fr ? 'Hiérarchie' : 'Hierarchy', desc: fr ? 'Départements et sous-départements' : 'Departments & sub-departments' },
+                      { icon: Users, title: fr ? 'Postes & Rôles' : 'Positions & Roles', desc: fr ? 'Suivez chaque poste et occupant' : 'Track every role & holder' },
+                    ].map((hint, i) => (
+                      <div key={i} className="p-3 rounded-xl border border-border/50 bg-muted/30 text-left">
+                        <hint.icon className="h-4 w-4 text-primary mb-1.5" />
+                        <div className="text-xs font-semibold">{hint.title}</div>
+                        <div className="text-[10px] text-muted-foreground">{hint.desc}</div>
+                      </div>
+                    ))}
+                  </motion.div>
                 </div>
               </div>
             ) : (
-              <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-1">
+              /* Org tree */
+              <div className="space-y-1 pt-2">
                 {tree.map(dept => renderDept(dept))}
                 {unassignedPositions.length > 0 && (
-                  <motion.div variants={fadeIn} className="mt-5 pt-5 border-t border-dashed">
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-2.5 flex items-center gap-2">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      {fr ? 'Postes non assignés' : 'Unassigned Positions'}
-                      <Badge variant="outline" className="text-[10px]">{unassignedPositions.length}</Badge>
-                    </h4>
-                    <div className="space-y-1.5">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-5 pt-5 border-t border-dashed border-border"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      <h4 className="text-sm font-semibold">
+                        {fr ? 'Postes non assignés' : 'Unassigned Positions'}
+                      </h4>
+                      <Badge variant="outline" className="text-[10px] h-5">{unassignedPositions.length}</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {unassignedPositions.map(pos => (
-                        <div key={pos.id} className="flex items-center gap-2.5 p-2.5 rounded-lg text-sm bg-muted/40 border border-dashed border-border/50">
-                          <UserCircle className="h-4 w-4 text-muted-foreground/50" />
-                          <span>{pos.title}</span>
+                        <div key={pos.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-dashed border-border/50">
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                            <UserCircle className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium truncate block">{pos.title}</span>
+                            <span className="text-[11px] text-muted-foreground capitalize">{pos.level}</span>
+                          </div>
                           {getStatusBadge(pos.status)}
                         </div>
                       ))}
                     </div>
                   </motion.div>
                 )}
-              </motion.div>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -340,11 +551,20 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
       <Dialog open={addDeptOpen} onOpenChange={setAddDeptOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{fr ? 'Ajouter un département' : 'Add Department'}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              {fr ? 'Ajouter un département' : 'Add Department'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div><Label>{fr ? 'Nom' : 'Name'}</Label><Input value={newDept.name} onChange={e => setNewDept(p => ({ ...p, name: e.target.value }))} placeholder={fr ? 'Ex: Ressources Humaines' : 'e.g., Human Resources'} /></div>
-            <div><Label>Description</Label><Input value={newDept.description} onChange={e => setNewDept(p => ({ ...p, description: e.target.value }))} placeholder={fr ? 'Description optionnelle...' : 'Optional description...'} /></div>
+            <div>
+              <Label>{fr ? 'Nom' : 'Name'}</Label>
+              <Input value={newDept.name} onChange={e => setNewDept(p => ({ ...p, name: e.target.value }))} placeholder={fr ? 'Ex: Ressources Humaines' : 'e.g., Human Resources'} />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Input value={newDept.description} onChange={e => setNewDept(p => ({ ...p, description: e.target.value }))} placeholder={fr ? 'Description optionnelle...' : 'Optional description...'} />
+            </div>
             {departments.length > 0 && (
               <div>
                 <Label>{fr ? 'Département parent' : 'Parent Department'}</Label>
@@ -357,7 +577,9 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 </Select>
               </div>
             )}
-            <Button onClick={handleAddDepartment} className="w-full">{fr ? 'Ajouter' : 'Add'}</Button>
+            <Button onClick={handleAddDepartment} className="w-full gap-2">
+              <Plus className="h-4 w-4" /> {fr ? 'Ajouter' : 'Add Department'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -366,10 +588,16 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
       <Dialog open={addPosOpen} onOpenChange={setAddPosOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{fr ? 'Ajouter un poste' : 'Add Position'}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCircle className="h-5 w-5 text-primary" />
+              {fr ? 'Ajouter un poste' : 'Add Position'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div><Label>{fr ? 'Titre' : 'Title'}</Label><Input value={newPos.title} onChange={e => setNewPos(p => ({ ...p, title: e.target.value }))} placeholder={fr ? 'Ex: Chef de projet' : 'e.g., Project Manager'} /></div>
+            <div>
+              <Label>{fr ? 'Titre' : 'Title'}</Label>
+              <Input value={newPos.title} onChange={e => setNewPos(p => ({ ...p, title: e.target.value }))} placeholder={fr ? 'Ex: Chef de projet' : 'e.g., Project Manager'} />
+            </div>
             <div>
               <Label>{fr ? 'Département' : 'Department'}</Label>
               <Select value={newPos.departmentId} onValueChange={v => setNewPos(p => ({ ...p, departmentId: v }))}>
@@ -399,11 +627,16 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
                 </Select>
               </div>
             </div>
-            <div><Label>{fr ? 'Occupant actuel' : 'Current holder'}</Label><Input value={newPos.holderName} onChange={e => setNewPos(p => ({ ...p, holderName: e.target.value }))} placeholder={fr ? 'Nom complet' : 'Full name'} /></div>
-            <Button onClick={handleAddPosition} className="w-full">{fr ? 'Ajouter' : 'Add'}</Button>
+            <div>
+              <Label>{fr ? 'Occupant actuel' : 'Current holder'}</Label>
+              <Input value={newPos.holderName} onChange={e => setNewPos(p => ({ ...p, holderName: e.target.value }))} placeholder={fr ? 'Nom complet' : 'Full name'} />
+            </div>
+            <Button onClick={handleAddPosition} className="w-full gap-2">
+              <Plus className="h-4 w-4" /> {fr ? 'Ajouter' : 'Add Position'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 };
