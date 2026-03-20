@@ -101,6 +101,28 @@ export default function PerformanceEvaluationForm({
     if (data) setJobDescriptions(data);
   };
 
+  const loadEmployees = async () => {
+    const { data } = await supabase
+      .from('company_employees')
+      .select('id, full_name, email, department, position')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .order('full_name');
+    if (data) setEmployees(data);
+  };
+
+  const handleEmployeeSelect = (employeeId: string) => {
+    const emp = employees.find(e => e.id === employeeId);
+    if (emp) {
+      setFormData(prev => ({
+        ...prev,
+        employeeName: emp.full_name,
+        employeeEmail: emp.email || "",
+        department: emp.department || prev.department,
+      }));
+    }
+  };
+
   const loadCompetenciesFromJob = async () => {
     const job = jobDescriptions.find(j => j.id === selectedJobId);
     if (job?.competencies) {
