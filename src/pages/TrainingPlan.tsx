@@ -455,7 +455,7 @@ export default function TrainingPlan() {
           <Button variant="outline" onClick={() => navigate('/')}>
             Back to Dashboard
           </Button>
-          <Button onClick={() => navigate('/diagnostic')} variant="outline">
+          <Button onClick={() => navigate('/workflow/plan/ai-builder')} variant="outline">
             Create New Plan
           </Button>
         </div>
