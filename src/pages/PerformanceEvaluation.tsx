@@ -15,6 +15,17 @@ import { ContextualActions } from "@/components/ContextualActions";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AIPerformancePanel from "@/components/performance/AIPerformancePanel";
 
+const DEMO_COMPANY_ID = 'demo-company-id';
+const DEMO_EVALUATIONS = [
+  { id: 'demo-1', company_id: DEMO_COMPANY_ID, employee_name: 'Youssef Tazi', employee_email: 'y.tazi@atlas-industries.ma', department: 'Production', overall_rating: 4.2, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Leadership technique', 'Gestion de crise', 'Rigueur opérationnelle'], areas_for_improvement: ['Communication transversale', 'Digitalisation des processus'], training_recommendations: ['Formation Lean Six Sigma Black Belt', 'Séminaire management transversal'], competency_scores: { 'Lean Manufacturing': 4, 'Management': 4, 'Qualité': 5, 'Planification': 4, 'HSE': 3 }, career_goals: 'Directeur des opérations industrielles', notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+  { id: 'demo-2', company_id: DEMO_COMPANY_ID, employee_name: 'Fatima Zahra El Amrani', employee_email: 'f.elamrani@atlas-industries.ma', department: 'Ressources Humaines', overall_rating: 4.5, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Vision stratégique RH', 'Expertise juridique', 'Empathie managériale'], areas_for_improvement: ['Outils SIRH avancés', 'Data analytics RH'], training_recommendations: ['Certification People Analytics', 'Formation SIRH avancé'], competency_scores: { 'GPEC': 5, 'Droit social': 5, 'Formation': 4, 'Recrutement': 4, 'SIRH': 3 }, career_goals: 'VP People & Culture', notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+  { id: 'demo-3', company_id: DEMO_COMPANY_ID, employee_name: 'Sara Idrissi', employee_email: 's.idrissi@atlas-industries.ma', department: 'IT & Digital', overall_rating: 4.0, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Innovation technique', 'Architecture SI', 'Veille technologique'], areas_for_improvement: ['Budget management', 'Stakeholder communication'], training_recommendations: ['TOGAF certification', 'Formation Cloud AWS'], competency_scores: { 'Architecture': 4, 'Cloud': 3, 'Sécurité': 4, 'Management IT': 3, 'DevOps': 4 }, career_goals: 'CTO digital-first', notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+  { id: 'demo-4', company_id: DEMO_COMPANY_ID, employee_name: 'Amina Chraibi', employee_email: 'a.chraibi@atlas-industries.ma', department: 'Commercial', overall_rating: 3.8, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Négociation B2B', 'Connaissance marché Afrique'], areas_for_improvement: ['CRM avancé', 'Marketing digital'], training_recommendations: ['Formation Salesforce avancé', 'Certification Google Analytics'], competency_scores: { 'Vente B2B': 5, 'Négociation': 4, 'Marketing': 3, 'CRM': 2 }, career_goals: 'Directrice Développement International', notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+  { id: 'demo-5', company_id: DEMO_COMPANY_ID, employee_name: 'Mehdi Sqalli', employee_email: 'm.sqalli@atlas-industries.ma', department: 'IT & Digital', overall_rating: 3.5, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Rapidité de développement', 'Adaptabilité'], areas_for_improvement: ['Architecture logicielle', 'Tests automatisés'], training_recommendations: ['Formation Clean Architecture', 'Certification AWS Developer'], competency_scores: { 'React': 4, 'Node.js': 3, 'SQL': 3, 'DevOps': 2 }, career_goals: 'Lead Developer', notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+  { id: 'demo-6', company_id: DEMO_COMPANY_ID, employee_name: 'Rachid Alaoui', employee_email: 'r.alaoui@atlas-industries.ma', department: 'Production', overall_rating: 3.2, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Terrain', 'Connaissance machines'], areas_for_improvement: ['Leadership', 'Reporting'], training_recommendations: ['Formation management de proximité', 'Initiation Excel avancé'], competency_scores: { 'Technique production': 4, 'Management': 2, 'Qualité': 3, 'Digital': 1 }, career_goals: "Chef d'atelier", notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+  { id: 'demo-7', company_id: DEMO_COMPANY_ID, employee_name: 'Hassan Ouazzani', employee_email: 'h.ouazzani@atlas-industries.ma', department: 'Logistique', overall_rating: 3.9, evaluation_period: '2025', evaluation_date: '2025-01-15', strengths: ['Organisation', 'Gestion des flux'], areas_for_improvement: ['Automatisation', 'Lean logistics'], training_recommendations: ['Certification APICS CSCP', 'Formation WMS avancé'], competency_scores: { 'Supply Chain': 4, 'Stocks': 4, 'Transport': 3, 'ERP': 3 }, career_goals: 'Directeur Supply Chain', notes: null, resume_url: null, resume_summary: {}, skills_analysis: {} },
+];
+
 export default function PerformanceEvaluation() {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -48,26 +59,8 @@ export default function PerformanceEvaluation() {
         return;
       }
     }
-    // Discovery Mode fallback: find any company with demo data
-    const { data: companies } = await supabase
-      .from('companies')
-      .select('id')
-      .eq('name', 'Atlas Industries Maroc')
-      .limit(1);
-    if (companies && companies.length > 0) {
-      setCompanyId(companies[0].id);
-    } else {
-      // Try any company
-      const { data: anyCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .limit(1);
-      if (anyCompany && anyCompany.length > 0) {
-        setCompanyId(anyCompany[0].id);
-      } else {
-        setLoading(false);
-      }
-    }
+    // Discovery Mode fallback
+    setCompanyId(DEMO_COMPANY_ID);
   };
 
   const loadEvaluations = async () => {
@@ -78,10 +71,11 @@ export default function PerformanceEvaluation() {
       .eq('company_id', companyId)
       .order('evaluation_date', { ascending: false });
 
-    if (error) {
-      toast.error(p.failedToLoad);
+    if (!error && data && data.length > 0) {
+      setEvaluations(data);
     } else {
-      setEvaluations(data || []);
+      // Discovery Mode fallback
+      setEvaluations(DEMO_EVALUATIONS);
     }
     setLoading(false);
   };
@@ -136,6 +130,12 @@ export default function PerformanceEvaluation() {
   };
 
   const handleDelete = async (id: string) => {
+    // For demo data, just remove from local state
+    if (id.startsWith('demo-')) {
+      setEvaluations(prev => prev.filter(e => e.id !== id));
+      toast.success(p.evaluationDeleted);
+      return;
+    }
     const { error } = await supabase
       .from('performance_evaluations')
       .delete()
