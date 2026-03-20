@@ -14,7 +14,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
-import Diagnostic from "./pages/Diagnostic";
+
 import WorkforceOrg from "./pages/WorkforceOrg";
 import SkillsGaps from "./pages/SkillsGaps";
 import AssessmentReportPage from "./pages/AssessmentReportPage";
