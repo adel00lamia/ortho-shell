@@ -644,6 +644,37 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AI Detect Confirmation */}
+      <AlertDialog open={aiConfirmOpen} onOpenChange={setAiConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              {fr ? 'Détection AI de l\'organigramme' : 'AI Org Chart Detection'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                {fr
+                  ? 'L\'IA va analyser vos fiches de poste et évaluations pour suggérer automatiquement des départements et postes.'
+                  : 'AI will analyze your job descriptions and evaluations to automatically suggest departments and positions.'}
+              </p>
+              <p className="font-medium text-foreground">
+                {fr
+                  ? '⚠️ De nouveaux départements et postes seront créés. Les départements existants ne seront pas dupliqués.'
+                  : '⚠️ New departments and positions will be created. Existing departments will not be duplicated.'}
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{fr ? 'Annuler' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setAiConfirmOpen(false); handleAIAutoDetect(); }}>
+              <Sparkles className="h-4 w-4 mr-1.5" />
+              {fr ? 'Lancer la détection' : 'Run Detection'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
