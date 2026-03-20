@@ -42,6 +42,14 @@ interface Position {
   match_score: number | null;
   upskill_potential: boolean;
   reskill_candidate: boolean;
+  succession_candidates?: { name: string; readiness: string }[];
+}
+
+interface Employee {
+  id: string;
+  full_name: string;
+  department: string | null;
+  position: string | null;
 }
 
 interface OrgChartViewProps {
@@ -51,9 +59,10 @@ interface OrgChartViewProps {
   onRefresh: () => void;
   jobDescriptions: any[];
   evaluations: any[];
+  employees?: Employee[];
 }
 
-export const OrgChartView = ({ companyId, departments, positions, onRefresh, jobDescriptions, evaluations }: OrgChartViewProps) => {
+export const OrgChartView = ({ companyId, departments, positions, onRefresh, jobDescriptions, evaluations, employees = [] }: OrgChartViewProps) => {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set(departments.map(d => d.id)));
