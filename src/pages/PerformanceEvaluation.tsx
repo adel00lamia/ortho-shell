@@ -28,7 +28,8 @@ const DEMO_EVALUATIONS = [
 
 export default function PerformanceEvaluation() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const fr = language === 'fr';
   const p = t.performance;
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
