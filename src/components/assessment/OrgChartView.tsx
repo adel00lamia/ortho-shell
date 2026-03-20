@@ -331,13 +331,14 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             ref={provided.innerRef}
             {...provided.draggableProps}
             className={`
-              flex items-center gap-3 p-3 rounded-xl bg-card border transition-all duration-200 group/pos
+              rounded-xl bg-card border transition-all duration-200 group/pos
               ${snapshot.isDragging
                 ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/20 z-50'
                 : 'border-border/60 hover:border-primary/30 hover:shadow-sm'
               }
             `}
           >
+            <div className="flex items-center gap-3 p-3">
             {/* Drag handle */}
             <div
               {...provided.dragHandleProps}
