@@ -24,6 +24,7 @@ export default function PerformanceEvaluation() {
   const [showForm, setShowForm] = useState(false);
   const [editingEvaluation, setEditingEvaluation] = useState<any>(null);
   const [companyId, setCompanyId] = useState<string>("");
+  const [selectedEvalId, setSelectedEvalId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProfile();
