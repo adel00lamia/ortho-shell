@@ -15,7 +15,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import {
   Building2, Plus, Sparkles, Loader2, ChevronDown, ChevronRight,
   UserCircle, AlertTriangle, TrendingUp, Download, Network, GitBranch,
-  Users, Briefcase, Shield, GripVertical,
+  Users, Briefcase, Shield, GripVertical, Pencil, Check, X,
 } from 'lucide-react';
 import { POSITION_STATUSES } from '@/data/jobDescriptionTemplates';
 import { exportOrgChartPDF } from '@/lib/exportOrgChartPDF';
