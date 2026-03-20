@@ -9,7 +9,7 @@ import {
   LayoutDashboard, ClipboardCheck, Target, TrendingUp, Lightbulb, BookOpen,
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
-  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft,
+  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -57,6 +57,13 @@ export const HierarchicalSidebar = () => {
     if (role === 'employee') {
       return [
         {
+          titleKey: 'career',
+          items: [
+            { path: '/career', labelKey: 'myCareer', icon: UserCheck },
+            { path: '/career/jobs', labelKey: 'jobBoard', icon: Briefcase },
+          ],
+        },
+        {
           titleKey: 'execute',
           items: [
             { path: '/workflow/execute/modules', labelKey: 'moduleStudio', icon: BookOpen },
@@ -75,6 +82,12 @@ export const HierarchicalSidebar = () => {
 
     if (role === 'trainer') {
       return [
+        {
+          titleKey: 'career',
+          items: [
+            { path: '/career', labelKey: 'myCareer', icon: UserCheck },
+          ],
+        },
         {
           titleKey: 'execute',
           items: [
@@ -122,7 +135,6 @@ export const HierarchicalSidebar = () => {
         items: [
           { path: '/manager', labelKey: 'managerDashboard', icon: Gauge },
           { path: '/workflow/track/analytics', labelKey: 'analyticsROI', icon: BarChart3 },
-          { path: '/workflow/track/progress', labelKey: 'progressTracking', icon: TrendingUp },
           { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },
           { path: '/workflow/track/reimbursement', labelKey: 'ofpptReimbursement', icon: FileText },
         ],
@@ -133,6 +145,7 @@ export const HierarchicalSidebar = () => {
   const getManagementItems = (): NavItem[] => {
     if (role === 'admin') {
       return [
+        { path: '/manage/talent', labelKey: 'talentPipeline', icon: Briefcase },
         { path: '/manage/users', labelKey: 'userManagement', icon: Users },
         { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
         { path: '/billing', labelKey: 'billing', icon: CreditCard },
@@ -142,6 +155,7 @@ export const HierarchicalSidebar = () => {
     }
     if (role === 'hr_manager') {
       return [
+        { path: '/manage/talent', labelKey: 'talentPipeline', icon: Briefcase },
         { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
         { path: '/billing', labelKey: 'billing', icon: CreditCard },
         { path: '/referrals', labelKey: 'referrals', icon: Gift },
@@ -163,6 +177,7 @@ export const HierarchicalSidebar = () => {
       execute: t.nav.execute,
       trackCertify: t.nav.trackCertify,
       management: t.nav.management,
+      career: (t.nav as any).career || (language === 'fr' ? 'Carrière' : 'Career'),
     };
     return map[key] || key;
   };

@@ -31,6 +31,9 @@ import Benchmark from "./pages/Benchmark";
 import OFPPTReimbursement from "./pages/OFPPTReimbursement";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import Referrals from "./pages/Referrals";
+import Career from "./pages/Career";
+import JobBoard from "./pages/JobBoard";
+import TalentPipeline from "./pages/TalentPipeline";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import NotFound from "./pages/NotFound";
@@ -130,6 +133,11 @@ const App = () => (
               {/* Billing & Growth */}
               <Route path="/billing" element={<ProtectedLayout featureName="Billing"><Billing /></ProtectedLayout>} />
               <Route path="/referrals" element={<ProtectedLayout featureName="Referrals"><Referrals /></ProtectedLayout>} />
+
+              {/* Career & Talent */}
+              <Route path="/career" element={<ProtectedLayout featureName="Career"><Career /></ProtectedLayout>} />
+              <Route path="/career/jobs" element={<ProtectedLayout featureName="Job Board"><JobBoard /></ProtectedLayout>} />
+              <Route path="/manage/talent" element={<ProtectedLayout featureName="Talent Pipeline"><TalentPipeline /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
               <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
