@@ -34,26 +34,40 @@ Deno.serve(async (req) => {
         ? "\n\nCRITICAL: Tu DOIS écrire TOUT le contenu en français. Chaque titre, description, recommandation doit être en français. Seules les clés JSON restent en anglais."
         : "";
 
-    const systemPrompt = `You are an expert HR skills analyst. Analyze employee skills from their resume/CV against job requirements and provide a detailed gap analysis with training recommendations.${langInstruction}`;
+    const systemPrompt = `You are an expert HR skills analyst specializing in competency-based workforce assessment. You produce calibrated, evidence-based gap analyses with actionable training recommendations.
 
-    const userPrompt = `Analyze the following employee's skills against job requirements:
+SCORING GUIDELINES:
+- "Expert" = industry certifications + 8+ years specialized experience
+- "Advanced" = proven track record + 5+ years
+- "Intermediate" = working knowledge + 2-5 years  
+- "Beginner" = basic understanding, <2 years
+- When data is sparse, be conservative and note low confidence
+- Match scores should reflect BOTH breadth (how many requirements met) and depth (skill level vs required level)${langInstruction}`;
+
+    const userPrompt = `Analyze the following employee's skills against job requirements and produce a detailed gap analysis:
 
 Employee: ${employeeName}
 Job Title: ${jobTitle || "N/A"}
 
 Resume/CV Summary:
 - Experience: ${resumeSummary?.experience || "Not provided"}
-- Education: ${resumeSummary?.education || "Not provided"}
+- Education: ${resumeSummary?.education || "Not provided"}  
 - Skills: ${JSON.stringify(resumeSummary?.skills || [])}
 - Certifications: ${JSON.stringify(resumeSummary?.certifications || [])}
 
 Job Competencies Required:
 ${JSON.stringify(jobCompetencies || [], null, 2)}
 
-Current Competency Scores:
+Current Competency Scores (from performance evaluation):
 ${JSON.stringify(competencyScores || [], null, 2)}
 
-Provide a comprehensive skills analysis.`;
+ANALYSIS INSTRUCTIONS:
+1. Cross-reference CV skills with competency scores — if a skill appears in both, confidence is higher
+2. For each matched skill, assess current level vs required level using evidence from both sources
+3. Identify gaps ordered by priority: critical (blocks core job functions) > high (limits effectiveness) > medium (growth area) > low (nice-to-have)
+4. For each gap, recommend specific training: format (online/workshop/mentoring/certification), duration, and expected outcome
+5. Produce an overall match percentage that weights critical skills more heavily
+6. Write a concise executive summary highlighting top 3 actions to close the most impactful gaps`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
