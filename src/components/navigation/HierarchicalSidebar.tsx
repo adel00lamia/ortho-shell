@@ -207,6 +207,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
     const link = (
       <NavLink
         to={item.path}
+        onClick={onNavClick}
         className={({ isActive }) =>
           `flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
             isActive
