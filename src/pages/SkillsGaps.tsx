@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { BarChart3, GraduationCap, TrendingUp, Brain } from "lucide-react";
+import { ContextualActions } from "@/components/ContextualActions";
 import { SkillsMatrixView } from "@/components/assessment/SkillsMatrixView";
 import { SkillsTaxonomyEditor } from "@/components/skills/SkillsTaxonomyEditor";
 import { SkillsHeatmap } from "@/components/skills/SkillsHeatmap";
