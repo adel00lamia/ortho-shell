@@ -38,12 +38,11 @@ const SHELL_CONFIG: Record<string, { icon: any; color: string; label: string; la
   employee: { icon: BookOpen, color: 'from-green-500 to-emerald-500', label: 'Learner', labelFr: 'Apprenant' },
 };
 
-export const HierarchicalSidebar = () => {
+const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: boolean; setCollapsed: (v: boolean) => void; onNavClick?: () => void }) => {
   const { signOut, user } = useAuth();
   const { role } = useUserRole();
   const { t, language, setLanguage } = useLanguage();
   const [openSections, setOpenSections] = useState<string[]>(['workflow', 'assess']);
-  const [collapsed, setCollapsed] = useState(false);
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) =>
