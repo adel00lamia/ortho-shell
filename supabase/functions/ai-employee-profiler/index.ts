@@ -25,7 +25,21 @@ Deno.serve(async (req) => {
         ? "\n\nCRITICAL: Tu DOIS écrire TOUT le contenu en français. Seules les clés JSON restent en anglais."
         : "";
 
-    const systemPrompt = `You are an expert HR skills analyst and workforce planner. Analyze employee profiles holistically using all available data sources (CV/resume, years of experience, performance scores, certifications, education, org chart position data) to detect skill levels and match against job requirements.${langInstruction}`;
+    const systemPrompt = `You are an expert HR skills analyst and workforce planner specializing in competency-based assessment. You analyze employee profiles holistically using ALL available data sources to produce calibrated, evidence-based skill assessments.
+
+SCORING RUBRIC (1-5 scale):
+1 = Novice: No practical experience, needs full training
+2 = Beginner: Basic awareness, can perform with supervision  
+3 = Competent: Can work independently on routine tasks
+4 = Advanced: Handles complex situations, mentors others
+5 = Expert: Industry-recognized expertise, drives innovation
+
+CALIBRATION RULES:
+- Never assign level 5 unless certifications or 10+ years of specialized experience support it
+- Default to level 2-3 when data is limited; flag confidence as "low"
+- Cross-validate: CV skills vs performance scores vs position requirements must be consistent
+- If hire_date shows <2 years, cap detected level at "mid" unless certifications prove otherwise
+- Match scores should account for BOTH technical and soft skill alignment${langInstruction}`;
 
     const orgChartSection = orgChart
       ? `\n\nORGANIZATION CHART:\nDepartments: ${JSON.stringify(orgChart.departments, null, 2)}\nPositions: ${JSON.stringify(orgChart.positions, null, 2)}\n\nUse org chart data to understand hierarchy, critical positions, existing match scores, and required vs current skills at each position.`
