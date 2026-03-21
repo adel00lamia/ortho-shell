@@ -9,11 +9,13 @@ import {
   LayoutDashboard, ClipboardCheck, Target, TrendingUp, Lightbulb, BookOpen,
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
-  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain,
+  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface NavItem {
   path: string;
@@ -36,12 +38,11 @@ const SHELL_CONFIG: Record<string, { icon: any; color: string; label: string; la
   employee: { icon: BookOpen, color: 'from-green-500 to-emerald-500', label: 'Learner', labelFr: 'Apprenant' },
 };
 
-export const HierarchicalSidebar = () => {
+const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: boolean; setCollapsed: (v: boolean) => void; onNavClick?: () => void }) => {
   const { signOut, user } = useAuth();
   const { role } = useUserRole();
   const { t, language, setLanguage } = useLanguage();
   const [openSections, setOpenSections] = useState<string[]>(['workflow', 'assess']);
-  const [collapsed, setCollapsed] = useState(false);
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) =>
@@ -206,6 +207,7 @@ export const HierarchicalSidebar = () => {
     const link = (
       <NavLink
         to={item.path}
+        onClick={onNavClick}
         className={({ isActive }) =>
           `flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
             isActive
@@ -295,6 +297,7 @@ export const HierarchicalSidebar = () => {
             <TooltipTrigger asChild>
               <NavLink
                 to="/dashboard"
+                onClick={onNavClick}
                 className={({ isActive }) =>
                   `flex items-center justify-center gap-3 px-2 py-2 rounded-lg transition-colors ${
                     isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
@@ -309,6 +312,7 @@ export const HierarchicalSidebar = () => {
         ) : (
           <NavLink
             to="/dashboard"
+            onClick={onNavClick}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
@@ -419,4 +423,31 @@ export const HierarchicalSidebar = () => {
       </div>
     </aside>
   );
+};
+
+export const HierarchicalSidebar = () => {
+  const isMobile = useIsMobile();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (isMobile) {
+    return (
+      <>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-3 left-3 z-50 p-2 rounded-lg bg-sidebar border border-sidebar-border text-sidebar-foreground shadow-lg"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="p-0 w-72 bg-sidebar border-sidebar-border">
+            <SidebarContent collapsed={false} setCollapsed={() => {}} onNavClick={() => setMobileOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return <SidebarContent collapsed={collapsed} setCollapsed={setCollapsed} />;
 };

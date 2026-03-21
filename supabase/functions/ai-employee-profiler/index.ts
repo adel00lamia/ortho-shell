@@ -25,13 +25,27 @@ Deno.serve(async (req) => {
         ? "\n\nCRITICAL: Tu DOIS écrire TOUT le contenu en français. Seules les clés JSON restent en anglais."
         : "";
 
-    const systemPrompt = `You are an expert HR skills analyst and workforce planner. Analyze employee profiles holistically using all available data sources (CV/resume, years of experience, performance scores, certifications, education, org chart position data) to detect skill levels and match against job requirements.${langInstruction}`;
+    const systemPrompt = `You are an expert HR skills analyst and workforce planner specializing in competency-based assessment. You analyze employee profiles holistically using ALL available data sources to produce calibrated, evidence-based skill assessments.
+
+SCORING RUBRIC (1-5 scale):
+1 = Novice: No practical experience, needs full training
+2 = Beginner: Basic awareness, can perform with supervision  
+3 = Competent: Can work independently on routine tasks
+4 = Advanced: Handles complex situations, mentors others
+5 = Expert: Industry-recognized expertise, drives innovation
+
+CALIBRATION RULES:
+- Never assign level 5 unless certifications or 10+ years of specialized experience support it
+- Default to level 2-3 when data is limited; flag confidence as "low"
+- Cross-validate: CV skills vs performance scores vs position requirements must be consistent
+- If hire_date shows <2 years, cap detected level at "mid" unless certifications prove otherwise
+- Match scores should account for BOTH technical and soft skill alignment${langInstruction}`;
 
     const orgChartSection = orgChart
       ? `\n\nORGANIZATION CHART:\nDepartments: ${JSON.stringify(orgChart.departments, null, 2)}\nPositions: ${JSON.stringify(orgChart.positions, null, 2)}\n\nUse org chart data to understand hierarchy, critical positions, existing match scores, and required vs current skills at each position.`
       : "";
 
-    const userPrompt = `Analyze the following employees and their associated job descriptions to produce a comprehensive workforce skill profile:
+    const userPrompt = `Analyze the following employees and their associated job descriptions to produce a comprehensive workforce skill profile.
 
 EMPLOYEES (including evaluation data, resume summaries, org chart position, and department info):
 ${JSON.stringify(employees, null, 2)}
@@ -39,16 +53,15 @@ ${JSON.stringify(employees, null, 2)}
 JOB DESCRIPTIONS:
 ${JSON.stringify(jobDescriptions, null, 2)}${orgChartSection}
 
-For each employee, analyze:
-1. CV/Resume data (skills, experience, education, certifications) from evaluation.resumeSummary
-2. Years of experience (from hire_date to now)
-3. Performance evaluation scores and competency ratings
-4. Education level and certifications
-5. Current position vs job description requirements
-6. Org chart position data: match scores, current vs required skills, critical role flags
-7. Department hierarchy and reporting structure
+ANALYSIS STEPS (follow in order):
+1. For each employee, extract ALL skill signals from: CV/resume summary, competency scores, certifications, education level, years of experience (hire_date to now), and org chart position data
+2. Cross-reference signals: a skill mentioned in CV + scored in evaluation = higher confidence than CV-only
+3. Compare each employee's aggregated skills against their linked JD requirements
+4. Identify specific gaps with training recommendations including duration and provider type
+5. Produce department-level rollups: aggregate gaps, average readiness, critical training priorities
+6. Identify company-wide investment priorities ranked by impact (employees affected × gap severity)
 
-Then produce a department-level rollup showing aggregate gaps and training priorities, informed by the org chart structure.`;
+IMPORTANT: Be specific in training recommendations — include suggested formats (workshop, online course, mentoring, certification program) and realistic durations.`;
 
     const toolSchema = {
       type: "object",
