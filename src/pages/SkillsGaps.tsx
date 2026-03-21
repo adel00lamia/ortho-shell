@@ -58,7 +58,7 @@ export default function SkillsGaps() {
         </div>
 
         <Tabs defaultValue="matrix" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-[700px]">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-[700px]">
             <TabsTrigger value="matrix" className="flex items-center gap-1">
               <BarChart3 className="h-3.5 w-3.5" />
               {language === "fr" ? "Matrice" : "Skills Matrix"}
