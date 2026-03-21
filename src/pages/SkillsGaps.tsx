@@ -108,6 +108,10 @@ export default function SkillsGaps() {
             <EmployeeSkillProfiler />
           </TabsContent>
         </Tabs>
+
+        <div className="mt-8">
+          <ContextualActions currentPage="diagnostic" />
+        </div>
       </div>
     </div>
   );
