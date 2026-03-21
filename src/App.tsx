@@ -76,7 +76,7 @@ const ProtectedLayout = ({ children, featureName }: { children: React.ReactNode;
       <div className="flex-1 overflow-auto flex flex-col min-w-0">
         <TrialBanner />
         <Breadcrumbs />
-        <main className="flex-1">
+        <main className="flex-1 pl-12 md:pl-0">
           <FeatureErrorBoundary featureName={featureName}>
             <Suspense fallback={<PageLoader />}>
               {children}
