@@ -249,6 +249,57 @@ export type Database = {
           },
         ]
       }
+      employee_skills: {
+        Row: {
+          assessed_at: string
+          company_id: string
+          current_level: number
+          employee_email: string | null
+          employee_name: string
+          id: string
+          notes: string | null
+          skill_id: string
+          target_level: number
+        }
+        Insert: {
+          assessed_at?: string
+          company_id: string
+          current_level?: number
+          employee_email?: string | null
+          employee_name: string
+          id?: string
+          notes?: string | null
+          skill_id: string
+          target_level?: number
+        }
+        Update: {
+          assessed_at?: string
+          company_id?: string
+          current_level?: number
+          employee_email?: string | null
+          employee_name?: string
+          id?: string
+          notes?: string | null
+          skill_id?: string
+          target_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_skills_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_chat_messages: {
         Row: {
           company_id: string
@@ -1070,6 +1121,95 @@ export type Database = {
           },
         ]
       }
+      skill_categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          icon: string
+          id: string
+          name_en: string
+          name_fr: string
+          ofppt_sector_code: string | null
+          sort_order: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name_en: string
+          name_fr: string
+          ofppt_sector_code?: string | null
+          sort_order?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name_en?: string
+          name_fr?: string
+          ofppt_sector_code?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_categories_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skills: {
+        Row: {
+          category_id: string
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          max_level: number
+          name_en: string
+          name_fr: string
+        }
+        Insert: {
+          category_id: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_level?: number
+          name_en: string
+          name_fr: string
+        }
+        Update: {
+          category_id?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_level?: number
+          name_en?: string
+          name_fr?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skills_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "skill_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skills_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills_catalog: {
         Row: {
           category: string
@@ -1442,6 +1582,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_hr: { Args: { _user_id: string }; Returns: boolean }
+      seed_default_skills: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "hr_manager" | "employee" | "trainer"
