@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -272,6 +272,40 @@ export default function AIPlanBuilder() {
   const { language } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Receive gap analysis data from Skills & Gaps module
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.gapAnalysisData) {
+      const gapData = state.gapAnalysisData;
+      // Pre-populate target skills from top gaps
+      const gapSkills = (gapData.topGaps || []).map((g: any) => g.skill).filter(Boolean);
+      if (gapSkills.length > 0) {
+        setRequirements(prev => ({
+          ...prev,
+          targetSkills: [...new Set([...prev.targetSkills, ...gapSkills])],
+          context: prev.context
+            ? prev.context
+            : `Skills gap analysis: ${gapData.summary?.criticalGapsCount || 0} critical gaps across ${gapData.summary?.totalEmployees || 0} employees. Top gaps: ${gapSkills.slice(0, 5).join(', ')}.`,
+        }));
+        setStep(1); // Skip template selection, go to config
+      }
+      // Clear navigation state to prevent re-trigger
+      window.history.replaceState({}, document.title);
+    } else if (state?.diagnosticData || state?.performanceData) {
+      // Legacy support for other data sources
+      const data = state.diagnosticData || state.performanceData;
+      if (data?.targetSkills) {
+        setRequirements(prev => ({
+          ...prev,
+          targetSkills: [...new Set([...prev.targetSkills, ...data.targetSkills])],
+        }));
+      }
+      setStep(1);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Training Templates
   const trainingTemplates: TrainingTemplate[] = [

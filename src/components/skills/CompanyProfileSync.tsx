@@ -1,14 +1,24 @@
+import { useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSyncCompanySkills } from '@/hooks/useSyncCompanySkills';
-import { RefreshCw, Building2, Users, BarChart3, Network, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Building2, Users, BarChart3, Network, CheckCircle2, ArrowUpDown } from 'lucide-react';
 
 export const CompanyProfileSync = () => {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const { sync, syncing, lastSync, companyId } = useSyncCompanySkills();
+  const autoSynced = useRef(false);
+
+  // Auto-sync on first mount (silent)
+  useEffect(() => {
+    if (companyId && !autoSynced.current) {
+      autoSynced.current = true;
+      sync(language, true);
+    }
+  }, [companyId, language, sync]);
 
   if (!companyId) return null;
 
@@ -26,8 +36,8 @@ export const CompanyProfileSync = () => {
               </h3>
               <p className="text-xs text-muted-foreground">
                 {fr
-                  ? 'Importer les employés, évaluations et organigramme dans le diagnostic des compétences'
-                  : 'Import employees, evaluations & org chart into skills diagnostic'}
+                  ? 'Importer et mettre à jour les compétences depuis évaluations et organigramme'
+                  : 'Import & update skills from evaluations and org chart'}
               </p>
             </div>
           </div>
@@ -54,10 +64,18 @@ export const CompanyProfileSync = () => {
               <Network className="h-3 w-3" />
               {lastSync.fromPositions} {fr ? 'depuis organigramme' : 'from org chart'}
             </Badge>
-            <Badge variant="secondary" className="gap-1 text-xs">
-              <CheckCircle2 className="h-3 w-3" />
-              {lastSync.skillsMapped} {fr ? 'compétences mappées' : 'skills mapped'}
-            </Badge>
+            {lastSync.created > 0 && (
+              <Badge variant="secondary" className="gap-1 text-xs">
+                <CheckCircle2 className="h-3 w-3" />
+                {lastSync.created} {fr ? 'créées' : 'created'}
+              </Badge>
+            )}
+            {lastSync.updated > 0 && (
+              <Badge variant="secondary" className="gap-1 text-xs text-amber-600">
+                <ArrowUpDown className="h-3 w-3" />
+                {lastSync.updated} {fr ? 'mises à jour' : 'updated'}
+              </Badge>
+            )}
           </div>
         )}
       </CardContent>
