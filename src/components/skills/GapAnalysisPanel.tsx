@@ -1,15 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSkills, useEmployeeSkills, useSkillCategories } from '@/hooks/useSkillsTaxonomy';
-import { Loader2, User, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Loader2, User, TrendingUp, AlertTriangle, Brain } from 'lucide-react';
 
 export const GapAnalysisPanel = () => {
   const { language } = useLanguage();
   const fr = language === 'fr';
+  const navigate = useNavigate();
 
   const { data: categories = [] } = useSkillCategories();
   const { data: skills = [], isLoading: skillsLoading } = useSkills();
@@ -51,20 +54,91 @@ export const GapAnalysisPanel = () => {
   const onTargetCount = gaps.filter(g => g.gap <= 0).length;
   const avgPercent = gaps.length > 0 ? Math.round(gaps.reduce((s, g) => s + g.percent, 0) / gaps.length) : 0;
 
+  // Build org-wide gap summary for all employees
+  const buildOrgGapSummary = () => {
+    const allGaps: { skillName: string; categoryName: string; avgGap: number; employeeCount: number }[] = [];
+    const skillGapAgg = new Map<string, { name: string; cat: string; totalGap: number; count: number }>();
+
+    for (const es of employeeSkills) {
+      const skill = skillMap.get(es.skill_id);
+      if (!skill) continue;
+      const gap = es.target_level - es.current_level;
+      if (gap <= 0) continue;
+      const key = es.skill_id;
+      const existing = skillGapAgg.get(key);
+      if (existing) {
+        existing.totalGap += gap;
+        existing.count++;
+      } else {
+        const cat = catMap.get(skill.category_id);
+        skillGapAgg.set(key, {
+          name: fr ? skill.name_fr : skill.name_en,
+          cat: cat ? (fr ? cat.name_fr : cat.name_en) : '',
+          totalGap: gap,
+          count: 1,
+        });
+      }
+    }
+
+    skillGapAgg.forEach((v) => {
+      allGaps.push({ skillName: v.name, categoryName: v.cat, avgGap: v.totalGap / v.count, employeeCount: v.count });
+    });
+
+    return allGaps.sort((a, b) => b.avgGap * b.employeeCount - a.avgGap * a.employeeCount);
+  };
+
+  const handleSendToPlanBuilder = () => {
+    const orgGaps = buildOrgGapSummary();
+    const gapData = {
+      source: 'skills_gap_analysis',
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalEmployees: employees.length,
+        totalSkillsAssessed: employeeSkills.length,
+        criticalGapsCount: employeeSkills.filter(es => es.target_level - es.current_level >= 2).length,
+      },
+      topGaps: orgGaps.slice(0, 15).map(g => ({
+        skill: g.skillName,
+        category: g.categoryName,
+        avgGap: Math.round(g.avgGap * 10) / 10,
+        affectedEmployees: g.employeeCount,
+      })),
+      selectedEmployee: selectedEmployee || null,
+      employeeGaps: selectedEmployee ? gaps.filter(g => g.gap > 0).map(g => ({
+        skill: g.skillName,
+        category: g.categoryName,
+        current: g.current,
+        target: g.target,
+        gap: g.gap,
+      })) : null,
+    };
+
+    navigate('/workflow/plan/builder', { state: { gapAnalysisData: gapData } });
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <User className="h-5 w-5 text-primary" />
-        <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder={fr ? 'Selectionner un employe' : 'Select an employee'} />
-          </SelectTrigger>
-          <SelectContent>
-            {employees.map(emp => (
-              <SelectItem key={emp} value={emp}>{emp}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <User className="h-5 w-5 text-primary" />
+          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder={fr ? 'Selectionner un employe' : 'Select an employee'} />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map(emp => (
+                <SelectItem key={emp} value={emp}>{emp}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {employeeSkills.length > 0 && (
+          <Button size="sm" onClick={handleSendToPlanBuilder} className="gap-2">
+            <Brain className="h-4 w-4" />
+            {fr ? 'Générer un plan de formation' : 'Generate Training Plan'}
+          </Button>
+        )}
       </div>
 
       {!selectedEmployee ? (
