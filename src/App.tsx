@@ -73,7 +73,7 @@ const ProtectedLayout = ({ children, featureName }: { children: React.ReactNode;
   <ProtectedRoute>
     <div className="flex w-full min-h-screen">
       <HierarchicalSidebar />
-      <div className="flex-1 overflow-auto flex flex-col">
+      <div className="flex-1 overflow-auto flex flex-col min-w-0">
         <TrialBanner />
         <Breadcrumbs />
         <main className="flex-1">
