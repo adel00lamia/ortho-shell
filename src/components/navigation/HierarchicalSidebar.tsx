@@ -422,3 +422,30 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
     </aside>
   );
 };
+
+export const HierarchicalSidebar = () => {
+  const isMobile = useIsMobile();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (isMobile) {
+    return (
+      <>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-3 left-3 z-50 p-2 rounded-lg bg-sidebar border border-sidebar-border text-sidebar-foreground shadow-lg"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="p-0 w-72 bg-sidebar border-sidebar-border">
+            <SidebarContent collapsed={false} setCollapsed={() => {}} onNavClick={() => setMobileOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return <SidebarContent collapsed={collapsed} setCollapsed={setCollapsed} />;
+};
