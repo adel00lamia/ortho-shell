@@ -2,26 +2,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface CompetencyScore {
-  name: string;
-  score: number;
-  category: string;
-}
+import { normalizeCompetencyScores, type NormalizedCompetencyScore } from "@/lib/normalizeCompetencyScores";
 
 interface CompetencyScoreCardProps {
-  competencies: CompetencyScore[];
+  competencies: NormalizedCompetencyScore[] | Record<string, number> | unknown;
   onScoreUpdate: (index: number, score: number) => void;
   readOnly?: boolean;
 }
 
 const scoreColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
 
-export default function CompetencyScoreCard({ competencies, onScoreUpdate, readOnly = false }: CompetencyScoreCardProps) {
+export default function CompetencyScoreCard({ competencies: rawCompetencies, onScoreUpdate, readOnly = false }: CompetencyScoreCardProps) {
   const { t } = useLanguage();
   const r = t.performance.form.ratings;
 
   const scoreLabels = [r.needsImprovement, r.below, r.meets, r.exceeds, r.exceptional];
+
+  const competencies = normalizeCompetencyScores(rawCompetencies);
 
   if (competencies.length === 0) {
     return (

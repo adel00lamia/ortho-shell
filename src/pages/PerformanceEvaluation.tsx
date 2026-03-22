@@ -143,7 +143,11 @@ export default function PerformanceEvaluation() {
       .eq('id', id);
 
     if (error) {
-      toast.error(p.failedToDelete);
+      console.error('Delete evaluation error:', error);
+      const msg = error.message?.includes('row-level security')
+        ? (fr ? 'Accès refusé : seuls les admins/RH peuvent supprimer' : 'Access denied: only admin/HR can delete')
+        : p.failedToDelete;
+      toast.error(msg);
     } else {
       toast.success(p.evaluationDeleted);
       loadEvaluations();

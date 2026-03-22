@@ -2,12 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface CompetencyScore {
-  name: string;
-  score: number;
-  category: string;
-}
+import { normalizeCompetencyScores, type NormalizedCompetencyScore } from "@/lib/normalizeCompetencyScores";
 
 interface PerformanceAnalyticsProps {
   evaluations: any[];
@@ -39,15 +34,14 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
   }));
 
   const competencyAverages = evaluations.reduce((acc: any, evaluation: any) => {
-    if (evaluation.competency_scores && Array.isArray(evaluation.competency_scores)) {
-      evaluation.competency_scores.forEach((comp: CompetencyScore) => {
-        if (!acc[comp.name]) {
-          acc[comp.name] = { total: 0, count: 0, category: comp.category };
-        }
-        acc[comp.name].total += comp.score;
-        acc[comp.name].count += 1;
-      });
-    }
+    const scores = normalizeCompetencyScores(evaluation.competency_scores);
+    scores.forEach((comp: NormalizedCompetencyScore) => {
+      if (!acc[comp.name]) {
+        acc[comp.name] = { total: 0, count: 0, category: comp.category };
+      }
+      acc[comp.name].total += comp.score;
+      acc[comp.name].count += 1;
+    });
     return acc;
   }, {});
 
