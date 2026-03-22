@@ -2,15 +2,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface CompetencyScore {
-  name: string;
-  score: number;
-  category: string;
-}
+import { normalizeCompetencyScores, type NormalizedCompetencyScore } from "@/lib/normalizeCompetencyScores";
 
 interface CompetencyScoreCardProps {
-  competencies: CompetencyScore[];
+  competencies: NormalizedCompetencyScore[] | Record<string, number> | unknown;
   onScoreUpdate: (index: number, score: number) => void;
   readOnly?: boolean;
 }
