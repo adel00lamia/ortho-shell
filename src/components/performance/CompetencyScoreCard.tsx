@@ -12,11 +12,13 @@ interface CompetencyScoreCardProps {
 
 const scoreColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
 
-export default function CompetencyScoreCard({ competencies, onScoreUpdate, readOnly = false }: CompetencyScoreCardProps) {
+export default function CompetencyScoreCard({ competencies: rawCompetencies, onScoreUpdate, readOnly = false }: CompetencyScoreCardProps) {
   const { t } = useLanguage();
   const r = t.performance.form.ratings;
 
   const scoreLabels = [r.needsImprovement, r.below, r.meets, r.exceeds, r.exceptional];
+
+  const competencies = normalizeCompetencyScores(rawCompetencies);
 
   if (competencies.length === 0) {
     return (

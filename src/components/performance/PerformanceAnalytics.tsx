@@ -34,15 +34,14 @@ export default function PerformanceAnalytics({ evaluations }: PerformanceAnalyti
   }));
 
   const competencyAverages = evaluations.reduce((acc: any, evaluation: any) => {
-    if (evaluation.competency_scores && Array.isArray(evaluation.competency_scores)) {
-      evaluation.competency_scores.forEach((comp: CompetencyScore) => {
-        if (!acc[comp.name]) {
-          acc[comp.name] = { total: 0, count: 0, category: comp.category };
-        }
-        acc[comp.name].total += comp.score;
-        acc[comp.name].count += 1;
-      });
-    }
+    const scores = normalizeCompetencyScores(evaluation.competency_scores);
+    scores.forEach((comp: NormalizedCompetencyScore) => {
+      if (!acc[comp.name]) {
+        acc[comp.name] = { total: 0, count: 0, category: comp.category };
+      }
+      acc[comp.name].total += comp.score;
+      acc[comp.name].count += 1;
+    });
     return acc;
   }, {});
 
