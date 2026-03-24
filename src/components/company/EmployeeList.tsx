@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import {
   Download, Upload, Plus, Trash2, UserPlus, Users, Loader2,
-  FileText, Edit2, Search, AlertCircle
+  FileText, Edit2, Search, AlertCircle, Paperclip, X
 } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -306,6 +307,40 @@ export default function EmployeeList({ companyId, fr }: EmployeeListProps) {
                       <div>
                         <Label>{fr ? "Date d'embauche" : 'Hire Date'}</Label>
                         <Input type="date" value={form.hire_date || ''} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} />
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="flex items-center gap-1">
+                          <Paperclip className="w-3.5 h-3.5" />
+                          {fr ? 'CV / Résumé' : 'CV / Resume'}
+                        </Label>
+                        <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-dashed rounded-lg hover:border-primary transition-colors mt-1">
+                          <Upload className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {fr ? 'Cliquez pour uploader un CV (PDF, DOC)' : 'Click to upload a CV (PDF, DOC)'}
+                          </span>
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 10 * 1024 * 1024) {
+                                sonnerToast.error(fr ? 'Fichier trop volumineux (max 10 Mo)' : 'File too large (max 10 MB)');
+                                return;
+                              }
+                              const fileName = `${companyId}/${Date.now()}-${file.name}`;
+                              const { error } = await supabase.storage
+                                .from('employee-cvs')
+                                .upload(fileName, file);
+                              if (error) {
+                                sonnerToast.error(fr ? "Erreur d'upload" : 'Upload error');
+                              } else {
+                                sonnerToast.success(fr ? 'CV uploadé avec succès' : 'CV uploaded successfully');
+                              }
+                            }}
+                          />
+                        </label>
                       </div>
                     </div>
                   </div>

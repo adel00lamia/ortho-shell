@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CompetencyScoreCard from "@/components/performance/CompetencyScoreCard";
 import EvaluationSection from "@/components/performance/EvaluationSection";
-import ResumeSection from "@/components/performance/ResumeSection";
+import PerformanceQuestionsSection, { type PerformanceQuestion } from "@/components/performance/PerformanceQuestionsSection";
 import SkillsAnalysisCard from "@/components/performance/SkillsAnalysisCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -65,16 +65,8 @@ export default function PerformanceEvaluationForm({
   );
   const [aiLoading, setAiLoading] = useState(false);
 
-  const [resumeUrl, setResumeUrl] = useState<string>(initialData?.resume_url || "");
-  const [resumeSummary, setResumeSummary] = useState<ResumeSummary>(
-    initialData?.resume_summary && typeof initialData.resume_summary === 'object'
-      ? { 
-          experience: initialData.resume_summary.experience || "",
-          education: initialData.resume_summary.education || "",
-          skills: initialData.resume_summary.skills || [],
-          certifications: initialData.resume_summary.certifications || [],
-        }
-      : { experience: "", education: "", skills: [], certifications: [] }
+  const [performanceQuestions, setPerformanceQuestions] = useState<PerformanceQuestion[]>(
+    initialData?.performance_questions || []
   );
   const [skillsAnalysis, setSkillsAnalysis] = useState<any>(
     initialData?.skills_analysis && Object.keys(initialData.skills_analysis).length > 0
@@ -246,8 +238,7 @@ export default function PerformanceEvaluationForm({
       strengths,
       areasForImprovement,
       trainingRecommendations,
-      resumeUrl,
-      resumeSummary,
+      performanceQuestions,
       skillsAnalysis,
     });
   };
@@ -360,13 +351,12 @@ export default function PerformanceEvaluationForm({
         </div>
       </div>
 
-      <ResumeSection
-        resumeUrl={resumeUrl}
-        resumeSummary={resumeSummary}
-        onResumeUrlChange={setResumeUrl}
-        onResumeSummaryChange={setResumeSummary}
-        companyId={companyId}
-        employeeName={formData.employeeName}
+      <PerformanceQuestionsSection
+        questions={performanceQuestions}
+        onQuestionsChange={setPerformanceQuestions}
+        jobTitle={selectedJob?.title || ""}
+        responsibilities={selectedJob?.responsibilities || []}
+        competencies={(selectedJob?.competencies as any[]) || []}
       />
 
       <div>
@@ -380,7 +370,7 @@ export default function PerformanceEvaluationForm({
       <SkillsAnalysisCard
         analysis={skillsAnalysis}
         onAnalysisUpdate={setSkillsAnalysis}
-        resumeSummary={resumeSummary}
+        resumeSummary={{ experience: "", education: "", skills: [], certifications: [] }}
         jobCompetencies={selectedJob?.competencies || []}
         competencyScores={competencyScores}
         employeeName={formData.employeeName}
