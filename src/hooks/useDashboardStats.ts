@@ -45,7 +45,7 @@ async function fetchPlanStats(companyId: string | null): Promise<{
   totalSkillCategories: number;
   recentEvals: { employee_name: string; created_at: string | null }[];
 }> {
-  const [plansRes, modulesRes, teamRes, evalsRes] = await Promise.all([
+  const [plansRes, modulesRes, teamRes, evalsRes, skillsRes, catRes] = await Promise.all([
     (() => {
       let q = supabase.from('training_plans').select('id, status', { count: 'exact' });
       if (companyId) q = q.eq('company_id', companyId);
@@ -60,6 +60,12 @@ async function fetchPlanStats(companyId: string | null): Promise<{
       if (companyId) q = q.eq('company_id', companyId);
       return q.order('created_at', { ascending: false }).limit(4);
     })(),
+    companyId
+      ? supabase.from('skills').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
+    companyId
+      ? supabase.from('skill_categories').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
   ]);
 
   const plans = plansRes.data || [];
