@@ -23,6 +23,9 @@ export interface DashboardStats {
   criticalPositions: number;
   topSkillGaps: string[];
   topTrainingNeeds: string[];
+  // Skills taxonomy
+  totalSkills: number;
+  totalSkillCategories: number;
   recentActivity: {
     title: string;
     time: string;
