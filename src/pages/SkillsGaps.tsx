@@ -90,37 +90,46 @@ export default function SkillsGaps() {
           </TabsList>
 
           <TabsContent value="matrix" className="space-y-4">
-            <SkillsMatrixView
-              positions={positions}
-              evaluations={evaluations}
-              jobDescriptions={jobDescriptions}
-            />
+            <FeatureErrorBoundary featureName="Skills Matrix">
+              <SkillsMatrixView
+                positions={positions}
+                evaluations={evaluations}
+                jobDescriptions={jobDescriptions}
+              />
+            </FeatureErrorBoundary>
           </TabsContent>
 
           <TabsContent value="taxonomy" className="space-y-6">
-            <CompanyProfileSync />
-            <Tabs defaultValue="editor" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="editor">{language === "fr" ? "Éditeur" : "Taxonomy Editor"}</TabsTrigger>
-                <TabsTrigger value="heatmap">{language === "fr" ? "Carte thermique" : "Skills Heatmap"}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="editor">
-                <SkillsTaxonomyEditor />
-              </TabsContent>
-              <TabsContent value="heatmap">
-                <SkillsHeatmap />
-              </TabsContent>
-            </Tabs>
+            <FeatureErrorBoundary featureName="Taxonomy">
+              <CompanyProfileSync />
+              <Tabs defaultValue="editor" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="editor">{language === "fr" ? "Éditeur" : "Taxonomy Editor"}</TabsTrigger>
+                  <TabsTrigger value="heatmap">{language === "fr" ? "Carte thermique" : "Skills Heatmap"}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="editor">
+                  <SkillsTaxonomyEditor />
+                </TabsContent>
+                <TabsContent value="heatmap">
+                  <SkillsHeatmap />
+                </TabsContent>
+              </Tabs>
+            </FeatureErrorBoundary>
           </TabsContent>
 
           <TabsContent value="gaps" className="space-y-4">
-            <GapAnalysisPanel />
+            <FeatureErrorBoundary featureName="Gap Analysis">
+              <GapAnalysisPanel />
+            </FeatureErrorBoundary>
           </TabsContent>
 
           <TabsContent value="profiler">
-            <EmployeeSkillProfiler />
+            <FeatureErrorBoundary featureName="AI Profiler">
+              <EmployeeSkillProfiler />
+            </FeatureErrorBoundary>
           </TabsContent>
         </Tabs>
+        )}
 
         <div className="mt-8">
           <ContextualActions currentPage="diagnostic" />
