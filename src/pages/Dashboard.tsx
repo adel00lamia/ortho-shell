@@ -358,6 +358,7 @@ const Dashboard = () => {
       {/* Company Insights — HR/Admin only */}
       {isVisible('profile') && (role === 'hr_manager' || role === 'admin') && companyId && stats && (stats.totalEmployees > 0 || stats.totalEvaluations > 0) && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={5.5}>
+          <FeatureErrorBoundary featureName="Company Insights">
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -409,6 +410,7 @@ const Dashboard = () => {
               </div>
             )}
           </Card>
+          </FeatureErrorBoundary>
         </motion.div>
       )}
 
