@@ -70,6 +70,7 @@ export const fr: Translations = {
     jobBoard: 'Postes ouverts',
     talentPipeline: 'Pipeline de talents',
     hrKnowledge: 'Base de connaissances RH',
+    ingenieriePlan: 'Ingénierie de Formation',
   },
 
   breadcrumbs: {
@@ -104,6 +105,39 @@ export const fr: Translations = {
     referrals: 'Programme de parrainage',
     reimbursement: 'Remboursement OFPPT',
     plans: 'Mes plans',
+    ingenierie: 'Ingénierie de Formation',
+  },
+
+  // Ingénierie de Formation (GIAC/OFPPT)
+  ingenierie: {
+    title: 'Dossier Ingénierie de Formation',
+    subtitle: 'Constituez votre dossier GIAC/OFPPT pour récupérer jusqu\'à 70% de vos coûts de formation',
+    step1: 'Fiche signalétique',
+    step2: 'SWOT',
+    step3: 'Besoins',
+    step4: 'Actions',
+    step5: 'Budget',
+    step6: 'Calendrier',
+    step7: 'Annexes',
+    giacSector: 'Secteur GIAC',
+    ifNumber: 'Identifiant Fiscal (IF)',
+    grossPayroll: 'Masse salariale annuelle brute',
+    tfp: 'TFP (1,6%)',
+    reimbursementCap: 'Plafond de remboursement',
+    contactName: 'Responsable formation',
+    strategicDiagnostic: 'Diagnostic stratégique réalisé (taux GIAC 80%)',
+    saveNext: 'Enregistrer & Suivant',
+    finalize: 'Finaliser le dossier',
+    exportPDF: 'Exporter en PDF',
+    exportWord: 'Exporter en Word',
+    deadlineGiac: 'Validation GIAC',
+    deadlineOfppt: 'Dépôt plan OFPPT',
+    deadlineReimb: 'Dossier remboursement',
+    plannedTraining: 'Formation planifiée (70%)',
+    unplannedTraining: 'Formation non planifiée (40%)',
+    exceedsHourlyCap: 'Dépasse le plafond OFPPT 40 DH/h/pers.',
+    giacEngineering: 'Coût ingénierie GIAC',
+    totalReimbursement: 'Remboursement total estimé',
   },
 
   dashboard: {

@@ -34,6 +34,7 @@ const ModuleStudio = lazy(() => import("./pages/ModuleStudio"));
 const CertificateGenerator = lazy(() => import("./pages/CertificateGenerator"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const AIPlanBuilder = lazy(() => import("./pages/AIPlanBuilder"));
+const IngenieriePage = lazy(() => import("./pages/IngenieriePage"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const TeamCollaboration = lazy(() => import("./pages/TeamCollaboration"));
@@ -136,6 +137,7 @@ const App = () => (
               <Route path="/workflow/assess/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               
               {/* Workflow Routes - Plan */}
+              <Route path="/workflow/plan/ingenierie" element={<ProtectedLayout featureName="Ingénierie de Formation"><GatedPage><IngenieriePage /></GatedPage></ProtectedLayout>} />
               <Route path="/workflow/plan/builder" element={<ProtectedLayout featureName="AI Plan Builder"><GatedPage><AIPlanBuilder /></GatedPage></ProtectedLayout>} />
               <Route path="/workflow/plan/plans" element={<ProtectedLayout featureName="Training Plans"><GatedPage><AIPlanBuilder /></GatedPage></ProtectedLayout>} />
               <Route path="/workflow/plan/plans/:id" element={<ProtectedLayout featureName="Training Plan"><TrainingPlan /></ProtectedLayout>} />
