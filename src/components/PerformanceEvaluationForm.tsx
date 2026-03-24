@@ -351,13 +351,12 @@ export default function PerformanceEvaluationForm({
         </div>
       </div>
 
-      <ResumeSection
-        resumeUrl={resumeUrl}
-        resumeSummary={resumeSummary}
-        onResumeUrlChange={setResumeUrl}
-        onResumeSummaryChange={setResumeSummary}
-        companyId={companyId}
-        employeeName={formData.employeeName}
+      <PerformanceQuestionsSection
+        questions={performanceQuestions}
+        onQuestionsChange={setPerformanceQuestions}
+        jobTitle={selectedJob?.title || ""}
+        responsibilities={selectedJob?.responsibilities || []}
+        competencies={(selectedJob?.competencies as any[]) || []}
       />
 
       <div>
@@ -371,7 +370,7 @@ export default function PerformanceEvaluationForm({
       <SkillsAnalysisCard
         analysis={skillsAnalysis}
         onAnalysisUpdate={setSkillsAnalysis}
-        resumeSummary={resumeSummary}
+        resumeSummary={{ experience: "", education: "", skills: [], certifications: [] }}
         jobCompetencies={selectedJob?.competencies || []}
         competencyScores={competencyScores}
         employeeName={formData.employeeName}

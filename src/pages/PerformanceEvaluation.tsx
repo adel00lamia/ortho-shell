@@ -98,8 +98,8 @@ export default function PerformanceEvaluation() {
       training_recommendations: formData.trainingRecommendations,
       career_goals: formData.careerGoals,
       notes: formData.notes,
-      resume_url: formData.resumeUrl || null,
-      resume_summary: formData.resumeSummary || {},
+      resume_url: null,
+      resume_summary: formData.performanceQuestions ? { performance_questions: formData.performanceQuestions } : {},
       skills_analysis: formData.skillsAnalysis || {},
     };
 
