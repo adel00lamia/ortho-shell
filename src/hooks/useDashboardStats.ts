@@ -98,7 +98,7 @@ function buildDashboardStats(
   planStats: Awaited<ReturnType<typeof fetchPlanStats>>,
   companyId: string | null,
 ): DashboardStats {
-  const { totalPlans, activePlans, completionRate, modulesCount, completedModules, teamCount, recentEvals } = planStats;
+  const { totalPlans, activePlans, completionRate, modulesCount, completedModules, teamCount, totalSkills, totalSkillCategories, recentEvals } = planStats;
 
   // Derive from company context (single source of truth)
   const companyStats = context?.stats;
