@@ -45,6 +45,7 @@ export default function SkillsGaps() {
       if (evalsRes.data) setEvaluations(evalsRes.data);
       if (jdRes.data) setJobDescriptions(jdRes.data);
     }
+    setLoading(false);
   };
 
   return (
