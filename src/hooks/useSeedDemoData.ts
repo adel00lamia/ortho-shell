@@ -213,7 +213,7 @@ export function useSeedDemoData() {
     }
 
     setIsSeeding(true);
-    const TOTAL = 8;
+    const TOTAL = 9;
 
     const runStep = async <T,>(
       step: number,
