@@ -30,6 +30,76 @@ const TYPE_CONFIG = {
   goal: { icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800' },
 };
 
+const KPI_TEMPLATES_EN = [
+  (resp: string) => `What specific metrics or KPIs did you use to measure your success in "${resp}"? Share the numbers.`,
+  (resp: string) => `Describe the gap between your target and actual performance for "${resp}". What drove the variance?`,
+  (resp: string) => `How did your work on "${resp}" directly impact revenue, cost savings, or operational efficiency? Quantify.`,
+  (resp: string) => `What was the most significant bottleneck you encountered while delivering on "${resp}", and how did you overcome it?`,
+  (resp: string) => `If you had to re-prioritize "${resp}" against competing deadlines, how did you decide what to defer?`,
+];
+const KPI_TEMPLATES_FR = [
+  (resp: string) => `Quels indicateurs précis avez-vous utilisés pour mesurer votre réussite sur "${resp}" ? Chiffrez.`,
+  (resp: string) => `Décrivez l'écart entre votre objectif et votre résultat réel pour "${resp}". Qu'est-ce qui explique cet écart ?`,
+  (resp: string) => `Comment votre travail sur "${resp}" a-t-il impacté le chiffre d'affaires, les coûts ou l'efficacité opérationnelle ? Quantifiez.`,
+  (resp: string) => `Quel a été le plus gros frein rencontré dans la réalisation de "${resp}", et comment l'avez-vous surmonté ?`,
+  (resp: string) => `Si vous avez dû arbitrer "${resp}" face à d'autres priorités, comment avez-vous décidé quoi reporter ?`,
+];
+
+const COMP_TEMPLATES_EN = [
+  (comp: string) => `Describe a project where "${comp}" was the decisive factor between success and failure. What did you do differently?`,
+  (comp: string) => `How have you pushed beyond your comfort zone to grow "${comp}" this period? Give a concrete before/after.`,
+  (comp: string) => `When "${comp}" conflicted with a tight deadline, how did you balance quality and speed?`,
+  (comp: string) => `Who did you mentor or coach on "${comp}"? What was the outcome for them?`,
+  (comp: string) => `Rate your "${comp}" honestly — where are you still weak, and what's your plan to close that gap?`,
+];
+const COMP_TEMPLATES_FR = [
+  (comp: string) => `Décrivez un projet où "${comp}" a été le facteur décisif entre succès et échec. Qu'avez-vous fait différemment ?`,
+  (comp: string) => `Comment avez-vous repoussé vos limites pour progresser en "${comp}" cette période ? Donnez un avant/après concret.`,
+  (comp: string) => `Quand "${comp}" entrait en conflit avec un délai serré, comment avez-vous arbitré entre qualité et rapidité ?`,
+  (comp: string) => `Qui avez-vous accompagné ou coaché sur "${comp}" ? Quel a été le résultat pour cette personne ?`,
+  (comp: string) => `Évaluez honnêtement votre "${comp}" — où êtes-vous encore faible, et quel est votre plan pour progresser ?`,
+];
+
+const BEHAVIORAL_TEMPLATES_EN = (jt: string) => [
+  `Tell us about a time you failed in your role as ${jt}. What did you learn and what would you do differently?`,
+  `Describe a decision you made as ${jt} that was unpopular but turned out to be right. How did you handle pushback?`,
+  `Give an example where you had to influence stakeholders without formal authority in your ${jt} role.`,
+  `When was the last time you changed your mind on an important work topic? What triggered the shift?`,
+  `Describe a cross-functional conflict you navigated as ${jt}. What was the root cause and how did you resolve it?`,
+];
+const BEHAVIORAL_TEMPLATES_FR = (jt: string) => [
+  `Racontez un échec dans votre rôle de ${jt}. Qu'avez-vous appris et que feriez-vous différemment ?`,
+  `Décrivez une décision impopulaire que vous avez prise en tant que ${jt} mais qui s'est avérée juste. Comment avez-vous géré la résistance ?`,
+  `Donnez un exemple où vous avez dû influencer des parties prenantes sans autorité hiérarchique dans votre rôle de ${jt}.`,
+  `Quand avez-vous changé d'avis sur un sujet professionnel important pour la dernière fois ? Qu'est-ce qui a provoqué ce changement ?`,
+  `Décrivez un conflit transversal que vous avez géré en tant que ${jt}. Quelle en était la cause et comment l'avez-vous résolu ?`,
+];
+
+const GOAL_TEMPLATES_EN = [
+  `What is the single most ambitious goal you're setting for next period, and what makes it a stretch?`,
+  `Which of last period's goals did you miss, and what systemic change will prevent that from recurring?`,
+  `How do your personal development goals align with the team's strategic priorities for next quarter?`,
+  `What skill or capability gap, if closed, would have the biggest impact on your performance next period?`,
+];
+const GOAL_TEMPLATES_FR = [
+  `Quel est l'objectif le plus ambitieux que vous vous fixez pour la prochaine période, et pourquoi est-il un défi ?`,
+  `Quels objectifs de la période passée n'avez-vous pas atteints, et quel changement systémique empêchera que cela se reproduise ?`,
+  `Comment vos objectifs de développement personnel s'alignent-ils avec les priorités stratégiques de l'équipe ?`,
+  `Quel écart de compétence, s'il était comblé, aurait le plus grand impact sur votre performance ?`,
+];
+
+function pickUnique<T>(arr: T[], count: number, seed: number): T[] {
+  const copy = [...arr];
+  const result: T[] = [];
+  let s = seed;
+  for (let i = 0; i < Math.min(count, copy.length); i++) {
+    s = (s * 31 + 7) & 0x7fffffff;
+    const idx = s % copy.length;
+    result.push(copy.splice(idx, 1)[0]);
+  }
+  return result;
+}
+
 function generateQuestions(
   jobTitle: string,
   responsibilities: string[],
@@ -38,81 +108,59 @@ function generateQuestions(
 ): PerformanceQuestion[] {
   const questions: PerformanceQuestion[] = [];
   let idx = 0;
+  const seed = jobTitle.length * 17 + responsibilities.length * 13 + competencies.length * 7;
 
-  // KPI-based from responsibilities
+  // KPI questions — pick varied templates per responsibility
+  const kpiTemplates = fr ? KPI_TEMPLATES_FR : KPI_TEMPLATES_EN;
   const kpiResps = responsibilities.slice(0, 3);
   if (kpiResps.length > 0) {
-    for (const resp of kpiResps) {
-      questions.push({
-        id: `kpi-${idx++}`,
-        type: 'kpi',
-        question: fr
-          ? `Quels résultats mesurables avez-vous atteints concernant : "${resp}" ?`
-          : `What measurable results did you achieve regarding: "${resp}"?`,
-        answer: '',
-      });
-    }
+    const picked = pickUnique(kpiTemplates, kpiResps.length, seed);
+    kpiResps.forEach((resp, i) => {
+      questions.push({ id: `kpi-${idx++}`, type: 'kpi', question: picked[i % picked.length](resp), answer: '' });
+    });
   } else {
     questions.push({
-      id: `kpi-${idx++}`,
-      type: 'kpi',
+      id: `kpi-${idx++}`, type: 'kpi',
       question: fr
-        ? `Quels sont les principaux objectifs quantifiables atteints dans votre rôle de ${jobTitle} ?`
-        : `What are the key quantifiable objectives achieved in your role as ${jobTitle}?`,
+        ? `Quels résultats quantifiables avez-vous produits dans votre rôle de ${jobTitle} cette période ? Détaillez les chiffres.`
+        : `What quantifiable results did you produce as ${jobTitle} this period? Detail the numbers.`,
       answer: '',
     });
   }
 
-  // Competency-based from job competencies
+  // Competency questions — varied per competency
+  const compTemplates = fr ? COMP_TEMPLATES_FR : COMP_TEMPLATES_EN;
   const compSlice = competencies.slice(0, 3);
   if (compSlice.length > 0) {
-    for (const comp of compSlice) {
+    const picked = pickUnique(compTemplates, compSlice.length, seed + 3);
+    compSlice.forEach((comp, i) => {
       questions.push({
-        id: `comp-${idx++}`,
-        type: 'competency',
-        question: fr
-          ? `Comment évaluez-vous votre maîtrise de "${comp.name}" ? Donnez un exemple concret.`
-          : `How do you assess your proficiency in "${comp.name}"? Give a concrete example.`,
-        answer: '',
-        rating: undefined,
+        id: `comp-${idx++}`, type: 'competency',
+        question: picked[i % picked.length](comp.name),
+        answer: '', rating: undefined,
       });
-    }
+    });
   } else {
     questions.push({
-      id: `comp-${idx++}`,
-      type: 'competency',
+      id: `comp-${idx++}`, type: 'competency',
       question: fr
-        ? `Quelles compétences techniques avez-vous le plus développées cette année ?`
-        : `Which technical skills did you develop the most this year?`,
+        ? `Quelle compétence technique avez-vous le plus progressé cette période, et comment le prouvez-vous ?`
+        : `Which technical skill did you grow the most this period, and how can you prove it?`,
       answer: '',
     });
   }
 
-  // Behavioral / situational
-  const behavioralTemplates = fr
-    ? [
-        `Décrivez une situation difficile que vous avez gérée dans votre rôle de ${jobTitle}. Comment l'avez-vous résolue ?`,
-        `Donnez un exemple où vous avez fait preuve de leadership ou d'initiative au-delà de vos responsabilités.`,
-      ]
-    : [
-        `Describe a challenging situation you handled in your role as ${jobTitle}. How did you resolve it?`,
-        `Give an example where you demonstrated leadership or initiative beyond your responsibilities.`,
-      ];
-  for (const q of behavioralTemplates) {
+  // Behavioral — pick 2 unique from pool
+  const behPool = fr ? BEHAVIORAL_TEMPLATES_FR(jobTitle) : BEHAVIORAL_TEMPLATES_EN(jobTitle);
+  const behPicked = pickUnique(behPool, 2, seed + 5);
+  for (const q of behPicked) {
     questions.push({ id: `beh-${idx++}`, type: 'behavioral', question: q, answer: '' });
   }
 
-  // Goal achievement
-  const goalTemplates = fr
-    ? [
-        `Quels objectifs de la période précédente avez-vous atteints, partiellement atteints ou non atteints ?`,
-        `Quels objectifs vous fixez-vous pour la prochaine période d'évaluation ?`,
-      ]
-    : [
-        `Which goals from the previous period did you fully achieve, partially achieve, or miss?`,
-        `What goals are you setting for the next evaluation period?`,
-      ];
-  for (const q of goalTemplates) {
+  // Goals — pick 2 unique
+  const goalPool = fr ? GOAL_TEMPLATES_FR : GOAL_TEMPLATES_EN;
+  const goalPicked = pickUnique(goalPool, 2, seed + 9);
+  for (const q of goalPicked) {
     questions.push({ id: `goal-${idx++}`, type: 'goal', question: q, answer: '' });
   }
 
