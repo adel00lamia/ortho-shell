@@ -238,8 +238,7 @@ export default function PerformanceEvaluationForm({
       strengths,
       areasForImprovement,
       trainingRecommendations,
-      resumeUrl,
-      resumeSummary,
+      performanceQuestions,
       skillsAnalysis,
     });
   };
