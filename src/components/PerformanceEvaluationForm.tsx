@@ -111,25 +111,57 @@ export default function PerformanceEvaluationForm({
     if (data) setEmployees(data);
   };
 
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+
   const handleEmployeeSelect = (employeeId: string) => {
     const emp = employees.find(e => e.id === employeeId);
-    if (emp) {
-      setFormData(prev => ({
-        ...prev,
-        employeeName: emp.full_name,
-        employeeEmail: emp.email || "",
-        department: emp.department || prev.department,
-      }));
+    if (!emp) return;
 
-      // Auto-match job description by employee position
-      if (emp.position && jobDescriptions.length > 0) {
-        const posLower = emp.position.toLowerCase();
-        const matched = jobDescriptions.find(jd => {
-          const titleLower = (jd.title || '').toLowerCase();
-          return titleLower === posLower || titleLower.includes(posLower) || posLower.includes(titleLower);
-        });
-        if (matched) {
-          setSelectedJobId(matched.id);
+    setFormData(prev => ({
+      ...prev,
+      employeeName: emp.full_name,
+      employeeEmail: emp.email || "",
+      department: emp.department || prev.department,
+    }));
+
+    // Auto-match job description by employee position
+    if (emp.position && jobDescriptions.length > 0) {
+      const posNorm = normalize(emp.position);
+      const posWords = posNorm.split(' ').filter(w => w.length > 2);
+
+      let bestMatch: { id: string; score: number; department?: string } | null = null;
+
+      for (const jd of jobDescriptions) {
+        const titleNorm = normalize(jd.title || '');
+        let score = 0;
+
+        // Exact match
+        if (titleNorm === posNorm) { score = 100; }
+        // One contains the other
+        else if (titleNorm.includes(posNorm) || posNorm.includes(titleNorm)) { score = 80; }
+        else {
+          // Word overlap scoring
+          const titleWords = titleNorm.split(' ').filter((w: string) => w.length > 2);
+          const overlap = posWords.filter(w => titleWords.some((tw: string) => tw.includes(w) || w.includes(tw))).length;
+          if (overlap > 0) score = Math.round((overlap / Math.max(posWords.length, titleWords.length)) * 60);
+        }
+
+        // Bonus for same department
+        if (score > 0 && emp.department && jd.department && normalize(emp.department) === normalize(jd.department)) {
+          score += 10;
+        }
+
+        if (score > (bestMatch?.score || 0)) {
+          bestMatch = { id: jd.id, score, department: jd.department };
+        }
+      }
+
+      if (bestMatch && bestMatch.score >= 30) {
+        setSelectedJobId(bestMatch.id);
+        // Also fill department from JD if employee has none
+        if (!emp.department && bestMatch.department) {
+          setFormData(prev => ({ ...prev, department: bestMatch!.department! }));
         }
       }
     }
