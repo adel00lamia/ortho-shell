@@ -299,13 +299,16 @@ Migrations run in lexicographic order. Always include rollback comments.
 
 ### Known Critical Issues (from `.lovable/plan.md`)
 
-Before making schema changes, read `.lovable/plan.md`. Key issues:
+Before making schema changes, read `.lovable/plan.md`. Key issues and their current status:
 
-1. **Missing tables:** `skill_categories`, `skills`, `employee_skills` tables are referenced in code but may not exist in production — creating them requires the migration in the plan file.
-2. **JD RLS gap:** `job_descriptions` INSERT policy doesn't restrict by company — cross-company insertion is possible.
-3. **Dual role storage:** `profiles.role` and `user_roles` table are out of sync — use `user_roles` as the source of truth for new code.
-4. **No DELETE on `training_plans`:** Users can't delete draft plans — add a DELETE policy.
-5. **Leaked password protection disabled** in Supabase Auth settings.
+| # | Issue | Status |
+|---|-------|--------|
+| 1 | **Missing tables** (`skill_categories`, `skills`, `employee_skills`) | ✅ Fixed — migration `20260321041409` |
+| 2 | **JD RLS gap** — cross-company insertion possible | ✅ Fixed — migration `20260324000000` |
+| 3 | **Dual role storage** — `profiles.role` vs `user_roles` table | ⚠️ Partial — use `user_roles` for all new code |
+| 4 | **No DELETE on `training_plans`** | ✅ Fixed — migration `20260324000000` |
+| 5 | **Leaked password protection disabled** | ⚠️ Manual fix required in Supabase dashboard |
+| 6 | **Public plan templates expose config JSONB** | ✅ Fixed — `plan_templates_public` view in `20260324000000` |
 
 ---
 
@@ -324,6 +327,17 @@ npm run test:coverage   # Generate coverage report
 - Tests live alongside source files: `src/hooks/useDashboardLayout.test.ts`
 - Or in dedicated folders: `src/locales/translations.test.ts`
 - File pattern: `**/*.{test,spec}.{ts,tsx}`
+
+### Current Test Files
+
+| File | What it tests |
+|------|---------------|
+| `src/hooks/useDashboardLayout.test.ts` | Widget visibility, ordering, localStorage persistence |
+| `src/hooks/useAuth.test.tsx` | Auth state, signIn/signUp/signOut, auth event handling |
+| `src/hooks/useCompanyId.test.ts` | Company scoping, enabled/disabled query states |
+| `src/hooks/useUserRole.test.ts` | Role resolution, fallback to employee, error cases |
+| `src/hooks/useDashboardStats.test.ts` | Stat aggregation, completion rate, activity feed |
+| `src/locales/translations.test.ts` | EN/FR key parity, no empty strings |
 
 ### Writing Tests
 
@@ -396,6 +410,16 @@ The app is PWA-enabled with:
 - React Query is configured with `staleTime: 5 * 60 * 1000` (5 min) — avoid setting lower values without justification
 - `CommandPalette`, `OnboardingChecklist`, and `PWAInstallBanner` are lazy-loaded components
 - The `AIPlanBuilder.tsx` page is 126K — keep feature additions in child components, not the page file
+
+---
+
+## Migrations Applied (Changelog)
+
+| Migration | Date | Summary |
+|-----------|------|---------|
+| `20260321041409` | 2026-03-21 | Created `skill_categories`, `skills`, `employee_skills` tables + `seed_default_skills()` RPC |
+| `20260322125116` | 2026-03-22 | Fixed `performance_evaluations` RLS to use `get_user_company_id()` + `is_admin_or_hr()` |
+| `20260324000000` | 2026-03-24 | Fixed JD RLS cross-company gap; added `training_plans` DELETE policy; added `plan_templates_public` view |
 
 ---
 

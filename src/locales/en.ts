@@ -70,6 +70,7 @@ export const en = {
     jobBoard: 'Job Board',
     talentPipeline: 'Talent Pipeline',
     hrKnowledge: 'HR Knowledge Base',
+    ingenieriePlan: 'Training Engineering',
   },
 
   // Breadcrumbs
@@ -105,6 +106,39 @@ export const en = {
     referrals: 'Referral Program',
     reimbursement: 'OFPPT Reimbursement',
     plans: 'My Plans',
+    ingenierie: 'Training Engineering',
+  },
+
+  // Ingénierie de Formation (GIAC/OFPPT)
+  ingenierie: {
+    title: 'Training Engineering Dossier',
+    subtitle: 'Build your GIAC/OFPPT dossier to recover up to 70% of training costs',
+    step1: 'Company Info',
+    step2: 'SWOT',
+    step3: 'Needs',
+    step4: 'Actions',
+    step5: 'Budget',
+    step6: 'Calendar',
+    step7: 'Annexes',
+    giacSector: 'GIAC Sector',
+    ifNumber: 'Tax ID (IF)',
+    grossPayroll: 'Gross Annual Payroll',
+    tfp: 'TFP (1.6%)',
+    reimbursementCap: 'Reimbursement Cap',
+    contactName: 'Training Contact',
+    strategicDiagnostic: 'Strategic diagnostic completed (80% GIAC rate)',
+    saveNext: 'Save & Next',
+    finalize: 'Finalize Dossier',
+    exportPDF: 'Export PDF',
+    exportWord: 'Export Word',
+    deadlineGiac: 'GIAC Validation',
+    deadlineOfppt: 'OFPPT Deposit',
+    deadlineReimb: 'Reimbursement Dossier',
+    plannedTraining: 'Planned training (70%)',
+    unplannedTraining: 'Unplanned training (40%)',
+    exceedsHourlyCap: 'Exceeds OFPPT 40 DH/h/person cap',
+    giacEngineering: 'GIAC Engineering Cost',
+    totalReimbursement: 'Total estimated reimbursement',
   },
 
   // Dashboard

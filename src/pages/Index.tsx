@@ -266,7 +266,7 @@ const Index = () => {
             </motion.div>
 
             {/* Stats bar */}
-            <motion.div variants={fadeInUp} custom={4} className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+            <motion.div variants={fadeInUp} custom={4} className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
               {stats.map((stat, i) => (
                 <div key={i} className="text-center">
                   <div className="text-3xl md:text-4xl font-extrabold text-white" style={{ fontFamily: 'Plus Jakarta Sans' }}>{stat.value}</div>
@@ -507,7 +507,6 @@ const Index = () => {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors">{language === 'fr' ? 'Fonctionnalités' : 'Features'}</a></li>
                 <li><a href="#pricing" className="hover:text-foreground transition-colors">{language === 'fr' ? 'Tarifs' : 'Pricing'}</a></li>
-                <li><a href="#testimonials" className="hover:text-foreground transition-colors">{language === 'fr' ? 'Témoignages' : 'Testimonials'}</a></li>
               </ul>
             </div>
             <div>

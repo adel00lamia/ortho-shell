@@ -122,6 +122,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
         items: [
           { path: '/workflow/plan/builder', labelKey: 'aiPlanBuilder', icon: Lightbulb, badge: 'AI' },
           { path: '/workflow/plan/plans', labelKey: 'myPlans', icon: Target },
+          { path: '/workflow/plan/ingenierie', labelKey: 'ingenieriePlan', icon: FileText, badge: 'GIAC' },
         ],
       },
       {
