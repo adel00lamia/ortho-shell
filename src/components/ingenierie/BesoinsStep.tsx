@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ArrowRight, Plus, X, Users, Building2, Target } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, X, Users, Building2, Target, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { IngenierieDossier } from '@/hooks/useIngenierie';
+import { useNeedsSuggestions } from '@/hooks/useIngenieriePreFill';
 
 interface Need {
   id: string;
@@ -120,6 +121,18 @@ export function BesoinsStep({ dossier, onSave, onNext, onPrev }: Props) {
   const [individual, setIndividual] = useState<Need[]>(() => parseNeeds(dossier.needs_individual));
   const [collective, setCollective] = useState<Need[]>(() => parseNeeds(dossier.needs_collective));
   const [strategic, setStrategic] = useState<Need[]>(() => parseNeeds(dossier.needs_strategic));
+  const { data: suggestions, isLoading: suggestionsLoading } = useNeedsSuggestions();
+
+  const importSuggestions = () => {
+    if (!suggestions) return;
+    if (individual.length === 0 && suggestions.individualNeeds.length > 0) setIndividual(suggestions.individualNeeds);
+    if (collective.length === 0 && suggestions.collectiveNeeds.length > 0) setCollective(suggestions.collectiveNeeds);
+    if (strategic.length === 0 && suggestions.strategicNeeds.length > 0) setStrategic(suggestions.strategicNeeds);
+  };
+
+  const totalSuggestions = (suggestions?.individualNeeds.length ?? 0)
+    + (suggestions?.collectiveNeeds.length ?? 0)
+    + (suggestions?.strategicNeeds.length ?? 0);
 
   const handleNext = async () => {
     await onSave({ needs_individual: individual, needs_collective: collective, needs_strategic: strategic });
@@ -130,8 +143,14 @@ export function BesoinsStep({ dossier, onSave, onNext, onPrev }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3">
         <Badge variant="outline" className="text-xs">{totalNeeds} {fr ? 'besoins identifiés' : 'needs identified'}</Badge>
+        {totalSuggestions > 0 && (
+          <Button size="sm" variant="outline" className="text-xs gap-1 border-blue-300 text-blue-700 hover:bg-blue-50" onClick={importSuggestions} disabled={suggestionsLoading}>
+            <Sparkles className="h-3.5 w-3.5" />
+            {fr ? `Importer ${totalSuggestions} suggestions` : `Import ${totalSuggestions} suggestions`}
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="collective">

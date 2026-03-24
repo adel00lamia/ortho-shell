@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRight, ArrowLeft, Plus, X, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { IngenierieDossier } from '@/hooks/useIngenierie';
+import { useSWOTSuggestions } from '@/hooks/useIngenieriePreFill';
 
 interface SwotData {
   strengths: string[];
@@ -45,6 +47,17 @@ export function SWOTStep({ dossier, onSave, onNext, onPrev }: Props) {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const [swot, setSwot] = useState<SwotData>(() => parseSwot(dossier.swot_data));
+  const { data: suggestions, isLoading: suggestionsLoading } = useSWOTSuggestions();
+
+  const applysuggestions = () => {
+    if (!suggestions) return;
+    setSwot(prev => ({
+      ...prev,
+      strengths: suggestions.strengths.length ? suggestions.strengths : prev.strengths,
+      weaknesses: suggestions.weaknesses.length ? suggestions.weaknesses : prev.weaknesses,
+      opportunities: suggestions.opportunities.length ? suggestions.opportunities : prev.opportunities,
+    }));
+  };
 
   const updateItem = (quadrant: keyof Omit<SwotData, 'implications'>, index: number, value: string) => {
     setSwot((prev) => {
@@ -70,8 +83,25 @@ export function SWOTStep({ dossier, onSave, onNext, onPrev }: Props) {
     onNext();
   };
 
+  const hasSuggestions = suggestions && (
+    suggestions.strengths.length > 0 || suggestions.weaknesses.length > 0 || suggestions.opportunities.length > 0
+  );
+
   return (
     <div className="space-y-6">
+      {hasSuggestions && (
+        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-700">
+            <Sparkles className="h-4 w-4 inline mr-1" />
+            {fr
+              ? `Données disponibles : ${suggestions.strengths.length} forces, ${suggestions.weaknesses.length} faiblesses, ${suggestions.opportunities.length} opportunités depuis vos évaluations.`
+              : `Data available: ${suggestions.strengths.length} strengths, ${suggestions.weaknesses.length} weaknesses, ${suggestions.opportunities.length} opportunities from your evaluations.`}
+          </p>
+          <Button size="sm" variant="outline" className="shrink-0 ml-3 border-blue-300 text-blue-700 hover:bg-blue-100" onClick={applysuggestions} disabled={suggestionsLoading}>
+            {fr ? 'Importer' : 'Import'}
+          </Button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {QUADRANTS.map((q) => (
           <Card key={q.key} className={`border-2 ${q.color}`}>

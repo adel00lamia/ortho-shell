@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useActionsFromTrainingPlans } from '@/hooks/useIngenieriePreFill';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, ArrowRight, Plus, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { computeActionReimbursement, computeCostPerHourPerPerson, formatDH } from '@/lib/ofpptFinancials';
 import type { IngenierieAction } from '@/hooks/useIngenierie';
@@ -175,9 +176,17 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
 export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onDeleteAction, onNext, onPrev }: Props) {
   const { language } = useLanguage();
   const fr = language === 'fr';
+  const { data: planSuggestions, isLoading: plansLoading } = useActionsFromTrainingPlans();
 
   const handleAdd = async () => {
     await onAddAction({ title: fr ? 'Nouvelle action de formation' : 'New training action' });
+  };
+
+  const handleImportFromPlans = async () => {
+    if (!planSuggestions?.length) return;
+    for (const suggestion of planSuggestions) {
+      await onAddAction({ title: suggestion.title, ...suggestion });
+    }
   };
 
   return (
@@ -192,10 +201,18 @@ export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onD
             </Badge>
           )}
         </div>
-        <Button onClick={handleAdd} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          {fr ? 'Ajouter une action' : 'Add action'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {planSuggestions && planSuggestions.length > 0 && (
+            <Button onClick={handleImportFromPlans} size="sm" variant="outline" disabled={plansLoading} className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              {fr ? `Importer ${planSuggestions.length} plan(s)` : `Import ${planSuggestions.length} plan(s)`}
+            </Button>
+          )}
+          <Button onClick={handleAdd} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            {fr ? 'Ajouter une action' : 'Add action'}
+          </Button>
+        </div>
       </div>
 
       {actions.length === 0 && (

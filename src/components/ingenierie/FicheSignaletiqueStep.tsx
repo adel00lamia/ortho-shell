@@ -10,10 +10,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, ArrowRight } from 'lucide-react';
+import { Info, ArrowRight, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { computeTFP, computeReimbursementCap, formatDH } from '@/lib/ofpptFinancials';
 import type { IngenierieDossier } from '@/hooks/useIngenierie';
+import { useFicheSignaletiquePreFill } from '@/hooks/useIngenieriePreFill';
 
 const GIAC_SECTORS = [
   'IMMEE', 'Textile-Cuir', 'Technologies', 'BTP', 'Tourisme',
@@ -41,6 +42,7 @@ interface Props {
 export function FicheSignaletiqueStep({ dossier, onSave, onNext }: Props) {
   const { language } = useLanguage();
   const fr = language === 'fr';
+  const { defaults, isLoading: prefillLoading } = useFicheSignaletiquePreFill();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -54,6 +56,15 @@ export function FicheSignaletiqueStep({ dossier, onSave, onNext }: Props) {
       followed_strategic_diagnostic: dossier.followed_strategic_diagnostic ?? false,
     },
   });
+
+  // Auto-populate from company profile only if dossier fields are still empty
+  useEffect(() => {
+    if (prefillLoading || !defaults) return;
+    if (!dossier.contact_name && defaults.contact_name) form.setValue('contact_name', defaults.contact_name);
+    if (!dossier.contact_email && defaults.contact_email) form.setValue('contact_email', defaults.contact_email);
+    if (!dossier.contact_phone && defaults.contact_phone) form.setValue('contact_phone', defaults.contact_phone);
+    if (!dossier.giac_sector && defaults.giac_sector) form.setValue('giac_sector', defaults.giac_sector);
+  }, [prefillLoading]);
 
   const payroll = form.watch('gross_annual_payroll');
   const tfp = computeTFP(payroll || 0);
@@ -146,7 +157,15 @@ export function FicheSignaletiqueStep({ dossier, onSave, onNext }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{fr ? 'Responsable Formation' : 'Training Contact'}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{fr ? 'Responsable Formation' : 'Training Contact'}</CardTitle>
+                {!prefillLoading && (defaults.contact_name || defaults.contact_email) && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    {fr ? 'Pré-rempli depuis le profil' : 'Pre-filled from profile'}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
