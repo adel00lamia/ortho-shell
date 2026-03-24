@@ -20,6 +20,7 @@ import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 import { useSeedDemoData } from '@/hooks/useSeedDemoData';
 import { PROFILE_FIELDS } from '@/data/diagnosticConstants';
 import { motion } from 'framer-motion';
+import { FeatureErrorBoundary } from '@/components/error-boundaries/FeatureErrorBoundary';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
