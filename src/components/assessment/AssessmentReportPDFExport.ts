@@ -123,41 +123,41 @@ export const exportAssessmentReportPDF = async (options: ExportOptions) => {
   // ════════════════════════════════════════════
   // Brand bar
   doc.setFillColor(r, g, b);
-  doc.rect(0, 0, pageWidth, 8, 'F');
+  doc.rect(0, 0, pageWidth, 10, 'F');
 
-  yPos = 35;
+  yPos = 40;
 
   // Logo
   if (logoImg) {
     try {
-      doc.addImage(logoImg, 'PNG', pageWidth / 2 - 15, yPos, 30, 30);
-      yPos += 38;
+      doc.addImage(logoImg, 'PNG', pageWidth / 2 - 18, yPos, 36, 36);
+      yPos += 44;
     } catch { yPos += 5; }
   }
 
   // Title
-  doc.setFontSize(26);
+  doc.setFontSize(28);
   doc.setTextColor(r, g, b);
   const reportTitle = fr ? "Rapport d'Évaluation 360°" : '360° Assessment Report';
   doc.text(reportTitle, pageWidth / 2, yPos, { align: 'center' });
-  yPos += 12;
+  yPos += 14;
 
   // Company name
-  doc.setFontSize(18);
+  doc.setFontSize(20);
   doc.setTextColor(60, 60, 60);
   doc.text(company.name, pageWidth / 2, yPos, { align: 'center' });
-  yPos += 12;
+  yPos += 14;
 
   // Date
   doc.setFontSize(11);
   doc.setTextColor(120, 120, 120);
   doc.text(new Date().toLocaleDateString(fr ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }), pageWidth / 2, yPos, { align: 'center' });
-  yPos += 20;
+  yPos += 22;
 
   // Stats box
   doc.setFillColor(245, 245, 250);
-  doc.roundedRect(30, yPos, pageWidth - 60, 30, 3, 3, 'F');
-  doc.setFontSize(9);
+  doc.roundedRect(30, yPos, pageWidth - 60, 32, 4, 4, 'F');
+  doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
   const statsItems = [
     `${stats.departments} ${fr ? 'départements' : 'departments'}`,
@@ -167,31 +167,55 @@ export const exportAssessmentReportPDF = async (options: ExportOptions) => {
   ];
   const colW = (pageWidth - 60) / 4;
   statsItems.forEach((s, i) => {
-    doc.text(s, 30 + colW * i + colW / 2, yPos + 18, { align: 'center' });
+    doc.text(s, 30 + colW * i + colW / 2, yPos + 19, { align: 'center' });
   });
-  yPos += 40;
+  yPos += 45;
 
   // Maturity score gauge
   doc.setFontSize(14);
   doc.setTextColor(r, g, b);
   doc.text(fr ? 'Score de maturité RH' : 'HR Maturity Score', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 10;
+  yPos += 12;
   // Score bar background
   doc.setFillColor(230, 230, 235);
-  doc.roundedRect(40, yPos, pageWidth - 80, 10, 3, 3, 'F');
+  doc.roundedRect(40, yPos, pageWidth - 80, 12, 4, 4, 'F');
   // Score bar fill
   const barWidth = (pageWidth - 80) * (report.maturityScore / 100);
   doc.setFillColor(r, g, b);
-  doc.roundedRect(40, yPos, barWidth, 10, 3, 3, 'F');
+  doc.roundedRect(40, yPos, barWidth, 12, 4, 4, 'F');
   // Score text
-  doc.setFontSize(12);
+  doc.setFontSize(13);
   doc.setTextColor(255, 255, 255);
-  doc.text(`${report.maturityScore}/100`, 40 + barWidth / 2, yPos + 7.5, { align: 'center' });
-  yPos += 20;
+  doc.text(`${report.maturityScore}/100`, 40 + barWidth / 2, yPos + 8.5, { align: 'center' });
+  yPos += 25;
+
+  // Table of Contents
+  yPos += 10;
+  doc.setFontSize(14);
+  doc.setTextColor(r, g, b);
+  doc.text(fr ? 'Table des matières' : 'Table of Contents', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  const tocItems = [
+    fr ? '1. Résumé exécutif' : '1. Executive Summary',
+    fr ? '2. Analyse SWOT des compétences' : '2. Competency SWOT Analysis',
+    fr ? '3. Analyse de la structure organisationnelle' : '3. Organizational Structure Analysis',
+    fr ? '4. Analyse des gaps de compétences' : '4. Skills Gap Analysis',
+    fr ? '5. Planification des postes' : '5. Position Planning',
+    fr ? '6. Actions prioritaires' : '6. Prioritized Actions',
+  ];
+  tocItems.forEach(item => {
+    doc.text(item, 50, yPos);
+    yPos += 7;
+  });
 
   // Bottom brand bar
   doc.setFillColor(r, g, b);
-  doc.rect(0, pageHeight - 8, pageWidth, 8, 'F');
+  doc.rect(0, pageHeight - 10, pageWidth, 10, 'F');
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text(fr ? 'Confidentiel — Usage interne uniquement' : 'Confidential — Internal use only', pageWidth / 2, pageHeight - 4, { align: 'center' });
 
   // ════════════════════════════════════════════
   // PAGE 2+: CONTENT

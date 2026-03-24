@@ -213,7 +213,7 @@ export function useSeedDemoData() {
     }
 
     setIsSeeding(true);
-    const TOTAL = 8;
+    const TOTAL = 9;
 
     const runStep = async <T,>(
       step: number,
@@ -326,13 +326,21 @@ export function useSeedDemoData() {
         );
       }
 
+      // 9. Seed default skills taxonomy
+      setProgress(`[9/${TOTAL}] Initialisation de la taxonomie de compétences...`);
+      try {
+        await supabase.rpc('seed_default_skills', { p_company_id: companyId });
+      } catch (e) {
+        console.warn('seed_default_skills failed (may already exist):', e);
+      }
+
       // Refresh all queries
       setProgress('Finalisation...');
       await queryClient.invalidateQueries();
 
       toast({
         title: '🎉 Données démo chargées !',
-        description: 'Atlas Industries Maroc : 15 employés, 7 départements, 4 fiches de poste, 7 évaluations.',
+        description: 'Atlas Industries Maroc : 15 employés, 7 départements, 4 fiches de poste, 7 évaluations, taxonomie de compétences.',
       });
     } catch (error: any) {
       console.error('Seed error:', error);

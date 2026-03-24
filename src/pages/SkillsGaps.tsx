@@ -11,10 +11,14 @@ import { SkillsHeatmap } from "@/components/skills/SkillsHeatmap";
 import { GapAnalysisPanel } from "@/components/skills/GapAnalysisPanel";
 import { CompanyProfileSync } from "@/components/skills/CompanyProfileSync";
 import { EmployeeSkillProfiler } from "@/components/diagnostic/EmployeeSkillProfiler";
+import { FeatureErrorBoundary } from "@/components/error-boundaries/FeatureErrorBoundary";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 export default function SkillsGaps() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const [loading, setLoading] = useState(true);
   const [positions, setPositions] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [jobDescriptions, setJobDescriptions] = useState<any[]>([]);
@@ -41,6 +45,7 @@ export default function SkillsGaps() {
       if (evalsRes.data) setEvaluations(evalsRes.data);
       if (jdRes.data) setJobDescriptions(jdRes.data);
     }
+    setLoading(false);
   };
 
   return (
@@ -57,6 +62,13 @@ export default function SkillsGaps() {
           </p>
         </div>
 
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-6"><Skeleton className="h-32 w-full" /></Card>
+            ))}
+          </div>
+        ) : (
         <Tabs defaultValue="matrix" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-[700px]">
             <TabsTrigger value="matrix" className="flex items-center gap-1">
@@ -78,37 +90,46 @@ export default function SkillsGaps() {
           </TabsList>
 
           <TabsContent value="matrix" className="space-y-4">
-            <SkillsMatrixView
-              positions={positions}
-              evaluations={evaluations}
-              jobDescriptions={jobDescriptions}
-            />
+            <FeatureErrorBoundary featureName="Skills Matrix">
+              <SkillsMatrixView
+                positions={positions}
+                evaluations={evaluations}
+                jobDescriptions={jobDescriptions}
+              />
+            </FeatureErrorBoundary>
           </TabsContent>
 
           <TabsContent value="taxonomy" className="space-y-6">
-            <CompanyProfileSync />
-            <Tabs defaultValue="editor" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="editor">{language === "fr" ? "Éditeur" : "Taxonomy Editor"}</TabsTrigger>
-                <TabsTrigger value="heatmap">{language === "fr" ? "Carte thermique" : "Skills Heatmap"}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="editor">
-                <SkillsTaxonomyEditor />
-              </TabsContent>
-              <TabsContent value="heatmap">
-                <SkillsHeatmap />
-              </TabsContent>
-            </Tabs>
+            <FeatureErrorBoundary featureName="Taxonomy">
+              <CompanyProfileSync />
+              <Tabs defaultValue="editor" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="editor">{language === "fr" ? "Éditeur" : "Taxonomy Editor"}</TabsTrigger>
+                  <TabsTrigger value="heatmap">{language === "fr" ? "Carte thermique" : "Skills Heatmap"}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="editor">
+                  <SkillsTaxonomyEditor />
+                </TabsContent>
+                <TabsContent value="heatmap">
+                  <SkillsHeatmap />
+                </TabsContent>
+              </Tabs>
+            </FeatureErrorBoundary>
           </TabsContent>
 
           <TabsContent value="gaps" className="space-y-4">
-            <GapAnalysisPanel />
+            <FeatureErrorBoundary featureName="Gap Analysis">
+              <GapAnalysisPanel />
+            </FeatureErrorBoundary>
           </TabsContent>
 
           <TabsContent value="profiler">
-            <EmployeeSkillProfiler />
+            <FeatureErrorBoundary featureName="AI Profiler">
+              <EmployeeSkillProfiler />
+            </FeatureErrorBoundary>
           </TabsContent>
         </Tabs>
+        )}
 
         <div className="mt-8">
           <ContextualActions currentPage="diagnostic" />

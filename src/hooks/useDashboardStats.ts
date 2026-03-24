@@ -23,6 +23,9 @@ export interface DashboardStats {
   criticalPositions: number;
   topSkillGaps: string[];
   topTrainingNeeds: string[];
+  // Skills taxonomy
+  totalSkills: number;
+  totalSkillCategories: number;
   recentActivity: {
     title: string;
     time: string;
@@ -38,9 +41,11 @@ async function fetchPlanStats(companyId: string | null): Promise<{
   modulesCount: number;
   completedModules: number;
   teamCount: number;
+  totalSkills: number;
+  totalSkillCategories: number;
   recentEvals: { employee_name: string; created_at: string | null }[];
 }> {
-  const [plansRes, modulesRes, teamRes, evalsRes] = await Promise.all([
+  const [plansRes, modulesRes, teamRes, evalsRes, skillsRes, catRes] = await Promise.all([
     (() => {
       let q = supabase.from('training_plans').select('id, status', { count: 'exact' });
       if (companyId) q = q.eq('company_id', companyId);
@@ -55,6 +60,12 @@ async function fetchPlanStats(companyId: string | null): Promise<{
       if (companyId) q = q.eq('company_id', companyId);
       return q.order('created_at', { ascending: false }).limit(4);
     })(),
+    companyId
+      ? supabase.from('skills').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
+    companyId
+      ? supabase.from('skill_categories').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+      : Promise.resolve({ count: 0 }),
   ]);
 
   const plans = plansRes.data || [];
@@ -75,6 +86,8 @@ async function fetchPlanStats(companyId: string | null): Promise<{
     modulesCount,
     completedModules,
     teamCount,
+    totalSkills: skillsRes.count || 0,
+    totalSkillCategories: catRes.count || 0,
     recentEvals: (evalsRes.data || []) as { employee_name: string; created_at: string | null }[],
   };
 }
@@ -85,7 +98,7 @@ function buildDashboardStats(
   planStats: Awaited<ReturnType<typeof fetchPlanStats>>,
   companyId: string | null,
 ): DashboardStats {
-  const { totalPlans, activePlans, completionRate, modulesCount, completedModules, teamCount, recentEvals } = planStats;
+  const { totalPlans, activePlans, completionRate, modulesCount, completedModules, teamCount, totalSkills, totalSkillCategories, recentEvals } = planStats;
 
   // Derive from company context (single source of truth)
   const companyStats = context?.stats;
@@ -119,6 +132,8 @@ function buildDashboardStats(
     criticalPositions: companyStats?.criticalPositions ?? 0,
     topSkillGaps: companyStats?.skillGaps ?? [],
     topTrainingNeeds: companyStats?.topTrainingNeeds ?? [],
+    totalSkills,
+    totalSkillCategories,
     recentActivity,
   };
 }
