@@ -65,16 +65,8 @@ export default function PerformanceEvaluationForm({
   );
   const [aiLoading, setAiLoading] = useState(false);
 
-  const [resumeUrl, setResumeUrl] = useState<string>(initialData?.resume_url || "");
-  const [resumeSummary, setResumeSummary] = useState<ResumeSummary>(
-    initialData?.resume_summary && typeof initialData.resume_summary === 'object'
-      ? { 
-          experience: initialData.resume_summary.experience || "",
-          education: initialData.resume_summary.education || "",
-          skills: initialData.resume_summary.skills || [],
-          certifications: initialData.resume_summary.certifications || [],
-        }
-      : { experience: "", education: "", skills: [], certifications: [] }
+  const [performanceQuestions, setPerformanceQuestions] = useState<PerformanceQuestion[]>(
+    initialData?.performance_questions || []
   );
   const [skillsAnalysis, setSkillsAnalysis] = useState<any>(
     initialData?.skills_analysis && Object.keys(initialData.skills_analysis).length > 0
