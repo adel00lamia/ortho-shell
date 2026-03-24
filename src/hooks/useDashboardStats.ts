@@ -132,6 +132,8 @@ function buildDashboardStats(
     criticalPositions: companyStats?.criticalPositions ?? 0,
     topSkillGaps: companyStats?.skillGaps ?? [],
     topTrainingNeeds: companyStats?.topTrainingNeeds ?? [],
+    totalSkills,
+    totalSkillCategories,
     recentActivity,
   };
 }
