@@ -86,6 +86,8 @@ async function fetchPlanStats(companyId: string | null): Promise<{
     modulesCount,
     completedModules,
     teamCount,
+    totalSkills: skillsRes.count || 0,
+    totalSkillCategories: catRes.count || 0,
     recentEvals: (evalsRes.data || []) as { employee_name: string; created_at: string | null }[],
   };
 }
