@@ -41,6 +41,8 @@ async function fetchPlanStats(companyId: string | null): Promise<{
   modulesCount: number;
   completedModules: number;
   teamCount: number;
+  totalSkills: number;
+  totalSkillCategories: number;
   recentEvals: { employee_name: string; created_at: string | null }[];
 }> {
   const [plansRes, modulesRes, teamRes, evalsRes] = await Promise.all([
