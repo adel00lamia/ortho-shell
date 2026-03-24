@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         // NOTE: Do NOT set loading here - it's owned by initializeAuth below.
         // Use setTimeout to avoid potential deadlock from synchronous Supabase callbacks.
-        console.log('Auth state change:', event, session?.user?.email);
+        if (import.meta.env.DEV) console.log('Auth state change:', event, session?.user?.email);
       }
     );
 
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
-        console.log('Initial session check:', session?.user?.email);
+        if (import.meta.env.DEV) console.log('Initial session check:', session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
       } finally {
