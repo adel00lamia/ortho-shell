@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 export default function SkillsGaps() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const [loading, setLoading] = useState(true);
   const [positions, setPositions] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [jobDescriptions, setJobDescriptions] = useState<any[]>([]);

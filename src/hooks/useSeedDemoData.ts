@@ -340,7 +340,7 @@ export function useSeedDemoData() {
 
       toast({
         title: '🎉 Données démo chargées !',
-        description: 'Atlas Industries Maroc : 15 employés, 7 départements, 4 fiches de poste, 7 évaluations.',
+        description: 'Atlas Industries Maroc : 15 employés, 7 départements, 4 fiches de poste, 7 évaluations, taxonomie de compétences.',
       });
     } catch (error: any) {
       console.error('Seed error:', error);
