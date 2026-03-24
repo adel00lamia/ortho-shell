@@ -326,6 +326,14 @@ export function useSeedDemoData() {
         );
       }
 
+      // 9. Seed default skills taxonomy
+      setProgress(`[9/${TOTAL}] Initialisation de la taxonomie de compétences...`);
+      try {
+        await supabase.rpc('seed_default_skills', { p_company_id: companyId });
+      } catch (e) {
+        console.warn('seed_default_skills failed (may already exist):', e);
+      }
+
       // Refresh all queries
       setProgress('Finalisation...');
       await queryClient.invalidateQueries();
