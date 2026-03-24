@@ -11,6 +11,9 @@ import { SkillsHeatmap } from "@/components/skills/SkillsHeatmap";
 import { GapAnalysisPanel } from "@/components/skills/GapAnalysisPanel";
 import { CompanyProfileSync } from "@/components/skills/CompanyProfileSync";
 import { EmployeeSkillProfiler } from "@/components/diagnostic/EmployeeSkillProfiler";
+import { FeatureErrorBoundary } from "@/components/error-boundaries/FeatureErrorBoundary";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 export default function SkillsGaps() {
   const { user } = useAuth();
