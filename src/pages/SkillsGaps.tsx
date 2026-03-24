@@ -62,6 +62,13 @@ export default function SkillsGaps() {
           </p>
         </div>
 
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-6"><Skeleton className="h-32 w-full" /></Card>
+            ))}
+          </div>
+        ) : (
         <Tabs defaultValue="matrix" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-[700px]">
             <TabsTrigger value="matrix" className="flex items-center gap-1">
