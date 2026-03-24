@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CompetencyScoreCard from "@/components/performance/CompetencyScoreCard";
 import EvaluationSection from "@/components/performance/EvaluationSection";
-import ResumeSection from "@/components/performance/ResumeSection";
+import PerformanceQuestionsSection, { type PerformanceQuestion } from "@/components/performance/PerformanceQuestionsSection";
 import SkillsAnalysisCard from "@/components/performance/SkillsAnalysisCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 
