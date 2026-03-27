@@ -439,6 +439,188 @@ export type Database = {
           },
         ]
       }
+      ingenierie_actions: {
+        Row: {
+          company_id: string
+          content_outline: string | null
+          cost_ht: number | null
+          created_at: string
+          dossier_id: string
+          duration_days: number | null
+          duration_hours: number | null
+          id: string
+          is_planned: boolean
+          location: string | null
+          objectives: string[] | null
+          participant_count: number | null
+          planned_end_date: string | null
+          planned_start_date: string | null
+          provider_name: string | null
+          provider_type: string | null
+          reimbursement_rate: number | null
+          sort_order: number
+          source_need_type: string | null
+          target_population: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          content_outline?: string | null
+          cost_ht?: number | null
+          created_at?: string
+          dossier_id: string
+          duration_days?: number | null
+          duration_hours?: number | null
+          id?: string
+          is_planned?: boolean
+          location?: string | null
+          objectives?: string[] | null
+          participant_count?: number | null
+          planned_end_date?: string | null
+          planned_start_date?: string | null
+          provider_name?: string | null
+          provider_type?: string | null
+          reimbursement_rate?: number | null
+          sort_order?: number
+          source_need_type?: string | null
+          target_population?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          content_outline?: string | null
+          cost_ht?: number | null
+          created_at?: string
+          dossier_id?: string
+          duration_days?: number | null
+          duration_hours?: number | null
+          id?: string
+          is_planned?: boolean
+          location?: string | null
+          objectives?: string[] | null
+          participant_count?: number | null
+          planned_end_date?: string | null
+          planned_start_date?: string | null
+          provider_name?: string | null
+          provider_type?: string | null
+          reimbursement_rate?: number | null
+          sort_order?: number
+          source_need_type?: string | null
+          target_population?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingenierie_actions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingenierie_actions_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "ingenierie_de_formation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingenierie_de_formation: {
+        Row: {
+          company_id: string
+          completed_steps: number[] | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          csf_attestation_url: string | null
+          current_step: number
+          estimated_reimbursement: number | null
+          exercise_year: number
+          followed_strategic_diagnostic: boolean
+          giac_attestation_url: string | null
+          giac_sector: string | null
+          gross_annual_payroll: number | null
+          id: string
+          if_number: string | null
+          linked_training_plan_id: string | null
+          needs_collective: Json | null
+          needs_individual: Json | null
+          needs_strategic: Json | null
+          status: string
+          swot_data: Json | null
+          tfp_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completed_steps?: number[] | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          csf_attestation_url?: string | null
+          current_step?: number
+          estimated_reimbursement?: number | null
+          exercise_year?: number
+          followed_strategic_diagnostic?: boolean
+          giac_attestation_url?: string | null
+          giac_sector?: string | null
+          gross_annual_payroll?: number | null
+          id?: string
+          if_number?: string | null
+          linked_training_plan_id?: string | null
+          needs_collective?: Json | null
+          needs_individual?: Json | null
+          needs_strategic?: Json | null
+          status?: string
+          swot_data?: Json | null
+          tfp_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completed_steps?: number[] | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          csf_attestation_url?: string | null
+          current_step?: number
+          estimated_reimbursement?: number | null
+          exercise_year?: number
+          followed_strategic_diagnostic?: boolean
+          giac_attestation_url?: string | null
+          giac_sector?: string | null
+          gross_annual_payroll?: number | null
+          id?: string
+          if_number?: string | null
+          linked_training_plan_id?: string | null
+          needs_collective?: Json | null
+          needs_individual?: Json | null
+          needs_strategic?: Json | null
+          status?: string
+          swot_data?: Json | null
+          tfp_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingenierie_de_formation_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_applications: {
         Row: {
           applied_at: string
