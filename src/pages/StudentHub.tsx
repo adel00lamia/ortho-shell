@@ -323,14 +323,7 @@ const StudentHub = () => {
     setChat(newHistory);
     setChatLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: { mode: 'interview', position, difficulty, style, studentProfile: profile ?? draft, history: newHistory, language: fr ? 'fr' : 'en' },
-      });
-      if (error) throw error;
-      const reply = (data as { reply?: string }).reply ?? '';
-      setChat([...newHistory, { role: 'assistant', content: reply }]);
-    } catch (e) {
-      toast.error((e as Error).message);
+      await streamInterviewReply(newHistory);
     } finally {
       setChatLoading(false);
     }
