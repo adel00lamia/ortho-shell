@@ -48,6 +48,7 @@ const Career = lazy(() => import("./pages/Career"));
 const JobBoard = lazy(() => import("./pages/JobBoard"));
 const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
+const StudentHub = lazy(() => import("./pages/StudentHub"));
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
@@ -172,6 +173,7 @@ const App = () => (
               <Route path="/career/jobs" element={<ProtectedLayout featureName="Job Board"><JobBoard /></ProtectedLayout>} />
               <Route path="/manage/talent" element={<ProtectedLayout featureName="Talent Pipeline"><TalentPipeline /></ProtectedLayout>} />
               <Route path="/hr-knowledge" element={<ProtectedLayout featureName="HR Knowledge Base"><HRKnowledgeBase /></ProtectedLayout>} />
+              <Route path="/student" element={<ProtectedLayout featureName="Student Hub"><StudentHub /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
               <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />

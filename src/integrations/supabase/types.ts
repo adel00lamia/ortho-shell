@@ -675,6 +675,7 @@ export type Database = {
           created_by: string | null
           department: string | null
           description: string | null
+          employment_type: string
           id: string
           is_open: boolean
           level: string | null
@@ -692,6 +693,7 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           description?: string | null
+          employment_type?: string
           id?: string
           is_open?: boolean
           level?: string | null
@@ -709,6 +711,7 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           description?: string | null
+          employment_type?: string
           id?: string
           is_open?: boolean
           level?: string | null
@@ -1426,6 +1429,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_profiles: {
+        Row: {
+          bio: string | null
+          company_id: string | null
+          created_at: string
+          cv_data: Json
+          cv_url: string | null
+          education: Json
+          email: string | null
+          experiences: Json
+          field_of_study: string | null
+          full_name: string | null
+          graduation_year: number | null
+          id: string
+          interests: string[]
+          interview_history: Json
+          languages: Json
+          phone: string | null
+          school: string | null
+          soft_skills: Json
+          technical_skills: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          company_id?: string | null
+          created_at?: string
+          cv_data?: Json
+          cv_url?: string | null
+          education?: Json
+          email?: string | null
+          experiences?: Json
+          field_of_study?: string | null
+          full_name?: string | null
+          graduation_year?: number | null
+          id?: string
+          interests?: string[]
+          interview_history?: Json
+          languages?: Json
+          phone?: string | null
+          school?: string | null
+          soft_skills?: Json
+          technical_skills?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          company_id?: string | null
+          created_at?: string
+          cv_data?: Json
+          cv_url?: string | null
+          education?: Json
+          email?: string | null
+          experiences?: Json
+          field_of_study?: string | null
+          full_name?: string | null
+          graduation_year?: number | null
+          id?: string
+          interests?: string[]
+          interview_history?: Json
+          languages?: Json
+          phone?: string | null
+          school?: string | null
+          soft_skills?: Json
+          technical_skills?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {

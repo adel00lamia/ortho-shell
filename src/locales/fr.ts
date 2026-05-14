@@ -68,6 +68,7 @@ export const fr: Translations = {
     career: 'Carrière',
     myCareer: 'Ma carrière',
     jobBoard: 'Postes ouverts',
+    studentHub: 'Espace étudiant',
     talentPipeline: 'Pipeline de talents',
     hrKnowledge: 'Base de connaissances RH',
     ingenieriePlan: 'Ingénierie de Formation',

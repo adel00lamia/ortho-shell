@@ -68,6 +68,7 @@ export const en = {
     career: 'Career',
     myCareer: 'My Career',
     jobBoard: 'Job Board',
+    studentHub: 'Student Hub',
     talentPipeline: 'Talent Pipeline',
     hrKnowledge: 'HR Knowledge Base',
     ingenieriePlan: 'Training Engineering',
