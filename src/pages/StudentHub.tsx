@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import {
   GraduationCap, Briefcase, Sparkles, FileText, Send, Loader2, ExternalLink, Plus, X,
   Bot, User as UserIcon, Download, Copy, Award, CheckCircle2, RotateCcw, Target, BookOpen,
-  Video, Newspaper, Book,
+  Video, Newspaper, Book, Lightbulb,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
