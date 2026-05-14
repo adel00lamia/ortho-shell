@@ -207,7 +207,7 @@ const StudentHub = () => {
 
   /* ------------------------- Interview ------------------------ */
   const [position, setPosition] = useState('');
-  const [difficulty, setDifficulty] = useState<'junior' | 'mid' | 'senior'>('mid');
+  const [difficulty, setDifficulty] = useState<'warmup' | 'junior' | 'mid' | 'senior'>('warmup');
   const [style, setStyle] = useState<'behavioral' | 'technical' | 'mixed'>('mixed');
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState('');
