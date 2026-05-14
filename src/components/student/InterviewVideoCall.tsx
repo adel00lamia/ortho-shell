@@ -266,15 +266,35 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
               </AnimatePresence>
               <motion.div
                 animate={{
-                  scale: isSpeaking ? [1, 1.08, 1] : 1,
+                  scale: isSpeaking ? [1, 1.04, 1] : 1,
                   boxShadow: isSpeaking
-                    ? '0 0 60px rgba(99,102,241,0.6)'
-                    : '0 0 30px rgba(99,102,241,0.25)',
+                    ? '0 0 80px rgba(99,102,241,0.7), 0 0 0 4px rgba(255,255,255,0.15)'
+                    : '0 0 40px rgba(99,102,241,0.35), 0 0 0 3px rgba(255,255,255,0.1)',
                 }}
-                transition={{ duration: 0.6, repeat: isSpeaking ? Infinity : 0 }}
-                className="relative h-44 w-44 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 flex items-center justify-center"
+                transition={{ duration: 0.8, repeat: isSpeaking ? Infinity : 0 }}
+                className="relative h-48 w-48 rounded-full overflow-hidden ring-2 ring-white/20"
               >
-                <Bot className="h-16 w-16 text-white" />
+                <img
+                  src={coachAvatar}
+                  alt={fr ? "Coach IA Sarah" : ar ? "المدربة الافتراضية سارة" : "AI Coach Sarah"}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                  width={512}
+                  height={512}
+                />
+                {/* speaking shimmer overlay */}
+                {isSpeaking && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-t from-indigo-500/30 via-transparent to-transparent"
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                  />
+                )}
+                {/* live status pill */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md">
+                  <span className={`h-1.5 w-1.5 rounded-full ${isSpeaking ? 'bg-emerald-400 animate-pulse' : isListening ? 'bg-red-400 animate-pulse' : 'bg-white/60'}`} />
+                  <span className="text-[10px] font-medium text-white">Sarah</span>
+                </div>
               </motion.div>
             </div>
 
