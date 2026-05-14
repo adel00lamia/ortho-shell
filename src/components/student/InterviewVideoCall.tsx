@@ -281,6 +281,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error(fr ? 'Reconnaissance vocale non supportée par ce navigateur. Utilisez Chrome.' : 'Speech recognition not supported. Try Chrome.');
+      pushLog('error', 'SpeechRecognition not supported');
       return;
     }
     try {
@@ -289,7 +290,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       rec.continuous = false;
       rec.interimResults = true;
       let finalText = '';
-      rec.onstart = () => { setIsListening(true); setTranscript(''); };
+      rec.onstart = () => { setIsListening(true); setTranscript(''); pushLog('info', `mic start (${locale})`); };
       rec.onresult = (e: any) => {
         let interim = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -302,20 +303,23 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       rec.onerror = (e: any) => {
         console.warn('SR error', e?.error);
         setIsListening(false);
+        pushLog('error', `mic error: ${e?.error ?? 'unknown'}`);
       };
       rec.onend = () => {
         setIsListening(false);
         const text = finalText.trim();
+        pushLog('info', `mic end (final="${text.slice(0, 40)}${text.length > 40 ? '…' : ''}")`);
         if (text.length > 1) onUserAnswer(text);
         setTranscript('');
       };
       recognitionRef.current = rec;
       rec.start();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Recognition start failed', e);
       setIsListening(false);
+      pushLog('error', `mic start failed: ${e?.message ?? String(e)}`);
     }
-  }, [locale, fr, onUserAnswer]);
+  }, [locale, fr, onUserAnswer, pushLog]);
 
   const stopListening = () => {
     try { recognitionRef.current?.stop(); } catch {}
