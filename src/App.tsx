@@ -48,6 +48,7 @@ const Career = lazy(() => import("./pages/Career"));
 const JobBoard = lazy(() => import("./pages/JobBoard"));
 const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
+const StudentHub = lazy(() => import("./pages/StudentHub"));
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
