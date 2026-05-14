@@ -233,6 +233,9 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       setTranscript('');
       setHasStarted(false);
       lastSpokenRef.current = '';
+      if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
+      setLiveCaption('');
+      setSpokenFull('');
     }
   }, [open]);
 
