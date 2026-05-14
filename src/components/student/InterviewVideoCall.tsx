@@ -140,11 +140,32 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
   // Load voices (browsers populate them async)
   useEffect(() => {
-    const load = () => setVoices(window.speechSynthesis.getVoices());
+    const load = () => {
+      const v = window.speechSynthesis.getVoices();
+      setVoices(v);
+      pushLog('info', `voices loaded: ${v.length}`);
+    };
     load();
     window.speechSynthesis.onvoiceschanged = load;
     return () => { window.speechSynthesis.onvoiceschanged = null; };
-  }, []);
+  }, [pushLog]);
+
+  // Query mic permission once
+  useEffect(() => {
+    if (!open) return;
+    const nav: any = navigator;
+    if (nav?.permissions?.query) {
+      nav.permissions.query({ name: 'microphone' as PermissionName })
+        .then((p: any) => {
+          setMicPermission(p.state);
+          pushLog('info', `mic permission: ${p.state}`);
+          p.onchange = () => { setMicPermission(p.state); pushLog('info', `mic permission → ${p.state}`); };
+        })
+        .catch(() => setMicPermission('unsupported'));
+    } else {
+      setMicPermission('unsupported');
+    }
+  }, [open, pushLog]);
 
   const localeVoices = useMemo(() => {
     const lang = locale.split('-')[0];
