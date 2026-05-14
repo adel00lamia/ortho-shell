@@ -140,7 +140,7 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
       const finalSystem = system + warmupOverride;
 
       const messages = [
-        { role: 'system', content: system },
+        { role: 'system', content: finalSystem },
         ...body.history.map((m) => ({ role: m.role, content: m.content })),
       ];
       if (body.history.length === 0) {
