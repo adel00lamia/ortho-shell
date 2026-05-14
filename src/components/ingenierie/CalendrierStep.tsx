@@ -15,7 +15,7 @@ interface Props {
 
 // Exercise year runs Jul(Y-1) → Jun(Y) for GIAC
 function getExerciseMonths(exerciseYear: number) {
-  const months = [];
+  const months: Date[] = [];
   for (let i = 6; i <= 11; i++) {
     months.push(new Date(exerciseYear - 1, i, 1));
   }
