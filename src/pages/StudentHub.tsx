@@ -709,24 +709,29 @@ const StudentHub = () => {
                     <div className="space-y-3">
                       {chat.map((m, i) => {
                         if (m.role === 'assistant') {
-                          const tipMatch = m.content.match(/\[TIP\]([\s\S]*?)\[\/TIP\]/i);
-                          const tip = tipMatch?.[1]?.trim();
-                          const question = m.content.replace(/\[TIP\][\s\S]*?\[\/TIP\]/i, '').trim();
+                          const tipRegex = /\[TIP\]([\s\S]*?)\[\/TIP\]/gi;
+                          const tips: string[] = [];
+                          let tm: RegExpExecArray | null;
+                          while ((tm = tipRegex.exec(m.content)) !== null) {
+                            const t = tm[1]?.trim();
+                            if (t) tips.push(t);
+                          }
+                          const question = m.content.replace(/\[TIP\][\s\S]*?\[\/TIP\]/gi, '').trim();
                           return (
                             <div key={i} className="space-y-2">
-                              {tip && (
-                                <div className="flex gap-2">
+                              {tips.map((tip, ti) => (
+                                <div key={ti} className="flex gap-2">
                                   <div className="p-1.5 rounded-full shrink-0 bg-amber-500/15">
                                     <Lightbulb className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                                   </div>
                                   <div className="text-sm rounded-lg px-3 py-2 max-w-[85%] bg-amber-500/10 border border-amber-500/30 text-foreground">
                                     <div className="text-[10px] uppercase tracking-wider font-semibold text-amber-700 dark:text-amber-400 mb-1">
-                                      {fr ? '💡 Conseil pour progresser' : '💡 Tip to improve'}
+                                      {fr ? `💡 Conseil ${tips.length > 1 ? `${ti + 1}/${tips.length}` : 'pour progresser'}` : `💡 Tip ${tips.length > 1 ? `${ti + 1}/${tips.length}` : 'to improve'}`}
                                     </div>
                                     <div className="whitespace-pre-wrap leading-relaxed">{tip}</div>
                                   </div>
                                 </div>
-                              )}
+                              ))}
                               {question && (
                                 <div className="flex gap-2">
                                   <div className="p-1.5 rounded-full shrink-0 bg-muted">
