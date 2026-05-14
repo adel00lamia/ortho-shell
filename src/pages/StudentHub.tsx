@@ -124,15 +124,49 @@ const StudentHub = () => {
 
   /* ------------------------- Soft skills ---------------------- */
   const [softState, setSoftState] = useState<SoftSkillState>({});
+
+  // Load from DB (fallback to localStorage if offline / unauthenticated)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSoftState(JSON.parse(raw));
-    } catch { /* ignore */ }
-  }, []);
-  const persistSoft = (next: SoftSkillState) => {
+    const loadFromCache = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setSoftState(JSON.parse(raw));
+      } catch { /* ignore */ }
+    };
+    if (!user) { loadFromCache(); return; }
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from('student_soft_skill_progress')
+        .select('skill_key, level, completed_lessons')
+        .eq('user_id', user.id);
+      if (error || !data) { loadFromCache(); return; }
+      const next: SoftSkillState = {};
+      for (const row of data as Array<{ skill_key: string; level: number; completed_lessons: number[] }>) {
+        next[row.skill_key] = { level: row.level, completedLessons: row.completed_lessons ?? [] };
+      }
+      setSoftState(next);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    })();
+  }, [user]);
+
+  const persistSoft = (next: SoftSkillState, changedKey?: string) => {
     setSoftState(next);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    if (!user || !changedKey) return;
+    const row = next[changedKey];
+    if (!row) return;
+    (supabase as any)
+      .from('student_soft_skill_progress')
+      .upsert({
+        user_id: user.id,
+        company_id: profile?.company_id ?? null,
+        skill_key: changedKey,
+        level: row.level,
+        completed_lessons: row.completedLessons,
+      }, { onConflict: 'user_id,skill_key' })
+      .then(({ error }: { error: { message: string } | null }) => {
+        if (error) toast.error(error.message);
+      });
   };
 
   const [activeTrack, setActiveTrack] = useState<SoftSkillTrack | null>(null);
