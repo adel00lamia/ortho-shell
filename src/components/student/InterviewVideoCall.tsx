@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon, ScrollText, Lightbulb } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import coachAvatar from '@/assets/interview-coach-avatar.jpg';
 import { toast } from 'sonner';
 
@@ -65,6 +66,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
   const [muted, setMuted] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [hasStarted, setHasStarted] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
 
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
@@ -356,6 +358,14 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
                 </Button>
                 <Button
                   size="icon"
+                  onClick={() => setShowTranscript((s) => !s)}
+                  className={`h-14 w-14 rounded-full ${showTranscript ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-white/15 hover:bg-white/25'}`}
+                  title={fr ? 'Transcription' : ar ? 'النص الكامل' : 'Transcript'}
+                >
+                  <ScrollText className="h-6 w-6" />
+                </Button>
+                <Button
+                  size="icon"
                   onClick={handleHangup}
                   className="h-14 w-14 rounded-full bg-red-500 hover:bg-red-600"
                 >
@@ -364,6 +374,93 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
               </>
             )}
           </div>
+
+          {/* Transcript overlay */}
+          <AnimatePresence>
+            {showTranscript && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="absolute inset-x-0 bottom-[88px] top-[60px] z-20 mx-4 rounded-2xl bg-slate-950/85 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col"
+              >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <ScrollText className="h-4 w-4 text-indigo-300" />
+                    <span className="text-sm font-medium">
+                      {fr ? 'Transcription complète' : ar ? 'النص الكامل للمقابلة' : 'Full transcript'}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/70">
+                      {chat.length} {fr ? 'messages' : ar ? 'رسائل' : 'messages'}
+                    </span>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs text-white/70 hover:bg-white/10" onClick={() => setShowTranscript(false)}>
+                    {fr ? 'Fermer' : ar ? 'إغلاق' : 'Close'}
+                  </Button>
+                </div>
+                <ScrollArea className="flex-1 px-4 py-3">
+                  {chat.length === 0 ? (
+                    <p className="text-sm text-white/50 text-center py-8">
+                      {fr ? 'Aucun échange pour le moment.' : ar ? 'لا توجد محادثة بعد.' : 'No conversation yet.'}
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {chat.map((m, idx) => {
+                        if (m.role === 'user') {
+                          return (
+                            <div key={idx} className="flex justify-end">
+                              <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-emerald-500/20 border border-emerald-400/30 px-3 py-2">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <UserIcon className="h-3 w-3 text-emerald-300" />
+                                  <span className="text-[10px] uppercase tracking-wider text-emerald-300">{fr ? 'Vous' : ar ? 'أنت' : 'You'}</span>
+                                </div>
+                                <p className="text-sm text-white/90 whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        // assistant: split tips and question
+                        const tipRegex = /\[TIP\]([\s\S]*?)\[\/TIP\]/gi;
+                        const tips: string[] = [];
+                        let tm;
+                        while ((tm = tipRegex.exec(m.content)) !== null) {
+                          const t = tm[1]?.trim();
+                          if (t) tips.push(t);
+                        }
+                        const question = m.content.replace(tipRegex, '').trim();
+                        return (
+                          <div key={idx} className="flex justify-start">
+                            <div className="max-w-[85%] space-y-2">
+                              {tips.map((t, i) => (
+                                <div key={i} className="rounded-xl bg-amber-500/15 border border-amber-400/30 px-3 py-2 flex gap-2">
+                                  <Lightbulb className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
+                                  <div>
+                                    <div className="text-[10px] uppercase tracking-wider text-amber-300 mb-0.5">
+                                      {fr ? `Conseil ${tips.length > 1 ? `${i + 1}/${tips.length}` : ''}` : ar ? `نصيحة ${tips.length > 1 ? `${i + 1}/${tips.length}` : ''}` : `Tip ${tips.length > 1 ? `${i + 1}/${tips.length}` : ''}`}
+                                    </div>
+                                    <p className="text-xs text-amber-50/90 whitespace-pre-wrap leading-relaxed">{t}</p>
+                                  </div>
+                                </div>
+                              ))}
+                              {question && (
+                                <div className="rounded-2xl rounded-bl-sm bg-white/10 border border-white/15 px-3 py-2">
+                                  <div className="flex items-center gap-1.5 mb-1">
+                                    <img src={coachAvatar} alt="" className="h-4 w-4 rounded-full object-cover" />
+                                    <span className="text-[10px] uppercase tracking-wider text-indigo-300">Sarah</span>
+                                  </div>
+                                  <p className="text-sm text-white/95 whitespace-pre-wrap leading-relaxed">{question}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>
