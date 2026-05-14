@@ -132,6 +132,13 @@ RULES:
 
 Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
 
+      const warmupOverride = isWarmup
+        ? (fr
+          ? `\n\nMODE ÉCHAUFFEMENT ACTIVÉ: Reste UNIQUEMENT sur des questions très simples d'introduction (présentation, motivation, qualités, centres d'intérêt, projet d'études). N'augmente JAMAIS la difficulté. Le but est de mettre l'étudiant en confiance. Après 4-5 questions, propose gentiment de passer à un niveau supérieur.`
+          : `\n\nWARM-UP MODE ACTIVE: Stay ONLY on very simple introduction questions (self-intro, motivation, strengths, interests, studies). NEVER increase difficulty. The goal is to build the student's confidence. After 4-5 questions, gently suggest moving to a higher level.`)
+        : '';
+      const finalSystem = system + warmupOverride;
+
       const messages = [
         { role: 'system', content: system },
         ...body.history.map((m) => ({ role: m.role, content: m.content })),
