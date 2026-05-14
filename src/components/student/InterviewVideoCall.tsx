@@ -155,7 +155,9 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
     lastSpokenRef.current = last.content;
-    const spoken = stripMarkdownForSpeech(last.content);
+    let spoken = stripMarkdownForSpeech(last.content);
+    if (conciseTTS) spoken = keepShortSentences(spoken, 15);
+    if (!spoken) return;
 
     try {
       window.speechSynthesis.cancel();
