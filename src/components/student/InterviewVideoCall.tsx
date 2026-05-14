@@ -369,16 +369,30 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
               </motion.div>
             </div>
 
-            <div className="text-center max-w-md min-h-[80px]">
+            <div className="text-center w-full max-w-xl">
               <div className="text-xs uppercase tracking-wider text-indigo-300 mb-2">
-                {chatLoading ? (fr ? 'Réfléchit...' : 'Thinking...')
-                  : isSpeaking ? (fr ? 'Parle' : 'Speaking')
-                  : isListening ? (fr ? 'Écoute' : 'Listening')
-                  : (fr ? 'En attente' : 'Ready')}
+                {chatLoading ? (fr ? 'Réfléchit...' : ar ? 'يفكر...' : 'Thinking...')
+                  : isSpeaking ? (fr ? 'Parle' : ar ? 'تتحدث' : 'Speaking')
+                  : isListening ? (fr ? 'Écoute' : ar ? 'تستمع' : 'Listening')
+                  : (fr ? 'En attente' : ar ? 'جاهزة' : 'Ready')}
               </div>
-              <p className="text-sm text-white/90 leading-relaxed line-clamp-3">
-                {chatLoading ? '...' : (lastAssistant || (fr ? 'Cliquez sur Démarrer pour commencer l\'entretien.' : 'Click Start to begin the interview.'))}
-              </p>
+              <ScrollArea className="max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3">
+                <p className="text-sm text-white/95 leading-relaxed whitespace-pre-wrap text-left">
+                  {chatLoading
+                    ? '...'
+                    : (lastAssistant || (fr ? "Cliquez sur Démarrer pour commencer l'entretien." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.'))}
+                </p>
+                {lastAssistantTips.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {lastAssistantTips.map((t, i) => (
+                      <div key={i} className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-400/30 px-3 py-2 text-left">
+                        <Lightbulb className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-100 leading-relaxed">{t}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </div>
 
             {/* User transcript bubble */}
