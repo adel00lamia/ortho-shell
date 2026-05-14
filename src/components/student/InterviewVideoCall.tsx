@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Bot, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,10 +13,40 @@ interface Props {
   onClose: () => void;
   chat: ChatMsg[];
   chatLoading: boolean;
-  language: 'fr' | 'en';
+  language: 'fr' | 'en' | 'ar';
   position: string;
   onStart: () => void;
   onUserAnswer: (text: string) => void;
+}
+
+const LOCALE_OPTIONS = [
+  { value: 'fr-FR', label: '🇫🇷 Français (France)' },
+  { value: 'fr-CA', label: '🇨🇦 Français (Canada)' },
+  { value: 'en-US', label: '🇺🇸 English (US)' },
+  { value: 'en-GB', label: '🇬🇧 English (UK)' },
+  { value: 'ar-MA', label: '🇲🇦 العربية (المغرب)' },
+  { value: 'ar-SA', label: '🇸🇦 العربية (السعودية)' },
+  { value: 'ar-EG', label: '🇪🇬 العربية (مصر)' },
+];
+
+// Score a voice — higher is more natural / less robotic.
+function scoreVoice(v: SpeechSynthesisVoice): number {
+  const n = `${v.name} ${(v as any).voiceURI ?? ''}`.toLowerCase();
+  let s = 0;
+  if (/(neural|natural|premium|enhanced|wavenet|studio|online)/.test(n)) s += 50;
+  if (/(google|microsoft)/.test(n)) s += 30;
+  if (/(siri|samantha|amelie|amélie|thomas|daniel|karen|moira|tessa|hoda|maged|laila|zeina)/.test(n)) s += 20;
+  if (/(novelty|whisper|bad|cellos|organ|deranged|trinoids|zarvox|bahh|bells)/.test(n)) s -= 80;
+  if (!v.localService) s += 10; // cloud voices usually sound better
+  return s;
+}
+
+function pickBestVoice(voices: SpeechSynthesisVoice[], locale: string): SpeechSynthesisVoice | undefined {
+  const lang = locale.split('-')[0];
+  const exact = voices.filter((v) => v.lang.toLowerCase() === locale.toLowerCase());
+  const sameLang = voices.filter((v) => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+  const pool = exact.length ? exact : sameLang;
+  return pool.sort((a, b) => scoreVoice(b) - scoreVoice(a))[0];
 }
 
 // Web Speech API types (lightweight)
@@ -23,6 +54,11 @@ type SR = any;
 
 export function InterviewVideoCall({ open, onClose, chat, chatLoading, language, position, onStart, onUserAnswer }: Props) {
   const fr = language === 'fr';
+  const ar = language === 'ar';
+  const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
+  const [locale, setLocale] = useState<string>(defaultLocale);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceURI, setVoiceURI] = useState<string>('');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -32,6 +68,33 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Sync locale with parent language changes
+  useEffect(() => { setLocale(defaultLocale); }, [defaultLocale]);
+
+  // Load voices (browsers populate them async)
+  useEffect(() => {
+    const load = () => setVoices(window.speechSynthesis.getVoices());
+    load();
+    window.speechSynthesis.onvoiceschanged = load;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  const localeVoices = useMemo(() => {
+    const lang = locale.split('-')[0];
+    return voices
+      .filter((v) => v.lang.toLowerCase().startsWith(lang.toLowerCase()))
+      .sort((a, b) => scoreVoice(b) - scoreVoice(a));
+  }, [voices, locale]);
+
+  // Auto-pick best voice on locale change
+  useEffect(() => {
+    if (!localeVoices.length) { setVoiceURI(''); return; }
+    if (!localeVoices.find((v) => v.voiceURI === voiceURI)) {
+      const best = pickBestVoice(localeVoices, locale);
+      setVoiceURI(best?.voiceURI ?? localeVoices[0].voiceURI);
+    }
+  }, [localeVoices, locale, voiceURI]);
 
   // Speak the agent's latest message
   useEffect(() => {
@@ -46,19 +109,15 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(spoken);
-      u.lang = fr ? 'fr-FR' : 'en-US';
-      u.rate = 1;
-      u.pitch = 1;
-      // Pick a matching voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const v = voices.find((vo) => vo.lang.startsWith(u.lang.split('-')[0]));
-      if (v) u.voice = v;
+      u.lang = locale;
+      // Slightly slower + warmer pitch = less robotic
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      u.volume = 1;
+      const chosen = voices.find((v) => v.voiceURI === voiceURI) ?? pickBestVoice(voices, locale);
+      if (chosen) { u.voice = chosen; u.lang = chosen.lang; }
       u.onstart = () => setIsSpeaking(true);
-      u.onend = () => {
-        setIsSpeaking(false);
-        // auto-listen after agent finishes speaking
-        startListening();
-      };
+      u.onend = () => { setIsSpeaking(false); startListening(); };
       u.onerror = () => setIsSpeaking(false);
       utteranceRef.current = u;
       window.speechSynthesis.speak(u);
@@ -66,7 +125,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       console.error('TTS error', e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat, open, muted, fr]);
+  }, [chat, open, muted, locale, voiceURI, voices]);
 
   // Cleanup on close
   useEffect(() => {
@@ -90,7 +149,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     }
     try {
       const rec = new SpeechRecognition();
-      rec.lang = fr ? 'fr-FR' : 'en-US';
+      rec.lang = locale;
       rec.continuous = false;
       rec.interimResults = true;
       let finalText = '';
@@ -120,7 +179,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       console.error('Recognition start failed', e);
       setIsListening(false);
     }
-  }, [fr, onUserAnswer]);
+  }, [locale, fr, onUserAnswer]);
 
   const stopListening = () => {
     try { recognitionRef.current?.stop(); } catch {}
@@ -147,19 +206,42 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
 
         <div className="relative h-[600px] flex flex-col">
           {/* Header */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/40 to-transparent">
-            <div className="flex items-center gap-2">
+          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-b from-black/50 to-transparent">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-medium uppercase tracking-wider">
-                {fr ? 'En direct' : 'Live'}
+              <span className="text-[10px] font-medium uppercase tracking-wider">
+                {fr ? 'En direct' : ar ? 'مباشر' : 'Live'}
               </span>
             </div>
-            <div className="text-sm font-medium">
-              {position || (fr ? 'Entretien IA' : 'AI Interview')}
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <Select value={locale} onValueChange={setLocale}>
+                <SelectTrigger className="h-8 w-[150px] bg-white/10 border-white/20 text-white text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOCALE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {localeVoices.length > 0 && (
+                <Select value={voiceURI} onValueChange={setVoiceURI}>
+                  <SelectTrigger className="h-8 w-[160px] bg-white/10 border-white/20 text-white text-xs">
+                    <SelectValue placeholder={fr ? 'Voix' : 'Voice'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {localeVoices.map((v) => (
+                      <SelectItem key={v.voiceURI} value={v.voiceURI}>
+                        {v.name.length > 28 ? v.name.slice(0, 28) + '…' : v.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10 shrink-0" onClick={() => setMuted(!muted)}>
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </Button>
             </div>
-            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => setMuted(!muted)}>
-              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </Button>
           </div>
 
           {/* Agent stage */}
