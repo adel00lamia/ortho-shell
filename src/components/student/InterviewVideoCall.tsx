@@ -164,17 +164,57 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
 
     try {
       window.speechSynthesis.cancel();
+      if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
+      setLiveCaption('');
+      setSpokenFull(spoken);
       const u = new SpeechSynthesisUtterance(spoken);
       u.lang = locale;
-      // Slightly slower + warmer pitch = less robotic
       u.rate = 0.92;
       u.pitch = 1.05;
       u.volume = 1;
       const chosen = voices.find((v) => v.voiceURI === voiceURI) ?? pickBestVoice(voices, locale);
       if (chosen) { u.voice = chosen; u.lang = chosen.lang; }
-      u.onstart = () => setIsSpeaking(true);
-      u.onend = () => { setIsSpeaking(false); startListening(); };
-      u.onerror = () => setIsSpeaking(false);
+
+      // Live captions: prefer native word boundaries; fallback to time-based reveal.
+      let boundaryFired = false;
+      const startFallback = () => {
+        if (liveTimerRef.current) return;
+        const total = spoken.length;
+        // Approx duration in ms: ~55ms per char at rate 0.92, clamp 2.5s..30s
+        const est = Math.min(30000, Math.max(2500, total * 55));
+        const startedAt = performance.now();
+        liveTimerRef.current = window.setInterval(() => {
+          const p = Math.min(1, (performance.now() - startedAt) / est);
+          const idx = Math.floor(p * total);
+          setLiveCaption(spoken.slice(0, idx));
+          if (p >= 1 && liveTimerRef.current) {
+            window.clearInterval(liveTimerRef.current);
+            liveTimerRef.current = null;
+          }
+        }, 80);
+      };
+
+      u.onstart = () => {
+        setIsSpeaking(true);
+        // Give the engine ~250ms to emit a boundary; if not, start fallback.
+        window.setTimeout(() => { if (!boundaryFired) startFallback(); }, 250);
+      };
+      u.onboundary = (e: SpeechSynthesisEvent) => {
+        boundaryFired = true;
+        if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
+        const end = (e.charIndex ?? 0) + (e.charLength ?? 0);
+        setLiveCaption(spoken.slice(0, end));
+      };
+      u.onend = () => {
+        if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
+        setLiveCaption(spoken);
+        setIsSpeaking(false);
+        startListening();
+      };
+      u.onerror = () => {
+        if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
+        setIsSpeaking(false);
+      };
       utteranceRef.current = u;
       window.speechSynthesis.speak(u);
     } catch (e) {
