@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 import { FeatureErrorBoundary } from "@/components/error-boundaries/FeatureErrorBoundary";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
