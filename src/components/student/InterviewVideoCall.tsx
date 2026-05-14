@@ -206,19 +206,42 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
 
         <div className="relative h-[600px] flex flex-col">
           {/* Header */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/40 to-transparent">
-            <div className="flex items-center gap-2">
+          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-b from-black/50 to-transparent">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-medium uppercase tracking-wider">
-                {fr ? 'En direct' : 'Live'}
+              <span className="text-[10px] font-medium uppercase tracking-wider">
+                {fr ? 'En direct' : ar ? 'مباشر' : 'Live'}
               </span>
             </div>
-            <div className="text-sm font-medium">
-              {position || (fr ? 'Entretien IA' : 'AI Interview')}
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <Select value={locale} onValueChange={setLocale}>
+                <SelectTrigger className="h-8 w-[150px] bg-white/10 border-white/20 text-white text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOCALE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {localeVoices.length > 0 && (
+                <Select value={voiceURI} onValueChange={setVoiceURI}>
+                  <SelectTrigger className="h-8 w-[160px] bg-white/10 border-white/20 text-white text-xs">
+                    <SelectValue placeholder={fr ? 'Voix' : 'Voice'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {localeVoices.map((v) => (
+                      <SelectItem key={v.voiceURI} value={v.voiceURI}>
+                        {v.name.length > 28 ? v.name.slice(0, 28) + '…' : v.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10 shrink-0" onClick={() => setMuted(!muted)}>
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </Button>
             </div>
-            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => setMuted(!muted)}>
-              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </Button>
           </div>
 
           {/* Agent stage */}
