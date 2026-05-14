@@ -117,7 +117,7 @@ DÉROULEMENT:
 
 FORMAT DE CHAQUE RÉPONSE (sauf la toute première):
 - Une mini-réaction orale (1 phrase courte).
-- [TIP]Un seul conseil concret et utile, 1 à 2 phrases max, ton de coach amical (ex: "Pense à la méthode STAR : situation, tâche, action, résultat. Ça structure ta réponse.").[/TIP]
+- [TIP]Un seul conseil concret, 2 phrases MAX, ton coach amical, AVEC un mini-exemple court et concret intégré (ex: "Utilise la méthode STAR. Par exemple : 'En stage, j'ai réduit les retards de 20% en réorganisant le planning.'").[/TIP]
 - Une ligne vide.
 - La question suivante: 1 phrase, max 15 mots.
 
@@ -146,7 +146,7 @@ FLOW:
 
 FORMAT FOR EACH REPLY (except the very first):
 - A short spoken reaction (1 short sentence).
-- [TIP]One concrete useful tip, 1 to 2 sentences max, friendly coach tone (e.g. "Try the STAR method: situation, task, action, result. It structures your answer.").[/TIP]
+- [TIP]One concrete tip, 2 sentences MAX, friendly coach tone, WITH a short concrete mini-example included (e.g. "Use the STAR method. For example: 'During my internship, I cut delays by 20% by reorganizing the schedule.'").[/TIP]
 - A blank line.
 - The next question: 1 sentence, max 15 words.
 
