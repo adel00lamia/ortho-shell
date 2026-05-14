@@ -1502,6 +1502,39 @@ export type Database = {
         }
         Relationships: []
       }
+      student_soft_skill_progress: {
+        Row: {
+          company_id: string | null
+          completed_lessons: number[]
+          created_at: string
+          id: string
+          level: number
+          skill_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          completed_lessons?: number[]
+          created_at?: string
+          id?: string
+          level?: number
+          skill_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          completed_lessons?: number[]
+          created_at?: string
+          id?: string
+          level?: number
+          skill_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
