@@ -114,6 +114,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
   const [transcript, setTranscript] = useState('');
   const [hasStarted, setHasStarted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [conciseTTS, setConciseTTS] = useState(true);
 
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
