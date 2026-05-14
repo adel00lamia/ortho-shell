@@ -13,6 +13,7 @@ interface InterviewBody {
   studentProfile?: Record<string, unknown>;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
+  stream?: boolean;
 }
 
 interface CvBody {
