@@ -117,7 +117,7 @@ DÉROULEMENT:
 
 FORMAT DE CHAQUE RÉPONSE (sauf la toute première):
 - Une mini-réaction orale (1 phrase courte).
-- [TIP]Un seul conseil concret et utile, 1 à 2 phrases max, ton de coach amical (ex: "Pense à la méthode STAR : situation, tâche, action, résultat. Ça structure ta réponse.").[/TIP]
+- [TIP]Un seul conseil concret, 2 phrases MAX, ton coach amical, AVEC un mini-exemple court et concret intégré (ex: "Utilise la méthode STAR. Par exemple : 'En stage, j'ai réduit les retards de 20% en réorganisant le planning.'").[/TIP]
 - Une ligne vide.
 - La question suivante: 1 phrase, max 15 mots.
 
