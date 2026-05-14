@@ -432,11 +432,13 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                       <span>{lastAssistant || '…'}</span>
                       <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
                     </>
-                  ) : chatLoading && !lastAssistant ? '...' : isSpeaking && spokenFull ? (
+                  ) : chatLoading && !lastAssistant ? '...' : spokenFull ? (
                     <>
                       <span>{liveCaption}</span>
                       <span className="text-white/30">{spokenFull.slice(liveCaption.length)}</span>
-                      <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                      {isSpeaking && (
+                        <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                      )}
                     </>
                   ) : (lastAssistant || (fr ? "Cliquez sur Démarrer pour commencer l'entretien." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.'))}
                 </p>
