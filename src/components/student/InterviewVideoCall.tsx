@@ -107,24 +107,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
     lastSpokenRef.current = last.content;
-    const spoken = last.content
-      .replace(/\[TIP\][\s\S]*?\[\/TIP\]/gi, '')
-      .replace(/```[\s\S]*?```/g, '')           // code blocks
-      .replace(/`([^`]+)`/g, '$1')               // inline code
-      .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')     // ***bold italic***
-      .replace(/\*\*([^*]+)\*\*/g, '$1')         // **bold**
-      .replace(/\*([^*]+)\*/g, '$1')             // *italic*
-      .replace(/__([^_]+)__/g, '$1')             // __bold__
-      .replace(/_([^_]+)_/g, '$1')               // _italic_
-      .replace(/~~([^~]+)~~/g, '$1')             // ~~strike~~
-      .replace(/^#{1,6}\s+/gm, '')               // headings
-      .replace(/^\s*[-*+]\s+/gm, '')             // bullets
-      .replace(/^\s*\d+\.\s+/gm, '')             // numbered lists
-      .replace(/!\[[^\]]*\]\([^)]+\)/g, '')      // images
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')   // links
-      .replace(/[*_~`>#]/g, '')                  // any leftover md chars
-      .replace(/\s+/g, ' ')
-      .trim();
+    const spoken = stripMarkdownForSpeech(last.content);
 
     try {
       window.speechSynthesis.cancel();
