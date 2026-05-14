@@ -250,7 +250,17 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     onClose();
   };
 
-  const lastAssistant = [...chat].reverse().find((m) => m.role === 'assistant')?.content?.replace(/\[TIP\][\s\S]*?\[\/TIP\]/gi, '').trim();
+  const lastAssistantRaw = [...chat].reverse().find((m) => m.role === 'assistant')?.content ?? '';
+  const lastAssistantTips: string[] = [];
+  {
+    const r = /\[TIP\]([\s\S]*?)\[\/TIP\]/gi;
+    let m;
+    while ((m = r.exec(lastAssistantRaw)) !== null) {
+      const t = m[1]?.trim();
+      if (t) lastAssistantTips.push(t);
+    }
+  }
+  const lastAssistant = lastAssistantRaw.replace(/\[TIP\][\s\S]*?\[\/TIP\]/gi, '').trim();
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleHangup()}>
