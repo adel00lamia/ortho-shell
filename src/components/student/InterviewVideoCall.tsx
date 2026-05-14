@@ -90,6 +90,15 @@ function stripMarkdownForSpeech(input: string): string {
     .trim();
 }
 
+// Concise mode: keep only short sentences (≤ maxWords). [TIP] is already stripped upstream.
+function keepShortSentences(input: string, maxWords = 15): string {
+  const sentences = input.match(/[^.!?…]+[.!?…]?/g) ?? [input];
+  const kept = sentences
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && s.split(/\s+/).length <= maxWords);
+  return (kept.length ? kept : sentences.slice(-1)).join(' ').trim();
+}
+
 type SR = any;
 
 export function InterviewVideoCall({ open, onClose, chat, chatLoading, language, position, onStart, onUserAnswer }: Props) {
