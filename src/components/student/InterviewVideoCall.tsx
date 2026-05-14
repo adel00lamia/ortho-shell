@@ -118,7 +118,18 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
   const [conciseTTS, setConciseTTS] = useState(true);
   const [liveCaption, setLiveCaption] = useState('');
   const [spokenFull, setSpokenFull] = useState('');
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<{ ts: number; level: 'info' | 'warn' | 'error'; msg: string }[]>([]);
+  const [lastError, setLastError] = useState<string>('');
+  const [ttsSupported] = useState<boolean>(typeof window !== 'undefined' && 'speechSynthesis' in window);
+  const [srSupported] = useState<boolean>(typeof window !== 'undefined' && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
+  const [micPermission, setMicPermission] = useState<string>('unknown');
   const liveTimerRef = useRef<number | null>(null);
+
+  const pushLog = useCallback((level: 'info' | 'warn' | 'error', msg: string) => {
+    setDebugLogs((logs) => [...logs.slice(-49), { ts: Date.now(), level, msg }]);
+    if (level === 'error') setLastError(msg);
+  }, []);
 
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
