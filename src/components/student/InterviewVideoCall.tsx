@@ -54,6 +54,11 @@ type SR = any;
 
 export function InterviewVideoCall({ open, onClose, chat, chatLoading, language, position, onStart, onUserAnswer }: Props) {
   const fr = language === 'fr';
+  const ar = language === 'ar';
+  const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
+  const [locale, setLocale] = useState<string>(defaultLocale);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceURI, setVoiceURI] = useState<string>('');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -63,6 +68,33 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Sync locale with parent language changes
+  useEffect(() => { setLocale(defaultLocale); }, [defaultLocale]);
+
+  // Load voices (browsers populate them async)
+  useEffect(() => {
+    const load = () => setVoices(window.speechSynthesis.getVoices());
+    load();
+    window.speechSynthesis.onvoiceschanged = load;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  const localeVoices = useMemo(() => {
+    const lang = locale.split('-')[0];
+    return voices
+      .filter((v) => v.lang.toLowerCase().startsWith(lang.toLowerCase()))
+      .sort((a, b) => scoreVoice(b) - scoreVoice(a));
+  }, [voices, locale]);
+
+  // Auto-pick best voice on locale change
+  useEffect(() => {
+    if (!localeVoices.length) { setVoiceURI(''); return; }
+    if (!localeVoices.find((v) => v.voiceURI === voiceURI)) {
+      const best = pickBestVoice(localeVoices, locale);
+      setVoiceURI(best?.voiceURI ?? localeVoices[0].voiceURI);
+    }
+  }, [localeVoices, locale, voiceURI]);
 
   // Speak the agent's latest message
   useEffect(() => {
@@ -77,19 +109,15 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(spoken);
-      u.lang = fr ? 'fr-FR' : 'en-US';
-      u.rate = 1;
-      u.pitch = 1;
-      // Pick a matching voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const v = voices.find((vo) => vo.lang.startsWith(u.lang.split('-')[0]));
-      if (v) u.voice = v;
+      u.lang = locale;
+      // Slightly slower + warmer pitch = less robotic
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      u.volume = 1;
+      const chosen = voices.find((v) => v.voiceURI === voiceURI) ?? pickBestVoice(voices, locale);
+      if (chosen) { u.voice = chosen; u.lang = chosen.lang; }
       u.onstart = () => setIsSpeaking(true);
-      u.onend = () => {
-        setIsSpeaking(false);
-        // auto-listen after agent finishes speaking
-        startListening();
-      };
+      u.onend = () => { setIsSpeaking(false); startListening(); };
       u.onerror = () => setIsSpeaking(false);
       utteranceRef.current = u;
       window.speechSynthesis.speak(u);
@@ -97,7 +125,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       console.error('TTS error', e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat, open, muted, fr]);
+  }, [chat, open, muted, locale, voiceURI, voices]);
 
   // Cleanup on close
   useEffect(() => {
