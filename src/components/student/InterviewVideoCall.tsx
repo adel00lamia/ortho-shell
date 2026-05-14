@@ -424,9 +424,13 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
               </div>
               <ScrollArea className="max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3">
                 <p className="text-sm text-white/95 leading-relaxed whitespace-pre-wrap text-left">
-                  {chatLoading
-                    ? '...'
-                    : (lastAssistant || (fr ? "Cliquez sur Démarrer pour commencer l'entretien." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.'))}
+                  {chatLoading ? '...' : isSpeaking && spokenFull ? (
+                    <>
+                      <span>{liveCaption}</span>
+                      <span className="text-white/30">{spokenFull.slice(liveCaption.length)}</span>
+                      <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                    </>
+                  ) : (lastAssistant || (fr ? "Cliquez sur Démarrer pour commencer l'entretien." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.'))}
                 </p>
                 {lastAssistantTips.length > 0 && (
                   <div className="mt-3 space-y-2">
