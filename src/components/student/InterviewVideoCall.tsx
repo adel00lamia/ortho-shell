@@ -41,10 +41,11 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
     lastSpokenRef.current = last.content;
+    const spoken = last.content.replace(/\[TIP\][\s\S]*?\[\/TIP\]/i, '').trim();
 
     try {
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(last.content);
+      const u = new SpeechSynthesisUtterance(spoken);
       u.lang = fr ? 'fr-FR' : 'en-US';
       u.rate = 1;
       u.pitch = 1;
@@ -137,7 +138,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     onClose();
   };
 
-  const lastAssistant = [...chat].reverse().find((m) => m.role === 'assistant')?.content;
+  const lastAssistant = [...chat].reverse().find((m) => m.role === 'assistant')?.content?.replace(/\[TIP\][\s\S]*?\[\/TIP\]/i, '').trim();
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleHangup()}>
