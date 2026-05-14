@@ -291,6 +291,15 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
                   </SelectContent>
                 </Select>
               )}
+              <Button
+                size="icon"
+                variant="ghost"
+                title={fr ? (conciseTTS ? 'Mode concis activé (phrases courtes)' : 'Mode concis désactivé') : conciseTTS ? 'Concise mode on (short sentences)' : 'Concise mode off'}
+                className={`h-8 w-8 shrink-0 ${conciseTTS ? 'bg-indigo-500/30 text-indigo-100 hover:bg-indigo-500/40' : 'text-white hover:bg-white/10'}`}
+                onClick={() => setConciseTTS(!conciseTTS)}
+              >
+                <Zap className="h-4 w-4" />
+              </Button>
               <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10 shrink-0" onClick={() => setMuted(!muted)}>
                 {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
