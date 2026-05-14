@@ -217,7 +217,7 @@ export function useActionsFromTrainingPlans() {
         duration_days: p.duration_months ? p.duration_months * 20 : null,
         duration_hours: p.duration_months ? p.duration_months * 160 : null,
         cost_ht: p.budget ?? null,
-        is_planned: p.status === 'approved' || p.status === 'active',
+        is_planned: p.status === 'active' || p.status === 'completed',
         provider_type: 'external',
         source_need_type: 'strategic',
       }));

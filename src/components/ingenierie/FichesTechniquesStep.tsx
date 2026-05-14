@@ -185,7 +185,7 @@ export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onD
   const handleImportFromPlans = async () => {
     if (!planSuggestions?.length) return;
     for (const suggestion of planSuggestions) {
-      await onAddAction({ title: suggestion.title, ...suggestion });
+      await onAddAction({ ...suggestion, title: suggestion.title });
     }
   };
 
