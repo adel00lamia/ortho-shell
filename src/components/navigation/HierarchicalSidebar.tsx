@@ -62,6 +62,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
           items: [
             { path: '/career', labelKey: 'myCareer', icon: UserCheck },
             { path: '/career/jobs', labelKey: 'jobBoard', icon: Briefcase },
+            { path: '/student', labelKey: 'studentHub', icon: GraduationCap },
           ],
         },
         {
