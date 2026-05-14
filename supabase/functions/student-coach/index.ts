@@ -8,7 +8,7 @@ const MODEL = 'google/gemini-3-flash-preview';
 interface InterviewBody {
   mode: 'interview';
   position: string;
-  difficulty?: 'junior' | 'mid' | 'senior';
+  difficulty?: 'warmup' | 'junior' | 'mid' | 'senior';
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
@@ -89,9 +89,10 @@ Deno.serve(async (req) => {
     if (body.mode === 'interview') {
       const diff = body.difficulty ?? 'mid';
       const style = body.style ?? 'mixed';
+      const isWarmup = diff === 'warmup';
       const diffLabel = fr
-        ? { junior: 'junior (questions accessibles)', mid: 'intermédiaire (exigeant mais juste)', senior: 'senior (exigeant, suivis approfondis)' }[diff]
-        : { junior: 'junior (entry-level questions)', mid: 'mid-level (challenging but fair)', senior: 'senior (challenging, deep follow-ups)' }[diff];
+        ? { warmup: 'échauffement très doux (présentation et questions ultra simples uniquement)', junior: 'junior (questions accessibles)', mid: 'intermédiaire (exigeant mais juste)', senior: 'senior (exigeant, suivis approfondis)' }[diff]
+        : { warmup: 'gentle warm-up (introduction and ultra-simple questions only)', junior: 'junior (entry-level questions)', mid: 'mid-level (challenging but fair)', senior: 'senior (challenging, deep follow-ups)' }[diff];
       const styleLabel = fr
         ? { behavioral: 'comportementales (STAR)', technical: 'techniques (cas pratiques, fondamentaux)', mixed: 'mixtes (comportementales + techniques)' }[style]
         : { behavioral: 'behavioral (STAR)', technical: 'technical (case studies, fundamentals)', mixed: 'mixed (behavioral + technical)' }[style];
@@ -131,8 +132,15 @@ RULES:
 
 Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
 
+      const warmupOverride = isWarmup
+        ? (fr
+          ? `\n\nMODE ÉCHAUFFEMENT ACTIVÉ: Reste UNIQUEMENT sur des questions très simples d'introduction (présentation, motivation, qualités, centres d'intérêt, projet d'études). N'augmente JAMAIS la difficulté. Le but est de mettre l'étudiant en confiance. Après 4-5 questions, propose gentiment de passer à un niveau supérieur.`
+          : `\n\nWARM-UP MODE ACTIVE: Stay ONLY on very simple introduction questions (self-intro, motivation, strengths, interests, studies). NEVER increase difficulty. The goal is to build the student's confidence. After 4-5 questions, gently suggest moving to a higher level.`)
+        : '';
+      const finalSystem = system + warmupOverride;
+
       const messages = [
-        { role: 'system', content: system },
+        { role: 'system', content: finalSystem },
         ...body.history.map((m) => ({ role: m.role, content: m.content })),
       ];
       if (body.history.length === 0) {
