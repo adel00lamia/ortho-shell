@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
+import { InterviewVideoCall } from '@/components/student/InterviewVideoCall';
 
 type StudentProfile = {
   id?: string;
