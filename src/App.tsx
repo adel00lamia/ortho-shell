@@ -184,7 +184,6 @@ const App = () => (
               <Route path="/certificate-generator" element={<Navigate to="/workflow/track/certificates" replace />} />
               <Route path="/user-management" element={<Navigate to="/manage/users" replace />} />
               <Route path="/team-collaboration" element={<Navigate to="/manage/team" replace />} />
-              <Route path="/dashboard/trainer" element={<ProtectedLayout featureName="Trainer Dashboard"><RoleProtectedRoute allowedRoles={["trainer"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
               {/* Role-scoped dashboard placeholders — each loads only for the matching role */}
               <Route path="/dashboard/admin" element={<ProtectedLayout featureName="Admin Dashboard"><RoleProtectedRoute allowedRoles={["admin"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
               <Route path="/dashboard/hr" element={<ProtectedLayout featureName="HR Dashboard"><RoleProtectedRoute allowedRoles={["hr_manager"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
