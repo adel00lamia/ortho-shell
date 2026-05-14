@@ -149,7 +149,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     }
     try {
       const rec = new SpeechRecognition();
-      rec.lang = fr ? 'fr-FR' : 'en-US';
+      rec.lang = locale;
       rec.continuous = false;
       rec.interimResults = true;
       let finalText = '';
