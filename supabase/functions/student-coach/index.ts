@@ -180,6 +180,31 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
       if (body.history.length === 0) {
         messages.push({ role: 'user', content: fr ? "Commence par te présenter chaleureusement et pose ta première question d'introduction." : 'Start by warmly introducing yourself and ask your first introduction question.' });
       }
+      if (body.stream) {
+        const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          },
+          body: JSON.stringify({ model: MODEL, messages, stream: true }),
+        });
+        if (!upstream.ok || !upstream.body) {
+          const text = await upstream.text();
+          return new Response(JSON.stringify({ error: `AI gateway ${upstream.status}: ${text}` }), {
+            status: upstream.status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        return new Response(upstream.body, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          },
+        });
+      }
       const reply = await callGemini(messages);
       return new Response(JSON.stringify({ reply }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
