@@ -146,7 +146,7 @@ FLOW:
 
 FORMAT FOR EACH REPLY (except the very first):
 - A short spoken reaction (1 short sentence).
-- [TIP]One concrete useful tip, 1 to 2 sentences max, friendly coach tone (e.g. "Try the STAR method: situation, task, action, result. It structures your answer.").[/TIP]
+- [TIP]One concrete tip, 2 sentences MAX, friendly coach tone, WITH a short concrete mini-example included (e.g. "Use the STAR method. For example: 'During my internship, I cut delays by 20% by reorganizing the schedule.'").[/TIP]
 - A blank line.
 - The next question: 1 sentence, max 15 words.
 
