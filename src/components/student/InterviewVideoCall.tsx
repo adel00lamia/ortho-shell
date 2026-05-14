@@ -223,7 +223,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       console.error('TTS error', e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat, open, muted, locale, voiceURI, voices, conciseTTS]);
+  }, [chat, open, muted, locale, voiceURI, voices, conciseTTS, streamingAssistant]);
 
   // Cleanup on close
   useEffect(() => {
