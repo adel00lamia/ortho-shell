@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, Bot, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,10 +13,40 @@ interface Props {
   onClose: () => void;
   chat: ChatMsg[];
   chatLoading: boolean;
-  language: 'fr' | 'en';
+  language: 'fr' | 'en' | 'ar';
   position: string;
   onStart: () => void;
   onUserAnswer: (text: string) => void;
+}
+
+const LOCALE_OPTIONS = [
+  { value: 'fr-FR', label: '🇫🇷 Français (France)' },
+  { value: 'fr-CA', label: '🇨🇦 Français (Canada)' },
+  { value: 'en-US', label: '🇺🇸 English (US)' },
+  { value: 'en-GB', label: '🇬🇧 English (UK)' },
+  { value: 'ar-MA', label: '🇲🇦 العربية (المغرب)' },
+  { value: 'ar-SA', label: '🇸🇦 العربية (السعودية)' },
+  { value: 'ar-EG', label: '🇪🇬 العربية (مصر)' },
+];
+
+// Score a voice — higher is more natural / less robotic.
+function scoreVoice(v: SpeechSynthesisVoice): number {
+  const n = `${v.name} ${(v as any).voiceURI ?? ''}`.toLowerCase();
+  let s = 0;
+  if (/(neural|natural|premium|enhanced|wavenet|studio|online)/.test(n)) s += 50;
+  if (/(google|microsoft)/.test(n)) s += 30;
+  if (/(siri|samantha|amelie|amélie|thomas|daniel|karen|moira|tessa|hoda|maged|laila|zeina)/.test(n)) s += 20;
+  if (/(novelty|whisper|bad|cellos|organ|deranged|trinoids|zarvox|bahh|bells)/.test(n)) s -= 80;
+  if (!v.localService) s += 10; // cloud voices usually sound better
+  return s;
+}
+
+function pickBestVoice(voices: SpeechSynthesisVoice[], locale: string): SpeechSynthesisVoice | undefined {
+  const lang = locale.split('-')[0];
+  const exact = voices.filter((v) => v.lang.toLowerCase() === locale.toLowerCase());
+  const sameLang = voices.filter((v) => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+  const pool = exact.length ? exact : sameLang;
+  return pool.sort((a, b) => scoreVoice(b) - scoreVoice(a))[0];
 }
 
 // Web Speech API types (lightweight)
