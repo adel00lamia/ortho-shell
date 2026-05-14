@@ -215,7 +215,63 @@ const StudentHub = () => {
   const [chatLoading, setChatLoading] = useState(false);
   const [feedback, setFeedback] = useState<any>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [streamingAssistant, setStreamingAssistant] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Stream an interview turn from the edge function via SSE; updates `chat` in place.
+  const streamInterviewReply = async (history: ChatMsg[]) => {
+    setStreamingAssistant(true);
+    // Append empty assistant placeholder so UI binds to it.
+    setChat([...history, { role: 'assistant', content: '' }]);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token ?? env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/student-coach`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mode: 'interview', position, difficulty, style,
+          studentProfile: profile ?? draft, history,
+          language: fr ? 'fr' : 'en', stream: true,
+        }),
+      });
+      if (!res.ok || !res.body) throw new Error(`stream ${res.status}`);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let acc = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          const l = line.trim();
+          if (!l.startsWith('data:')) continue;
+          const payload = l.slice(5).trim();
+          if (!payload || payload === '[DONE]') continue;
+          try {
+            const json = JSON.parse(payload);
+            const delta = json.choices?.[0]?.delta?.content
+              ?? json.choices?.[0]?.message?.content ?? '';
+            if (delta) {
+              acc += delta;
+              setChat([...history, { role: 'assistant', content: acc }]);
+            }
+          } catch { /* ignore non-JSON keepalives */ }
+        }
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setStreamingAssistant(false);
+    }
+  };
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chat]);
 
