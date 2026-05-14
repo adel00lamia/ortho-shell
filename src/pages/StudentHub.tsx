@@ -41,6 +41,7 @@ type StudentProfile = {
   technical_skills?: string[];
   soft_skills?: string[];
   cv_data?: Record<string, unknown> | null;
+  company_id?: string | null;
 };
 
 type ChatMsg = { role: 'user' | 'assistant'; content: string };
