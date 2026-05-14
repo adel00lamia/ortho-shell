@@ -848,6 +848,17 @@ const StudentHub = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <InterviewVideoCall
+        open={videoCallOpen}
+        onClose={() => setVideoCallOpen(false)}
+        chat={chat}
+        chatLoading={chatLoading}
+        language={fr ? 'fr' : 'en'}
+        position={position}
+        onStart={() => sendInterviewTurn(true)}
+        onUserAnswer={(text) => sendInterviewAnswer(text)}
+      />
     </div>
   );
 };
