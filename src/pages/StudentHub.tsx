@@ -266,6 +266,28 @@ const StudentHub = () => {
 
   const resetInterview = () => { setChat([]); setFeedback(null); };
 
+  // Voice-mode helper: send a spoken answer directly without using chatInput
+  const sendInterviewAnswer = async (text: string) => {
+    if (!text.trim() || !position.trim()) return;
+    const newHistory: ChatMsg[] = [...chat, { role: 'user' as const, content: text.trim() }];
+    setChat(newHistory);
+    setChatLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('student-coach', {
+        body: { mode: 'interview', position, difficulty, style, studentProfile: profile ?? draft, history: newHistory, language: fr ? 'fr' : 'en' },
+      });
+      if (error) throw error;
+      const reply = (data as { reply?: string }).reply ?? '';
+      setChat([...newHistory, { role: 'assistant', content: reply }]);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const [videoCallOpen, setVideoCallOpen] = useState(false);
+
   /* --------------------------- CV ----------------------------- */
   const [cvTarget, setCvTarget] = useState('');
   const [cvLoading, setCvLoading] = useState(false);
