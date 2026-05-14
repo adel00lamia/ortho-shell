@@ -194,14 +194,14 @@ const StudentHub = () => {
 
   const setSkillLevel = (key: string, level: number) => {
     const next = { ...softState, [key]: { level, completedLessons: softState[key]?.completedLessons ?? [] } };
-    persistSoft(next);
+    persistSoft(next, key);
   };
   const toggleLesson = (key: string, idx: number) => {
     const cur = softState[key] ?? { level: 3, completedLessons: [] };
     const completed = cur.completedLessons.includes(idx)
       ? cur.completedLessons.filter((i) => i !== idx)
       : [...cur.completedLessons, idx];
-    persistSoft({ ...softState, [key]: { ...cur, completedLessons: completed } });
+    persistSoft({ ...softState, [key]: { ...cur, completedLessons: completed } }, key);
   };
 
   /* ------------------------- Interview ------------------------ */
