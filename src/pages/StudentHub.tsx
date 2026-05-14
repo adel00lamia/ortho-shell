@@ -707,16 +707,50 @@ const StudentHub = () => {
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      {chat.map((m, i) => (
-                        <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                          <div className={`p-1.5 rounded-full shrink-0 ${m.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
-                            {m.role === 'user' ? <UserIcon className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                      {chat.map((m, i) => {
+                        if (m.role === 'assistant') {
+                          const tipMatch = m.content.match(/\[TIP\]([\s\S]*?)\[\/TIP\]/i);
+                          const tip = tipMatch?.[1]?.trim();
+                          const question = m.content.replace(/\[TIP\][\s\S]*?\[\/TIP\]/i, '').trim();
+                          return (
+                            <div key={i} className="space-y-2">
+                              {tip && (
+                                <div className="flex gap-2">
+                                  <div className="p-1.5 rounded-full shrink-0 bg-amber-500/15">
+                                    <Lightbulb className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                  </div>
+                                  <div className="text-sm rounded-lg px-3 py-2 max-w-[85%] bg-amber-500/10 border border-amber-500/30 text-foreground">
+                                    <div className="text-[10px] uppercase tracking-wider font-semibold text-amber-700 dark:text-amber-400 mb-1">
+                                      {fr ? '💡 Conseil pour progresser' : '💡 Tip to improve'}
+                                    </div>
+                                    <div className="whitespace-pre-wrap leading-relaxed">{tip}</div>
+                                  </div>
+                                </div>
+                              )}
+                              {question && (
+                                <div className="flex gap-2">
+                                  <div className="p-1.5 rounded-full shrink-0 bg-muted">
+                                    <Bot className="h-4 w-4" />
+                                  </div>
+                                  <div className="text-sm rounded-lg px-3 py-2 max-w-[80%] whitespace-pre-wrap bg-muted">
+                                    {question}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={i} className="flex gap-2 flex-row-reverse">
+                            <div className="p-1.5 rounded-full shrink-0 bg-primary/10">
+                              <UserIcon className="h-4 w-4" />
+                            </div>
+                            <div className="text-sm rounded-lg px-3 py-2 max-w-[80%] whitespace-pre-wrap bg-primary text-primary-foreground">
+                              {m.content}
+                            </div>
                           </div>
-                          <div className={`text-sm rounded-lg px-3 py-2 max-w-[80%] whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                            {m.content}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {chatLoading && <div className="flex gap-2"><div className="p-1.5 rounded-full bg-muted"><Bot className="h-4 w-4" /></div><Loader2 className="h-4 w-4 animate-spin self-center" /></div>}
                       <div ref={chatEndRef} />
                     </div>
