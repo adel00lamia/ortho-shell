@@ -8,7 +8,7 @@ const MODEL = 'google/gemini-3-flash-preview';
 interface InterviewBody {
   mode: 'interview';
   position: string;
-  difficulty?: 'junior' | 'mid' | 'senior';
+  difficulty?: 'warmup' | 'junior' | 'mid' | 'senior';
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
