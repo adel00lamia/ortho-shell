@@ -98,6 +98,41 @@ Deno.serve(async (req) => {
         ? { behavioral: 'comportementales (STAR)', technical: 'techniques (cas pratiques, fondamentaux)', mixed: 'mixtes (comportementales + techniques)' }[style]
         : { behavioral: 'behavioral (STAR)', technical: 'technical (case studies, fundamentals)', mixed: 'mixed (behavioral + technical)' }[style];
 
+      // --- Tone rotation layer ---------------------------------------------
+      // Bias the model toward a different register each turn so replies feel
+      // human even though the gentle-correction structure stays constant.
+      const TONES_FR = [
+        { key: 'curieuse',     desc: "curieuse et engagée — pose un suivi naturel, montre de l'intérêt sincère" },
+        { key: 'encourageante', desc: 'chaleureuse et encourageante — valorise un détail concret sans flatterie' },
+        { key: 'analytique',   desc: "posée et analytique — reformule brièvement pour montrer que tu as bien écouté" },
+        { key: 'directe',      desc: 'directe et professionnelle — va droit au point, ton RH senior' },
+        { key: 'complice',     desc: 'légèrement complice — ton détendu, presque conversationnel, sans familiarité' },
+        { key: 'rassurante',   desc: "douce et rassurante — abaisse la pression, normalise l'hésitation" },
+      ];
+      const TONES_EN = [
+        { key: 'curious',     desc: 'curious and engaged — ask a natural follow-up, show genuine interest' },
+        { key: 'encouraging', desc: 'warm and encouraging — highlight one concrete detail, no flattery' },
+        { key: 'analytical',  desc: 'composed and analytical — briefly paraphrase to show you really listened' },
+        { key: 'direct',      desc: 'direct and professional — to the point, senior HR voice' },
+        { key: 'easygoing',   desc: 'lightly conversational — relaxed but never casual or familiar' },
+        { key: 'reassuring',  desc: 'soft and reassuring — lower the pressure, normalize hesitation' },
+      ];
+      const tonePool = fr ? TONES_FR : TONES_EN;
+      const turnIdx = body.history.filter((m) => m.role === 'assistant').length;
+      const tone = tonePool[turnIdx % tonePool.length];
+      const recentOpeners = body.history
+        .filter((m) => m.role === 'assistant')
+        .slice(-3)
+        .map((m) => m.content.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase());
+      const avoidOpeners = recentOpeners.length
+        ? (fr
+          ? `\n- ÉVITE absolument de recommencer par ces ouvertures déjà utilisées récemment : ${recentOpeners.map((o) => `"${o}"`).join(', ')}.`
+          : `\n- AVOID reusing any of these recently used openers: ${recentOpeners.map((o) => `"${o}"`).join(', ')}.`)
+        : '';
+      const toneBlock = fr
+        ? `\n\nTON DU TOUR ACTUEL (à respecter pour CETTE réponse uniquement, sans jamais le nommer) : ${tone.desc}.${avoidOpeners}\n- La correction gentille reste OBLIGATOIRE à chaque tour, mais elle passe À TRAVERS ce ton, pas comme un bloc séparé.\n- Au prochain tour tu changeras naturellement de registre ; ne te fige jamais sur une seule couleur.`
+        : `\n\nTONE FOR THIS TURN (apply to THIS reply only, never name it): ${tone.desc}.${avoidOpeners}\n- Gentle correction is MANDATORY every turn, but it must flow THROUGH this tone, not as a separate block.\n- On the next turn the register will naturally shift; never lock into a single color.`;
+
       const system = fr
         ? `Tu es Sarah, RH senior (10+ ans) et coach carrière. Tu fais passer un entretien de simulation ${diffLabel} pour le poste "${body.position}". Ton rôle : aider l'étudiant à progresser, pas le piéger.
 
@@ -183,7 +218,7 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nMODE ÉCHAUFFEMENT ACTIVÉ: Reste UNIQUEMENT sur des questions très simples d'introduction (présentation, motivation, qualités, centres d'intérêt, projet d'études). N'augmente JAMAIS la difficulté. Le but est de mettre l'étudiant en confiance. Après 4-5 questions, propose gentiment de passer à un niveau supérieur.`
           : `\n\nWARM-UP MODE ACTIVE: Stay ONLY on very simple introduction questions (self-intro, motivation, strengths, interests, studies). NEVER increase difficulty. The goal is to build the student's confidence. After 4-5 questions, gently suggest moving to a higher level.`)
         : '';
-      const finalSystem = system + warmupOverride;
+      const finalSystem = system + warmupOverride + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
