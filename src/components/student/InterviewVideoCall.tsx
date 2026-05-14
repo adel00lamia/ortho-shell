@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon, ScrollText, Lightbulb } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import coachAvatar from '@/assets/interview-coach-avatar.jpg';
 import { toast } from 'sonner';
 
