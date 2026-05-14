@@ -15,6 +15,7 @@ interface Props {
   onClose: () => void;
   chat: ChatMsg[];
   chatLoading: boolean;
+  streamingAssistant?: boolean;
   language: 'fr' | 'en' | 'ar';
   position: string;
   onStart: () => void;
@@ -101,7 +102,7 @@ function keepShortSentences(input: string, maxWords = 15): string {
 
 type SR = any;
 
-export function InterviewVideoCall({ open, onClose, chat, chatLoading, language, position, onStart, onUserAnswer }: Props) {
+export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer }: Props) {
   const fr = language === 'fr';
   const ar = language === 'ar';
   const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
@@ -157,6 +158,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     if (!last || last.role !== 'assistant') return;
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
+    if (streamingAssistant) return; // wait until full message is received before speaking
     lastSpokenRef.current = last.content;
     let spoken = stripMarkdownForSpeech(last.content);
     if (conciseTTS) spoken = keepShortSentences(spoken, 15);
@@ -221,7 +223,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       console.error('TTS error', e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat, open, muted, locale, voiceURI, voices, conciseTTS]);
+  }, [chat, open, muted, locale, voiceURI, voices, conciseTTS, streamingAssistant]);
 
   // Cleanup on close
   useEffect(() => {
@@ -417,14 +419,20 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
 
             <div className="text-center w-full max-w-xl">
               <div className="text-xs uppercase tracking-wider text-indigo-300 mb-2">
-                {chatLoading ? (fr ? 'Réfléchit...' : ar ? 'يفكر...' : 'Thinking...')
+                {streamingAssistant ? (fr ? 'Rédige…' : ar ? 'يكتب…' : 'Typing…')
+                  : chatLoading ? (fr ? 'Réfléchit...' : ar ? 'يفكر...' : 'Thinking...')
                   : isSpeaking ? (fr ? 'Parle' : ar ? 'تتحدث' : 'Speaking')
                   : isListening ? (fr ? 'Écoute' : ar ? 'تستمع' : 'Listening')
                   : (fr ? 'En attente' : ar ? 'جاهزة' : 'Ready')}
               </div>
               <ScrollArea className="max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3">
                 <p className="text-sm text-white/95 leading-relaxed whitespace-pre-wrap text-left">
-                  {chatLoading ? '...' : isSpeaking && spokenFull ? (
+                  {streamingAssistant ? (
+                    <>
+                      <span>{lastAssistant || '…'}</span>
+                      <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                    </>
+                  ) : chatLoading && !lastAssistant ? '...' : isSpeaking && spokenFull ? (
                     <>
                       <span>{liveCaption}</span>
                       <span className="text-white/30">{spokenFull.slice(liveCaption.length)}</span>
