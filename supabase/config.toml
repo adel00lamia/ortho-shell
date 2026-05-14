@@ -58,3 +58,6 @@ verify_jwt = false
 
 [functions.hr-knowledge-chat]
 verify_jwt = false
+
+[functions.student-coach]
+verify_jwt = false
