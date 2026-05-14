@@ -419,14 +419,20 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
             <div className="text-center w-full max-w-xl">
               <div className="text-xs uppercase tracking-wider text-indigo-300 mb-2">
-                {chatLoading ? (fr ? 'Réfléchit...' : ar ? 'يفكر...' : 'Thinking...')
+                {streamingAssistant ? (fr ? 'Rédige…' : ar ? 'يكتب…' : 'Typing…')
+                  : chatLoading ? (fr ? 'Réfléchit...' : ar ? 'يفكر...' : 'Thinking...')
                   : isSpeaking ? (fr ? 'Parle' : ar ? 'تتحدث' : 'Speaking')
                   : isListening ? (fr ? 'Écoute' : ar ? 'تستمع' : 'Listening')
                   : (fr ? 'En attente' : ar ? 'جاهزة' : 'Ready')}
               </div>
               <ScrollArea className="max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3">
                 <p className="text-sm text-white/95 leading-relaxed whitespace-pre-wrap text-left">
-                  {chatLoading ? '...' : isSpeaking && spokenFull ? (
+                  {streamingAssistant ? (
+                    <>
+                      <span>{lastAssistant || '…'}</span>
+                      <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                    </>
+                  ) : chatLoading && !lastAssistant ? '...' : isSpeaking && spokenFull ? (
                     <>
                       <span>{liveCaption}</span>
                       <span className="text-white/30">{spokenFull.slice(liveCaption.length)}</span>
