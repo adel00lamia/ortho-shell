@@ -937,6 +937,7 @@ const StudentHub = () => {
         onClose={() => setVideoCallOpen(false)}
         chat={chat}
         chatLoading={chatLoading}
+        streamingAssistant={streamingAssistant}
         language={fr ? 'fr' : 'en'}
         position={position}
         onStart={() => sendInterviewTurn(true)}
