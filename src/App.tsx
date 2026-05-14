@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 import { FeatureErrorBoundary } from "@/components/error-boundaries/FeatureErrorBoundary";
 import { HierarchicalSidebar } from "./components/navigation/HierarchicalSidebar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
@@ -183,10 +184,13 @@ const App = () => (
               <Route path="/certificate-generator" element={<Navigate to="/workflow/track/certificates" replace />} />
               <Route path="/user-management" element={<Navigate to="/manage/users" replace />} />
               <Route path="/team-collaboration" element={<Navigate to="/manage/team" replace />} />
-              <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard/company" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard/trainer" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/profile" element={<Navigate to="/manage/settings" replace />} />
+              {/* Role-scoped dashboard placeholders — each loads only for the matching role */}
+              <Route path="/dashboard/admin" element={<ProtectedLayout featureName="Admin Dashboard"><RoleProtectedRoute allowedRoles={["admin"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
+              <Route path="/dashboard/hr" element={<ProtectedLayout featureName="HR Dashboard"><RoleProtectedRoute allowedRoles={["hr_manager"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
+              <Route path="/dashboard/trainer" element={<ProtectedLayout featureName="Trainer Dashboard"><RoleProtectedRoute allowedRoles={["trainer"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
+              <Route path="/dashboard/employee" element={<ProtectedLayout featureName="Employee Dashboard"><RoleProtectedRoute allowedRoles={["employee"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
+              <Route path="/dashboard/company" element={<ProtectedLayout featureName="Company Dashboard"><RoleProtectedRoute allowedRoles={["admin", "hr_manager"]}><Dashboard /></RoleProtectedRoute></ProtectedLayout>} />
+              <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
               <Route path="/ofppt-reimbursement" element={<Navigate to="/workflow/track/reimbursement" replace />} />
               <Route path="/training-plan" element={<Navigate to="/workflow/plan/plans" replace />} />
               
