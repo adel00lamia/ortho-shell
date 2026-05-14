@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
+import { InterviewVideoCall } from '@/components/student/InterviewVideoCall';
 
 type StudentProfile = {
   id?: string;
@@ -264,6 +265,28 @@ const StudentHub = () => {
   };
 
   const resetInterview = () => { setChat([]); setFeedback(null); };
+
+  // Voice-mode helper: send a spoken answer directly without using chatInput
+  const sendInterviewAnswer = async (text: string) => {
+    if (!text.trim() || !position.trim()) return;
+    const newHistory: ChatMsg[] = [...chat, { role: 'user' as const, content: text.trim() }];
+    setChat(newHistory);
+    setChatLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('student-coach', {
+        body: { mode: 'interview', position, difficulty, style, studentProfile: profile ?? draft, history: newHistory, language: fr ? 'fr' : 'en' },
+      });
+      if (error) throw error;
+      const reply = (data as { reply?: string }).reply ?? '';
+      setChat([...newHistory, { role: 'assistant', content: reply }]);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const [videoCallOpen, setVideoCallOpen] = useState(false);
 
   /* --------------------------- CV ----------------------------- */
   const [cvTarget, setCvTarget] = useState('');
@@ -668,6 +691,9 @@ const StudentHub = () => {
                   <Button size="sm" className="flex-1" onClick={() => { resetInterview(); sendInterviewTurn(true); }} disabled={chatLoading || !position.trim()}>
                     {chatLoading && chat.length === 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : (fr ? 'Démarrer' : 'Start')}
                   </Button>
+                  <Button size="sm" variant="secondary" onClick={() => { resetInterview(); setVideoCallOpen(true); }} disabled={!position.trim()}>
+                    <Video className="h-4 w-4 mr-1" />{fr ? 'Appel vidéo' : 'Video call'}
+                  </Button>
                   {chat.length > 0 && (
                     <Button size="sm" variant="outline" onClick={resetInterview}><RotateCcw className="h-4 w-4" /></Button>
                   )}
@@ -822,6 +848,17 @@ const StudentHub = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <InterviewVideoCall
+        open={videoCallOpen}
+        onClose={() => setVideoCallOpen(false)}
+        chat={chat}
+        chatLoading={chatLoading}
+        language={fr ? 'fr' : 'en'}
+        position={position}
+        onStart={() => sendInterviewTurn(true)}
+        onUserAnswer={(text) => sendInterviewAnswer(text)}
+      />
     </div>
   );
 };
