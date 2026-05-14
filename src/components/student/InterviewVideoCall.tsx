@@ -230,7 +230,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
       u.onstart = () => {
         setIsSpeaking(true);
-        // Give the engine ~250ms to emit a boundary; if not, start fallback.
+        pushLog('info', `TTS start (${spoken.length} chars, voice="${u.voice?.name ?? 'default'}", lang=${u.lang})`);
         window.setTimeout(() => { if (!boundaryFired) startFallback(); }, 250);
       };
       u.onboundary = (e: SpeechSynthesisEvent) => {
@@ -243,16 +243,19 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
         if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
         setLiveCaption(spoken);
         setIsSpeaking(false);
+        pushLog('info', 'TTS end');
         startListening();
       };
-      u.onerror = () => {
+      u.onerror = (e: any) => {
         if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
         setIsSpeaking(false);
+        pushLog('error', `TTS error: ${e?.error ?? 'unknown'}`);
       };
       utteranceRef.current = u;
       window.speechSynthesis.speak(u);
-    } catch (e) {
+    } catch (e: any) {
       console.error('TTS error', e);
+      pushLog('error', `TTS exception: ${e?.message ?? String(e)}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat, open, muted, locale, voiceURI, voices, conciseTTS, streamingAssistant]);
