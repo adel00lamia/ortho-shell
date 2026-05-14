@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon, ScrollText, Lightbulb, Zap } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon, ScrollText, Lightbulb, Zap, Bug } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import coachAvatar from '@/assets/interview-coach-avatar.jpg';
 import { toast } from 'sonner';
@@ -118,7 +118,18 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
   const [conciseTTS, setConciseTTS] = useState(true);
   const [liveCaption, setLiveCaption] = useState('');
   const [spokenFull, setSpokenFull] = useState('');
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<{ ts: number; level: 'info' | 'warn' | 'error'; msg: string }[]>([]);
+  const [lastError, setLastError] = useState<string>('');
+  const [ttsSupported] = useState<boolean>(typeof window !== 'undefined' && 'speechSynthesis' in window);
+  const [srSupported] = useState<boolean>(typeof window !== 'undefined' && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
+  const [micPermission, setMicPermission] = useState<string>('unknown');
   const liveTimerRef = useRef<number | null>(null);
+
+  const pushLog = useCallback((level: 'info' | 'warn' | 'error', msg: string) => {
+    setDebugLogs((logs) => [...logs.slice(-49), { ts: Date.now(), level, msg }]);
+    if (level === 'error') setLastError(msg);
+  }, []);
 
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
@@ -129,11 +140,32 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
   // Load voices (browsers populate them async)
   useEffect(() => {
-    const load = () => setVoices(window.speechSynthesis.getVoices());
+    const load = () => {
+      const v = window.speechSynthesis.getVoices();
+      setVoices(v);
+      pushLog('info', `voices loaded: ${v.length}`);
+    };
     load();
     window.speechSynthesis.onvoiceschanged = load;
     return () => { window.speechSynthesis.onvoiceschanged = null; };
-  }, []);
+  }, [pushLog]);
+
+  // Query mic permission once
+  useEffect(() => {
+    if (!open) return;
+    const nav: any = navigator;
+    if (nav?.permissions?.query) {
+      nav.permissions.query({ name: 'microphone' as PermissionName })
+        .then((p: any) => {
+          setMicPermission(p.state);
+          pushLog('info', `mic permission: ${p.state}`);
+          p.onchange = () => { setMicPermission(p.state); pushLog('info', `mic permission → ${p.state}`); };
+        })
+        .catch(() => setMicPermission('unsupported'));
+    } else {
+      setMicPermission('unsupported');
+    }
+  }, [open, pushLog]);
 
   const localeVoices = useMemo(() => {
     const lang = locale.split('-')[0];
@@ -198,7 +230,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
       u.onstart = () => {
         setIsSpeaking(true);
-        // Give the engine ~250ms to emit a boundary; if not, start fallback.
+        pushLog('info', `TTS start (${spoken.length} chars, voice="${u.voice?.name ?? 'default'}", lang=${u.lang})`);
         window.setTimeout(() => { if (!boundaryFired) startFallback(); }, 250);
       };
       u.onboundary = (e: SpeechSynthesisEvent) => {
@@ -211,16 +243,19 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
         if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
         setLiveCaption(spoken);
         setIsSpeaking(false);
+        pushLog('info', 'TTS end');
         startListening();
       };
-      u.onerror = () => {
+      u.onerror = (e: any) => {
         if (liveTimerRef.current) { window.clearInterval(liveTimerRef.current); liveTimerRef.current = null; }
         setIsSpeaking(false);
+        pushLog('error', `TTS error: ${e?.error ?? 'unknown'}`);
       };
       utteranceRef.current = u;
       window.speechSynthesis.speak(u);
-    } catch (e) {
+    } catch (e: any) {
       console.error('TTS error', e);
+      pushLog('error', `TTS exception: ${e?.message ?? String(e)}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat, open, muted, locale, voiceURI, voices, conciseTTS, streamingAssistant]);
@@ -246,6 +281,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error(fr ? 'Reconnaissance vocale non supportée par ce navigateur. Utilisez Chrome.' : 'Speech recognition not supported. Try Chrome.');
+      pushLog('error', 'SpeechRecognition not supported');
       return;
     }
     try {
@@ -254,7 +290,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       rec.continuous = false;
       rec.interimResults = true;
       let finalText = '';
-      rec.onstart = () => { setIsListening(true); setTranscript(''); };
+      rec.onstart = () => { setIsListening(true); setTranscript(''); pushLog('info', `mic start (${locale})`); };
       rec.onresult = (e: any) => {
         let interim = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -267,20 +303,23 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
       rec.onerror = (e: any) => {
         console.warn('SR error', e?.error);
         setIsListening(false);
+        pushLog('error', `mic error: ${e?.error ?? 'unknown'}`);
       };
       rec.onend = () => {
         setIsListening(false);
         const text = finalText.trim();
+        pushLog('info', `mic end (final="${text.slice(0, 40)}${text.length > 40 ? '…' : ''}")`);
         if (text.length > 1) onUserAnswer(text);
         setTranscript('');
       };
       recognitionRef.current = rec;
       rec.start();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Recognition start failed', e);
       setIsListening(false);
+      pushLog('error', `mic start failed: ${e?.message ?? String(e)}`);
     }
-  }, [locale, fr, onUserAnswer]);
+  }, [locale, fr, onUserAnswer, pushLog]);
 
   const stopListening = () => {
     try { recognitionRef.current?.stop(); } catch {}
@@ -360,6 +399,15 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
               </Button>
               <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10 shrink-0" onClick={() => setMuted(!muted)}>
                 {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                title={fr ? 'Mode débogage' : 'Debug mode'}
+                className={`h-8 w-8 shrink-0 ${debugOpen ? 'bg-rose-500/30 text-rose-100 hover:bg-rose-500/40' : 'text-white hover:bg-white/10'} ${lastError ? 'ring-2 ring-rose-400' : ''}`}
+                onClick={() => setDebugOpen((d) => !d)}
+              >
+                <Bug className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -601,6 +649,97 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                     </div>
                   )}
                 </ScrollArea>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Debug overlay */}
+          <AnimatePresence>
+            {debugOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute right-3 top-[60px] bottom-[88px] z-30 w-[300px] rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-rose-400/30 shadow-2xl flex flex-col text-[11px]"
+              >
+                <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+                  <div className="flex items-center gap-1.5">
+                    <Bug className="h-3.5 w-3.5 text-rose-300" />
+                    <span className="text-xs font-semibold">{fr ? 'Débogage' : 'Debug'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-white/70 hover:bg-white/10" onClick={() => { setDebugLogs([]); setLastError(''); }}>
+                      {fr ? 'Vider' : 'Clear'}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-white/70 hover:bg-white/10" onClick={() => setDebugOpen(false)}>
+                      ×
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="px-3 py-2 border-b border-white/10 space-y-1">
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                    <span className="text-white/50">{fr ? 'Micro' : 'Mic'}</span>
+                    <span className={isListening ? 'text-emerald-300' : 'text-white/80'}>
+                      {isListening ? (fr ? 'écoute' : 'listening') : (fr ? 'inactif' : 'idle')}
+                    </span>
+                    <span className="text-white/50">SR API</span>
+                    <span className={srSupported ? 'text-emerald-300' : 'text-rose-300'}>{srSupported ? 'ok' : 'absent'}</span>
+                    <span className="text-white/50">{fr ? 'Permission' : 'Permission'}</span>
+                    <span className={micPermission === 'granted' ? 'text-emerald-300' : micPermission === 'denied' ? 'text-rose-300' : 'text-amber-300'}>
+                      {micPermission}
+                    </span>
+                    <span className="text-white/50">TTS</span>
+                    <span className={isSpeaking ? 'text-emerald-300' : 'text-white/80'}>
+                      {isSpeaking ? (fr ? 'parle' : 'speaking') : muted ? (fr ? 'muet' : 'muted') : (fr ? 'inactif' : 'idle')}
+                    </span>
+                    <span className="text-white/50">TTS API</span>
+                    <span className={ttsSupported ? 'text-emerald-300' : 'text-rose-300'}>{ttsSupported ? 'ok' : 'absent'}</span>
+                    <span className="text-white/50">{fr ? 'Voix' : 'Voices'}</span>
+                    <span className="text-white/80">{voices.length} ({localeVoices.length} @ {locale})</span>
+                    <span className="text-white/50">{fr ? 'Streaming' : 'Streaming'}</span>
+                    <span className={streamingAssistant ? 'text-amber-300' : 'text-white/80'}>{streamingAssistant ? 'oui' : 'non'}</span>
+                    <span className="text-white/50">{fr ? 'Messages' : 'Messages'}</span>
+                    <span className="text-white/80">{chat.length}</span>
+                  </div>
+                </div>
+
+                <div className="px-3 py-2 border-b border-white/10">
+                  <div className="text-[10px] uppercase tracking-wider text-white/50 mb-1">{fr ? 'Sous-titres' : 'Caption'}</div>
+                  <div className="text-white/90 max-h-12 overflow-hidden">
+                    {liveCaption ? `${liveCaption.slice(0, 80)}${liveCaption.length > 80 ? '…' : ''}` : <span className="text-white/40 italic">—</span>}
+                  </div>
+                  <div className="mt-1 text-[10px] text-white/50">
+                    {liveCaption.length}/{spokenFull.length} chars
+                  </div>
+                </div>
+
+                {lastError && (
+                  <div className="px-3 py-2 border-b border-rose-400/30 bg-rose-500/10">
+                    <div className="text-[10px] uppercase tracking-wider text-rose-300 mb-0.5">{fr ? 'Dernière erreur' : 'Last error'}</div>
+                    <div className="text-rose-100 break-words">{lastError}</div>
+                  </div>
+                )}
+
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  <div className="px-3 pt-2 text-[10px] uppercase tracking-wider text-white/50">{fr ? 'Journal' : 'Logs'}</div>
+                  <ScrollArea className="flex-1 px-3 py-1">
+                    {debugLogs.length === 0 ? (
+                      <div className="text-white/40 italic py-2">—</div>
+                    ) : (
+                      <div className="space-y-0.5 font-mono">
+                        {debugLogs.slice().reverse().map((l, i) => (
+                          <div key={i} className="flex gap-1.5">
+                            <span className="text-white/40 shrink-0">{new Date(l.ts).toLocaleTimeString().slice(0, 8)}</span>
+                            <span className={l.level === 'error' ? 'text-rose-300' : l.level === 'warn' ? 'text-amber-300' : 'text-white/80'}>
+                              {l.msg}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
