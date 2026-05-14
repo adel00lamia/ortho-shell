@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon, ScrollText, Lightbulb } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Loader2, User as UserIcon, ScrollText, Lightbulb, Zap } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import coachAvatar from '@/assets/interview-coach-avatar.jpg';
 import { toast } from 'sonner';
@@ -90,6 +90,15 @@ function stripMarkdownForSpeech(input: string): string {
     .trim();
 }
 
+// Concise mode: keep only short sentences (≤ maxWords). [TIP] is already stripped upstream.
+function keepShortSentences(input: string, maxWords = 15): string {
+  const sentences = input.match(/[^.!?…]+[.!?…]?/g) ?? [input];
+  const kept = sentences
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && s.split(/\s+/).length <= maxWords);
+  return (kept.length ? kept : sentences.slice(-1)).join(' ').trim();
+}
+
 type SR = any;
 
 export function InterviewVideoCall({ open, onClose, chat, chatLoading, language, position, onStart, onUserAnswer }: Props) {
@@ -105,6 +114,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
   const [transcript, setTranscript] = useState('');
   const [hasStarted, setHasStarted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [conciseTTS, setConciseTTS] = useState(true);
 
   const recognitionRef = useRef<SR>(null);
   const lastSpokenRef = useRef<string>('');
@@ -145,7 +155,9 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
     lastSpokenRef.current = last.content;
-    const spoken = stripMarkdownForSpeech(last.content);
+    let spoken = stripMarkdownForSpeech(last.content);
+    if (conciseTTS) spoken = keepShortSentences(spoken, 15);
+    if (!spoken) return;
 
     try {
       window.speechSynthesis.cancel();
@@ -166,7 +178,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       console.error('TTS error', e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat, open, muted, locale, voiceURI, voices]);
+  }, [chat, open, muted, locale, voiceURI, voices, conciseTTS]);
 
   // Cleanup on close
   useEffect(() => {
@@ -279,6 +291,15 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
                   </SelectContent>
                 </Select>
               )}
+              <Button
+                size="icon"
+                variant="ghost"
+                title={fr ? (conciseTTS ? 'Mode concis activé (phrases courtes)' : 'Mode concis désactivé') : conciseTTS ? 'Concise mode on (short sentences)' : 'Concise mode off'}
+                className={`h-8 w-8 shrink-0 ${conciseTTS ? 'bg-indigo-500/30 text-indigo-100 hover:bg-indigo-500/40' : 'text-white hover:bg-white/10'}`}
+                onClick={() => setConciseTTS(!conciseTTS)}
+              >
+                <Zap className="h-4 w-4" />
+              </Button>
               <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10 shrink-0" onClick={() => setMuted(!muted)}>
                 {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
