@@ -158,6 +158,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
     if (!last || last.role !== 'assistant') return;
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
+    if (streamingAssistant) return; // wait until full message is received before speaking
     lastSpokenRef.current = last.content;
     let spoken = stripMarkdownForSpeech(last.content);
     if (conciseTTS) spoken = keepShortSentences(spoken, 15);
