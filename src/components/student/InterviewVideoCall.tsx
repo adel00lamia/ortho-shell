@@ -51,7 +51,45 @@ function pickBestVoice(voices: SpeechSynthesisVoice[], locale: string): SpeechSy
   return pool.sort((a, b) => scoreVoice(b) - scoreVoice(a))[0];
 }
 
-// Web Speech API types (lightweight)
+// Strip Markdown so the TTS engine reads natural prose only.
+function stripMarkdownForSpeech(input: string): string {
+  return input
+    // tip blocks
+    .replace(/\[TIP\][\s\S]*?\[\/TIP\]/gi, '')
+    // fenced code & inline code
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    // markdown tables: drop separator rows (|---|---|), turn cell rows into "a, b, c."
+    .replace(/^\s*\|?[\s:|-]*-+[\s:|-]*\|?\s*$/gm, '')
+    .replace(/^\s*\|(.+)\|\s*$/gm, (_m, row: string) =>
+      row.split('|').map((c) => c.trim()).filter(Boolean).join(', ') + '.'
+    )
+    // blockquotes (one or more leading >)
+    .replace(/^\s*>+\s?/gm, '')
+    // headings
+    .replace(/^#{1,6}\s+/gm, '')
+    // lists
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    // emphasis
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    // images & links
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // horizontal rules
+    .replace(/^\s*([-*_])\1{2,}\s*$/gm, '')
+    // any leftover md chars
+    .replace(/[*_~`>#|]/g, '')
+    // collapse whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 type SR = any;
 
 export function InterviewVideoCall({ open, onClose, chat, chatLoading, language, position, onStart, onUserAnswer }: Props) {
