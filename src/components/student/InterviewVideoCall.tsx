@@ -15,6 +15,7 @@ interface Props {
   onClose: () => void;
   chat: ChatMsg[];
   chatLoading: boolean;
+  streamingAssistant?: boolean;
   language: 'fr' | 'en' | 'ar';
   position: string;
   onStart: () => void;
