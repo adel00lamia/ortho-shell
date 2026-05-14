@@ -673,6 +673,7 @@ const StudentHub = () => {
                   <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="warmup">{fr ? '🌱 Échauffement (intro facile)' : '🌱 Warm-up (easy intro)'}</SelectItem>
                       <SelectItem value="junior">{fr ? 'Junior' : 'Junior'}</SelectItem>
                       <SelectItem value="mid">{fr ? 'Intermédiaire' : 'Mid-level'}</SelectItem>
                       <SelectItem value="senior">{fr ? 'Senior' : 'Senior'}</SelectItem>
