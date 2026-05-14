@@ -179,7 +179,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
       console.error('Recognition start failed', e);
       setIsListening(false);
     }
-  }, [fr, onUserAnswer]);
+  }, [locale, fr, onUserAnswer]);
 
   const stopListening = () => {
     try { recognitionRef.current?.stop(); } catch {}
