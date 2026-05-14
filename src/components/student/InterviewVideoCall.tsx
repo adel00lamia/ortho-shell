@@ -41,7 +41,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, language,
     if (last.content === lastSpokenRef.current) return;
     if (muted) return;
     lastSpokenRef.current = last.content;
-    const spoken = last.content.replace(/\[TIP\][\s\S]*?\[\/TIP\]/i, '').trim();
+    const spoken = last.content.replace(/\[TIP\][\s\S]*?\[\/TIP\]/gi, '').trim();
 
     try {
       window.speechSynthesis.cancel();
