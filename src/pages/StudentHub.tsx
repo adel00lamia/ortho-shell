@@ -691,6 +691,9 @@ const StudentHub = () => {
                   <Button size="sm" className="flex-1" onClick={() => { resetInterview(); sendInterviewTurn(true); }} disabled={chatLoading || !position.trim()}>
                     {chatLoading && chat.length === 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : (fr ? 'Démarrer' : 'Start')}
                   </Button>
+                  <Button size="sm" variant="secondary" onClick={() => { resetInterview(); setVideoCallOpen(true); }} disabled={!position.trim()}>
+                    <Video className="h-4 w-4 mr-1" />{fr ? 'Appel vidéo' : 'Video call'}
+                  </Button>
                   {chat.length > 0 && (
                     <Button size="sm" variant="outline" onClick={resetInterview}><RotateCcw className="h-4 w-4" /></Button>
                   )}
