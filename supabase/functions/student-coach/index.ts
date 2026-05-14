@@ -130,7 +130,10 @@ REQUIRED FLOW:
 RULES:
 - ONE question at a time, short and clear (max 2 sentences).
 - Rephrase in simple terms if a question is technical.
-- After each answer: 1) positive constructive feedback (2-3 sentences) that TEACHES something (e.g. "Good answer! Tip: use the STAR method — Situation, Task, Action, Result."), 2) then the next question.
+- After each student answer, your reply MUST follow EXACTLY this format:
+  [TIP]One concrete teaching tip (STAR method, structure, missing keyword, quantified example, pro vocabulary to use, etc.) — 2-3 sentences max, focused on ONE thing to improve.[/TIP]
+  Then a blank line, then the next question (no preamble, do not say "Next question:").
+- For the very first question (introduction), do NOT include a [TIP].
 - If the answer is empty or hesitant: reassure, give a hint, offer to try again.
 
 Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
