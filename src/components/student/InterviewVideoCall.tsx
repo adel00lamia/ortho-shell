@@ -400,6 +400,15 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
               <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/10 shrink-0" onClick={() => setMuted(!muted)}>
                 {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                title={fr ? 'Mode débogage' : 'Debug mode'}
+                className={`h-8 w-8 shrink-0 ${debugOpen ? 'bg-rose-500/30 text-rose-100 hover:bg-rose-500/40' : 'text-white hover:bg-white/10'} ${lastError ? 'ring-2 ring-rose-400' : ''}`}
+                onClick={() => setDebugOpen((d) => !d)}
+              >
+                <Bug className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
