@@ -98,16 +98,18 @@ Deno.serve(async (req) => {
         ? { behavioral: 'comportementales (STAR)', technical: 'techniques (cas pratiques, fondamentaux)', mixed: 'mixtes (comportementales + techniques)' }[style]
         : { behavioral: 'behavioral (STAR)', technical: 'technical (case studies, fundamentals)', mixed: 'mixed (behavioral + technical)' }[style];
 
-      // --- Tone rotation layer ---------------------------------------------
-      // Bias the model toward a different register each turn so replies feel
-      // human even though the gentle-correction structure stays constant.
+      // --- Humanization layer ---------------------------------------------
+      // Each turn rotates: a tone, a micro-quirk, and a sentence-rhythm cue.
+      // Combined with a ban list of robotic phrasing, this keeps Sarah alive.
       const TONES_FR = [
-        { key: 'curieuse',     desc: "curieuse et engagée — pose un suivi naturel, montre de l'intérêt sincère" },
+        { key: 'curieuse',      desc: "curieuse et engagée — pose un suivi naturel, montre de l'intérêt sincère" },
         { key: 'encourageante', desc: 'chaleureuse et encourageante — valorise un détail concret sans flatterie' },
-        { key: 'analytique',   desc: "posée et analytique — reformule brièvement pour montrer que tu as bien écouté" },
-        { key: 'directe',      desc: 'directe et professionnelle — va droit au point, ton RH senior' },
-        { key: 'complice',     desc: 'légèrement complice — ton détendu, presque conversationnel, sans familiarité' },
-        { key: 'rassurante',   desc: "douce et rassurante — abaisse la pression, normalise l'hésitation" },
+        { key: 'analytique',    desc: "posée et analytique — reformule brièvement pour montrer que tu as bien écouté" },
+        { key: 'directe',       desc: 'directe et professionnelle — va droit au point, ton RH senior' },
+        { key: 'complice',      desc: 'légèrement complice — ton détendu, presque conversationnel, sans familiarité' },
+        { key: 'rassurante',    desc: "douce et rassurante — abaisse la pression, normalise l'hésitation" },
+        { key: 'pragmatique',   desc: 'pragmatique et concrète — ancre la réponse dans un détail terrain' },
+        { key: 'pensive',       desc: "légèrement pensive — marque une mini-pause (\"hmm…\", \"alors…\") avant de rebondir" },
       ];
       const TONES_EN = [
         { key: 'curious',     desc: 'curious and engaged — ask a natural follow-up, show genuine interest' },
@@ -116,22 +118,47 @@ Deno.serve(async (req) => {
         { key: 'direct',      desc: 'direct and professional — to the point, senior HR voice' },
         { key: 'easygoing',   desc: 'lightly conversational — relaxed but never casual or familiar' },
         { key: 'reassuring',  desc: 'soft and reassuring — lower the pressure, normalize hesitation' },
+        { key: 'pragmatic',   desc: 'pragmatic and concrete — anchor the reply in a small real-world detail' },
+        { key: 'thoughtful',  desc: 'slightly thoughtful — a tiny pause ("hmm…", "okay so…") before bouncing back' },
       ];
-      const tonePool = fr ? TONES_FR : TONES_EN;
+      const QUIRKS_FR = [
+        'glisse une mini-reformulation entre guillemets de ce que vient de dire l\'étudiant ("donc, si je comprends bien, …")',
+        'commence par un connecteur oral très court ("Hmm.", "Okay.", "Mmh.") puis enchaîne directement',
+        'utilise une comparaison très simple du quotidien (1 image max) pour rendre le feedback concret',
+        'pose la question suivante sous forme légèrement ouverte ("Raconte-moi…", "Comment…", "Qu\'est-ce qui…")',
+        'rebondis sur UN mot précis qu\'a employé l\'étudiant pour montrer une écoute fine',
+        'introduis une variation de rythme : une phrase très courte (3-5 mots), puis une un peu plus longue',
+        'remplace toute ouverture par une simple respiration écrite ("Bien.") puis va droit au feedback',
+      ];
+      const QUIRKS_EN = [
+        'slip in a tiny paraphrase in quotes of what the student just said ("so, if I get this right, …")',
+        'start with a very short spoken connector ("Hmm.", "Okay.", "Mmh.") then move on directly',
+        'use one very simple everyday comparison (1 image max) to make the feedback concrete',
+        'phrase the next question in a slightly open way ("Tell me…", "How…", "What made…")',
+        'bounce off ONE specific word the student used to show fine listening',
+        'vary the rhythm: one very short sentence (3-5 words), then a slightly longer one',
+        'replace any opener with a single written breath ("Right.") then go straight to feedback',
+      ];
+      const tonePool  = fr ? TONES_FR  : TONES_EN;
+      const quirkPool = fr ? QUIRKS_FR : QUIRKS_EN;
       const turnIdx = body.history.filter((m) => m.role === 'assistant').length;
-      const tone = tonePool[turnIdx % tonePool.length];
+      const tone  = tonePool[turnIdx % tonePool.length];
+      // Offset the quirk so tone+quirk pairing keeps shifting and never locks.
+      const quirk = quirkPool[(turnIdx * 3 + 1) % quirkPool.length];
       const recentOpeners = body.history
         .filter((m) => m.role === 'assistant')
-        .slice(-3)
+        .slice(-4)
         .map((m) => m.content.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase());
       const avoidOpeners = recentOpeners.length
         ? (fr
           ? `\n- ÉVITE absolument de recommencer par ces ouvertures déjà utilisées récemment : ${recentOpeners.map((o) => `"${o}"`).join(', ')}.`
           : `\n- AVOID reusing any of these recently used openers: ${recentOpeners.map((o) => `"${o}"`).join(', ')}.`)
         : '';
+      const bannedPhrasesFR = '"En tant que coach", "C\'est une excellente question", "Je suis ravie de", "N\'hésite pas à", "Pour conclure", "En somme", "Tout d\'abord", "Premièrement / Deuxièmement", "C\'est noté !" répété, "Wow !", "Incroyable !"';
+      const bannedPhrasesEN = '"As a coach", "That\'s a great question", "I\'m delighted to", "Feel free to", "To conclude", "In summary", "First of all", "Firstly / Secondly", repeated "Noted!", "Wow!", "Incredible!"';
       const toneBlock = fr
-        ? `\n\nTON DU TOUR ACTUEL (à respecter pour CETTE réponse uniquement, sans jamais le nommer) : ${tone.desc}.${avoidOpeners}\n- La correction gentille reste OBLIGATOIRE à chaque tour, mais elle passe À TRAVERS ce ton, pas comme un bloc séparé.\n- Au prochain tour tu changeras naturellement de registre ; ne te fige jamais sur une seule couleur.`
-        : `\n\nTONE FOR THIS TURN (apply to THIS reply only, never name it): ${tone.desc}.${avoidOpeners}\n- Gentle correction is MANDATORY every turn, but it must flow THROUGH this tone, not as a separate block.\n- On the next turn the register will naturally shift; never lock into a single color.`;
+        ? `\n\nTON DU TOUR ACTUEL (à respecter pour CETTE réponse uniquement, sans jamais le nommer) : ${tone.desc}.${avoidOpeners}\n- QUIRK HUMAIN DE CE TOUR (à appliquer subtilement, sans le nommer) : ${quirk}.\n- PHRASES INTERDITES (sonnent robotiques ou IA) : ${bannedPhrasesFR}. N'utilise JAMAIS ces formulations.\n- RYTHME : alterne phrases courtes et phrases moyennes ; pas deux phrases de même longueur d'affilée.\n- La correction gentille reste OBLIGATOIRE à chaque tour, mais elle passe À TRAVERS ce ton, pas comme un bloc séparé.\n- Au prochain tour tu changeras naturellement de registre ET de quirk ; ne te fige jamais sur une seule couleur.`
+        : `\n\nTONE FOR THIS TURN (apply to THIS reply only, never name it): ${tone.desc}.${avoidOpeners}\n- HUMAN QUIRK FOR THIS TURN (apply it subtly, never name it): ${quirk}.\n- BANNED PHRASES (sound robotic or AI-ish): ${bannedPhrasesEN}. NEVER use these.\n- RHYTHM: alternate short and medium sentences; never two same-length sentences in a row.\n- Gentle correction is MANDATORY every turn, but it must flow THROUGH this tone, not as a separate block.\n- On the next turn the register AND the quirk will naturally shift; never lock into a single color.`;
 
       const system = fr
         ? `Tu es Sarah, RH senior (10+ ans) et coach carrière. Tu fais passer un entretien de simulation ${diffLabel} pour le poste "${body.position}". Ton rôle : aider l'étudiant à progresser, pas le piéger.
