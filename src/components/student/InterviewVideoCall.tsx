@@ -506,6 +506,26 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   <span className="text-[10px] font-medium text-white">Sarah</span>
                 </div>
               </motion.div>
+              {/* Equalizer bars under orb when speaking */}
+              <AnimatePresence>
+                {isSpeaking && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute left-1/2 -translate-x-1/2 -bottom-6 flex items-end gap-1 h-5"
+                  >
+                    {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="w-1 rounded-full bg-gradient-to-t from-indigo-400 to-fuchsia-300"
+                        animate={{ height: ['25%', '100%', '40%', '85%', '30%'] }}
+                        transition={{ duration: 0.9 + (i % 3) * 0.15, repeat: Infinity, delay: i * 0.07, ease: 'easeInOut' }}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="text-center w-full max-w-xl">
