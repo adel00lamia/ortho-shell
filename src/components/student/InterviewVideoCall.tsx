@@ -124,7 +124,17 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
   const [ttsSupported] = useState<boolean>(typeof window !== 'undefined' && 'speechSynthesis' in window);
   const [srSupported] = useState<boolean>(typeof window !== 'undefined' && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
   const [micPermission, setMicPermission] = useState<string>('unknown');
+  const [elapsed, setElapsed] = useState(0);
   const liveTimerRef = useRef<number | null>(null);
+
+  // Call duration timer
+  useEffect(() => {
+    if (!hasStarted || !open) return;
+    setElapsed(0);
+    const id = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [hasStarted, open]);
+  const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const pushLog = useCallback((level: 'info' | 'warn' | 'error', msg: string) => {
     setDebugLogs((logs) => [...logs.slice(-49), { ts: Date.now(), level, msg }]);
