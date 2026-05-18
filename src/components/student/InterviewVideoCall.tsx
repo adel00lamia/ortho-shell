@@ -124,7 +124,17 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
   const [ttsSupported] = useState<boolean>(typeof window !== 'undefined' && 'speechSynthesis' in window);
   const [srSupported] = useState<boolean>(typeof window !== 'undefined' && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
   const [micPermission, setMicPermission] = useState<string>('unknown');
+  const [elapsed, setElapsed] = useState(0);
   const liveTimerRef = useRef<number | null>(null);
+
+  // Call duration timer
+  useEffect(() => {
+    if (!hasStarted || !open) return;
+    setElapsed(0);
+    const id = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [hasStarted, open]);
+  const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const pushLog = useCallback((level: 'info' | 'warn' | 'error', msg: string) => {
     setDebugLogs((logs) => [...logs.slice(-49), { ts: Date.now(), level, msg }]);
@@ -355,6 +365,33 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
         <DialogTitle className="sr-only">{fr ? 'Entretien vidéo IA' : 'AI Video Interview'}</DialogTitle>
 
         <div className="relative h-[600px] flex flex-col">
+          {/* Aurora background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              className="absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-3xl"
+              animate={{ x: [0, 30, -10, 0], y: [0, 20, -10, 0], scale: [1, 1.1, 0.95, 1] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -bottom-32 -right-24 h-[460px] w-[460px] rounded-full bg-fuchsia-500/20 blur-3xl"
+              animate={{ x: [0, -40, 10, 0], y: [0, -20, 15, 0], scale: [1, 0.95, 1.1, 1] }}
+              transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute top-1/3 right-1/4 h-[280px] w-[280px] rounded-full bg-cyan-400/15 blur-3xl"
+              animate={{ x: [0, 20, -25, 0], y: [0, -15, 20, 0] }}
+              transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)',
+                backgroundSize: '32px 32px',
+              }}
+            />
+          </div>
+
           {/* Header */}
           <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-b from-black/50 to-transparent">
             <div className="flex items-center gap-2 shrink-0">
@@ -362,7 +399,13 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
               <span className="text-[10px] font-medium uppercase tracking-wider">
                 {fr ? 'En direct' : ar ? 'مباشر' : 'Live'}
               </span>
+              {hasStarted && (
+                <span className="ml-1 text-[10px] font-mono tabular-nums text-white/80 px-1.5 py-0.5 rounded bg-white/10 border border-white/15">
+                  {fmtTime(elapsed)}
+                </span>
+              )}
             </div>
+
             <div className="flex items-center gap-2 flex-1 justify-end">
               <Select value={locale} onValueChange={setLocale}>
                 <SelectTrigger className="h-8 w-[150px] bg-white/10 border-white/20 text-white text-xs">
@@ -463,6 +506,26 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   <span className="text-[10px] font-medium text-white">Sarah</span>
                 </div>
               </motion.div>
+              {/* Equalizer bars under orb when speaking */}
+              <AnimatePresence>
+                {isSpeaking && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute left-1/2 -translate-x-1/2 -bottom-6 flex items-end gap-1 h-5"
+                  >
+                    {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="w-1 rounded-full bg-gradient-to-t from-indigo-400 to-fuchsia-300"
+                        animate={{ height: ['25%', '100%', '40%', '85%', '30%'] }}
+                        transition={{ duration: 0.9 + (i % 3) * 0.15, repeat: Infinity, delay: i * 0.07, ease: 'easeInOut' }}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="text-center w-full max-w-xl">
@@ -543,14 +606,14 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   size="icon"
                   onClick={isListening ? stopListening : startListening}
                   disabled={isSpeaking || chatLoading}
-                  className={`h-14 w-14 rounded-full ${isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white/15 hover:bg-white/25'}`}
+                  className={`h-14 w-14 rounded-full transition-transform hover:scale-110 active:scale-95 shadow-lg ${isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white/15 hover:bg-white/25'}`}
                 >
                   {isListening ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
                 </Button>
                 <Button
                   size="icon"
                   onClick={() => setShowTranscript((s) => !s)}
-                  className={`h-14 w-14 rounded-full ${showTranscript ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-white/15 hover:bg-white/25'}`}
+                  className={`h-14 w-14 rounded-full transition-transform hover:scale-110 active:scale-95 shadow-lg ${showTranscript ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-white/15 hover:bg-white/25'}`}
                   title={fr ? 'Transcription' : ar ? 'النص الكامل' : 'Transcript'}
                 >
                   <ScrollText className="h-6 w-6" />
@@ -558,7 +621,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                 <Button
                   size="icon"
                   onClick={handleHangup}
-                  className="h-14 w-14 rounded-full bg-red-500 hover:bg-red-600"
+                  className="h-14 w-14 rounded-full transition-transform hover:scale-110 active:scale-95 shadow-lg bg-red-500 hover:bg-red-600"
                 >
                   <PhoneOff className="h-6 w-6" />
                 </Button>
