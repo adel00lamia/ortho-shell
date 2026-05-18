@@ -365,6 +365,33 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
         <DialogTitle className="sr-only">{fr ? 'Entretien vidéo IA' : 'AI Video Interview'}</DialogTitle>
 
         <div className="relative h-[600px] flex flex-col">
+          {/* Aurora background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              className="absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-indigo-500/25 blur-3xl"
+              animate={{ x: [0, 30, -10, 0], y: [0, 20, -10, 0], scale: [1, 1.1, 0.95, 1] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -bottom-32 -right-24 h-[460px] w-[460px] rounded-full bg-fuchsia-500/20 blur-3xl"
+              animate={{ x: [0, -40, 10, 0], y: [0, -20, 15, 0], scale: [1, 0.95, 1.1, 1] }}
+              transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute top-1/3 right-1/4 h-[280px] w-[280px] rounded-full bg-cyan-400/15 blur-3xl"
+              animate={{ x: [0, 20, -25, 0], y: [0, -15, 20, 0] }}
+              transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)',
+                backgroundSize: '32px 32px',
+              }}
+            />
+          </div>
+
           {/* Header */}
           <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-b from-black/50 to-transparent">
             <div className="flex items-center gap-2 shrink-0">
@@ -372,7 +399,13 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
               <span className="text-[10px] font-medium uppercase tracking-wider">
                 {fr ? 'En direct' : ar ? 'مباشر' : 'Live'}
               </span>
+              {hasStarted && (
+                <span className="ml-1 text-[10px] font-mono tabular-nums text-white/80 px-1.5 py-0.5 rounded bg-white/10 border border-white/15">
+                  {fmtTime(elapsed)}
+                </span>
+              )}
             </div>
+
             <div className="flex items-center gap-2 flex-1 justify-end">
               <Select value={locale} onValueChange={setLocale}>
                 <SelectTrigger className="h-8 w-[150px] bg-white/10 border-white/20 text-white text-xs">
