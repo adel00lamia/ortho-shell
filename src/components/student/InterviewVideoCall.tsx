@@ -606,14 +606,14 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   size="icon"
                   onClick={isListening ? stopListening : startListening}
                   disabled={isSpeaking || chatLoading}
-                  className={`h-14 w-14 rounded-full ${isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white/15 hover:bg-white/25'}`}
+                  className={`h-14 w-14 rounded-full transition-transform hover:scale-110 active:scale-95 shadow-lg ${isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white/15 hover:bg-white/25'}`}
                 >
                   {isListening ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
                 </Button>
                 <Button
                   size="icon"
                   onClick={() => setShowTranscript((s) => !s)}
-                  className={`h-14 w-14 rounded-full ${showTranscript ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-white/15 hover:bg-white/25'}`}
+                  className={`h-14 w-14 rounded-full transition-transform hover:scale-110 active:scale-95 shadow-lg ${showTranscript ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-white/15 hover:bg-white/25'}`}
                   title={fr ? 'Transcription' : ar ? 'النص الكامل' : 'Transcript'}
                 >
                   <ScrollText className="h-6 w-6" />
@@ -621,7 +621,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                 <Button
                   size="icon"
                   onClick={handleHangup}
-                  className="h-14 w-14 rounded-full bg-red-500 hover:bg-red-600"
+                  className="h-14 w-14 rounded-full transition-transform hover:scale-110 active:scale-95 shadow-lg bg-red-500 hover:bg-red-600"
                 >
                   <PhoneOff className="h-6 w-6" />
                 </Button>
