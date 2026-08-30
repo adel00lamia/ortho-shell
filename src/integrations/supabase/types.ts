@@ -249,6 +249,79 @@ export type Database = {
           },
         ]
       }
+      diagnostic_impact_measurements: {
+        Row: {
+          action_id: string | null
+          actual_value: number | null
+          baseline_value: number | null
+          company_id: string
+          created_at: string
+          diagnostic_id: string
+          direction: string
+          id: string
+          kpi_name: string
+          measured_at: string | null
+          notes: string | null
+          target_value: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_id?: string | null
+          actual_value?: number | null
+          baseline_value?: number | null
+          company_id: string
+          created_at?: string
+          diagnostic_id: string
+          direction?: string
+          id?: string
+          kpi_name: string
+          measured_at?: string | null
+          notes?: string | null
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_id?: string | null
+          actual_value?: number | null
+          baseline_value?: number | null
+          company_id?: string
+          created_at?: string
+          diagnostic_id?: string
+          direction?: string
+          id?: string
+          kpi_name?: string
+          measured_at?: string | null
+          notes?: string | null
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_impact_measurements_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "root_cause_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_impact_measurements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_impact_measurements_diagnostic_id_fkey"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "root_cause_diagnostics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_skills: {
         Row: {
           assessed_at: string
@@ -1302,6 +1375,186 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      root_cause_actions: {
+        Row: {
+          action_type: string
+          company_id: string
+          created_at: string
+          description: string | null
+          diagnostic_id: string
+          due_date: string | null
+          effort: string | null
+          estimated_cost_mad: number | null
+          expected_impact: string | null
+          headcount: number | null
+          id: string
+          is_training: boolean
+          owner_name: string | null
+          priority: string
+          rationale: string | null
+          sort_order: number
+          status: string
+          target_population: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_type?: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          diagnostic_id: string
+          due_date?: string | null
+          effort?: string | null
+          estimated_cost_mad?: number | null
+          expected_impact?: string | null
+          headcount?: number | null
+          id?: string
+          is_training?: boolean
+          owner_name?: string | null
+          priority?: string
+          rationale?: string | null
+          sort_order?: number
+          status?: string
+          target_population?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          diagnostic_id?: string
+          due_date?: string | null
+          effort?: string | null
+          estimated_cost_mad?: number | null
+          expected_impact?: string | null
+          headcount?: number | null
+          id?: string
+          is_training?: boolean
+          owner_name?: string | null
+          priority?: string
+          rationale?: string | null
+          sort_order?: number
+          status?: string
+          target_population?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "root_cause_actions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "root_cause_actions_diagnostic_id_fkey"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "root_cause_diagnostics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      root_cause_diagnostics: {
+        Row: {
+          affected_population: string | null
+          ai_confidence: number | null
+          ai_summary: string | null
+          ai_verdict: string | null
+          avoided_training_cost_mad: number | null
+          business_kpis: Json
+          cause_breakdown: Json
+          company_id: string
+          created_at: string
+          created_by: string
+          department: string | null
+          diagnosed_at: string | null
+          estimated_training_cost_mad: number | null
+          evidence_sources: Json
+          headcount_affected: number | null
+          id: string
+          linked_training_plan_id: string | null
+          problem_description: string
+          source_channel: string
+          status: string
+          symptoms: string[]
+          title: string
+          training_fit_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          affected_population?: string | null
+          ai_confidence?: number | null
+          ai_summary?: string | null
+          ai_verdict?: string | null
+          avoided_training_cost_mad?: number | null
+          business_kpis?: Json
+          cause_breakdown?: Json
+          company_id: string
+          created_at?: string
+          created_by?: string
+          department?: string | null
+          diagnosed_at?: string | null
+          estimated_training_cost_mad?: number | null
+          evidence_sources?: Json
+          headcount_affected?: number | null
+          id?: string
+          linked_training_plan_id?: string | null
+          problem_description?: string
+          source_channel?: string
+          status?: string
+          symptoms?: string[]
+          title: string
+          training_fit_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          affected_population?: string | null
+          ai_confidence?: number | null
+          ai_summary?: string | null
+          ai_verdict?: string | null
+          avoided_training_cost_mad?: number | null
+          business_kpis?: Json
+          cause_breakdown?: Json
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          department?: string | null
+          diagnosed_at?: string | null
+          estimated_training_cost_mad?: number | null
+          evidence_sources?: Json
+          headcount_affected?: number | null
+          id?: string
+          linked_training_plan_id?: string | null
+          problem_description?: string
+          source_channel?: string
+          status?: string
+          symptoms?: string[]
+          title?: string
+          training_fit_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "root_cause_diagnostics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "root_cause_diagnostics_linked_training_plan_id_fkey"
+            columns: ["linked_training_plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
             referencedColumns: ["id"]
           },
         ]
