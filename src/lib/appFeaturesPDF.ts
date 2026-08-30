@@ -25,7 +25,7 @@ export function exportAppFeaturesPDF(language: 'fr' | 'en') {
   yPos = 50;
   doc.setFontSize(28);
   doc.setTextColor(...PRIMARY);
-  doc.text('TrainPro Academy', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('QimataQ', pageWidth / 2, yPos, { align: 'center' });
   yPos += 14;
   doc.setFontSize(16);
   doc.setTextColor(80, 80, 80);
@@ -272,10 +272,10 @@ export function exportAppFeaturesPDF(language: 'fr' | 'en') {
     doc.line(20, pageHeight - 15, pageWidth - 20, pageHeight - 15);
     doc.setFontSize(8);
     doc.setTextColor(140, 140, 140);
-    doc.text('TrainPro Academy', 20, pageHeight - 10);
+    doc.text('QimataQ', 20, pageHeight - 10);
     doc.text(`Page ${i}/${totalPages}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
     doc.text(fr ? 'Guide des fonctionnalités' : 'Feature Guide', pageWidth / 2, pageHeight - 10, { align: 'center' });
   }
 
-  doc.save(`TrainPro_Feature_Guide_${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(`QimataQ_Feature_Guide_${new Date().toISOString().slice(0, 10)}.pdf`);
 }

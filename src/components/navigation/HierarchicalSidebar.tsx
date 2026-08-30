@@ -10,6 +10,7 @@ import {
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
   GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,
+  Stethoscope,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -112,6 +113,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
         titleKey: 'assess',
         items: [
           { path: '/company-profile', labelKey: 'companyProfile', icon: Building2 },
+          { path: '/workflow/assess/root-cause', labelKey: 'rootCauseDiagnostic', icon: Stethoscope, badge: 'AI' },
           { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
           { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
           { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },
@@ -254,7 +256,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-sidebar-foreground text-sm truncate">TrainPro Academy</h2>
+              <h2 className="font-semibold text-sidebar-foreground text-sm truncate">QimataQ</h2>
               <div className="flex items-center gap-1.5">
                 <div className={`h-2 w-2 rounded-full bg-gradient-to-r ${shell.color}`} />
                 <span className="text-xs text-sidebar-foreground/60 truncate">{shellLabel}</span>

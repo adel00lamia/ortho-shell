@@ -71,6 +71,7 @@ export const en = {
     studentHub: 'Student Hub',
     talentPipeline: 'Talent Pipeline',
     hrKnowledge: 'HR Knowledge Base',
+    rootCauseDiagnostic: 'Root Cause Diagnostic',
     ingenieriePlan: 'Training Engineering',
   },
 
@@ -505,7 +506,7 @@ export const en = {
 
   // Landing page
   landing: {
-    platformName: 'TrainPro Academy',
+    platformName: 'QimataQ',
     welcome: 'Welcome',
     heroTitle: 'Drive Skills-Based Learning With an',
     heroTitleHighlight: 'AI-Powered Platform',
@@ -537,7 +538,7 @@ export const en = {
     analyticsROI: 'Analytics & ROI',
     analyticsDesc: 'Track progress and measure training impact',
     trustedBy: 'Trusted by Leading Organizations',
-    trustedByDesc: 'Join thousands of companies using TrainPro Academy for their training needs',
+    trustedByDesc: 'Join thousands of companies using QimataQ for their training needs',
     ctaTitle: 'Ready to Transform Your Training Programs?',
     ctaSubtitle: 'Start building AI-powered training plans today and see measurable results in weeks, not months.',
     startFreeTrial: 'Start Free Trial',

@@ -49,6 +49,7 @@ const JobBoard = lazy(() => import("./pages/JobBoard"));
 const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
 const StudentHub = lazy(() => import("./pages/StudentHub"));
+const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
@@ -130,13 +131,15 @@ const App = () => (
               <Route path="/company-profile" element={<ProtectedLayout featureName="Company Profile"><CompanyProfile /></ProtectedLayout>} />
 
               {/* Workflow Routes - Assess */}
+              <Route path="/workflow/assess/root-cause" element={<ProtectedLayout featureName="Root Cause Diagnostic"><RootCauseDiagnostic /></ProtectedLayout>} />
               <Route path="/workflow/assess/workforce" element={<ProtectedLayout featureName="Workforce & Org"><WorkforceOrg /></ProtectedLayout>} />
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
               <Route path="/workflow/assess/skills" element={<ProtectedLayout featureName="Skills & Gaps"><SkillsGaps /></ProtectedLayout>} />
               <Route path="/workflow/assess/report" element={<ProtectedLayout featureName="360° Report"><AssessmentReportPage /></ProtectedLayout>} />
               {/* Legacy assess routes */}
-              <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
+              <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/root-cause" replace />} />
               <Route path="/workflow/assess/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
+              
               
               {/* Workflow Routes - Plan */}
               <Route path="/workflow/plan/ingenierie" element={<ProtectedLayout featureName="Ingénierie de Formation"><GatedPage><IngenieriePage /></GatedPage></ProtectedLayout>} />
