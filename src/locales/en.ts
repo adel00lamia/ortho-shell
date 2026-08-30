@@ -71,6 +71,7 @@ export const en = {
     studentHub: 'Student Hub',
     talentPipeline: 'Talent Pipeline',
     hrKnowledge: 'HR Knowledge Base',
+    rootCauseDiagnostic: 'Root Cause Diagnostic',
     ingenieriePlan: 'Training Engineering',
   },
 

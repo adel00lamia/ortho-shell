@@ -9,7 +9,8 @@ import {
   LayoutDashboard, ClipboardCheck, Target, TrendingUp, Lightbulb, BookOpen,
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
-  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,
+  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,,
+  Stethoscope,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -112,6 +113,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
         titleKey: 'assess',
         items: [
           { path: '/company-profile', labelKey: 'companyProfile', icon: Building2 },
+          { path: '/workflow/assess/root-cause', labelKey: 'rootCauseDiagnostic', icon: Stethoscope, badge: 'AI' },
           { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
           { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
           { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },

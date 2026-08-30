@@ -71,6 +71,7 @@ export const fr: Translations = {
     studentHub: 'Espace étudiant',
     talentPipeline: 'Pipeline de talents',
     hrKnowledge: 'Base de connaissances RH',
+    rootCauseDiagnostic: 'Diagnostic Causes Racines',
     ingenieriePlan: 'Ingénierie de Formation',
   },
 
