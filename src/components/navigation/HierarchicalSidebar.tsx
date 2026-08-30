@@ -254,7 +254,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-sidebar-foreground text-sm truncate">TrainPro Academy</h2>
+              <h2 className="font-semibold text-sidebar-foreground text-sm truncate">QimataQ</h2>
               <div className="flex items-center gap-1.5">
                 <div className={`h-2 w-2 rounded-full bg-gradient-to-r ${shell.color}`} />
                 <span className="text-xs text-sidebar-foreground/60 truncate">{shellLabel}</span>

@@ -134,7 +134,7 @@ const Index = () => {
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-extrabold tracking-tight text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>
-                TrainPro Academy
+                QimataQ
               </span>
             </div>
 
@@ -469,8 +469,8 @@ const Index = () => {
           </h2>
           <p className="text-lg text-white/60 mb-10 max-w-2xl mx-auto">
             {language === 'fr'
-              ? 'Rejoignez plus de 500 entreprises qui utilisent TrainPro Academy pour développer les compétences de leurs équipes.'
-              : 'Join 500+ companies using TrainPro Academy to develop their team\'s skills.'}
+              ? 'Rejoignez plus de 500 entreprises qui utilisent QimataQ pour développer les compétences de leurs équipes.'
+              : 'Join 500+ companies using QimataQ to develop their team\'s skills.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -494,7 +494,7 @@ const Index = () => {
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <span className="text-lg font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>TrainPro Academy</span>
+                <span className="text-lg font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>QimataQ</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 {language === 'fr'
@@ -528,7 +528,7 @@ const Index = () => {
           </div>
           <div className="border-t border-border pt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} TrainPro Academy. {language === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}
+              © {new Date().getFullYear()} QimataQ. {language === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}
             </p>
           </div>
         </div>

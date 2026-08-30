@@ -152,7 +152,7 @@ const Billing = () => {
     generateInvoice({
       invoiceNumber: `INV-${subscription.id.slice(0, 8).toUpperCase()}`,
       date: new Date().toLocaleDateString('fr-MA'),
-      sellerName: 'TrainPro Academy SAS',
+      sellerName: 'QimataQ SAS',
       sellerAddress: 'Casablanca, Maroc',
       sellerIce: '003012345678901',
       sellerIf: '50123456',
@@ -242,7 +242,7 @@ const Billing = () => {
             <AlertDescription>
               {fr
                 ? `Votre essai se termine dans ${daysLeft} jour${daysLeft !== 1 ? 's' : ''}. Passez à un plan payant pour continuer.`
-                : `Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Upgrade to keep using TrainPro Academy.`}
+                : `Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Upgrade to keep using QimataQ.`}
               <Button size="sm" variant="link" onClick={() => navigate('/pricing')} className="ml-2 p-0 h-auto">
                 {fr ? 'Voir les plans →' : 'View plans →'}
               </Button>

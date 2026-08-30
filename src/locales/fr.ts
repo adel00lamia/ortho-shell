@@ -496,7 +496,7 @@ export const fr: Translations = {
   },
 
   landing: {
-    platformName: 'TrainPro Academy',
+    platformName: 'QimataQ',
     welcome: 'Bienvenue',
     heroTitle: 'Développez les compétences grâce à une',
     heroTitleHighlight: 'Plateforme propulsée par l\'IA',
@@ -528,7 +528,7 @@ export const fr: Translations = {
     analyticsROI: 'Analytique & ROI',
     analyticsDesc: 'Suivez la progression et mesurez l\'impact de la formation',
     trustedBy: 'Des organisations de premier plan nous font confiance',
-    trustedByDesc: 'Rejoignez des milliers d\'entreprises qui utilisent TrainPro Academy pour leurs besoins en formation',
+    trustedByDesc: 'Rejoignez des milliers d\'entreprises qui utilisent QimataQ pour leurs besoins en formation',
     ctaTitle: 'Prêt à transformer vos programmes de formation ?',
     ctaSubtitle: 'Commencez à créer des plans de formation propulsés par l\'IA et obtenez des résultats mesurables en quelques semaines.',
     startFreeTrial: 'Essai gratuit',

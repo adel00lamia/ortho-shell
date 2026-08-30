@@ -202,7 +202,7 @@ export const OnboardingChecklist = () => {
     setDismissed(true);
   };
 
-  const welcomeTitle = fr ? 'Bienvenue sur TrainPro Academy !' : 'Welcome to TrainPro Academy!';
+  const welcomeTitle = fr ? 'Bienvenue sur QimataQ !' : 'Welcome to QimataQ!';
   const welcomeDesc = fr
     ? 'Votre plateforme intelligente de gestion de formation. Suivez les étapes pour commencer.'
     : 'Your intelligent training management platform. Follow the steps to get started.';
