@@ -9,7 +9,7 @@ import {
   LayoutDashboard, ClipboardCheck, Target, TrendingUp, Lightbulb, BookOpen,
   PlayCircle, BarChart3, Award, Users, Settings, LogOut, ChevronDown,
   ShoppingBag, FileText, Building2, UserCog, Languages, Gauge, ShieldCheck,
-  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,,
+  GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,
   Stethoscope,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
