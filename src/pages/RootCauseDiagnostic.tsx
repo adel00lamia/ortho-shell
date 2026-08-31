@@ -482,77 +482,16 @@ export default function RootCauseDiagnostic() {
 
         {/* ---------- 3. IMPACT ---------- */}
         <TabsContent value="impact" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{fr ? 'Mesure d’impact' : 'Impact measurement'}</CardTitle>
-              <CardDescription>
-                {fr
-                  ? 'Après l’action, vérifiez si la performance s’améliore réellement.'
-                  : 'After the action, verify whether performance actually improves.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(detail?.measurements ?? []).length === 0 && (
-                <p className="text-sm text-muted-foreground">{fr ? 'Aucun indicateur suivi.' : 'No indicator tracked yet.'}</p>
-              )}
-              {(detail?.measurements ?? []).map((m) => (
-                <div key={m.id} className="grid gap-3 rounded-lg border border-border/60 p-3 md:grid-cols-5 md:items-end">
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-semibold text-foreground">{m.kpi_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {fr ? 'Objectif' : 'Target'}: {m.target_value ?? '—'} {m.unit ?? ''} · {fr ? 'Référence' : 'Baseline'}: {m.baseline_value ?? '—'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">{fr ? 'Valeur mesurée' : 'Measured value'}</Label>
-                    <Input
-                      type="number"
-                      defaultValue={m.actual_value ?? ''}
-                      onBlur={(e) =>
-                        upsertMeasurement.mutate({
-                          id: m.id,
-                          kpi_name: m.kpi_name,
-                          actual_value: e.target.value === '' ? null : Number(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">{fr ? 'Date de mesure' : 'Measured on'}</Label>
-                    <Input
-                      type="date"
-                      defaultValue={m.measured_at ?? ''}
-                      onBlur={(e) =>
-                        upsertMeasurement.mutate({ id: m.id, kpi_name: m.kpi_name, measured_at: e.target.value || null })
-                      }
-                    />
-                  </div>
-                  <div className="text-sm">
-                    {m.actual_value != null && m.baseline_value != null && (
-                      <Badge
-                        variant="outline"
-                        className={
-                          (m.direction === 'increase' ? m.actual_value > m.baseline_value : m.actual_value < m.baseline_value)
-                            ? 'border-emerald-500/40 text-emerald-600'
-                            : 'border-destructive/40 text-destructive'
-                        }
-                      >
-                        {(m.actual_value - m.baseline_value > 0 ? '+' : '')}
-                        {Math.round((m.actual_value - m.baseline_value) * 100) / 100} {m.unit ?? ''}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
+          <ImpactTracker
+            fr={fr}
+            measurements={detail?.measurements ?? []}
+            disabled={!selectedId}
+            onAddKpi={(row) => upsertMeasurement.mutate(row)}
+            onAddReading={(row) => upsertMeasurement.mutate(row)}
+            onUpdate={(row) => upsertMeasurement.mutate(row)}
+            onDelete={(id) => deleteMeasurement.mutate(id)}
+          />
 
-              <Separator />
-              <NewMeasurementRow
-                fr={fr}
-                onAdd={(row) => upsertMeasurement.mutate(row)}
-                disabled={!selectedId}
-              />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* ---------- HISTORY ---------- */}
