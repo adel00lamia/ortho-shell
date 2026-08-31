@@ -52,6 +52,23 @@ const ACTION_TONE: Record<string, string> = {
 
 const ACTION_STATUS = ['proposed', 'accepted', 'in_progress', 'done', 'dismissed'];
 
+const STATUS_LABELS: Record<'fr' | 'en', Record<string, string>> = {
+  fr: {
+    proposed: 'Proposée',
+    accepted: 'Acceptée',
+    in_progress: 'En cours',
+    done: 'Terminée',
+    dismissed: 'Écartée',
+  },
+  en: {
+    proposed: 'Proposed',
+    accepted: 'Accepted',
+    in_progress: 'In progress',
+    done: 'Done',
+    dismissed: 'Dismissed',
+  },
+};
+
 const fmtMad = (n?: number | null) =>
   new Intl.NumberFormat('fr-MA', { maximumFractionDigits: 0 }).format(Number(n ?? 0)) + ' MAD';
 
