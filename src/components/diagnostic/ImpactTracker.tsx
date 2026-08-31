@@ -175,7 +175,6 @@ function KpiCard({
           {targetReached && (
             <Badge className="bg-emerald-500 text-emerald-50">{fr ? 'Objectif atteint' : 'Target reached'}</Badge>
           )}
-          <Button size="icon" variant="ghost" onClick={() => readings.concat(def).forEach(() => {})} className="hidden" />
           <Button
             size="icon"
             variant="ghost"
