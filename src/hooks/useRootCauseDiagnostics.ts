@@ -68,7 +68,9 @@ export interface MeasurementRow {
   measured_at: string | null;
   direction: string;
   notes: string | null;
+  created_at?: string;
 }
+
 
 export interface AIDiagnosis {
   cause_breakdown: Record<CauseKey, number>;
