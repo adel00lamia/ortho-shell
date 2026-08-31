@@ -159,7 +159,7 @@ export default function RootCauseDiagnostic() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            <Sparkles className="mr-1 h-3 w-3" /> Qimatak
+            <Sparkles className="mr-1 h-3 w-3" /> QimataQ
           </Badge>
           <Badge variant="secondary">AI</Badge>
         </div>
