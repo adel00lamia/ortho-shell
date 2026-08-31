@@ -467,7 +467,7 @@ export default function RootCauseDiagnostic() {
                           <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {ACTION_STATUS.map((s) => (
-                              <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+                              <SelectItem key={s} value={s} className="text-xs">{STATUS_LABELS[lang][s] ?? s}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
