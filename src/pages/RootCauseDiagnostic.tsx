@@ -19,9 +19,10 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TrainingFitScore } from '@/components/diagnostic/TrainingFitScore';
 import { CauseBreakdownChart, CAUSE_LABELS } from '@/components/diagnostic/CauseBreakdownChart';
+import { ImpactTracker } from '@/components/diagnostic/ImpactTracker';
 import {
   useDeleteDiagnostic, useDiagnosticDetail, useDiagnostics, useRunDiagnostic,
-  useUpdateAction, useUpsertMeasurement, type DiagnosticRow,
+  useDeleteMeasurement, useUpdateAction, useUpsertMeasurement, type DiagnosticRow,
 } from '@/hooks/useRootCauseDiagnostics';
 
 const SYMPTOM_OPTIONS = [
@@ -90,6 +91,7 @@ export default function RootCauseDiagnostic() {
   const { data: detail } = useDiagnosticDetail(selectedId);
   const updateAction = useUpdateAction(selectedId);
   const upsertMeasurement = useUpsertMeasurement(selectedId);
+  const deleteMeasurement = useDeleteMeasurement(selectedId);
 
   // ---- intake form state ----
   const [title, setTitle] = useState('');
@@ -482,77 +484,16 @@ export default function RootCauseDiagnostic() {
 
         {/* ---------- 3. IMPACT ---------- */}
         <TabsContent value="impact" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{fr ? 'Mesure d’impact' : 'Impact measurement'}</CardTitle>
-              <CardDescription>
-                {fr
-                  ? 'Après l’action, vérifiez si la performance s’améliore réellement.'
-                  : 'After the action, verify whether performance actually improves.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(detail?.measurements ?? []).length === 0 && (
-                <p className="text-sm text-muted-foreground">{fr ? 'Aucun indicateur suivi.' : 'No indicator tracked yet.'}</p>
-              )}
-              {(detail?.measurements ?? []).map((m) => (
-                <div key={m.id} className="grid gap-3 rounded-lg border border-border/60 p-3 md:grid-cols-5 md:items-end">
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-semibold text-foreground">{m.kpi_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {fr ? 'Objectif' : 'Target'}: {m.target_value ?? '—'} {m.unit ?? ''} · {fr ? 'Référence' : 'Baseline'}: {m.baseline_value ?? '—'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">{fr ? 'Valeur mesurée' : 'Measured value'}</Label>
-                    <Input
-                      type="number"
-                      defaultValue={m.actual_value ?? ''}
-                      onBlur={(e) =>
-                        upsertMeasurement.mutate({
-                          id: m.id,
-                          kpi_name: m.kpi_name,
-                          actual_value: e.target.value === '' ? null : Number(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">{fr ? 'Date de mesure' : 'Measured on'}</Label>
-                    <Input
-                      type="date"
-                      defaultValue={m.measured_at ?? ''}
-                      onBlur={(e) =>
-                        upsertMeasurement.mutate({ id: m.id, kpi_name: m.kpi_name, measured_at: e.target.value || null })
-                      }
-                    />
-                  </div>
-                  <div className="text-sm">
-                    {m.actual_value != null && m.baseline_value != null && (
-                      <Badge
-                        variant="outline"
-                        className={
-                          (m.direction === 'increase' ? m.actual_value > m.baseline_value : m.actual_value < m.baseline_value)
-                            ? 'border-emerald-500/40 text-emerald-600'
-                            : 'border-destructive/40 text-destructive'
-                        }
-                      >
-                        {(m.actual_value - m.baseline_value > 0 ? '+' : '')}
-                        {Math.round((m.actual_value - m.baseline_value) * 100) / 100} {m.unit ?? ''}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
+          <ImpactTracker
+            fr={fr}
+            measurements={detail?.measurements ?? []}
+            disabled={!selectedId}
+            onAddKpi={(row) => upsertMeasurement.mutate(row)}
+            onAddReading={(row) => upsertMeasurement.mutate(row)}
+            onUpdate={(row) => upsertMeasurement.mutate(row)}
+            onDelete={(id) => deleteMeasurement.mutate(id)}
+          />
 
-              <Separator />
-              <NewMeasurementRow
-                fr={fr}
-                onAdd={(row) => upsertMeasurement.mutate(row)}
-                disabled={!selectedId}
-              />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* ---------- HISTORY ---------- */}
@@ -586,67 +527,6 @@ export default function RootCauseDiagnostic() {
           ))}
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function NewMeasurementRow({
-  fr,
-  onAdd,
-  disabled,
-}: {
-  fr: boolean;
-  onAdd: (row: { kpi_name: string; unit: string | null; baseline_value: number | null; target_value: number | null; direction: string }) => void;
-  disabled?: boolean;
-}) {
-  const [name, setName] = useState('');
-  const [unit, setUnit] = useState('');
-  const [baseline, setBaseline] = useState('');
-  const [target, setTarget] = useState('');
-  const [direction, setDirection] = useState('decrease');
-
-  return (
-    <div className="grid gap-2 md:grid-cols-6 md:items-end">
-      <div className="md:col-span-2 space-y-1">
-        <Label className="text-xs">{fr ? 'Nouvel indicateur' : 'New indicator'}</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={fr ? 'Taux de réclamation' : 'Complaint rate'} />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">{fr ? 'Unité' : 'Unit'}</Label>
-        <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="%" />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">{fr ? 'Référence' : 'Baseline'}</Label>
-        <Input type="number" value={baseline} onChange={(e) => setBaseline(e.target.value)} />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">{fr ? 'Objectif' : 'Target'}</Label>
-        <Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} />
-      </div>
-      <div className="flex gap-2">
-        <Select value={direction} onValueChange={setDirection}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="decrease">{fr ? 'Baisser' : 'Decrease'}</SelectItem>
-            <SelectItem value="increase">{fr ? 'Augmenter' : 'Increase'}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          disabled={disabled || !name.trim()}
-          onClick={() => {
-            onAdd({
-              kpi_name: name.trim(),
-              unit: unit.trim() || null,
-              baseline_value: baseline === '' ? null : Number(baseline),
-              target_value: target === '' ? null : Number(target),
-              direction,
-            });
-            setName(''); setUnit(''); setBaseline(''); setTarget('');
-          }}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 }

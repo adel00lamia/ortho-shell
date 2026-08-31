@@ -68,7 +68,9 @@ export interface MeasurementRow {
   measured_at: string | null;
   direction: string;
   notes: string | null;
+  created_at?: string;
 }
+
 
 export interface AIDiagnosis {
   cause_breakdown: Record<CauseKey, number>;
@@ -264,6 +266,20 @@ export function useUpsertMeasurement(diagnosticId: string | null) {
     onError: (e: Error) => toast.error(e.message),
   });
 }
+
+export function useDeleteMeasurement(diagnosticId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('diagnostic_impact_measurements').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['root-cause-diagnostic-detail', diagnosticId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+
 
 export function useDeleteDiagnostic() {
   const qc = useQueryClient();
