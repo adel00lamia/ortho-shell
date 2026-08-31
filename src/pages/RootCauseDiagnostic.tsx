@@ -52,6 +52,23 @@ const ACTION_TONE: Record<string, string> = {
 
 const ACTION_STATUS = ['proposed', 'accepted', 'in_progress', 'done', 'dismissed'];
 
+const STATUS_LABELS: Record<'fr' | 'en', Record<string, string>> = {
+  fr: {
+    proposed: 'Proposée',
+    accepted: 'Acceptée',
+    in_progress: 'En cours',
+    done: 'Terminée',
+    dismissed: 'Écartée',
+  },
+  en: {
+    proposed: 'Proposed',
+    accepted: 'Accepted',
+    in_progress: 'In progress',
+    done: 'Done',
+    dismissed: 'Dismissed',
+  },
+};
+
 const fmtMad = (n?: number | null) =>
   new Intl.NumberFormat('fr-MA', { maximumFractionDigits: 0 }).format(Number(n ?? 0)) + ' MAD';
 
@@ -142,7 +159,7 @@ export default function RootCauseDiagnostic() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            <Sparkles className="mr-1 h-3 w-3" /> Qimatak
+            <Sparkles className="mr-1 h-3 w-3" /> QimataQ
           </Badge>
           <Badge variant="secondary">AI</Badge>
         </div>
@@ -450,7 +467,7 @@ export default function RootCauseDiagnostic() {
                           <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {ACTION_STATUS.map((s) => (
-                              <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+                              <SelectItem key={s} value={s} className="text-xs">{STATUS_LABELS[lang][s] ?? s}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
