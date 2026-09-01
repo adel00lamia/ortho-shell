@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -110,6 +111,40 @@ export function useToggleSession() {
 
 const PUBLIC_COLUMNS =
   'id, session_id, domain, locale, sector, company_size, job_title, hr_function, seniority, team_size, answers, dimension_scores, opportunity_score, profile_label, profile_level, top_frictions, top_use_cases, recommended_modules, created_at';
+
+/**
+ * Realtime: keeps sessions + participants in sync instantly.
+ * Polling stays as a safety net if the socket drops.
+ */
+export function useDiagnosticRealtime(sessionId?: string) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    const channel = supabase
+      .channel(`diagnostic-live-${sessionId ?? 'all'}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'diagnostic_participants',
+          ...(sessionId ? { filter: `session_id=eq.${sessionId}` } : {}),
+        },
+        () => {
+          qc.invalidateQueries({ queryKey: ['diagnostic-participants', sessionId] });
+          qc.invalidateQueries({ queryKey: ['diagnostic-participants'] });
+        },
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'diagnostic_sessions' }, () => {
+        qc.invalidateQueries({ queryKey: ['diagnostic-sessions'] });
+        qc.invalidateQueries({ queryKey: ['diagnostic-session'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc, sessionId]);
+}
 
 export function useSessionParticipants(sessionId?: string, refetchMs?: number) {
   return useQuery({
