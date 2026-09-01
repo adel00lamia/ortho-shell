@@ -322,6 +322,134 @@ export type Database = {
           },
         ]
       }
+      diagnostic_participants: {
+        Row: {
+          answers: Json
+          company: string | null
+          company_size: string | null
+          contact_consent: boolean
+          contact_email: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          dimension_scores: Json
+          domain: string
+          first_name: string | null
+          hr_function: string
+          id: string
+          job_title: string | null
+          locale: string
+          opportunity_score: number
+          profile_label: string | null
+          profile_level: string | null
+          recommended_modules: Json
+          sector: string | null
+          seniority: string | null
+          session_id: string | null
+          team_size: string | null
+          top_frictions: Json
+          top_use_cases: Json
+        }
+        Insert: {
+          answers?: Json
+          company?: string | null
+          company_size?: string | null
+          contact_consent?: boolean
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          dimension_scores?: Json
+          domain?: string
+          first_name?: string | null
+          hr_function: string
+          id?: string
+          job_title?: string | null
+          locale?: string
+          opportunity_score?: number
+          profile_label?: string | null
+          profile_level?: string | null
+          recommended_modules?: Json
+          sector?: string | null
+          seniority?: string | null
+          session_id?: string | null
+          team_size?: string | null
+          top_frictions?: Json
+          top_use_cases?: Json
+        }
+        Update: {
+          answers?: Json
+          company?: string | null
+          company_size?: string | null
+          contact_consent?: boolean
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          dimension_scores?: Json
+          domain?: string
+          first_name?: string | null
+          hr_function?: string
+          id?: string
+          job_title?: string | null
+          locale?: string
+          opportunity_score?: number
+          profile_label?: string | null
+          profile_level?: string | null
+          recommended_modules?: Json
+          sector?: string | null
+          seniority?: string | null
+          session_id?: string | null
+          team_size?: string | null
+          top_frictions?: Json
+          top_use_cases?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_sessions: {
+        Row: {
+          city: string | null
+          code: string
+          created_at: string
+          domain: string
+          event_date: string | null
+          id: string
+          is_open: boolean
+          owner_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          code: string
+          created_at?: string
+          domain?: string
+          event_date?: string | null
+          id?: string
+          is_open?: boolean
+          owner_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          code?: string
+          created_at?: string
+          domain?: string
+          event_date?: string | null
+          id?: string
+          is_open?: boolean
+          owner_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employee_skills: {
         Row: {
           assessed_at: string

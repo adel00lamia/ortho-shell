@@ -50,6 +50,10 @@ const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
 const StudentHub = lazy(() => import("./pages/StudentHub"));
 const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
+const AiHrDiagnostic = lazy(() => import("./pages/AiHrDiagnostic"));
+const AiHrWorkshops = lazy(() => import("./pages/AiHrWorkshops"));
+const AiHrLiveScreen = lazy(() => import("./pages/AiHrLiveScreen"));
+const AiHrSessionReport = lazy(() => import("./pages/AiHrSessionReport"));
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
@@ -123,6 +127,12 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
+
+              {/* AI × HR Diagnostic — public participant + projected screens */}
+              <Route path="/diagnostic" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
+              <Route path="/diagnostic/live/:code" element={<Suspense fallback={<PageLoader />}><AiHrLiveScreen /></Suspense>} />
+              <Route path="/diagnostic/report/:code" element={<Suspense fallback={<PageLoader />}><AiHrSessionReport /></Suspense>} />
+              <Route path="/diagnostic/:code" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
               
               {/* Protected routes with sidebar */}
               <Route path="/dashboard" element={<ProtectedLayout featureName="Dashboard"><Dashboard /></ProtectedLayout>} />
@@ -132,6 +142,7 @@ const App = () => (
 
               {/* Workflow Routes - Assess */}
               <Route path="/workflow/assess/root-cause" element={<ProtectedLayout featureName="Root Cause Diagnostic"><RootCauseDiagnostic /></ProtectedLayout>} />
+              <Route path="/workflow/assess/ai-hr" element={<ProtectedLayout featureName="AI × HR Diagnostic"><AiHrWorkshops /></ProtectedLayout>} />
               <Route path="/workflow/assess/workforce" element={<ProtectedLayout featureName="Workforce & Org"><WorkforceOrg /></ProtectedLayout>} />
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
               <Route path="/workflow/assess/skills" element={<ProtectedLayout featureName="Skills & Gaps"><SkillsGaps /></ProtectedLayout>} />
