@@ -37,7 +37,10 @@ export function getQuestions(domainKey: string, roleKey: string): Question[] {
 }
 
 function normalize(q: Question, raw: AnswerValue | undefined, score: { map?: Record<string, number> }): number | null {
-  if (raw === undefined || raw === null || raw === '') return null;
+  if (raw === undefined || raw === null || raw === '') {
+    // A scale left untouched keeps its displayed default (3/5).
+    return q.type === 'scale' ? 0.5 : null;
+  }
   if (q.type === 'scale') {
     const v = Number(raw);
     if (!Number.isFinite(v)) return null;
