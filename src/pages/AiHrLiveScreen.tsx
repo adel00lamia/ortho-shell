@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Users, Gauge, Sparkles } from 'lucide-react';
-import { useDiagnosticSession, useSessionParticipants } from '@/hooks/useDiagnosticEngine';
+import { useDiagnosticRealtime, useDiagnosticSession, useSessionParticipants } from '@/hooks/useDiagnosticEngine';
 import { buildCohortInsights } from '@/lib/diagnosticAggregate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -12,7 +12,8 @@ import { motion } from 'framer-motion';
 export default function AiHrLiveScreen() {
   const { code } = useParams<{ code: string }>();
   const { data: session } = useDiagnosticSession(code);
-  const { data: participants = [] } = useSessionParticipants(session?.id, 5000);
+  const { data: participants = [] } = useSessionParticipants(session?.id, 15000);
+  useDiagnosticRealtime(session?.id);
   const insights = useMemo(() => buildCohortInsights(participants), [participants]);
 
   const url = `${window.location.origin}/diagnostic/${code}`;

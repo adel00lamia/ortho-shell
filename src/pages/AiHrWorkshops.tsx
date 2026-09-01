@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { COMPANY_SIZES, HR_ROLES, SECTORS } from '@/config/diagnosticEngine';
 import {
-  useCreateSession, useDiagnosticSessions, useSessionParticipants, useToggleSession,
+  useCreateSession, useDiagnosticRealtime, useDiagnosticSessions, useSessionParticipants, useToggleSession,
 } from '@/hooks/useDiagnosticEngine';
 import { buildCohortInsights, filterParticipants } from '@/lib/diagnosticAggregate';
 import { CohortInsightsView } from '@/components/diagnostic/CohortInsightsView';
@@ -28,7 +28,8 @@ export default function AiHrWorkshops() {
   const [filters, setFilters] = useState<{ role?: string; companySize?: string; sector?: string }>({});
 
   const active = sessions.find((s) => s.id === selectedId) ?? sessions[0] ?? null;
-  const { data: participants = [] } = useSessionParticipants(active?.id, 15000);
+  const { data: participants = [] } = useSessionParticipants(active?.id, 30000);
+  useDiagnosticRealtime(active?.id);
 
   const insights = useMemo(
     () => buildCohortInsights(filterParticipants(participants, filters)),
