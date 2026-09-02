@@ -20,6 +20,9 @@ max_client_conn = 100
 [functions.ai-suggest-diagnostic]
 verify_jwt = false
 
+[functions.ai-hr-diagnostic]
+verify_jwt = false
+
 [functions.ai-advanced-planner]
 verify_jwt = false
 

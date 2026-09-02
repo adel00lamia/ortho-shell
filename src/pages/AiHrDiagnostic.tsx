@@ -9,6 +9,7 @@ import {
   COMPANY_SIZES, DIMENSIONS, HR_ROLES, HR_TEAM_SIZES, SECTORS, SENIORITIES,
 } from '@/config/diagnosticEngine';
 import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticResult } from '@/lib/diagnosticScoring';
+import { generateAiDiagnostic } from '@/lib/aiHrDiagnostic';
 import { useDiagnosticSession, useSubmitDiagnostic, type ParticipantProfile } from '@/hooks/useDiagnosticEngine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +45,7 @@ export default function AiHrDiagnostic() {
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [qIndex, setQIndex] = useState(0);
   const [result, setResult] = useState<DiagnosticResult | null>(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const questions = useMemo(
     () => (profile.hr_function ? getQuestions('hr', profile.hr_function) : []),
@@ -73,16 +75,41 @@ export default function AiHrDiagnostic() {
     setResult(computed);
     setStep('result');
     window.scrollTo({ top: 0 });
+
     if (sessionClosed) {
       toast.error('Cette session est clôturée : votre résultat n’a pas été enregistré.');
       return;
     }
+
+    setAiGenerating(true);
+    let finalResult = computed;
+    try {
+      const generated = await generateAiDiagnostic({
+        roleKey: profile.hr_function,
+        answers,
+        baseline: computed,
+        profile: profile as unknown as Record<string, unknown>,
+        locale: 'fr',
+      });
+      if ('result' in generated) {
+        finalResult = generated.result;
+        setResult(finalResult);
+      } else {
+        toast.error(`${generated.error} Résultat calculé à partir de vos réponses.`);
+      }
+    } catch (error) {
+      console.error('AI HR diagnostic failed:', error);
+      toast.error('Le moteur IA est indisponible : résultat calculé à partir de vos réponses.');
+    } finally {
+      setAiGenerating(false);
+    }
+
     try {
       await submit.mutateAsync({
         sessionId: session?.id ?? null,
         profile,
         answers,
-        result: computed,
+        result: finalResult,
       });
     } catch {
       toast.error('Résultat affiché, mais l’enregistrement a échoué.');
@@ -440,7 +467,7 @@ export default function AiHrDiagnostic() {
           {/* ─────────── Result ─────────── */}
           {step === 'result' && result && (
             <motion.section key="result" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <ResultView result={result} firstName={profile.first_name} saving={submit.isPending} />
+              <ResultView result={result} firstName={profile.first_name} saving={submit.isPending} aiGenerating={aiGenerating} />
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="flex-1 gap-2">
                   <Link to="/pricing">Construire mon parcours AI × HR <ArrowRight className="h-4 w-4" /></Link>
@@ -478,7 +505,7 @@ function SelectField({ label, value, options, onChange }: { label: string; value
   );
 }
 
-export function ResultView({ result, firstName, saving }: { result: DiagnosticResult; firstName?: string; saving?: boolean }) {
+export function ResultView({ result, firstName, saving, aiGenerating }: { result: DiagnosticResult; firstName?: string; saving?: boolean; aiGenerating?: boolean }) {
   const radar = DIMENSIONS.map((d) => ({ dim: d.short, value: result.dimensions[d.key] }));
 
   return (
@@ -502,9 +529,10 @@ export function ResultView({ result, firstName, saving }: { result: DiagnosticRe
           <p className="text-xs text-muted-foreground">
             Un score élevé signale un fort potentiel de gain grâce à l’IA — pas un niveau de maturité élevé.
           </p>
-          {saving && (
+          {(saving || aiGenerating) && (
             <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" /> Enregistrement…
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {aiGenerating ? 'Analyse personnalisée par Gemini…' : 'Enregistrement…'}
             </p>
           )}
         </CardContent>
