@@ -270,14 +270,17 @@ export function useUpsertMeasurement(diagnosticId: string | null) {
 export function useDeleteMeasurement(diagnosticId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('diagnostic_impact_measurements').delete().eq('id', id);
+    mutationFn: async (id: string | string[]) => {
+      const ids = Array.isArray(id) ? id : [id];
+      if (ids.length === 0) return;
+      const { error } = await supabase.from('diagnostic_impact_measurements').delete().in('id', ids);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['root-cause-diagnostic-detail', diagnosticId] }),
     onError: (e: Error) => toast.error(e.message),
   });
 }
+
 
 
 
