@@ -30,10 +30,22 @@ export interface DiagnosticResult {
   tags: string[];
 }
 
-/** Returns the ordered question list for a role (universal first, then branch). */
+/** Returns an intentionally varied, role-first question path for a role. */
 export function getQuestions(domainKey: string, roleKey: string): Question[] {
   const domain = DOMAINS[domainKey] ?? DOMAINS.hr;
-  return [...domain.universal, ...(domain.branches[roleKey] ?? [])];
+  const universal = domain.universal;
+  const branch = domain.branches[roleKey] ?? [];
+  const byId = (id: string) => universal.find((question) => question.id === id);
+  const firstUniversal = ['u_time', 'u_priority']
+    .map(byId)
+    .filter((question): question is Question => !!question);
+  const laterUniversal = universal.filter((question) => !firstUniversal.includes(question));
+  const openingBranch = branch.slice(0, 2);
+  const remainingBranch = branch.slice(2);
+
+  // The participant sees their own work before generic maturity questions.
+  // This keeps the flow conversational while preserving every scored question.
+  return [...firstUniversal, ...openingBranch, ...laterUniversal.slice(0, 2), ...remainingBranch, ...laterUniversal.slice(2)];
 }
 
 function normalize(q: Question, raw: AnswerValue | undefined, score: { map?: Record<string, number> }): number | null {

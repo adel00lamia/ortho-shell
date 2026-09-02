@@ -346,24 +346,32 @@ export default function AiHrDiagnostic() {
 
           {/* ─────────── Questions ─────────── */}
           {step === 'questions' && current && (
-            <motion.section key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                  <span>Question {qIndex + 1} / {questions.length}</span>
-                  <span>{progress}%</span>
+              <motion.section key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                    <span>Question {qIndex + 1} / {questions.length}</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <Progress value={progress} className="h-1.5" />
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+                      {current.chapter ?? 'Votre diagnostic'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {current.type === 'multi' ? 'Choisissez ce qui vous ressemble' : current.type === 'scale' ? 'Votre ressenti compte' : current.type === 'text' ? 'Une réponse personnelle' : 'Votre choix métier'}
+                    </span>
+                  </div>
                 </div>
-                <Progress value={progress} className="h-1.5" />
-              </div>
 
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold leading-snug text-foreground sm:text-2xl">{current.label}</h2>
-                {current.hint && <p className="text-sm text-muted-foreground">{current.hint}</p>}
-                {current.notice && (
-                  <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
-                  </p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold leading-snug text-foreground sm:text-2xl">{current.label}</h2>
+                  {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
+                  {current.notice && (
+                    <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                    </p>
+                  )}
+                </div>
 
               {current.type === 'multi' && (
                 <div className="space-y-2">

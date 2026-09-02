@@ -42,6 +42,8 @@ export interface Question {
   id: string;
   type: QuestionType;
   label: string;
+  /** short eyebrow shown above the question, gives a sense of chapters */
+  chapter?: string;
   hint?: string;
   /** for multi: recommended number of selections (used for normalization) */
   pick?: number;
@@ -182,16 +184,51 @@ const opts = (list: [string, string, string[]?][]): QuestionOption[] =>
 // ─────────────────────── Universal questions ───────────────────────
 
 const TASK_OPTIONS = opts([
-  ['reporting', 'Reporting et tableaux de bord', ['reporting']],
-  ['admin_docs', 'Rédaction de documents et courriers', ['documents']],
-  ['data_entry', 'Saisie et consolidation de données', ['data']],
-  ['emails', 'E-mails et réponses aux mêmes questions', ['faq']],
-  ['meetings', 'Réunions et comptes rendus', ['meetings']],
-  ['recruit', 'Tri de CV et entretiens', ['recruitment']],
-  ['payroll', 'Contrôles de paie et pointage', ['payroll']],
-  ['training', 'Organisation et suivi des formations', ['learning']],
-  ['cases', 'Traitement de cas individuels', ['cases']],
-  ['policies', 'Interprétation de procédures et politiques', ['policy']],
+  ['reporting', 'Préparer des chiffres, tableaux, présentations', ['reporting']],
+  ['admin_docs', 'Rédiger des courriers, attestations, notes', ['documents']],
+  ['data_entry', 'Ressaisir ou recoller des données entre fichiers', ['data']],
+  ['emails', 'Répondre aux e-mails et aux mêmes questions', ['faq']],
+  ['meetings', 'Réunions, préparation et comptes rendus', ['meetings']],
+  ['recruit', 'Lire des CV, mener et suivre des entretiens', ['recruitment']],
+  ['payroll', 'Vérifier la paie, le pointage, les absences', ['payroll']],
+  ['training', 'Organiser et suivre les formations', ['learning']],
+  ['cases', 'Gérer des situations individuelles', ['cases']],
+  ['policies', 'Chercher ce que dit la procédure ou la loi', ['policy']],
+]);
+
+/** Very concrete micro-gestures — makes the "repetitive" question feel different. */
+const REPEAT_OPTIONS = opts([
+  ['copy_paste', 'Copier-coller d’un fichier vers un autre', ['data']],
+  ['same_answer', 'Réécrire la même réponse à des questions identiques', ['faq']],
+  ['template_docs', 'Repartir d’un ancien document et changer les noms', ['documents']],
+  ['chase', 'Relancer des personnes pour obtenir une information', ['meetings']],
+  ['monthly_report', 'Refaire le même tableau chaque mois', ['reporting']],
+  ['check_lines', 'Vérifier ligne à ligne pour éviter une erreur', ['payroll']],
+  ['sort_cv', 'Parcourir des candidatures très similaires', ['screening']],
+  ['schedule', 'Caler des créneaux et replanifier', ['scheduling']],
+]);
+
+/** Where the mess shows up — error / rework framing. */
+const ERROR_OPTIONS = opts([
+  ['numbers', 'Les chiffres transmis à la direction', ['reporting']],
+  ['payroll_var', 'Les éléments variables de paie', ['payroll']],
+  ['files', 'Les dossiers du personnel incomplets', ['documents']],
+  ['double_entry', 'Les données saisies deux fois différemment', ['data']],
+  ['deadlines', 'Les échéances oubliées ou découvertes tard', ['reporting']],
+  ['contracts', 'Les contrats, avenants et attestations', ['documents']],
+  ['perf_data', 'Les évaluations et données de performance', ['performance']],
+  ['leave', 'Les compteurs de congés et d’absences', ['payroll']],
+]);
+
+/** Where information physically lives — replaces the repeated task list. */
+const SOURCE_OPTIONS = opts([
+  ['excel', 'Plusieurs fichiers Excel, pas toujours à jour', ['data']],
+  ['mailbox', 'Ma boîte e-mail et mes conversations', ['faq']],
+  ['sirh', 'Le SIRH, mais l’extraction est pénible', ['data']],
+  ['drive', 'Des dossiers partagés mal rangés', ['documents']],
+  ['paper', 'Des documents papier ou scannés', ['documents']],
+  ['colleagues', 'La mémoire de mes collègues', ['policy']],
+  ['procedures', 'Des procédures dispersées en plusieurs versions', ['policy']],
 ]);
 
 export const HR_UNIVERSAL: Question[] = [
@@ -199,7 +236,9 @@ export const HR_UNIVERSAL: Question[] = [
     id: 'u_time',
     type: 'multi',
     pick: 3,
-    label: 'Quelles 3 tâches vous prennent le plus de temps chaque semaine ?',
+    chapter: 'Votre semaine',
+    label: 'Sur une semaine typique, où part réellement votre temps ?',
+    hint: 'Pensez à la semaine dernière plutôt qu’à une semaine idéale. 3 choix maximum.',
     options: TASK_OPTIONS,
     scores: [{ dim: 'time', weight: 2 }],
   },
@@ -207,38 +246,44 @@ export const HR_UNIVERSAL: Question[] = [
     id: 'u_repetitive',
     type: 'multi',
     pick: 3,
-    label: 'Quelles 3 activités sont les plus répétitives ?',
-    options: TASK_OPTIONS,
+    chapter: 'Votre semaine',
+    label: 'Quels gestes faites-vous presque les yeux fermés, tellement ils reviennent ?',
+    hint: 'Ce sont souvent les meilleurs candidats à l’automatisation.',
+    options: REPEAT_OPTIONS,
     scores: [{ dim: 'automation', weight: 2 }],
   },
   {
     id: 'u_errors',
     type: 'multi',
     pick: 3,
-    label: 'Quelles 3 activités génèrent le plus d’erreurs ou de reprises ?',
-    options: TASK_OPTIONS,
+    chapter: 'Ce qui coince',
+    label: 'Sur quoi devez-vous le plus souvent corriger, reprendre ou vous justifier ?',
+    hint: 'Là où une erreur coûte cher, l’IA sert surtout de filet de contrôle.',
+    options: ERROR_OPTIONS,
     scores: [{ dim: 'time', weight: 1.5 }, { dim: 'data', weight: 1, invert: true }],
   },
   {
     id: 'u_search',
     type: 'multi',
     pick: 3,
-    label: 'Quelles 3 activités vous obligent à chercher dans de nombreux documents ou fichiers ?',
-    options: TASK_OPTIONS,
+    chapter: 'Ce qui coince',
+    label: 'Quand il vous manque une information RH, où faut-il aller fouiller ?',
+    options: SOURCE_OPTIONS,
     scores: [{ dim: 'automation', weight: 1.5 }, { dim: 'data', weight: 1.5, invert: true }],
   },
   {
     id: 'u_decisions',
     type: 'multi',
     pick: 2,
-    label: 'Quelles décisions sont les plus difficiles faute de données fiables ou centralisées ?',
+    chapter: 'Décider',
+    label: 'Quelle décision prenez-vous aujourd’hui plus au feeling qu’avec des données ?',
     options: opts([
-      ['workforce', 'Dimensionnement des effectifs', ['workforce']],
-      ['salary', 'Décisions salariales', ['comp']],
-      ['skills', 'Priorisation des compétences à développer', ['skills']],
-      ['perf', 'Évaluation de la performance', ['performance']],
-      ['turnover', 'Anticipation des départs', ['analytics']],
-      ['budget', 'Arbitrages budgétaires RH', ['reporting']],
+      ['workforce', 'Combien de personnes recruter et où', ['workforce']],
+      ['salary', 'Qui augmenter et de combien', ['comp']],
+      ['skills', 'Quelles compétences développer en priorité', ['skills']],
+      ['perf', 'Comment évaluer réellement la performance', ['performance']],
+      ['turnover', 'Qui risque de partir dans les prochains mois', ['analytics']],
+      ['budget', 'Où couper ou investir dans le budget RH', ['reporting']],
     ]),
     scores: [{ dim: 'data', weight: 2, invert: true }],
   },
@@ -246,49 +291,54 @@ export const HR_UNIVERSAL: Question[] = [
     id: 'u_faq',
     type: 'multi',
     pick: 2,
-    label: 'Sur quels sujets collaborateurs et managers vous posent-ils sans cesse les mêmes questions ?',
+    chapter: 'Décider',
+    label: 'Sur quels sujets pourriez-vous réciter votre réponse par cœur ?',
+    hint: 'Les questions que collaborateurs et managers vous reposent sans arrêt.',
     options: opts([
-      ['leave', 'Congés et absences', ['faq']],
+      ['leave', 'Congés, absences, jours restants', ['faq']],
       ['payslip', 'Bulletins et éléments de paie', ['payroll', 'faq']],
       ['contracts', 'Contrats et attestations', ['documents', 'faq']],
       ['process', 'Procédures RH internes', ['policy', 'faq']],
-      ['training_offer', 'Offre de formation', ['learning', 'faq']],
-      ['career', 'Évolution et mobilité', ['talent', 'faq']],
+      ['training_offer', 'Formations disponibles', ['learning', 'faq']],
+      ['career', 'Évolution, mobilité, promotion', ['talent', 'faq']],
     ]),
     scores: [{ dim: 'automation', weight: 1.5 }],
   },
   {
     id: 'u_priority',
     type: 'single',
-    label: 'Quel processus souhaitez-vous améliorer en priorité dans les 3 prochains mois ?',
+    chapter: 'Votre priorité',
+    label: 'Si vous ne pouviez réussir qu’un seul chantier RH d’ici 3 mois, lequel ?',
     options: opts([
-      ['recruitment', 'Recrutement'],
-      ['learning', 'Formation & développement'],
-      ['payroll', 'Paie & administration'],
-      ['performance', 'Performance & talents'],
-      ['reporting', 'Reporting & pilotage RH'],
-      ['relations', 'Relations sociales'],
-      ['comp', 'Rémunération'],
-      ['other', 'Autre'],
+      ['recruitment', 'Recruter mieux et plus vite'],
+      ['learning', 'Faire monter les compétences'],
+      ['payroll', 'Sécuriser la paie et l’administration'],
+      ['performance', 'Structurer performance et talents'],
+      ['reporting', 'Piloter avec des chiffres fiables'],
+      ['relations', 'Apaiser le climat social'],
+      ['comp', 'Clarifier la rémunération'],
+      ['other', 'Autre chantier'],
     ]),
   },
   {
     id: 'u_comfort',
     type: 'scale',
-    label: 'Aujourd’hui, quel est votre niveau d’aisance avec l’IA générative ?',
-    hint: '1 = jamais utilisée · 5 = usage quotidien avancé',
+    chapter: 'Votre rapport à l’IA',
+    label: 'Où vous situez-vous aujourd’hui avec l’IA générative ?',
+    hint: '1 = je n’ai jamais essayé · 3 = j’essaie de temps en temps · 5 = je l’utilise chaque jour',
     scores: [{ dim: 'ai', weight: 3 }],
   },
   {
     id: 'u_tools',
     type: 'multi',
     pick: 2,
-    label: 'Quels outils d’IA utilisez-vous déjà ?',
+    chapter: 'Votre rapport à l’IA',
+    label: 'Qu’avez-vous déjà ouvert au moins une fois ?',
     options: opts([
       ['chatgpt', 'ChatGPT'],
       ['copilot', 'Microsoft Copilot'],
       ['gemini', 'Google Gemini'],
-      ['other', 'Un autre outil'],
+      ['other', 'Un autre assistant'],
       ['none', 'Aucun pour l’instant'],
     ]),
     scores: [{ dim: 'ai', weight: 1.5 }],
@@ -296,22 +346,29 @@ export const HR_UNIVERSAL: Question[] = [
   {
     id: 'u_rules',
     type: 'single',
-    label: 'Votre entreprise a-t-elle des règles claires sur l’usage de l’IA et des données collaborateurs ?',
-    options: opts([['yes', 'Oui, formalisées'], ['partly', 'Partiellement / en cours'], ['no', 'Non'], ['unsure', 'Je ne sais pas']]),
+    chapter: 'Cadre & confiance',
+    label: 'Si vous utilisiez l’IA sur un dossier RH demain, sauriez-vous ce qui est autorisé ?',
+    options: opts([
+      ['yes', 'Oui, des règles écrites existent'],
+      ['partly', 'En partie, c’est en construction'],
+      ['no', 'Non, rien n’est cadré'],
+      ['unsure', 'Je ne sais pas'],
+    ]),
     scores: [{ dim: 'governance', weight: 3, map: { yes: 1, partly: 0.55, no: 0.1, unsure: 0.2 } }],
   },
   {
     id: 'u_concern',
     type: 'single',
-    label: 'Quelle est votre principale préoccupation vis-à-vis de l’IA ?',
+    chapter: 'Cadre & confiance',
+    label: 'Qu’est-ce qui vous retient le plus d’aller plus loin avec l’IA ?',
     options: opts([
-      ['confidentiality', 'Confidentialité des données'],
-      ['reliability', 'Fiabilité des résultats'],
-      ['jobs', 'Impact sur les emplois'],
-      ['skills', 'Manque de compétences'],
-      ['compliance', 'Conformité et cadre légal'],
-      ['integration', 'Intégration aux outils existants'],
-      ['other', 'Autre'],
+      ['confidentiality', 'La confidentialité des données'],
+      ['reliability', 'Le risque de résultats faux'],
+      ['jobs', 'L’impact sur les emplois'],
+      ['skills', 'Le sentiment de ne pas savoir m’en servir'],
+      ['compliance', 'Le cadre légal et la conformité'],
+      ['integration', 'L’intégration à nos outils actuels'],
+      ['other', 'Autre chose'],
     ]),
     scores: [{ dim: 'governance', weight: 1, map: { confidentiality: 0.4, reliability: 0.5, jobs: 0.4, skills: 0.3, compliance: 0.4, integration: 0.6, other: 0.5 } }],
   },
@@ -319,19 +376,21 @@ export const HR_UNIVERSAL: Question[] = [
 
 // ─────────────────────── Role branches ───────────────────────
 
+
 const openQ = (id: string): Question => ({
   id,
   type: 'text',
-  label: 'Si vous pouviez supprimer une tâche frustrante de votre semaine, laquelle serait-ce ?',
-  hint: 'Réponse libre, en une ou deux phrases.',
+  chapter: 'Projection',
+  label: 'Imaginez votre semaine idéale : quelle tâche RH aimeriez-vous ne plus faire manuellement ?',
+  hint: 'Décrivez la situation concrète. Une ou deux phrases suffisent.',
 });
 
 const painQ = (id: string, label: string, options: QuestionOption[], pick = 3, scores?: QuestionScore[]): Question => ({
-  id, type: 'multi', pick, label, options, scores: scores ?? [{ dim: 'automation', weight: 1.5 }],
+  id, type: 'multi', chapter: 'Votre réalité métier', pick, label, options, scores: scores ?? [{ dim: 'automation', weight: 1.5 }],
 });
 
 const scaleQ = (id: string, label: string, dim: DimensionKey, weight = 1.5, invert = false, hint?: string): Question => ({
-  id, type: 'scale', label, hint, scores: [{ dim, weight, invert }],
+  id, type: 'scale', chapter: 'Votre réalité métier', label, hint, scores: [{ dim, weight, invert }],
 });
 
 export const HR_BRANCHES: Record<string, Question[]> = {
