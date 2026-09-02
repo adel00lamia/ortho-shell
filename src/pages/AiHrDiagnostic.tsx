@@ -457,6 +457,8 @@ export default function AiHrDiagnostic() {
             </motion.section>
           )}
         </AnimatePresence>
+        )}
+
       </div>
     </div>
   );
