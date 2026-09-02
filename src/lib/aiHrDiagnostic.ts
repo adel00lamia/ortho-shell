@@ -38,7 +38,7 @@ export async function generateAiDiagnostic(opts: {
   locale?: string;
 }): Promise<{ result: DiagnosticResult } | { error: string }> {
   const { roleKey, answers, baseline, profile, locale = 'fr' } = opts;
-  const questions = getQuestions('hr', roleKey);
+  const questions = getQuestions('hr', roleKey, answers);
 
   const { data, error } = await supabase.functions.invoke('ai-hr-diagnostic', {
     body: {
