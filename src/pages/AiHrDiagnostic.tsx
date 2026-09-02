@@ -95,7 +95,7 @@ export default function AiHrDiagnostic() {
         finalResult = generated.result;
         setResult(finalResult);
       } else {
-        toast.error('Le moteur IA est indisponible : résultat calculé à partir de vos réponses.');
+        toast.error(`${generated.error} Résultat calculé à partir de vos réponses.`);
       }
     } catch (error) {
       console.error('AI HR diagnostic failed:', error);
