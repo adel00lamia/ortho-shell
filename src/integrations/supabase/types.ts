@@ -322,8 +322,126 @@ export type Database = {
           },
         ]
       }
+      diagnostic_kpi_readings: {
+        Row: {
+          created_at: string
+          id: string
+          kpi_id: string
+          measured_at: string
+          note: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kpi_id: string
+          measured_at?: string
+          note?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kpi_id?: string
+          measured_at?: string
+          note?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_kpi_readings_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_participant_kpis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_participant_kpis: {
+        Row: {
+          baseline_value: number | null
+          created_at: string
+          direction: string
+          id: string
+          name: string
+          participant_id: string
+          source: string
+          target_value: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          baseline_value?: number | null
+          created_at?: string
+          direction?: string
+          id?: string
+          name: string
+          participant_id: string
+          source?: string
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          baseline_value?: number | null
+          created_at?: string
+          direction?: string
+          id?: string
+          name?: string
+          participant_id?: string
+          source?: string
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_participant_kpis_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_participant_modules: {
+        Row: {
+          created_at: string
+          id: string
+          module_id: string
+          participant_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module_id: string
+          participant_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module_id?: string
+          participant_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_participant_modules_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostic_participants: {
         Row: {
+          access_code: string | null
           answers: Json
           company: string | null
           company_size: string | null
@@ -350,6 +468,7 @@ export type Database = {
           top_use_cases: Json
         }
         Insert: {
+          access_code?: string | null
           answers?: Json
           company?: string | null
           company_size?: string | null
@@ -376,6 +495,7 @@ export type Database = {
           top_use_cases?: Json
         }
         Update: {
+          access_code?: string | null
           answers?: Json
           company?: string | null
           company_size?: string | null
@@ -2253,6 +2373,43 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_hr: { Args: { _user_id: string }; Returns: boolean }
+      portal_add_kpi: {
+        Args: {
+          _baseline?: number
+          _code: string
+          _direction?: string
+          _name: string
+          _source?: string
+          _target?: number
+          _unit?: string
+        }
+        Returns: string
+      }
+      portal_add_reading: {
+        Args: {
+          _code: string
+          _kpi_id: string
+          _measured_at?: string
+          _note?: string
+          _value: number
+        }
+        Returns: string
+      }
+      portal_cohort_stats: { Args: { _code: string }; Returns: Json }
+      portal_delete_kpi: {
+        Args: { _code: string; _kpi_id: string }
+        Returns: undefined
+      }
+      portal_delete_reading: {
+        Args: { _code: string; _reading_id: string }
+        Returns: undefined
+      }
+      portal_get_participant: { Args: { _code: string }; Returns: Json }
+      portal_participant_id: { Args: { _code: string }; Returns: string }
+      portal_set_module_status: {
+        Args: { _code: string; _module_id: string; _status: string }
+        Returns: undefined
+      }
       seed_default_skills: {
         Args: { p_company_id: string }
         Returns: undefined

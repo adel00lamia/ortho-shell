@@ -54,6 +54,10 @@ export interface ParticipantRow extends Omit<ParticipantProfile, 'first_name'> {
 export const makeSessionCode = () =>
   Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
 
+/** Personal access code a participant uses to come back to their portal. */
+export const makeAccessCode = () =>
+  Array.from({ length: 8 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+
 // ─────────────── Sessions ───────────────
 
 export function useDiagnosticSessions() {
@@ -172,12 +176,14 @@ export function useSubmitDiagnostic() {
       answers: AnswerMap;
       result: DiagnosticResult;
       locale?: string;
+      accessCode?: string;
     }) => {
       const { profile, result } = input;
       const payload = {
         session_id: input.sessionId,
         domain: 'hr',
         locale: input.locale ?? 'fr',
+        access_code: input.accessCode ?? null,
         first_name: profile.first_name || null,
         company: profile.company || null,
         sector: profile.sector || null,
