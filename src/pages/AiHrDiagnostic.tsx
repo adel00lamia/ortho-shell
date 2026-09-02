@@ -106,13 +106,17 @@ export default function AiHrDiagnostic() {
       setAiGenerating(false);
     }
 
+    const personalCode = makeAccessCode();
     try {
       await submit.mutateAsync({
         sessionId: session?.id ?? null,
         profile,
         answers,
         result: finalResult,
+        accessCode: personalCode,
       });
+      setAccessCode(personalCode);
+      try { localStorage.setItem(PORTAL_CODE_KEY, personalCode); } catch { /* private mode */ }
     } catch {
       toast.error('Résultat affiché, mais l’enregistrement a échoué.');
     }
