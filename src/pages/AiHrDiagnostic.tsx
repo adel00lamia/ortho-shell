@@ -494,6 +494,27 @@ export default function AiHrDiagnostic() {
           {step === 'result' && result && (
             <motion.section key="result" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               <ResultView result={result} firstName={profile.first_name} saving={submit.isPending} aiGenerating={aiGenerating} />
+
+              {accessCode && (
+                <Card className="border-primary/40 bg-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <KeyRound className="h-4 w-4 text-primary" /> Votre code d’accès personnel
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-center font-mono text-3xl font-bold tracking-[0.3em] text-primary">{accessCode}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Notez ce code : il vous permet de revenir sur votre espace, de suivre vos indicateurs
+                      et l’avancement de vos modules, et de vous comparer anonymement au groupe.
+                    </p>
+                    <Button asChild variant="secondary" className="w-full gap-2">
+                      <Link to={`/portail/${accessCode}`}>Ouvrir mon espace <ArrowRight className="h-4 w-4" /></Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="flex-1 gap-2">
                   <Link to="/pricing">Construire mon parcours AI × HR <ArrowRight className="h-4 w-4" /></Link>
