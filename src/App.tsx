@@ -54,6 +54,7 @@ const AiHrDiagnostic = lazy(() => import("./pages/AiHrDiagnostic"));
 const AiHrWorkshops = lazy(() => import("./pages/AiHrWorkshops"));
 const AiHrLiveScreen = lazy(() => import("./pages/AiHrLiveScreen"));
 const AiHrSessionReport = lazy(() => import("./pages/AiHrSessionReport"));
+const ParticipantPortal = lazy(() => import("./pages/ParticipantPortal"));
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
