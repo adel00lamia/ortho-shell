@@ -181,6 +181,105 @@ export const HR_TEAM_SIZES = ['1 (seul·e)', '2-5', '6-15', '16-50', '> 50'];
 const opts = (list: [string, string, string[]?][]): QuestionOption[] =>
   list.map(([value, label, tags]) => ({ value, label, tags }));
 
+/**
+ * Configuration-driven follow-up selected from the first work-pattern answer.
+ * Future diagnostic domains can provide their own adaptive branch here.
+ */
+export function getAdaptiveFollowUp(raw: string | string[] | number | undefined): Question {
+  const values = (Array.isArray(raw) ? raw : raw === undefined ? [] : [String(raw)]).map(String);
+  const has = (...matches: string[]) => matches.some((match) => values.includes(match));
+
+  if (has('recruit')) {
+    return {
+      id: 'adaptive_followup', type: 'single', chapter: 'Votre réalité métier',
+      label: 'Dans votre recrutement, à quel moment perdez-vous le plus d’énergie ?',
+      hint: 'Votre réponse nous aide à distinguer le vrai levier, pas seulement le symptôme.',
+      options: opts([
+        ['sourcing', 'Trouver les bons profils', ['recruitment']],
+        ['screening', 'Comparer les CV et présélectionner', ['screening']],
+        ['interviews', 'Préparer ou évaluer les entretiens', ['interview']],
+        ['scheduling', 'Coordonner les disponibilités et les relances', ['scheduling']],
+        ['communication', 'Répondre aux candidats et assurer le suivi', ['candidate_comm']],
+      ]),
+      scores: [{ dim: 'automation', weight: 1.5 }, { dim: 'time', weight: 1 }],
+    };
+  }
+  if (has('payroll')) {
+    return {
+      id: 'adaptive_followup', type: 'single', chapter: 'Votre réalité métier',
+      label: 'Dans vos contrôles paie, où un filet de sécurité vous aiderait-il le plus ?',
+      hint: 'Pensez au dernier contrôle qui vous a demandé une vérification manuelle.',
+      options: opts([
+        ['variables', 'Les éléments variables transmis', ['payroll']],
+        ['attendance', 'Le pointage, les absences et congés', ['payroll']],
+        ['anomalies', 'Les écarts inhabituels avant validation', ['anomaly']],
+        ['reconciliation', 'Le rapprochement entre deux fichiers', ['reconciliation']],
+        ['documents', 'Les attestations et demandes récurrentes', ['documents']],
+      ]),
+      scores: [{ dim: 'automation', weight: 1.5 }, { dim: 'data', weight: 1 }],
+    };
+  }
+  if (has('training')) {
+    return {
+      id: 'adaptive_followup', type: 'single', chapter: 'Votre réalité métier',
+      label: 'Dans votre cycle formation, quel passage bloque le plus souvent ?',
+      hint: 'Choisissez le moment où vous aimeriez récupérer du temps ou de la clarté.',
+      options: opts([
+        ['needs', 'Transformer une demande en besoin réel', ['needs']],
+        ['content', 'Créer ou adapter les contenus', ['content']],
+        ['personalization', 'Adapter le parcours aux niveaux', ['paths']],
+        ['evaluation', 'Mesurer les acquis et l’impact', ['evaluation']],
+        ['followup', 'Suivre les participants après la session', ['learning']],
+      ]),
+      scores: [{ dim: 'automation', weight: 1.5 }, { dim: 'time', weight: 1 }],
+    };
+  }
+  if (has('reporting')) {
+    return {
+      id: 'adaptive_followup', type: 'single', chapter: 'Votre réalité métier',
+      label: 'Quand vous préparez un reporting, qu’est-ce qui vous ralentit le plus ?',
+      hint: 'La réponse nous aide à séparer le problème de données du problème de présentation.',
+      options: opts([
+        ['collect', 'Rassembler les données de plusieurs sources', ['data']],
+        ['clean', 'Nettoyer et vérifier les chiffres', ['data']],
+        ['interpret', 'Comprendre les tendances et les écarts', ['analytics']],
+        ['format', 'Mettre en forme le support de direction', ['reporting']],
+        ['comment', 'Formuler les messages clés et recommandations', ['strategy']],
+      ]),
+      scores: [{ dim: 'data', weight: 1.5 }, { dim: 'automation', weight: 1 }],
+    };
+  }
+  if (has('admin_docs', 'policies', 'emails')) {
+    return {
+      id: 'adaptive_followup', type: 'single', chapter: 'Votre réalité métier',
+      label: 'Sur cette charge administrative, quel résultat vous ferait gagner le plus de sérénité ?',
+      hint: 'Il n’y a pas de mauvaise réponse : nous cherchons votre priorité concrète.',
+      options: opts([
+        ['draft', 'Produire un premier brouillon fiable', ['documents']],
+        ['search', 'Retrouver la bonne procédure rapidement', ['policy']],
+        ['answer', 'Répondre de façon cohérente aux mêmes demandes', ['faq']],
+        ['check', 'Vérifier les informations avant envoi', ['data']],
+        ['track', 'Ne plus perdre les relances et échéances', ['meetings']],
+      ]),
+      scores: [{ dim: 'automation', weight: 1.5 }, { dim: 'time', weight: 1 }],
+    };
+  }
+
+  return {
+    id: 'adaptive_followup', type: 'single', chapter: 'Votre réalité métier',
+    label: 'Dans cette charge de travail, quel moment aimeriez-vous rendre plus simple ?',
+    hint: 'Choisissez l’étape qui vous ferait ressentir un bénéfice dès cette semaine.',
+    options: opts([
+      ['prepare', 'Préparer le travail', ['documents']],
+      ['collect', 'Rassembler les informations', ['data']],
+      ['execute', 'Réaliser la tâche elle-même', ['automation']],
+      ['check', 'Contrôler la qualité avant envoi', ['data']],
+      ['followup', 'Relancer et suivre l’avancement', ['meetings']],
+    ]),
+    scores: [{ dim: 'automation', weight: 1.5 }, { dim: 'time', weight: 1 }],
+  };
+}
+
 // ─────────────────────── Universal questions ───────────────────────
 
 const TASK_OPTIONS = opts([

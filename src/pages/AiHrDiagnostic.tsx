@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ArrowRight, Check, Loader2, ShieldCheck, Sparkles, Clock, Target,
-  Lightbulb, AlertTriangle, GraduationCap, Send,
+  Lightbulb, AlertTriangle, GraduationCap, Send, Pencil,
 } from 'lucide-react';
 import {
   COMPANY_SIZES, DIMENSIONS, HR_ROLES, HR_TEAM_SIZES, SECTORS, SENIORITIES,
@@ -27,7 +27,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, PolarRadiusAxis,
 } from 'recharts';
 
-type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'result';
+type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'summary' | 'result';
 
 const emptyProfile: ParticipantProfile = {
   first_name: '', company: '', sector: '', company_size: '', job_title: '',
@@ -48,8 +48,8 @@ export default function AiHrDiagnostic() {
   const [aiGenerating, setAiGenerating] = useState(false);
 
   const questions = useMemo(
-    () => (profile.hr_function ? getQuestions('hr', profile.hr_function) : []),
-    [profile.hr_function],
+    () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers) : []),
+    [profile.hr_function, answers],
   );
   const current = questions[qIndex];
   const progress = questions.length ? Math.round(((qIndex + 1) / questions.length) * 100) : 0;
@@ -122,7 +122,8 @@ export default function AiHrDiagnostic() {
       setQIndex((i) => i + 1);
       window.scrollTo({ top: 0 });
     } else {
-      finish();
+      setStep('summary');
+      window.scrollTo({ top: 0 });
     }
   };
 
@@ -472,6 +473,17 @@ export default function AiHrDiagnostic() {
             </motion.section>
           )}
 
+          {/* ─────────── Summary before scoring ─────────── */}
+          {step === 'summary' && (
+            <SummaryView
+              profile={profile}
+              questions={questions}
+              answers={answers}
+              onBack={() => { setStep('questions'); setQIndex(Math.max(0, questions.length - 1)); }}
+              onConfirm={finish}
+            />
+          )}
+
           {/* ─────────── Result ─────────── */}
           {step === 'result' && result && (
             <motion.section key="result" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -496,6 +508,90 @@ export default function AiHrDiagnostic() {
 
       </div>
     </div>
+  );
+}
+
+function SummaryView({
+  profile,
+  questions,
+  answers,
+  onBack,
+  onConfirm,
+}: {
+  profile: ParticipantProfile;
+  questions: ReturnType<typeof getQuestions>;
+  answers: AnswerMap;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  const answeredQuestions = questions.filter((question) => {
+    const answer = answers[question.id];
+    return answer !== undefined && answer !== '' && (!Array.isArray(answer) || answer.length > 0);
+  });
+
+  const formatAnswer = (question: (typeof questions)[number]) => {
+    const answer = answers[question.id];
+    if (question.type === 'scale') return `${answer}/5`;
+    const values = Array.isArray(answer) ? answer : [String(answer)];
+    return values
+      .map((value) => question.options?.find((option) => option.value === value)?.label ?? value)
+      .join(' · ');
+  };
+
+  return (
+    <motion.section key="summary" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="space-y-2">
+        <Badge variant="outline" className="gap-1.5 border-primary/30 text-primary">
+          <Check className="h-3.5 w-3.5" /> Dernière vérification
+        </Badge>
+        <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+          Voici ce que nous avons compris de votre réalité
+        </h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Relisez vos réponses. Votre score et vos recommandations seront calculés à partir de cette synthèse.
+        </p>
+      </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="space-y-3 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Profil</p>
+              <p className="font-bold text-foreground">
+                {profile.first_name} · {HR_ROLES.find((role) => role.key === profile.hr_function)?.label ?? profile.hr_function}
+              </p>
+            </div>
+            <Badge variant="secondary">{answeredQuestions.length} réponses</Badge>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Le diagnostic relie vos tâches chronophages à un levier concret : automatiser, mieux décider ou sécuriser vos pratiques.
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        {answeredQuestions.map((question, index) => (
+          <div key={question.id} className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 p-4">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+              {index + 1}
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-sm font-semibold leading-snug text-foreground">{question.label}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{formatAnswer(question)}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Button variant="outline" className="flex-1 gap-2" onClick={onBack}>
+          <Pencil className="h-4 w-4" /> Modifier une réponse
+        </Button>
+        <Button className="flex-1 gap-2" onClick={onConfirm}>
+          Analyser ma situation <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </motion.section>
   );
 }
 
