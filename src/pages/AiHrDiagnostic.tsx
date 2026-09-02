@@ -123,7 +123,21 @@ export default function AiHrDiagnostic() {
           )}
         </header>
 
+        {sessionClosed && step !== 'result' ? (
+          <Card className="border-border/60">
+            <CardHeader>
+              <CardTitle className="text-lg">Session clôturée</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Le diagnostic de la session « {session?.title} » n’accepte plus de nouvelles réponses.
+              </p>
+              <p>Contactez l’animateur si vous souhaitez participer.</p>
+            </CardContent>
+          </Card>
+        ) : (
         <AnimatePresence mode="wait">
+
           {/* ─────────── Landing ─────────── */}
           {step === 'landing' && (
             <motion.section
