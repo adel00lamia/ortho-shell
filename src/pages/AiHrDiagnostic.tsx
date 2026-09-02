@@ -47,6 +47,7 @@ export default function AiHrDiagnostic() {
   const [qIndex, setQIndex] = useState(0);
   const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [accessCode, setAccessCode] = useState<string | null>(null);
 
   const questions = useMemo(
     () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers) : []),
