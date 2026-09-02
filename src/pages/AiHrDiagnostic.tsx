@@ -66,12 +66,17 @@ export default function AiHrDiagnostic() {
   };
 
   const profileValid = profile.first_name.trim().length > 1 && !!profile.hr_function;
+  const sessionClosed = !!session && !session.is_open;
 
   const finish = async () => {
     const computed = scoreDiagnostic('hr', profile.hr_function, answers);
     setResult(computed);
     setStep('result');
     window.scrollTo({ top: 0 });
+    if (sessionClosed) {
+      toast.error('Cette session est clôturée : votre résultat n’a pas été enregistré.');
+      return;
+    }
     try {
       await submit.mutateAsync({
         sessionId: session?.id ?? null,
@@ -83,6 +88,7 @@ export default function AiHrDiagnostic() {
       toast.error('Résultat affiché, mais l’enregistrement a échoué.');
     }
   };
+
 
   const next = () => {
     if (qIndex + 1 < questions.length) {
@@ -117,7 +123,21 @@ export default function AiHrDiagnostic() {
           )}
         </header>
 
+        {sessionClosed && step !== 'result' ? (
+          <Card className="border-border/60">
+            <CardHeader>
+              <CardTitle className="text-lg">Session clôturée</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Le diagnostic de la session « {session?.title} » n’accepte plus de nouvelles réponses.
+              </p>
+              <p>Contactez l’animateur si vous souhaitez participer.</p>
+            </CardContent>
+          </Card>
+        ) : (
         <AnimatePresence mode="wait">
+
           {/* ─────────── Landing ─────────── */}
           {step === 'landing' && (
             <motion.section
@@ -437,6 +457,8 @@ export default function AiHrDiagnostic() {
             </motion.section>
           )}
         </AnimatePresence>
+        )}
+
       </div>
     </div>
   );
