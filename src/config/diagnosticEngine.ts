@@ -380,16 +380,17 @@ export const HR_UNIVERSAL: Question[] = [
 const openQ = (id: string): Question => ({
   id,
   type: 'text',
-  label: 'Si vous pouviez supprimer une tâche frustrante de votre semaine, laquelle serait-ce ?',
-  hint: 'Réponse libre, en une ou deux phrases.',
+  chapter: 'Projection',
+  label: 'Imaginez votre semaine idéale : quelle tâche RH aimeriez-vous ne plus faire manuellement ?',
+  hint: 'Décrivez la situation concrète. Une ou deux phrases suffisent.',
 });
 
 const painQ = (id: string, label: string, options: QuestionOption[], pick = 3, scores?: QuestionScore[]): Question => ({
-  id, type: 'multi', pick, label, options, scores: scores ?? [{ dim: 'automation', weight: 1.5 }],
+  id, type: 'multi', chapter: 'Votre réalité métier', pick, label, options, scores: scores ?? [{ dim: 'automation', weight: 1.5 }],
 });
 
 const scaleQ = (id: string, label: string, dim: DimensionKey, weight = 1.5, invert = false, hint?: string): Question => ({
-  id, type: 'scale', label, hint, scores: [{ dim, weight, invert }],
+  id, type: 'scale', chapter: 'Votre réalité métier', label, hint, scores: [{ dim, weight, invert }],
 });
 
 export const HR_BRANCHES: Record<string, Question[]> = {
