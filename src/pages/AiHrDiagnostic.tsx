@@ -10,7 +10,8 @@ import {
 } from '@/config/diagnosticEngine';
 import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticResult } from '@/lib/diagnosticScoring';
 import { generateAiDiagnostic } from '@/lib/aiHrDiagnostic';
-import { useDiagnosticSession, useSubmitDiagnostic, type ParticipantProfile } from '@/hooks/useDiagnosticEngine';
+import { makeAccessCode, useDiagnosticSession, useSubmitDiagnostic, type ParticipantProfile } from '@/hooks/useDiagnosticEngine';
+import { PORTAL_CODE_KEY } from '@/hooks/useParticipantPortal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
