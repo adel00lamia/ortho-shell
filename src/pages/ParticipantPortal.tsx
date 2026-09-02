@@ -297,7 +297,7 @@ function KpisTab({ code, participant }: { code: string; participant: PortalParti
                 key={s}
                 size="sm"
                 variant="outline"
-                className="gap-1 text-xs"
+                className="h-auto max-w-full items-start gap-1 whitespace-normal py-2 text-left text-xs"
                 disabled={addKpi.isPending}
                 onClick={() =>
                   addKpi.mutateAsync({ name: s, unit: 'h/semaine', direction: 'down', source: 'use_case' })
