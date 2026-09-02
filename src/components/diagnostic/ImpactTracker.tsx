@@ -26,13 +26,14 @@ interface ImpactTrackerProps {
   onAddKpi: (row: KpiDefinition) => void;
   onAddReading: (row: KpiDefinition & { actual_value: number; measured_at: string; notes: string | null }) => void;
   onUpdate: (row: Partial<MeasurementRow> & { id: string; kpi_name: string }) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string | string[]) => void;
 }
 
 interface KpiGroup {
   key: string;
   definition: MeasurementRow;
   readings: MeasurementRow[];
+  rows: MeasurementRow[];
 }
 
 function sortKey(m: MeasurementRow) {
@@ -53,7 +54,7 @@ function groupByKpi(measurements: MeasurementRow[]): KpiGroup[] {
     const readings = rows
       .filter((r) => r.actual_value != null)
       .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
-    return { key, definition, readings };
+    return { key, definition, readings, rows: ordered };
   });
 }
 
@@ -179,7 +180,7 @@ function KpiCard({
             size="icon"
             variant="ghost"
             aria-label={fr ? 'Supprimer l’indicateur' : 'Delete indicator'}
-            onClick={() => onDelete(def.id)}
+            onClick={() => onDelete(group.rows.map((r) => r.id))}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
