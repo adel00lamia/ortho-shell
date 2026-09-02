@@ -27,7 +27,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, PolarRadiusAxis,
 } from 'recharts';
 
-type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'result';
+type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'summary' | 'result';
 
 const emptyProfile: ParticipantProfile = {
   first_name: '', company: '', sector: '', company_size: '', job_title: '',
@@ -48,8 +48,8 @@ export default function AiHrDiagnostic() {
   const [aiGenerating, setAiGenerating] = useState(false);
 
   const questions = useMemo(
-    () => (profile.hr_function ? getQuestions('hr', profile.hr_function) : []),
-    [profile.hr_function],
+    () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers) : []),
+    [profile.hr_function, answers],
   );
   const current = questions[qIndex];
   const progress = questions.length ? Math.round(((qIndex + 1) / questions.length) * 100) : 0;
@@ -122,7 +122,8 @@ export default function AiHrDiagnostic() {
       setQIndex((i) => i + 1);
       window.scrollTo({ top: 0 });
     } else {
-      finish();
+      setStep('summary');
+      window.scrollTo({ top: 0 });
     }
   };
 
@@ -470,6 +471,17 @@ export default function AiHrDiagnostic() {
                 </Button>
               </div>
             </motion.section>
+          )}
+
+          {/* ─────────── Summary before scoring ─────────── */}
+          {step === 'summary' && (
+            <SummaryView
+              profile={profile}
+              questions={questions}
+              answers={answers}
+              onBack={() => { setStep('questions'); setQIndex(Math.max(0, questions.length - 1)); }}
+              onConfirm={finish}
+            />
           )}
 
           {/* ─────────── Result ─────────── */}

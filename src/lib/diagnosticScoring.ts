@@ -41,13 +41,16 @@ export function getQuestions(domainKey: string, roleKey: string, answers: Answer
     .map(byId)
     .filter((question): question is Question => !!question);
   const adaptive = answers.u_time !== undefined ? getAdaptiveFollowUp(answers.u_time) : null;
-  const laterUniversal = universal.filter((question) => !firstUniversal.includes(question));
+  const firstQuestion = byId('u_time');
+  const priorityQuestion = byId('u_priority');
+  const openingUniversal = [firstQuestion, ...(adaptive ? [adaptive] : []), priorityQuestion]
+    .filter((question): question is Question => !!question);
+  const laterUniversal = universal.filter((question) => !openingUniversal.includes(question) && !firstUniversal.includes(question));
   const openingBranch = branch.slice(0, 2);
   const remainingBranch = branch.slice(2);
 
-  // The participant sees their own work, then one contextual follow-up,
-  // before generic maturity questions.
-  return [...firstUniversal, ...(adaptive ? [adaptive] : []), ...openingBranch, ...laterUniversal.slice(0, 2), ...remainingBranch, ...laterUniversal.slice(2)];
+  // Ask the contextual follow-up immediately after the participant's first answer.
+  return [...openingUniversal, ...openingBranch, ...laterUniversal.slice(0, 2), ...remainingBranch, ...laterUniversal.slice(2)];
 }
 
 function normalize(q: Question, raw: AnswerValue | undefined, score: { map?: Record<string, number> }): number | null {
