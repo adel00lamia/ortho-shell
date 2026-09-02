@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ArrowRight, Check, Loader2, ShieldCheck, Sparkles, Clock, Target,
-  Lightbulb, AlertTriangle, GraduationCap, Send, Pencil,
+  Lightbulb, AlertTriangle, GraduationCap, Send, Pencil, KeyRound,
 } from 'lucide-react';
 import {
   COMPANY_SIZES, DIMENSIONS, HR_ROLES, HR_TEAM_SIZES, SECTORS, SENIORITIES,
