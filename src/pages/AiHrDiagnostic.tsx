@@ -9,6 +9,7 @@ import {
   COMPANY_SIZES, DIMENSIONS, HR_ROLES, HR_TEAM_SIZES, SECTORS, SENIORITIES,
 } from '@/config/diagnosticEngine';
 import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticResult } from '@/lib/diagnosticScoring';
+import { generateAiDiagnostic } from '@/lib/aiHrDiagnostic';
 import { useDiagnosticSession, useSubmitDiagnostic, type ParticipantProfile } from '@/hooks/useDiagnosticEngine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
