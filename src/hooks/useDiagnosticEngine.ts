@@ -176,12 +176,14 @@ export function useSubmitDiagnostic() {
       answers: AnswerMap;
       result: DiagnosticResult;
       locale?: string;
+      accessCode?: string;
     }) => {
       const { profile, result } = input;
       const payload = {
         session_id: input.sessionId,
         domain: 'hr',
         locale: input.locale ?? 'fr',
+        access_code: input.accessCode ?? null,
         first_name: profile.first_name || null,
         company: profile.company || null,
         sector: profile.sector || null,
