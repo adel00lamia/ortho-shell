@@ -42,6 +42,8 @@ export interface Question {
   id: string;
   type: QuestionType;
   label: string;
+  /** short eyebrow shown above the question, gives a sense of chapters */
+  chapter?: string;
   hint?: string;
   /** for multi: recommended number of selections (used for normalization) */
   pick?: number;
