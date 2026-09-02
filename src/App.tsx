@@ -133,6 +133,10 @@ const App = () => (
               <Route path="/diagnostic/live/:code" element={<Suspense fallback={<PageLoader />}><AiHrLiveScreen /></Suspense>} />
               <Route path="/diagnostic/report/:code" element={<Suspense fallback={<PageLoader />}><AiHrSessionReport /></Suspense>} />
               <Route path="/diagnostic/:code" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
+
+              {/* Participant portal — code-based access */}
+              <Route path="/portail" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
+              <Route path="/portail/:code" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
               
               {/* Protected routes with sidebar */}
               <Route path="/dashboard" element={<ProtectedLayout featureName="Dashboard"><Dashboard /></ProtectedLayout>} />
