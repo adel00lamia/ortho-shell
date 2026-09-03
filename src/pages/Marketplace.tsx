@@ -23,6 +23,7 @@ import {
   usePublishListing,
   type MarketplaceListing,
 } from '@/hooks/useMarketplace';
+import { Seo } from '@/components/seo/Seo';
 
 export default function Marketplace() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,8 +157,29 @@ export default function Marketplace() {
     );
   };
 
+  const listingsJsonLd = listings.slice(0, 20).map((listing: any) => ({
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: listing.title,
+    description: listing.short_description || listing.description || listing.title,
+    ...(listing.cover_image_url ? { image: listing.cover_image_url } : {}),
+    provider: { '@type': 'Organization', name: 'QimataQ' },
+    offers: {
+      '@type': 'Offer',
+      price: ((listing.price_cents || 0) / 100).toFixed(2),
+      priceCurrency: 'MAD',
+      availability: 'https://schema.org/InStock',
+    },
+  }));
+
   return (
     <div className="container mx-auto py-8 space-y-6">
+      <Seo
+        path="/workflow/execute/marketplace"
+        title={`${m.title} | QimataQ`}
+        description={m.subtitle}
+        jsonLd={listingsJsonLd.length > 0 ? listingsJsonLd : undefined}
+      />
       <Button variant="ghost" onClick={() => navigate(-1)} className="mb-2">
         <ArrowLeft className="mr-2 h-4 w-4" />{t.common.back}
       </Button>
