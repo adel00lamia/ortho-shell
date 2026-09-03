@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Seo } from '@/components/seo/Seo';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },

@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { CardGridSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { SellerAnalytics } from '@/components/marketplace/SellerAnalytics';
 import {
+import { Seo } from '@/components/seo/Seo';
   usePublishedListings,
   useMyListings,
   useMyPurchases,

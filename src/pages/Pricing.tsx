@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { CheckIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Seo } from '@/components/seo/Seo';
 
 const plans = [
   {
