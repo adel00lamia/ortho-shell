@@ -39,8 +39,30 @@ const JobBoard = () => {
     return 'bg-slate-100 text-slate-700';
   };
 
+  const jobsJsonLd = sortedJobs.slice(0, 20).map((job: any) => ({
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: job.title,
+    description: job.description || job.title,
+    ...(job.created_at ? { datePosted: job.created_at } : {}),
+    ...(job.closing_date ? { validThrough: job.closing_date } : {}),
+    ...(job.location ? { jobLocation: { '@type': 'Place', address: job.location } } : {}),
+    ...(job.employment_type ? { employmentType: job.employment_type } : {}),
+    hiringOrganization: { '@type': 'Organization', name: 'QimataQ' },
+  }));
+
   return (
     <div className="container max-w-4xl py-6 space-y-6">
+      <Seo
+        path="/career/jobs"
+        title={language === 'fr' ? 'Postes ouverts | QimataQ' : 'Open Positions | QimataQ'}
+        description={
+          language === 'fr'
+            ? 'Consultez les postes et stages ouverts, classés par compatibilité avec vos compétences.'
+            : 'Browse open positions and internships, ranked by how well they match your skills.'
+        }
+        jsonLd={jobsJsonLd.length > 0 ? jobsJsonLd : undefined}
+      />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
           <Link to="/career">
