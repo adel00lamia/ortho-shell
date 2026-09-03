@@ -136,6 +136,11 @@ export default function AiHrDiagnostic() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        path="/diagnostic"
+        title="Diagnostic AI × HR | Où l'IA vous fait gagner du temps en RH"
+        description="En 5 minutes, identifiez vos irritants RH, votre maturité IA et les cas d'usage à plus fort impact pour votre fonction. Résultat personnalisé, sans prérequis technique."
+      />
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />

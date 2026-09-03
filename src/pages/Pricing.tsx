@@ -149,6 +149,11 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background py-12">
+      <Seo
+        path="/pricing"
+        title="Tarifs QimataQ | Logiciel RH et diagnostic IA"
+        description="Comparez les formules QimataQ : diagnostic RH, plan de formation IA, suivi d'impact et conformité OFPPT. Tarifs mensuels ou annuels en MAD."
+      />
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
