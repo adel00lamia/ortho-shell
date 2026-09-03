@@ -96,7 +96,8 @@ export function scoreDiagnostic(
   roleKey: string,
   answers: AnswerMap,
 ): DiagnosticResult {
-  const questions = getQuestions(domainKey, roleKey);
+  // Pass answers so the adaptive follow-up question is included in scoring and tags.
+  const questions = getQuestions(domainKey, roleKey, answers);
 
   // ── dimensions ──
   const acc: Record<string, { sum: number; weight: number }> = {};
