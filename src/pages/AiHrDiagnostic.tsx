@@ -25,9 +25,9 @@ import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
-import { Seo } from '@/components/seo/Seo';
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, PolarRadiusAxis,
 } from 'recharts';
+import { Seo } from '@/components/seo/Seo';
 
 type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'summary' | 'result';
 

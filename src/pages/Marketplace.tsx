@@ -16,7 +16,6 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { CardGridSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { SellerAnalytics } from '@/components/marketplace/SellerAnalytics';
 import {
-import { Seo } from '@/components/seo/Seo';
   usePublishedListings,
   useMyListings,
   useMyPurchases,
@@ -24,6 +23,7 @@ import { Seo } from '@/components/seo/Seo';
   usePublishListing,
   type MarketplaceListing,
 } from '@/hooks/useMarketplace';
+import { Seo } from '@/components/seo/Seo';
 
 export default function Marketplace() {
   const [searchTerm, setSearchTerm] = useState('');
