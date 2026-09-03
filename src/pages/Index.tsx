@@ -125,6 +125,21 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        path="/"
+        title="QimataQ | Diagnostic RH et plan de formation IA"
+        description="Diagnostiquez les causes racines de la performance, priorisez les actions et mesurez l'impact de vos formations. Plateforme RH IA conçue pour le Maroc (OFPPT, GIAC)."
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'QimataQ',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'Web',
+          url: 'https://ortho-shell.lovable.app/',
+          description:
+            "Diagnostic RH assisté par IA, plan de formation, suivi d'impact et conformité OFPPT pour les entreprises marocaines.",
+        }}
+      />
       {/* Navigation */}
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
