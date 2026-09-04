@@ -446,28 +446,59 @@ export default function AiHrDiagnostic() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                     <span>Question {qIndex + 1} / {questions.length}</span>
-                    <span>{progress}%</span>
+                    <span className="flex items-center gap-2">
+                      <Badge variant="secondary" className="gap-1 text-[11px]">
+                        <Sparkles className="h-3 w-3 text-primary" /> {points} pts
+                      </Badge>
+                      {progress}%
+                    </span>
                   </div>
                   <Progress value={progress} className="h-1.5" />
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-                      {current.chapter ?? 'Votre diagnostic'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {current.type === 'multi' ? 'Choisissez ce qui vous ressemble' : current.type === 'scale' ? 'Votre ressenti compte' : current.type === 'text' ? 'Une réponse personnelle' : 'Votre choix métier'}
-                    </span>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {chapters.map((chapterName) => {
+                      const done = chapters.indexOf(chapterName) < chapters.indexOf(currentChapter);
+                      const active = chapterName === currentChapter;
+                      return (
+                        <span
+                          key={chapterName}
+                          className={cn(
+                            'rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors',
+                            active
+                              ? 'bg-primary text-primary-foreground'
+                              : done
+                                ? 'bg-primary/15 text-primary'
+                                : 'bg-muted text-muted-foreground',
+                          )}
+                        >
+                          {done && '✓ '}{chapterName}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h2 className="text-xl font-bold leading-snug text-foreground sm:text-2xl">{current.label}</h2>
-                  {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
-                  {current.notice && (
-                    <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                {/* Coach : donne le ton conversationnel */}
+                <div className="flex gap-3">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1 space-y-2 rounded-2xl rounded-tl-sm border border-border/60 bg-card/70 p-4">
+                    {qIndex > 0 && (
+                      <p className="text-xs font-semibold text-primary">{coachReaction(qIndex - 1)}</p>
+                    )}
+                    <h2 className="text-lg font-bold leading-snug text-foreground sm:text-xl">{current.label}</h2>
+                    {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {current.type === 'multi' ? 'Choisissez ce qui vous ressemble' : current.type === 'scale' ? 'Votre ressenti compte' : current.type === 'text' ? 'Une réponse personnelle' : 'Votre choix métier'}
                     </p>
-                  )}
+                    {current.notice && (
+                      <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                      </p>
+                    )}
+                  </div>
                 </div>
+
 
               {current.type === 'multi' && (
                 <div className="space-y-2">
