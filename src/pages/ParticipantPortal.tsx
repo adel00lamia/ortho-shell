@@ -482,7 +482,8 @@ function ModulesTab({ code, participant }: { code: string; participant: PortalPa
       </Card>
 
       {modules.map((m) => {
-        const status = statusMap.get(m.id) ?? 'todo';
+        const progress = progressMap.get(m.id);
+        const status = progress?.status ?? 'todo';
         return (
           <Card key={m.id} className="border-border/60">
             <CardContent className="space-y-3 pt-6">
@@ -507,10 +508,19 @@ function ModulesTab({ code, participant }: { code: string; participant: PortalPa
                   </Button>
                 ))}
               </div>
+
+              <CopilotModuleRunner
+                code={code}
+                participant={participant}
+                moduleId={m.id}
+                moduleTitle={m.title}
+                completedLessons={progress?.completed_lessons ?? []}
+              />
             </CardContent>
           </Card>
         );
       })}
+
 
       <Button asChild size="lg" className="w-full gap-2">
         <Link to="/pricing">Construire mon parcours AI × HR <ArrowRight className="h-4 w-4" /></Link>
