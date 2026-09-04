@@ -137,15 +137,40 @@ export default function AiHrDiagnostic() {
   };
 
 
-  const next = () => {
-    if (qIndex + 1 < questions.length) {
-      setQIndex((i) => i + 1);
-      window.scrollTo({ top: 0 });
-    } else {
-      setStep('summary');
-      window.scrollTo({ top: 0 });
-    }
+  const goToIndex = (index: number) => {
+    setQIndex(index);
+    setStep('questions');
+    window.scrollTo({ top: 0 });
   };
+
+  const next = () => {
+    const nextQuestion = questions[qIndex + 1];
+    // Fin de chapitre : on montre d'abord ce que les réponses révèlent.
+    if (nextQuestion && (nextQuestion.chapter ?? '') !== currentChapter) {
+      setRecapChapter(currentChapter);
+      setStep('recap');
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    if (nextQuestion) {
+      goToIndex(qIndex + 1);
+      return;
+    }
+    setRecapChapter(currentChapter);
+    setStep('recap');
+    window.scrollTo({ top: 0 });
+  };
+
+  const continueAfterRecap = () => {
+    setRecapChapter(null);
+    if (qIndex + 1 < questions.length) {
+      goToIndex(qIndex + 1);
+      return;
+    }
+    setStep('summary');
+    window.scrollTo({ top: 0 });
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
