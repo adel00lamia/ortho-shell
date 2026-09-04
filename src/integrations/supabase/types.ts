@@ -406,6 +406,7 @@ export type Database = {
       }
       diagnostic_participant_modules: {
         Row: {
+          completed_lessons: string[]
           created_at: string
           id: string
           module_id: string
@@ -414,6 +415,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          completed_lessons?: string[]
           created_at?: string
           id?: string
           module_id: string
@@ -422,6 +424,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          completed_lessons?: string[]
           created_at?: string
           id?: string
           module_id?: string
@@ -2406,6 +2409,16 @@ export type Database = {
       }
       portal_get_participant: { Args: { _code: string }; Returns: Json }
       portal_participant_id: { Args: { _code: string }; Returns: string }
+      portal_set_lesson_done: {
+        Args: {
+          _code: string
+          _done: boolean
+          _lesson_id: string
+          _module_id: string
+          _total_lessons?: number
+        }
+        Returns: string
+      }
       portal_set_module_status: {
         Args: { _code: string; _module_id: string; _status: string }
         Returns: undefined
