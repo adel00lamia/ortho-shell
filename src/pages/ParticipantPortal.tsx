@@ -464,9 +464,10 @@ function KpiCard({ code, kpi, onDelete }: { code: string; kpi: PortalKpi; onDele
 
 function ModulesTab({ code, participant }: { code: string; participant: PortalParticipant }) {
   const setStatus = useSetModuleStatus(code);
-  const statusMap = new Map((participant.modules ?? []).map((m) => [m.module_id, m.status]));
+  const progressMap = new Map((participant.modules ?? []).map((m) => [m.module_id, m]));
   const modules = participant.recommended_modules ?? [];
-  const done = modules.filter((m) => statusMap.get(m.id) === 'done').length;
+  const done = modules.filter((m) => progressMap.get(m.id)?.status === 'done').length;
+
 
   return (
     <>
