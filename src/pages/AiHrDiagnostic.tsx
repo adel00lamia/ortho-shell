@@ -29,7 +29,7 @@ import {
 } from 'recharts';
 import { Seo } from '@/components/seo/Seo';
 
-type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'summary' | 'result';
+type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'recap' | 'summary' | 'result';
 
 const emptyProfile: ParticipantProfile = {
   first_name: '', company: '', sector: '', company_size: '', job_title: '',
