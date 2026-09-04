@@ -32,7 +32,16 @@ export interface PortalKpi {
 export interface PortalModuleStatus {
   module_id: string;
   status: 'todo' | 'in_progress' | 'done';
+  completed_lessons?: string[] | null;
   updated_at: string;
+}
+
+export interface CopilotFeedback {
+  verdict: 'solide' | 'à renforcer' | 'à revoir';
+  strengths: string[];
+  improvements: string[];
+  reworked: string;
+  nextStep: string;
 }
 
 export interface PortalParticipant {
