@@ -31,8 +31,19 @@ export interface DiagnosticResult {
   tags: string[];
 }
 
+/** Express = parcours court (~6 min), Complet = parcours détaillé. */
+export type DiagnosticMode = 'express' | 'complete';
+
+/** Ids universels conservés dans le parcours express (couvre les 5 dimensions). */
+const EXPRESS_UNIVERSAL = ['u_time', 'u_decisions', 'u_comfort', 'u_rules', 'u_priority'];
+
 /** Returns an intentionally varied, role-first question path for a role. */
-export function getQuestions(domainKey: string, roleKey: string, answers: AnswerMap = {}): Question[] {
+export function getQuestions(
+  domainKey: string,
+  roleKey: string,
+  answers: AnswerMap = {},
+  mode: DiagnosticMode = 'complete',
+): Question[] {
   const domain = DOMAINS[domainKey] ?? DOMAINS.hr;
   const universal = domain.universal;
   const branch = domain.branches[roleKey] ?? [];
@@ -43,6 +54,20 @@ export function getQuestions(domainKey: string, roleKey: string, answers: Answer
   const adaptive = answers.u_time !== undefined ? getAdaptiveFollowUp(answers.u_time) : null;
   const firstQuestion = byId('u_time');
   const priorityQuestion = byId('u_priority');
+
+  if (mode === 'express') {
+    const expressBranch = branch.filter((q) => q.type !== 'text').slice(0, 1);
+    return [
+      firstQuestion,
+      ...(adaptive ? [adaptive] : []),
+      ...expressBranch,
+      byId('u_decisions'),
+      byId('u_comfort'),
+      byId('u_rules'),
+      priorityQuestion,
+    ].filter((question): question is Question => !!question);
+  }
+
   const openingUniversal = [firstQuestion, ...(adaptive ? [adaptive] : []), priorityQuestion]
     .filter((question): question is Question => !!question);
   const laterUniversal = universal.filter((question) => !openingUniversal.includes(question) && !firstUniversal.includes(question));
@@ -52,6 +77,10 @@ export function getQuestions(domainKey: string, roleKey: string, answers: Answer
   // Ask the contextual follow-up immediately after the participant's first answer.
   return [...openingUniversal, ...openingBranch, ...laterUniversal.slice(0, 2), ...remainingBranch, ...laterUniversal.slice(2)];
 }
+
+/** Silences the unused-constant warning while documenting the express whitelist. */
+export const EXPRESS_UNIVERSAL_IDS = EXPRESS_UNIVERSAL;
+
 
 function normalize(q: Question, raw: AnswerValue | undefined, score: { map?: Record<string, number> }): number | null {
   if (raw === undefined || raw === null || raw === '') {
