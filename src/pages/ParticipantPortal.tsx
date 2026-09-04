@@ -19,6 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DIMENSIONS } from '@/config/diagnosticEngine';
+import CopilotModuleRunner from '@/components/diagnostic/CopilotModuleRunner';
 import {
   PORTAL_CODE_KEY, useAddKpi, useAddReading, useDeleteKpi, useDeleteReading,
   usePortalCohort, usePortalParticipant, useSetModuleStatus,
@@ -464,9 +465,10 @@ function KpiCard({ code, kpi, onDelete }: { code: string; kpi: PortalKpi; onDele
 
 function ModulesTab({ code, participant }: { code: string; participant: PortalParticipant }) {
   const setStatus = useSetModuleStatus(code);
-  const statusMap = new Map((participant.modules ?? []).map((m) => [m.module_id, m.status]));
+  const progressMap = new Map((participant.modules ?? []).map((m) => [m.module_id, m]));
   const modules = participant.recommended_modules ?? [];
-  const done = modules.filter((m) => statusMap.get(m.id) === 'done').length;
+  const done = modules.filter((m) => progressMap.get(m.id)?.status === 'done').length;
+
 
   return (
     <>
@@ -481,7 +483,8 @@ function ModulesTab({ code, participant }: { code: string; participant: PortalPa
       </Card>
 
       {modules.map((m) => {
-        const status = statusMap.get(m.id) ?? 'todo';
+        const progress = progressMap.get(m.id);
+        const status = progress?.status ?? 'todo';
         return (
           <Card key={m.id} className="border-border/60">
             <CardContent className="space-y-3 pt-6">
@@ -506,10 +509,19 @@ function ModulesTab({ code, participant }: { code: string; participant: PortalPa
                   </Button>
                 ))}
               </div>
+
+              <CopilotModuleRunner
+                code={code}
+                participant={participant}
+                moduleId={m.id}
+                moduleTitle={m.title}
+                completedLessons={progress?.completed_lessons ?? []}
+              />
             </CardContent>
           </Card>
         );
       })}
+
 
       <Button asChild size="lg" className="w-full gap-2">
         <Link to="/pricing">Construire mon parcours AI × HR <ArrowRight className="h-4 w-4" /></Link>
