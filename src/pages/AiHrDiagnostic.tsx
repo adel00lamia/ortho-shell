@@ -86,7 +86,8 @@ export default function AiHrDiagnostic() {
   const sessionClosed = !!session && !session.is_open;
 
   const finish = async () => {
-    const computed = scoreDiagnostic('hr', profile.hr_function, answers);
+    const computed = scoreDiagnostic('hr', profile.hr_function, answers, mode);
+
     setResult(computed);
     setStep('result');
     window.scrollTo({ top: 0 });
