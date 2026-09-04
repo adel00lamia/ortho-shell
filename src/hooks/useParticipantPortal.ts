@@ -175,3 +175,67 @@ export function useSetModuleStatus(code?: string) {
     if (error) throw error;
   }, code);
 }
+
+/** Marque une leçon de module Copilot comme faite / non faite (progression persistée par code). */
+export function useSetLessonDone(code?: string) {
+  return usePortalMutation<{ moduleId: string; lessonId: string; done: boolean; totalLessons?: number }>(
+    async (c, input) => {
+      const { error } = await rpc('portal_set_lesson_done', {
+        _code: c,
+        _module_id: input.moduleId,
+        _lesson_id: input.lessonId,
+        _done: input.done,
+        _total_lessons: input.totalLessons ?? null,
+      });
+      if (error) throw error;
+    },
+    code,
+  );
+}
+
+export interface CopilotCoachInput {
+  moduleId: string;
+  moduleTitle: string;
+  lessonId: string;
+  lessonTitle: string;
+  goal: string;
+  keyIdea?: string;
+  points?: string[];
+  submission: string;
+  context?: {
+    hr_function?: string;
+    job_title?: string | null;
+    sector?: string | null;
+    company_size?: string | null;
+    top_frictions?: string[];
+  };
+}
+
+/** Appelle le coach IA pour évaluer un exercice de module (accès par code participant). */
+export function useCopilotCoach(code?: string) {
+  return useMutation({
+    mutationFn: async (input: CopilotCoachInput): Promise<CopilotFeedback> => {
+      if (!code) throw new Error('Code manquant');
+      const { data, error } = await supabase.functions.invoke('ai-hr-copilot-coach', {
+        body: { ...input, code: normalizeCode(code), locale: 'fr' },
+      });
+      if (error) {
+        let details = error.message;
+        const ctx = (error as { context?: { text?: () => Promise<string> } }).context;
+        if (ctx?.text) {
+          try {
+            const body = await ctx.text();
+            const parsedBody = JSON.parse(body) as { error?: string };
+            details = parsedBody.error ?? body;
+          } catch {
+            /* garder le message d'origine */
+          }
+        }
+        throw new Error(details);
+      }
+      const feedback = (data as { feedback?: CopilotFeedback } | null)?.feedback;
+      if (!feedback) throw new Error('Réponse du coach IA vide');
+      return feedback;
+    },
+  });
+}
