@@ -8,7 +8,9 @@ import {
 import {
   COMPANY_SIZES, DIMENSIONS, HR_ROLES, HR_TEAM_SIZES, SECTORS, SENIORITIES,
 } from '@/config/diagnosticEngine';
-import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticResult } from '@/lib/diagnosticScoring';
+import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticMode, type DiagnosticResult } from '@/lib/diagnosticScoring';
+import { chapterOrder, chapterRecap, coachReaction } from '@/lib/diagnosticCoach';
+
 import { generateAiDiagnostic } from '@/lib/aiHrDiagnostic';
 import { makeAccessCode, useDiagnosticSession, useSubmitDiagnostic, type ParticipantProfile } from '@/hooks/useDiagnosticEngine';
 import { PORTAL_CODE_KEY } from '@/hooks/useParticipantPortal';
