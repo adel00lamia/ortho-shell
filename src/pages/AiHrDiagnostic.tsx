@@ -43,19 +43,29 @@ export default function AiHrDiagnostic() {
   const submit = useSubmitDiagnostic();
 
   const [step, setStep] = useState<Step>('landing');
+  const [mode, setMode] = useState<DiagnosticMode>('express');
   const [profile, setProfile] = useState<ParticipantProfile>(emptyProfile);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [qIndex, setQIndex] = useState(0);
+  const [recapChapter, setRecapChapter] = useState<string | null>(null);
   const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [accessCode, setAccessCode] = useState<string | null>(null);
 
   const questions = useMemo(
-    () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers) : []),
-    [profile.hr_function, answers],
+    () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers, mode) : []),
+    [profile.hr_function, answers, mode],
   );
   const current = questions[qIndex];
   const progress = questions.length ? Math.round(((qIndex + 1) / questions.length) * 100) : 0;
+  const chapters = useMemo(() => chapterOrder(questions), [questions]);
+  const currentChapter = current?.chapter ?? 'Votre diagnostic';
+  const answeredCount = questions.filter((q) => {
+    const a = answers[q.id];
+    return a !== undefined && a !== '' && (!Array.isArray(a) || a.length > 0);
+  }).length;
+  const points = answeredCount * 10;
+
 
   const setAnswer = (id: string, value: AnswerMap[string]) => setAnswers((a) => ({ ...a, [id]: value }));
 
