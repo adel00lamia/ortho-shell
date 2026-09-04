@@ -200,13 +200,58 @@ export default function AiHrDiagnostic() {
                 </p>
               </div>
 
+              <div className="space-y-3">
+                {([
+                  {
+                    key: 'express' as const,
+                    title: 'Version express',
+                    time: '≈ 6 min',
+                    desc: '7 questions essentielles, score et pistes tout de suite.',
+                  },
+                  {
+                    key: 'complete' as const,
+                    title: 'Version approfondie',
+                    time: '≈ 12 min',
+                    desc: 'Toutes les questions métier, diagnostic plus fin.',
+                  },
+                ]).map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => setMode(option.key)}
+                    className={cn(
+                      'flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.99]',
+                      mode === option.key
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border/60 bg-card/50 hover:border-primary/40',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                        mode === option.key ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                      )}
+                    >
+                      {mode === option.key && <Check className="h-3 w-3" />}
+                    </span>
+                    <span className="space-y-1">
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-foreground">{option.title}</span>
+                        <Badge variant="secondary" className="text-[11px]">{option.time}</Badge>
+                      </span>
+                      <span className="block text-xs leading-relaxed text-muted-foreground">{option.desc}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <Button size="lg" className="w-full gap-2 text-base" onClick={() => setStep('privacy')}>
                 Commencer mon diagnostic <ArrowRight className="h-4 w-4" />
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                5 minutes • Résultat personnalisé • Aucun prérequis technique
+                Résultat personnalisé • Retour après chaque chapitre • Aucun prérequis technique
               </p>
+
 
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
