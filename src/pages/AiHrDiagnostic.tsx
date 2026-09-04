@@ -599,6 +599,46 @@ export default function AiHrDiagnostic() {
             </motion.section>
           )}
 
+          {/* ─────────── Retour de fin de chapitre ─────────── */}
+          {step === 'recap' && recapChapter && (
+            <motion.section key={`recap-${recapChapter}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-5">
+              {(() => {
+                const recap = chapterRecap(recapChapter, questions, answers);
+                return (
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardHeader className="space-y-2">
+                      <Badge variant="outline" className="w-fit gap-1.5 border-primary/40 text-primary">
+                        <Check className="h-3 w-3" /> Chapitre terminé · {recap.chapter}
+                      </Badge>
+                      <CardTitle className="text-lg">{recap.headline}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <ul className="space-y-2">
+                        {recap.bullets.map((bullet, i) => (
+                          <li key={i} className="flex gap-2 text-sm text-foreground">
+                            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                            <span className="leading-relaxed">{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="flex gap-2 rounded-xl border border-border/60 bg-card/70 p-3 text-sm leading-relaxed text-muted-foreground">
+                        <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {recap.reading}
+                      </p>
+                      <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                        <span>{points} points collectés</span>
+                        <span>{answeredCount} / {questions.length} réponses</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+              <Button size="lg" className="w-full gap-2" onClick={continueAfterRecap}>
+                {qIndex + 1 < questions.length ? 'Chapitre suivant' : 'Voir ma synthèse'} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </motion.section>
+          )}
+
+
           {/* ─────────── Summary before scoring ─────────── */}
           {step === 'summary' && (
             <SummaryView
