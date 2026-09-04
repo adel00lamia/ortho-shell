@@ -8,7 +8,9 @@ import {
 import {
   COMPANY_SIZES, DIMENSIONS, HR_ROLES, HR_TEAM_SIZES, SECTORS, SENIORITIES,
 } from '@/config/diagnosticEngine';
-import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticResult } from '@/lib/diagnosticScoring';
+import { getQuestions, scoreDiagnostic, type AnswerMap, type DiagnosticMode, type DiagnosticResult } from '@/lib/diagnosticScoring';
+import { chapterOrder, chapterRecap, coachReaction } from '@/lib/diagnosticCoach';
+
 import { generateAiDiagnostic } from '@/lib/aiHrDiagnostic';
 import { makeAccessCode, useDiagnosticSession, useSubmitDiagnostic, type ParticipantProfile } from '@/hooks/useDiagnosticEngine';
 import { PORTAL_CODE_KEY } from '@/hooks/useParticipantPortal';
@@ -29,7 +31,7 @@ import {
 } from 'recharts';
 import { Seo } from '@/components/seo/Seo';
 
-type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'summary' | 'result';
+type Step = 'landing' | 'privacy' | 'profile' | 'questions' | 'recap' | 'summary' | 'result';
 
 const emptyProfile: ParticipantProfile = {
   first_name: '', company: '', sector: '', company_size: '', job_title: '',
@@ -43,19 +45,29 @@ export default function AiHrDiagnostic() {
   const submit = useSubmitDiagnostic();
 
   const [step, setStep] = useState<Step>('landing');
+  const [mode, setMode] = useState<DiagnosticMode>('express');
   const [profile, setProfile] = useState<ParticipantProfile>(emptyProfile);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [qIndex, setQIndex] = useState(0);
+  const [recapChapter, setRecapChapter] = useState<string | null>(null);
   const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [accessCode, setAccessCode] = useState<string | null>(null);
 
   const questions = useMemo(
-    () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers) : []),
-    [profile.hr_function, answers],
+    () => (profile.hr_function ? getQuestions('hr', profile.hr_function, answers, mode) : []),
+    [profile.hr_function, answers, mode],
   );
   const current = questions[qIndex];
   const progress = questions.length ? Math.round(((qIndex + 1) / questions.length) * 100) : 0;
+  const chapters = useMemo(() => chapterOrder(questions), [questions]);
+  const currentChapter = current?.chapter ?? 'Votre diagnostic';
+  const answeredCount = questions.filter((q) => {
+    const a = answers[q.id];
+    return a !== undefined && a !== '' && (!Array.isArray(a) || a.length > 0);
+  }).length;
+  const points = answeredCount * 10;
+
 
   const setAnswer = (id: string, value: AnswerMap[string]) => setAnswers((a) => ({ ...a, [id]: value }));
 
@@ -74,7 +86,8 @@ export default function AiHrDiagnostic() {
   const sessionClosed = !!session && !session.is_open;
 
   const finish = async () => {
-    const computed = scoreDiagnostic('hr', profile.hr_function, answers);
+    const computed = scoreDiagnostic('hr', profile.hr_function, answers, mode);
+
     setResult(computed);
     setStep('result');
     window.scrollTo({ top: 0 });
@@ -124,15 +137,40 @@ export default function AiHrDiagnostic() {
   };
 
 
-  const next = () => {
-    if (qIndex + 1 < questions.length) {
-      setQIndex((i) => i + 1);
-      window.scrollTo({ top: 0 });
-    } else {
-      setStep('summary');
-      window.scrollTo({ top: 0 });
-    }
+  const goToIndex = (index: number) => {
+    setQIndex(index);
+    setStep('questions');
+    window.scrollTo({ top: 0 });
   };
+
+  const next = () => {
+    const nextQuestion = questions[qIndex + 1];
+    // Fin de chapitre : on montre d'abord ce que les réponses révèlent.
+    if (nextQuestion && (nextQuestion.chapter ?? '') !== currentChapter) {
+      setRecapChapter(currentChapter);
+      setStep('recap');
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    if (nextQuestion) {
+      goToIndex(qIndex + 1);
+      return;
+    }
+    setRecapChapter(currentChapter);
+    setStep('recap');
+    window.scrollTo({ top: 0 });
+  };
+
+  const continueAfterRecap = () => {
+    setRecapChapter(null);
+    if (qIndex + 1 < questions.length) {
+      goToIndex(qIndex + 1);
+      return;
+    }
+    setStep('summary');
+    window.scrollTo({ top: 0 });
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -200,13 +238,58 @@ export default function AiHrDiagnostic() {
                 </p>
               </div>
 
+              <div className="space-y-3">
+                {([
+                  {
+                    key: 'express' as const,
+                    title: 'Version express',
+                    time: '≈ 6 min',
+                    desc: '7 questions essentielles, score et pistes tout de suite.',
+                  },
+                  {
+                    key: 'complete' as const,
+                    title: 'Version approfondie',
+                    time: '≈ 12 min',
+                    desc: 'Toutes les questions métier, diagnostic plus fin.',
+                  },
+                ]).map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => setMode(option.key)}
+                    className={cn(
+                      'flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.99]',
+                      mode === option.key
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border/60 bg-card/50 hover:border-primary/40',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                        mode === option.key ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                      )}
+                    >
+                      {mode === option.key && <Check className="h-3 w-3" />}
+                    </span>
+                    <span className="space-y-1">
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-foreground">{option.title}</span>
+                        <Badge variant="secondary" className="text-[11px]">{option.time}</Badge>
+                      </span>
+                      <span className="block text-xs leading-relaxed text-muted-foreground">{option.desc}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <Button size="lg" className="w-full gap-2 text-base" onClick={() => setStep('privacy')}>
                 Commencer mon diagnostic <ArrowRight className="h-4 w-4" />
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                5 minutes • Résultat personnalisé • Aucun prérequis technique
+                Résultat personnalisé • Retour après chaque chapitre • Aucun prérequis technique
               </p>
+
 
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
@@ -363,28 +446,59 @@ export default function AiHrDiagnostic() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                     <span>Question {qIndex + 1} / {questions.length}</span>
-                    <span>{progress}%</span>
+                    <span className="flex items-center gap-2">
+                      <Badge variant="secondary" className="gap-1 text-[11px]">
+                        <Sparkles className="h-3 w-3 text-primary" /> {points} pts
+                      </Badge>
+                      {progress}%
+                    </span>
                   </div>
                   <Progress value={progress} className="h-1.5" />
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-                      {current.chapter ?? 'Votre diagnostic'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {current.type === 'multi' ? 'Choisissez ce qui vous ressemble' : current.type === 'scale' ? 'Votre ressenti compte' : current.type === 'text' ? 'Une réponse personnelle' : 'Votre choix métier'}
-                    </span>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {chapters.map((chapterName) => {
+                      const done = chapters.indexOf(chapterName) < chapters.indexOf(currentChapter);
+                      const active = chapterName === currentChapter;
+                      return (
+                        <span
+                          key={chapterName}
+                          className={cn(
+                            'rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors',
+                            active
+                              ? 'bg-primary text-primary-foreground'
+                              : done
+                                ? 'bg-primary/15 text-primary'
+                                : 'bg-muted text-muted-foreground',
+                          )}
+                        >
+                          {done && '✓ '}{chapterName}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h2 className="text-xl font-bold leading-snug text-foreground sm:text-2xl">{current.label}</h2>
-                  {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
-                  {current.notice && (
-                    <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                {/* Coach : donne le ton conversationnel */}
+                <div className="flex gap-3">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1 space-y-2 rounded-2xl rounded-tl-sm border border-border/60 bg-card/70 p-4">
+                    {qIndex > 0 && (
+                      <p className="text-xs font-semibold text-primary">{coachReaction(qIndex - 1)}</p>
+                    )}
+                    <h2 className="text-lg font-bold leading-snug text-foreground sm:text-xl">{current.label}</h2>
+                    {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {current.type === 'multi' ? 'Choisissez ce qui vous ressemble' : current.type === 'scale' ? 'Votre ressenti compte' : current.type === 'text' ? 'Une réponse personnelle' : 'Votre choix métier'}
                     </p>
-                  )}
+                    {current.notice && (
+                      <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                      </p>
+                    )}
+                  </div>
                 </div>
+
 
               {current.type === 'multi' && (
                 <div className="space-y-2">
@@ -484,6 +598,46 @@ export default function AiHrDiagnostic() {
               </div>
             </motion.section>
           )}
+
+          {/* ─────────── Retour de fin de chapitre ─────────── */}
+          {step === 'recap' && recapChapter && (
+            <motion.section key={`recap-${recapChapter}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-5">
+              {(() => {
+                const recap = chapterRecap(recapChapter, questions, answers);
+                return (
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardHeader className="space-y-2">
+                      <Badge variant="outline" className="w-fit gap-1.5 border-primary/40 text-primary">
+                        <Check className="h-3 w-3" /> Chapitre terminé · {recap.chapter}
+                      </Badge>
+                      <CardTitle className="text-lg">{recap.headline}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <ul className="space-y-2">
+                        {recap.bullets.map((bullet, i) => (
+                          <li key={i} className="flex gap-2 text-sm text-foreground">
+                            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                            <span className="leading-relaxed">{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="flex gap-2 rounded-xl border border-border/60 bg-card/70 p-3 text-sm leading-relaxed text-muted-foreground">
+                        <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {recap.reading}
+                      </p>
+                      <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                        <span>{points} points collectés</span>
+                        <span>{answeredCount} / {questions.length} réponses</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+              <Button size="lg" className="w-full gap-2" onClick={continueAfterRecap}>
+                {qIndex + 1 < questions.length ? 'Chapitre suivant' : 'Voir ma synthèse'} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </motion.section>
+          )}
+
 
           {/* ─────────── Summary before scoring ─────────── */}
           {step === 'summary' && (
