@@ -64,3 +64,6 @@ verify_jwt = false
 
 [functions.student-coach]
 verify_jwt = false
+
+[functions.ai-hr-copilot-coach]
+verify_jwt = false
