@@ -477,125 +477,148 @@ export default function AiHrDiagnostic() {
                   </div>
                 </div>
 
-                {/* Coach : donne le ton conversationnel */}
-                <div className="flex gap-3">
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                    <Sparkles className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1 space-y-2 rounded-2xl rounded-tl-sm border border-border/60 bg-card/70 p-4">
-                    {qIndex > 0 && (
-                      <p className="text-xs font-semibold text-primary">{coachReaction(qIndex - 1)}</p>
-                    )}
-                    <h2 className="text-lg font-bold leading-snug text-foreground sm:text-xl">{current.label}</h2>
-                    {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
-                    <p className="text-xs text-muted-foreground">
-                      {current.type === 'multi' ? 'Choisissez ce qui vous ressemble' : current.type === 'scale' ? 'Votre ressenti compte' : current.type === 'text' ? 'Une réponse personnelle' : 'Votre choix métier'}
-                    </p>
-                    {current.notice && (
-                      <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
-                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-
-              {current.type === 'multi' && (
-                <div className="space-y-2">
-                  {current.options?.map((o) => {
-                    const selected = Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(o.value);
-                    return (
-                      <button
-                        key={o.value}
-                        onClick={() => toggleMulti(current.id, o.value, current.pick ?? 3)}
-                        className={cn(
-                          'flex w-full items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all active:scale-[0.99]',
-                          selected
-                            ? 'border-primary bg-primary/10 font-semibold text-foreground'
-                            : 'border-border/60 bg-card/50 text-muted-foreground hover:border-primary/40',
-                        )}
-                      >
-                        <span className={cn(
-                          'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border',
-                          selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
-                        )}>
-                          {selected && <Check className="h-3.5 w-3.5" />}
-                        </span>
-                        {o.label}
-                      </button>
-                    );
-                  })}
-                  <p className="text-xs text-muted-foreground">
-                    Choisissez jusqu’à {current.pick ?? 3} réponses.
-                  </p>
-                </div>
-              )}
-
-              {current.type === 'single' && (
-                <div className="space-y-2">
-                  {current.options?.map((o) => {
-                    const selected = answers[current.id] === o.value;
-                    return (
-                      <button
-                        key={o.value}
-                        onClick={() => setAnswer(current.id, o.value)}
-                        className={cn(
-                          'w-full rounded-xl border p-3.5 text-left text-sm transition-all active:scale-[0.99]',
-                          selected
-                            ? 'border-primary bg-primary/10 font-semibold text-foreground'
-                            : 'border-border/60 bg-card/50 text-muted-foreground hover:border-primary/40',
-                        )}
-                      >
-                        {o.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {current.type === 'scale' && (
-                <div className="space-y-6 rounded-xl border border-border/60 bg-card/50 p-6">
-                  <div className="text-center">
-                    <span className="text-5xl font-extrabold text-primary">
-                      {Number(answers[current.id] ?? 3)}
+              {/* Cadre unique : question + réponses dans une même carte */}
+              <Card className="overflow-hidden border-border/70 shadow-sm">
+                <CardHeader className="space-y-2 border-b border-border/60 bg-muted/40 p-5">
+                  <div className="flex gap-3">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <Sparkles className="h-4 w-4" />
                     </span>
-                    <span className="text-lg text-muted-foreground">/5</span>
+                    <div className="flex-1 space-y-1.5">
+                      {qIndex > 0 && (
+                        <p className="text-xs font-semibold text-primary">{coachReaction(qIndex - 1)}</p>
+                      )}
+                      <h2 className="text-lg font-bold leading-snug text-foreground sm:text-xl">{current.label}</h2>
+                      {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
+                    </div>
                   </div>
-                  <Slider
-                    min={1}
-                    max={5}
-                    step={1}
-                    value={[Number(answers[current.id] ?? 3)]}
-                    onValueChange={([v]) => setAnswer(current.id, v)}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Pas du tout</span><span>Très à l’aise</span>
+                  {current.notice && (
+                    <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                    </p>
+                  )}
+                </CardHeader>
+
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                    <span>
+                      {current.type === 'multi'
+                        ? `Choisissez jusqu’à ${current.pick ?? 3} réponses`
+                        : current.type === 'scale'
+                          ? 'Faites glisser le curseur'
+                          : current.type === 'text'
+                            ? 'Une réponse personnelle'
+                            : 'Une seule réponse'}
+                    </span>
+                    {current.type === 'multi' && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">
+                        {(Array.isArray(answers[current.id]) ? (answers[current.id] as string[]).length : 0)}/{current.pick ?? 3}
+                      </span>
+                    )}
                   </div>
+
+                  {current.type === 'multi' && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {current.options?.map((o) => {
+                        const selected = Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(o.value);
+                        return (
+                          <button
+                            key={o.value}
+                            onClick={() => toggleMulti(current.id, o.value, current.pick ?? 3)}
+                            className={cn(
+                              'flex w-full items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all active:scale-[0.99]',
+                              selected
+                                ? 'border-primary bg-primary/10 font-semibold text-foreground shadow-sm'
+                                : 'border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50',
+                            )}
+                          >
+                            <span className={cn(
+                              'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border',
+                              selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                            )}>
+                              {selected && <Check className="h-3.5 w-3.5" />}
+                            </span>
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {current.type === 'single' && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {current.options?.map((o) => {
+                        const selected = answers[current.id] === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            onClick={() => setAnswer(current.id, o.value)}
+                            className={cn(
+                              'flex w-full items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all active:scale-[0.99]',
+                              selected
+                                ? 'border-primary bg-primary/10 font-semibold text-foreground shadow-sm'
+                                : 'border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50',
+                            )}
+                          >
+                            <span className={cn(
+                              'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                              selected ? 'border-primary bg-primary' : 'border-border',
+                            )}>
+                              {selected && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                            </span>
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {current.type === 'scale' && (
+                    <div className="space-y-6 rounded-xl border border-border/60 bg-muted/30 p-6">
+                      <div className="text-center">
+                        <span className="text-5xl font-extrabold text-primary">
+                          {Number(answers[current.id] ?? 3)}
+                        </span>
+                        <span className="text-lg text-muted-foreground">/5</span>
+                      </div>
+                      <Slider
+                        min={1}
+                        max={5}
+                        step={1}
+                        value={[Number(answers[current.id] ?? 3)]}
+                        onValueChange={([v]) => setAnswer(current.id, v)}
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Pas du tout</span><span>Très à l’aise</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {current.type === 'text' && (
+                    <Textarea
+                      rows={5}
+                      value={String(answers[current.id] ?? '')}
+                      onChange={(e) => setAnswer(current.id, e.target.value)}
+                      placeholder="Votre réponse…"
+                    />
+                  )}
+                </CardContent>
+
+                <div className="flex gap-3 border-t border-border/60 bg-muted/30 p-4">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => (qIndex === 0 ? setStep('profile') : setQIndex((i) => i - 1))}
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Retour
+                  </Button>
+                  <Button className="flex-1 gap-2" onClick={next}>
+                    {qIndex + 1 === questions.length ? 'Voir mon résultat' : 'Suivant'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
+              </Card>
 
-              {current.type === 'text' && (
-                <Textarea
-                  rows={5}
-                  value={String(answers[current.id] ?? '')}
-                  onChange={(e) => setAnswer(current.id, e.target.value)}
-                  placeholder="Votre réponse…"
-                />
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => (qIndex === 0 ? setStep('profile') : setQIndex((i) => i - 1))}
-                >
-                  <ArrowLeft className="h-4 w-4" /> Retour
-                </Button>
-                <Button className="flex-1 gap-2" onClick={next}>
-                  {qIndex + 1 === questions.length ? 'Voir mon résultat' : 'Suivant'}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
             </motion.section>
           )}
 
