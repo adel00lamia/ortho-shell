@@ -493,7 +493,7 @@ export default function AiHrDiagnostic() {
                 </header>
 
                 {/* ── Question plein écran ── */}
-                <main className="flex-1">
+                <main className="flex-1 pb-28">
                   <div className="mb-8 space-y-3">
                     {qIndex > 0 && (
                       <p className="flex items-center gap-2 text-xs font-semibold text-accent">
@@ -622,7 +622,7 @@ export default function AiHrDiagnostic() {
                 </main>
 
                 {/* ── Actions ── */}
-                <footer className="sticky bottom-0 -mx-4 mt-10 flex items-center gap-4 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-6 pt-4">
+                <footer className="sticky bottom-0 -mx-4 mt-10 flex items-center gap-4 bg-background/95 px-4 pb-6 pt-4 backdrop-blur">
                   <button
                     onClick={() => (qIndex === 0 ? setStep('profile') : setQIndex((i) => i - 1))}
                     className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border/40 py-4 text-sm font-semibold text-muted-foreground transition-all hover:bg-foreground/5 hover:text-foreground"
