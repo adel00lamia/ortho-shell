@@ -443,19 +443,33 @@ export default function AiHrDiagnostic() {
 
           {/* ─────────── Questions ─────────── */}
           {step === 'questions' && current && (
-              <motion.section key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="space-y-6">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                    <span>Question {qIndex + 1} / {questions.length}</span>
-                    <span className="flex items-center gap-2">
-                      <Badge variant="secondary" className="gap-1 text-[11px]">
-                        <Sparkles className="h-3 w-3 text-primary" /> {points} pts
-                      </Badge>
-                      {progress}%
-                    </span>
+              <motion.section key={current.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="flex min-h-[70vh] flex-col">
+                {/* ── Rail supérieur : chapitre, points, progression ── */}
+                <header className="mb-8 flex flex-col gap-4">
+                  <div className="flex items-end justify-between gap-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
+                        Étape {String(chapters.indexOf(currentChapter) + 1).padStart(2, '0')} sur {String(chapters.length).padStart(2, '0')} · Question {qIndex + 1}/{questions.length}
+                      </span>
+                      <h2 className="text-lg font-bold text-foreground">{currentChapter}</h2>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 rounded-full border border-border/40 bg-card px-3 py-1.5 shadow-xl">
+                      <span className="text-xs font-bold text-accent">{points}</span>
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">pts</span>
+                    </div>
                   </div>
-                  <Progress value={progress} className="h-1.5" />
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/5">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundImage: 'var(--diag-gradient)', boxShadow: 'var(--diag-progress-glow)' }}
+                      initial={false}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
                     {chapters.map((chapterName) => {
                       const done = chapters.indexOf(chapterName) < chapters.indexOf(currentChapter);
                       const active = chapterName === currentChapter;
@@ -463,12 +477,12 @@ export default function AiHrDiagnostic() {
                         <span
                           key={chapterName}
                           className={cn(
-                            'rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors',
+                            'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors',
                             active
                               ? 'bg-primary text-primary-foreground'
                               : done
-                                ? 'bg-primary/15 text-primary'
-                                : 'bg-muted text-muted-foreground',
+                                ? 'bg-accent/10 text-accent'
+                                : 'bg-foreground/5 text-muted-foreground',
                           )}
                         >
                           {done && '✓ '}{chapterName}
@@ -476,70 +490,68 @@ export default function AiHrDiagnostic() {
                       );
                     })}
                   </div>
-                </div>
+                </header>
 
-              {/* Cadre unique : question + réponses dans une même carte */}
-              <Card className="overflow-hidden border-border/70 shadow-sm">
-                <CardHeader className="space-y-2 border-b border-border/60 bg-muted/40 p-5">
-                  <div className="flex gap-3">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                      <Sparkles className="h-4 w-4" />
-                    </span>
-                    <div className="flex-1 space-y-1.5">
-                      {qIndex > 0 && (
-                        <p className="text-xs font-semibold text-primary">{coachReaction(qIndex - 1)}</p>
+                {/* ── Question plein écran ── */}
+                <main className="flex-1">
+                  <div className="mb-8 space-y-3">
+                    {qIndex > 0 && (
+                      <p className="flex items-center gap-2 text-xs font-semibold text-accent">
+                        <Sparkles className="h-3.5 w-3.5" /> {coachReaction(qIndex - 1)}
+                      </p>
+                    )}
+                    <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+                      {current.label}
+                    </h1>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        {current.hint
+                          ?? (current.type === 'multi'
+                            ? `Choisissez jusqu’à ${current.pick ?? 3} réponses.`
+                            : current.type === 'scale'
+                              ? 'Faites glisser le curseur.'
+                              : current.type === 'text'
+                                ? 'Une réponse personnelle, en une phrase.'
+                                : 'Une seule réponse.')}
+                      </p>
+                      {current.type === 'multi' && (
+                        <span className="rounded bg-accent/10 px-2 py-0.5 text-xs font-bold text-accent">
+                          {(Array.isArray(answers[current.id]) ? (answers[current.id] as string[]).length : 0)} / {current.pick ?? 3}
+                        </span>
                       )}
-                      <h2 className="text-lg font-bold leading-snug text-foreground sm:text-xl">{current.label}</h2>
-                      {current.hint && <p className="text-sm leading-relaxed text-muted-foreground">{current.hint}</p>}
                     </div>
-                  </div>
-                  {current.notice && (
-                    <p className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
-                    </p>
-                  )}
-                </CardHeader>
-
-                <CardContent className="space-y-4 p-5">
-                  <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                    <span>
-                      {current.type === 'multi'
-                        ? `Choisissez jusqu’à ${current.pick ?? 3} réponses`
-                        : current.type === 'scale'
-                          ? 'Faites glisser le curseur'
-                          : current.type === 'text'
-                            ? 'Une réponse personnelle'
-                            : 'Une seule réponse'}
-                    </span>
-                    {current.type === 'multi' && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">
-                        {(Array.isArray(answers[current.id]) ? (answers[current.id] as string[]).length : 0)}/{current.pick ?? 3}
-                      </span>
+                    {current.notice && (
+                      <p className="flex gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-300">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {current.notice}
+                      </p>
                     )}
                   </div>
 
                   {current.type === 'multi' && (
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="space-y-3">
                       {current.options?.map((o) => {
                         const selected = Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(o.value);
                         return (
                           <button
                             key={o.value}
                             onClick={() => toggleMulti(current.id, o.value, current.pick ?? 3)}
+                            style={selected ? { boxShadow: 'var(--diag-select-glow)' } : undefined}
                             className={cn(
-                              'flex w-full items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all active:scale-[0.99]',
+                              'flex w-full items-center rounded-2xl border p-4 text-left transition-all duration-200 active:scale-[0.99]',
                               selected
-                                ? 'border-primary bg-primary/10 font-semibold text-foreground shadow-sm'
-                                : 'border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50',
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border/40 bg-card hover:border-foreground/20',
                             )}
                           >
                             <span className={cn(
-                              'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border',
-                              selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                              'mr-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors',
+                              selected ? 'border-primary bg-primary text-primary-foreground' : 'border-foreground/20',
                             )}>
-                              {selected && <Check className="h-3.5 w-3.5" />}
+                              {selected && <Check className="h-4 w-4" strokeWidth={3} />}
                             </span>
-                            {o.label}
+                            <span className={cn('text-base font-medium', selected ? 'text-foreground' : 'text-foreground/80')}>
+                              {o.label}
+                            </span>
                           </button>
                         );
                       })}
@@ -547,27 +559,30 @@ export default function AiHrDiagnostic() {
                   )}
 
                   {current.type === 'single' && (
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="space-y-3">
                       {current.options?.map((o) => {
                         const selected = answers[current.id] === o.value;
                         return (
                           <button
                             key={o.value}
                             onClick={() => setAnswer(current.id, o.value)}
+                            style={selected ? { boxShadow: 'var(--diag-select-glow)' } : undefined}
                             className={cn(
-                              'flex w-full items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all active:scale-[0.99]',
+                              'flex w-full items-center rounded-2xl border p-4 text-left transition-all duration-200 active:scale-[0.99]',
                               selected
-                                ? 'border-primary bg-primary/10 font-semibold text-foreground shadow-sm'
-                                : 'border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50',
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border/40 bg-card hover:border-foreground/20',
                             )}
                           >
                             <span className={cn(
-                              'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                              selected ? 'border-primary bg-primary' : 'border-border',
+                              'mr-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                              selected ? 'border-primary bg-primary' : 'border-foreground/20',
                             )}>
-                              {selected && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                              {selected && <span className="h-2 w-2 rounded-full bg-primary-foreground" />}
                             </span>
-                            {o.label}
+                            <span className={cn('text-base font-medium', selected ? 'text-foreground' : 'text-foreground/80')}>
+                              {o.label}
+                            </span>
                           </button>
                         );
                       })}
@@ -575,9 +590,9 @@ export default function AiHrDiagnostic() {
                   )}
 
                   {current.type === 'scale' && (
-                    <div className="space-y-6 rounded-xl border border-border/60 bg-muted/30 p-6">
+                    <div className="space-y-6 rounded-2xl border border-border/40 bg-card p-6">
                       <div className="text-center">
-                        <span className="text-5xl font-extrabold text-primary">
+                        <span className="text-6xl font-extrabold text-accent">
                           {Number(answers[current.id] ?? 3)}
                         </span>
                         <span className="text-lg text-muted-foreground">/5</span>
@@ -598,30 +613,34 @@ export default function AiHrDiagnostic() {
                   {current.type === 'text' && (
                     <Textarea
                       rows={5}
+                      className="rounded-2xl border-border/40 bg-card p-4 text-base"
                       value={String(answers[current.id] ?? '')}
                       onChange={(e) => setAnswer(current.id, e.target.value)}
                       placeholder="Votre réponse…"
                     />
                   )}
-                </CardContent>
+                </main>
 
-                <div className="flex gap-3 border-t border-border/60 bg-muted/30 p-4">
-                  <Button
-                    variant="outline"
-                    className="gap-2"
+                {/* ── Actions ── */}
+                <footer className="sticky bottom-0 -mx-4 mt-10 flex items-center gap-4 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-6 pt-4">
+                  <button
                     onClick={() => (qIndex === 0 ? setStep('profile') : setQIndex((i) => i - 1))}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border/40 py-4 text-sm font-semibold text-muted-foreground transition-all hover:bg-foreground/5 hover:text-foreground"
                   >
                     <ArrowLeft className="h-4 w-4" /> Retour
-                  </Button>
-                  <Button className="flex-1 gap-2" onClick={next}>
+                  </button>
+                  <button
+                    onClick={next}
+                    style={{ backgroundImage: 'var(--diag-gradient)', boxShadow: 'var(--diag-glow)' }}
+                    className="flex flex-[2] items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
+                  >
                     {qIndex + 1 === questions.length ? 'Voir mon résultat' : 'Suivant'}
                     <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-
+                  </button>
+                </footer>
             </motion.section>
           )}
+
 
           {/* ─────────── Retour de fin de chapitre ─────────── */}
           {step === 'recap' && recapChapter && (
