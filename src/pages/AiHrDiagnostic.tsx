@@ -173,16 +173,17 @@ export default function AiHrDiagnostic() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="diagnostic-immersive min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Seo
         path="/diagnostic"
         title="Diagnostic AI × HR | Où l'IA vous fait gagner du temps en RH"
         description="En 5 minutes, identifiez vos irritants RH, votre maturité IA et les cas d'usage à plus fort impact pour votre fonction. Résultat personnalisé, sans prérequis technique."
       />
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] h-[50%] w-[50%] rounded-full bg-accent/5 blur-[120px]" />
       </div>
+
 
       <div className="relative mx-auto w-full max-w-2xl px-4 pb-16 pt-8">
         <header className="mb-8 flex items-center justify-between">
