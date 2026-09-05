@@ -92,7 +92,46 @@ All colors MUST be HSL.
     --sidebar-border: 240 10% 14%;
     --sidebar-ring: 243 75% 65%;
   }
+
+  /* Immersive dark theme scoped to the AI × HR diagnostic experience */
+  .diagnostic-immersive {
+    --background: 222 40% 7%;
+    --foreground: 0 0% 100%;
+
+    --card: 217 33% 17%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 217 33% 17%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 187 85% 53%;
+    --accent-foreground: 222 40% 7%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 239 84% 67%;
+
+    --radius: 1rem;
+
+    --diag-gradient: linear-gradient(90deg, hsl(239 84% 67%), hsl(187 85% 53%));
+    --diag-glow: 0 10px 30px -10px hsl(239 84% 67% / 0.5);
+    --diag-progress-glow: 0 0 12px hsl(187 85% 53% / 0.4);
+    --diag-select-glow: 0 0 20px hsl(239 84% 67% / 0.15);
+  }
 }
+
 
 @layer base {
   * {
