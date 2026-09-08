@@ -75,7 +75,29 @@ export function getQuestions(
   const remainingBranch = branch.slice(2);
 
   // Ask the contextual follow-up immediately after the participant's first answer.
-  return [...openingUniversal, ...openingBranch, ...laterUniversal.slice(0, 2), ...remainingBranch, ...laterUniversal.slice(2)];
+  const ordered = [
+    ...openingUniversal,
+    ...openingBranch,
+    ...laterUniversal.slice(0, 2),
+    ...remainingBranch,
+    ...laterUniversal.slice(2),
+  ];
+
+  // Keep chapters contiguous: a participant must never come back to a chapter
+  // already recapped. Chapter order follows first appearance above.
+  return groupByChapter(ordered);
+}
+
+/** Stable grouping of questions by chapter, in order of first appearance. */
+function groupByChapter(questions: Question[]): Question[] {
+  const groups = new Map<string, Question[]>();
+  for (const q of questions) {
+    const chapter = q.chapter ?? 'Votre diagnostic';
+    const bucket = groups.get(chapter);
+    if (bucket) bucket.push(q);
+    else groups.set(chapter, [q]);
+  }
+  return [...groups.values()].flat();
 }
 
 /** Silences the unused-constant warning while documenting the express whitelist. */
