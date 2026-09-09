@@ -50,6 +50,8 @@ const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
 const StudentHub = lazy(() => import("./pages/StudentHub"));
 const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
+const EvidenceHub = lazy(() => import("./pages/EvidenceHub"));
+
 const AiHrDiagnostic = lazy(() => import("./pages/AiHrDiagnostic"));
 const AiHrWorkshops = lazy(() => import("./pages/AiHrWorkshops"));
 const AiHrLiveScreen = lazy(() => import("./pages/AiHrLiveScreen"));
@@ -171,6 +173,8 @@ const App = () => (
 
               {/* Workflow Routes - Assess */}
               <Route path="/workflow/assess/root-cause" element={<ProtectedLayout featureName="Root Cause Diagnostic"><RootCauseDiagnostic /></ProtectedLayout>} />
+              <Route path="/workflow/assess/evidence" element={<ProtectedLayout featureName="Evidence Hub"><EvidenceHub /></ProtectedLayout>} />
+
               <Route path="/workflow/assess/ai-hr" element={<ProtectedLayout featureName="AI × HR Diagnostic"><AiHrWorkshops /></ProtectedLayout>} />
               <Route path="/workflow/assess/workforce" element={<ProtectedLayout featureName="Workforce & Org"><WorkforceOrg /></ProtectedLayout>} />
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />

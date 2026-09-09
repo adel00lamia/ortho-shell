@@ -67,8 +67,19 @@ export const REFERENCE_RULES: FundingRules = {
   verified: false,
 };
 
+/**
+ * Legacy demo assumptions, kept ONLY so historical screens and saved examples
+ * keep rendering. These are NOT current law and must never be presented as
+ * the applicable regulatory rule.
+ */
+export const LEGACY_REFERENCE_RULES: FundingRules = REFERENCE_RULES;
+
+/** Rule configuration accepted by every calculator in this module. */
+export type RuleConfig = FundingRules;
+
 /** Backwards-compatible alias used by existing screens. */
 export const DEFAULT_FUNDING_RULES = REFERENCE_RULES;
+
 
 /** Human-readable disclaimer shown next to every computed funding amount. */
 export const FUNDING_DISCLAIMER = {

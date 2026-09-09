@@ -233,6 +233,35 @@ export function usePublicPulse(code: string | undefined) {
   });
 }
 
+/**
+ * Company-wide list of pulses (evidence + capability) for the Evidence hub.
+ * Aggregates are fetched per pulse; respondent rows are never selected.
+ */
+export function useCompanyEvidencePulses() {
+  const { companyId } = useCompanyId();
+
+  return useQuery({
+    queryKey: ['company-evidence-pulses', companyId],
+    queryFn: async (): Promise<Array<EvidencePulseRow & { responses: number }>> => {
+      const { data, error } = await db
+        .from('evidence_pulses')
+        .select('*')
+        .eq('company_id', companyId!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const pulses = (data ?? []) as EvidencePulseRow[];
+      const counts = await Promise.all(
+        pulses.map(async (p) => {
+          const { data: agg } = await db.rpc('evidence_pulse_aggregate', { _pulse_id: p.id });
+          return Number((agg as { responses?: number } | null)?.responses ?? 0);
+        })
+      );
+      return pulses.map((p, i) => ({ ...p, responses: counts[i] }));
+    },
+    enabled: !!companyId,
+  });
+}
+
 export function useSubmitPulse() {
   return useMutation({
     mutationFn: async (input: {
@@ -241,6 +270,7 @@ export function useSubmitPulse() {
       free_text?: string;
       name?: string;
       role?: string;
+      token?: string;
     }) => {
       const { data, error } = await db.rpc('evidence_pulse_submit', {
         _code: input.code,
@@ -248,12 +278,14 @@ export function useSubmitPulse() {
         _free_text: input.free_text ?? null,
         _name: input.name ?? null,
         _role: input.role ?? null,
+        _token: input.token ?? null,
       });
       if (error) throw error;
       return data as string;
     },
   });
 }
+
 
 // Reassessment lives with the diagnostic hooks; re-exported here so the
 // Evidence Pulse panel has a single import surface.

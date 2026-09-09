@@ -20,13 +20,19 @@ export default function EvidencePulsePublic() {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [done, setDone] = useState(false);
+  // One-time token so a reload of this page cannot duplicate the same answer set.
+  const [token] = useState(() =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now())
+  );
 
   const fr = (pulse?.locale ?? 'fr') === 'fr';
+  const isCapability = pulse?.kind === 'capability';
   const questions = pulse?.questions ?? [];
   const complete = useMemo(
     () => questions.length > 0 && questions.every((q) => !!answers[q.id]),
     [questions, answers]
   );
+
 
   const shell = (children: React.ReactNode) => (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-4 py-10">
@@ -82,10 +88,15 @@ export default function EvidencePulsePublic() {
           <CheckCircle2 className="mb-2 h-10 w-10 text-primary" />
           <CardTitle className="text-lg">{fr ? 'Merci !' : 'Thank you!'}</CardTitle>
           <CardDescription>
-            {fr
-              ? 'Votre réponse est enregistrée. Elle sera agrégée avec les autres, sans être lue individuellement.'
-              : 'Your answer is recorded. It will be aggregated with the others, never read individually.'}
+            {isCapability
+              ? fr
+                ? 'Votre réponse est enregistrée. Elle sera lue par les personnes autorisées de votre entreprise, sans votre nom.'
+                : 'Your answer is recorded. It will be read by authorised people in your company, without your name.'
+              : fr
+                ? 'Votre réponse est enregistrée. Elle sera regroupée avec les autres, sans votre nom.'
+                : 'Your answer is recorded. It will be grouped with the others, without your name.'}
           </CardDescription>
+
         </CardHeader>
       </Card>
     );
@@ -97,17 +108,20 @@ export default function EvidencePulsePublic() {
         <CardTitle className="text-lg">{pulse.title}</CardTitle>
         <CardDescription className="flex items-start gap-1.5">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          {pulse.allow_identity
+          {isCapability
             ? fr
-              ? '2 minutes. Vos réponses sont regroupées. Si vous choisissez de laisser votre nom et votre fonction, ils pourront être vus par les personnes autorisées de votre entreprise.'
-              : '2 minutes. Your answers are grouped. If you choose to leave your name and role, authorised people in your company may see them.'
-            : fr
-              ? '2 minutes. Réponses anonymes : votre entreprise ne voit que des résultats regroupés et des commentaires sans nom.'
-              : '2 minutes. Anonymous answers: your company only sees grouped results and unnamed comments.'}
-
-
+              ? 'Environ 5 minutes. Vos réponses écrites seront lues par les personnes autorisées de votre entreprise pour comprendre la pratique réelle du métier. Votre nom n’est pas demandé, mais le contenu de vos réponses sera visible.'
+              : 'About 5 minutes. Your written answers will be read by authorised people in your company to understand real working practice. Your name is not requested, but the content of your answers will be visible.'
+            : pulse.allow_identity
+              ? fr
+                ? '2 minutes. Vos réponses sont regroupées. Si vous choisissez de laisser votre nom et votre fonction, ils pourront être vus par les personnes autorisées de votre entreprise.'
+                : '2 minutes. Your answers are grouped. If you choose to leave your name and role, authorised people in your company may see them.'
+              : fr
+                ? '2 minutes. Réponses anonymes : aucune identité n’est enregistrée, et votre entreprise ne voit que des résultats regroupés et des commentaires sans nom.'
+                : '2 minutes. Anonymous answers: no identity is stored, and your company only sees grouped results and unnamed comments.'}
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-6">
         {questions.map((q, i) => (
           <fieldset key={q.id} className="space-y-2">
@@ -188,6 +202,8 @@ export default function EvidencePulsePublic() {
                 free_text: freeText.trim() || undefined,
                 name: pulse.allow_identity ? name.trim() || undefined : undefined,
                 role: pulse.allow_identity ? role.trim() || undefined : undefined,
+                token,
+
               },
               { onSuccess: () => setDone(true) }
             )
