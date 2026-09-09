@@ -67,8 +67,8 @@ export function QimatakExecutiveOverview({ fr }: { fr: boolean }) {
     { title: fr ? 'Diagnostiquer un problème' : 'Diagnose a problem', icon: Search, path: '/workflow/assess/root-cause' },
     { title: fr ? 'Collecter des preuves' : 'Collect evidence', icon: MessageSquareQuote, path: '/workflow/assess/root-cause' },
     { title: fr ? 'Revoir les plans d’action' : 'Review action plans', icon: ClipboardList, path: '/workflow/plan/plans' },
-    { title: fr ? 'Mesurer l’impact' : 'Measure impact', icon: TrendingUp, path: '/workflow/track/analytics' },
-    { title: fr ? 'Vérifier le financement' : 'Check funding', icon: Wallet, path: '/workflow/track/ofppt' },
+    { title: fr ? 'Mesurer l’impact' : 'Measure impact', icon: TrendingUp, path: '/workflow/assess/root-cause' },
+    { title: fr ? 'Vérifier le financement' : 'Check funding', icon: Wallet, path: '/workflow/track/reimbursement' },
   ];
 
   if (isLoading) {

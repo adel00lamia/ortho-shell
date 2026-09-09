@@ -21,6 +21,7 @@ import { useSeedDemoData } from '@/hooks/useSeedDemoData';
 import { PROFILE_FIELDS } from '@/data/diagnosticConstants';
 import { motion } from 'framer-motion';
 import { FeatureErrorBoundary } from '@/components/error-boundaries/FeatureErrorBoundary';
+import { QimatakExecutiveOverview } from '@/components/dashboard/QimatakExecutiveOverview';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -159,6 +160,10 @@ const Dashboard = () => {
   };
 
   const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.employee;
+  /** Admin and HR get the Qimatak outcome view instead of the legacy LMS stats. */
+  const isExecutive = role === 'admin' || role === 'hr_manager';
+  /** Demo seeding is a development aid, never a production-facing card. */
+  const showDemoSeeder = import.meta.env.DEV;
   const RoleIcon = config.icon;
 
   const workflowSteps = [
@@ -255,7 +260,9 @@ const Dashboard = () => {
       )}
 
       {/* Stats Grid — enhanced with gradient backgrounds */}
-      {isVisible('stats') && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {isExecutive && isVisible('stats') && <QimatakExecutiveOverview fr={fr} />}
+
+      {!isExecutive && isVisible('stats') && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {config.stats.map((stat, i) => {
           const StatIcon = stat.icon;
           return (
@@ -279,7 +286,7 @@ const Dashboard = () => {
       </div>}
 
       {/* Profile Completion */}
-      {(role === 'hr_manager' || role === 'admin' || role === 'employee') && (
+      {showDemoSeeder && (role === 'hr_manager' || role === 'admin' || role === 'employee') && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={4.5}>
           <Card className="p-6 border-dashed border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
             <div className="flex items-start gap-4">
@@ -415,7 +422,7 @@ const Dashboard = () => {
       )}
 
       {/* Workflow Steps */}
-      {isVisible('workflow') && (role === 'hr_manager' || role === 'admin') && (
+      {isVisible('workflow') && !isExecutive && (
         <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={6}>
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>
@@ -446,7 +453,7 @@ const Dashboard = () => {
       )}
 
       {/* Quick Actions */}
-      {isVisible('actions') && <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={11}>
+      {isVisible('actions') && !isExecutive && <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={11}>
         <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>{d.quickActions}</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {config.actions.map((action, i) => {
