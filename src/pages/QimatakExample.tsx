@@ -34,7 +34,7 @@ const CAUSES: Array<{ key: CauseKey; pct: number; for: string[]; against: string
     strength: 'moderate',
   },
   {
-    key: 'capability',
+    key: 'skill',
     pct: 18,
     for: ['Les nouveaux agents (moins de 6 mois) génèrent 60 % des réclamations remontées.'],
     against: ['Les agents expérimentés atteignent la cible avec les mêmes outils.'],
