@@ -426,7 +426,12 @@ export default function RootCauseDiagnostic() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <CauseBreakdownChart breakdown={selected.cause_breakdown} language={lang} />
+                    <CauseBreakdownChart
+                      breakdown={selected.cause_breakdown}
+                      causeEvidence={selected.cause_evidence ?? []}
+                      language={lang}
+                    />
+
                     {selected.ai_summary && (
                       <p className="rounded-lg bg-muted/40 p-3 text-sm leading-relaxed text-muted-foreground">
                         {selected.ai_summary}
