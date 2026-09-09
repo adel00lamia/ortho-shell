@@ -1,15 +1,30 @@
 // Qimatak root-cause diagnostic engine.
 // Takes a business problem described by a manager and returns:
-// - a cause breakdown across skill / process / management / tools / organisation
-// - a Training Fit Score (0-100) telling whether training is really the answer
+// - a cause breakdown across the 7 explicit causes
+// - per-cause evidence reasoning (supporting / contradicting / strength)
+// - a Training Fit Score computed by THIS code from constrained signals
 // - recommended interventions (most of them NOT training)
 // - suggested KPIs for the before/after impact loop
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import {
+  CAUSE_KEYS,
+  computeConfidence,
+  computeTrainingFit,
+  evidenceCompleteness,
+  normalizeCauseBreakdown,
+  normalizeCauseEvidence,
+  type TrainingFitSignals,
+} from '../_shared/rootCause.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const MODEL = 'google/gemini-3.7-flash';
 
-const CAUSE_KEYS = ['skill', 'process', 'management', 'tools', 'organization'] as const;
+interface PulseAggregate {
+  responses: number;
+  audience?: string;
+  questions?: Array<{ question: string; agreement?: number | null; answers?: number }>;
+  comments?: string[];
+}
 
 interface DiagnoseBody {
   problem_description: string;
@@ -22,18 +37,25 @@ interface DiagnoseBody {
   evidence_sources?: Record<string, number>;
   company?: { name?: string; industry?: string; employee_count?: number; city?: string };
   language?: 'fr' | 'en';
+  /** Aggregated Evidence Pulse results for a reassessment. */
+  evidence_pulse?: PulseAggregate;
+  /** Confidence of the diagnosis being reassessed, for context only. */
+  previous?: { training_fit_score?: number; ai_confidence?: number; ai_summary?: string };
 }
 
 function systemPrompt(lang: 'fr' | 'en') {
   if (lang === 'en') {
     return `You are Qimatak, a senior organisational performance diagnostician for Moroccan companies.
 
-Your core principle: not every performance drop is a training need. A lack of results can come from skills, but also from processes, tools, management, incentives or organisation. You diagnose BEFORE recommending training.
+Your core principle: not every performance drop is a training need. Weak results can come from capability, but also from unclear expectations, the process itself, tools and data, management, incentives, or capacity and organisation. You diagnose BEFORE recommending training.
 
 Rules:
-- Distribute 100 points across the five causes: skill, process, management, tools, organization.
-- training_fit_score (0-100) measures how much TRAINING is the right primary answer. It must be consistent with the skill weight: a low skill weight means a low score.
-- Most recommended actions must be NON-training (fix workflow, coach supervisors, update procedure, change tool, clarify roles). Add a training action only for the population that genuinely needs it, and say how many people.
+- Distribute 100 points across the seven causes: skill (capability), clarity, process, tools_data, management, incentives, capacity_organization.
+- Percentages are ESTIMATED HYPOTHESES, not measured truth. Write about them that way.
+- For every cause above 10 points, return cause_evidence with the supporting evidence, any contradicting evidence, and a strength.
+- Evidence must quote ONLY what the case supplies: the problem text, the symptoms, the KPI values, the declared evidence counts, the Evidence Pulse results. NEVER invent a document, an interview, a person or a figure that was not given.
+- You do NOT decide the Training Fit Score. Instead return training_fit_signals; Qimatak computes the score from them.
+- Most recommended actions must be NON-training (fix the workflow, coach supervisors, clarify the standard, change the tool, rebalance workload). Add a training action only for the population that genuinely needs it, and say how many people.
 - Costs in MAD. Assume ~40 MAD/hour/person as the OFPPT reimbursable reference and ~2 training days (14h) per person unless the problem says otherwise.
 - estimated_training_cost_mad = cost of training the whole affected population.
 - avoided_training_cost_mad = what is saved by training only the population that truly needs it.
@@ -41,12 +63,15 @@ Rules:
   }
   return `Tu es Qimatak, diagnosticien senior de la performance organisationnelle pour les entreprises marocaines.
 
-Ton principe fondateur : toute baisse de performance n'est pas un besoin de formation. Un manque de résultat peut venir de la compétence, mais aussi du processus, des outils, du management, des incitations ou de l'organisation. Tu diagnostiques AVANT de recommander une formation.
+Ton principe fondateur : toute baisse de performance n'est pas un besoin de formation. Un manque de résultat peut venir de la compétence, mais aussi d'attentes floues, du processus lui-même, des outils et des données, du management, des incitations, ou de la capacité et de l'organisation. Tu diagnostiques AVANT de recommander une formation.
 
 Règles :
-- Répartis 100 points entre les cinq causes : skill (compétence), process (processus), management, tools (outils), organization (organisation).
-- training_fit_score (0-100) mesure à quel point la FORMATION est la bonne réponse prioritaire. Il doit rester cohérent avec le poids de la compétence : un faible poids compétence implique un score faible.
-- La majorité des actions recommandées doivent être NON formatives (corriger le workflow, coacher les superviseurs, mettre à jour la procédure, changer l'outil, clarifier les rôles). N'ajoute une action de formation que pour la population qui en a réellement besoin, en précisant le nombre de personnes.
+- Répartis 100 points entre les sept causes : skill (compétence), clarity (clarté des attentes), process (processus), tools_data (outils & données), management, incentives (incitations & KPI), capacity_organization (capacité & organisation).
+- Les pourcentages sont des HYPOTHÈSES ESTIMÉES, pas une vérité mesurée. Formule-les ainsi.
+- Pour chaque cause au-dessus de 10 points, renvoie cause_evidence : preuves à l'appui, preuves contradictoires s'il y en a, et force de la preuve.
+- Les preuves doivent citer UNIQUEMENT ce que le dossier fournit : le texte du problème, les symptômes, les valeurs d'indicateurs, les sources de preuve déclarées, les résultats de l'Evidence Pulse. N'invente JAMAIS un document, un entretien, une personne ou un chiffre non fourni.
+- Tu ne décides PAS du Training Fit Score. Renvoie training_fit_signals ; Qimatak calcule le score à partir de ces signaux.
+- La majorité des actions recommandées doivent être NON formatives (corriger le workflow, coacher les superviseurs, clarifier le standard, changer l'outil, rééquilibrer la charge). N'ajoute une action de formation que pour la population qui en a réellement besoin, en précisant le nombre de personnes.
 - Coûts en MAD. Référence : ~40 MAD/heure/personne (plafond OFPPT) et ~2 jours (14h) par personne sauf indication contraire.
 - estimated_training_cost_mad = coût si l'on formait toute la population concernée.
 - avoided_training_cost_mad = économie réalisée en ne formant que la population réellement concernée.
@@ -54,6 +79,7 @@ Règles :
 }
 
 function userPrompt(b: DiagnoseBody, lang: 'fr' | 'en') {
+  const pulse = b.evidence_pulse;
   const ctx = [
     `PROBLEM: ${b.problem_description}`,
     b.title ? `TITLE: ${b.title}` : '',
@@ -64,15 +90,38 @@ function userPrompt(b: DiagnoseBody, lang: 'fr' | 'en') {
     b.business_kpis?.length ? `KPIS: ${JSON.stringify(b.business_kpis)}` : '',
     b.evidence_sources ? `EVIDENCE AVAILABLE: ${JSON.stringify(b.evidence_sources)}` : '',
     b.company ? `COMPANY: ${JSON.stringify(b.company)}` : '',
+    pulse
+      ? `EVIDENCE PULSE (field answers collected from ${pulse.audience ?? 'staff'}, ${pulse.responses} responses; agreement is 0-100): ${JSON.stringify(pulse.questions ?? [])}${
+          pulse.comments?.length ? `\nFIELD COMMENTS: ${JSON.stringify(pulse.comments.slice(0, 15))}` : ''
+        }`
+      : '',
+    b.previous
+      ? `PREVIOUS ASSESSMENT (for continuity only, re-judge freely): fit=${b.previous.training_fit_score}, confidence=${b.previous.ai_confidence}`
+      : '',
   ].filter(Boolean).join('\n');
 
   const shape = `Return ONLY valid JSON with this exact shape:
 {
-  "cause_breakdown": { "skill": 0, "process": 0, "management": 0, "tools": 0, "organization": 0 },
-  "training_fit_score": 0,
+  "cause_breakdown": { "skill": 0, "clarity": 0, "process": 0, "tools_data": 0, "management": 0, "incentives": 0, "capacity_organization": 0 },
+  "cause_evidence": [
+    {
+      "cause": "skill|clarity|process|tools_data|management|incentives|capacity_organization",
+      "supporting": ["evidence taken from the case only"],
+      "contradicting": ["evidence that weakens this hypothesis, or empty"],
+      "strength": "weak|moderate|strong",
+      "confidence": 0
+    }
+  ],
+  "training_fit_signals": {
+    "capability_share": 0,
+    "demonstrated_skill_gap": 0,
+    "barrier_load": 0,
+    "high_performers_succeed": true,
+    "standards_and_tools_available": true
+  },
   "ai_confidence": 0,
   "ai_verdict": "one short sentence: is training the priority or not",
-  "ai_summary": "3-5 sentences explaining the real root cause and what to do first",
+  "ai_summary": "3-5 sentences explaining the likely root cause and what to do first",
   "estimated_training_cost_mad": 0,
   "avoided_training_cost_mad": 0,
   "trainable_headcount": 0,
@@ -94,45 +143,70 @@ function userPrompt(b: DiagnoseBody, lang: 'fr' | 'en') {
   "kpis": [
     { "kpi_name": "indicator", "unit": "%", "baseline_value": 0, "target_value": 0, "direction": "decrease|increase" }
   ],
-  "missing_evidence": ["what data would raise confidence"]
+  "missing_evidence": ["a short, answerable question or data point that would raise confidence"]
 }
-Percentages in cause_breakdown must sum to 100. Provide 3 to 6 actions and 2 to 4 kpis. Write all human-readable text in ${lang === 'fr' ? 'French' : 'English'}.`;
+Notes on training_fit_signals: capability_share, demonstrated_skill_gap and barrier_load are 0-100. Set high_performers_succeed / standards_and_tools_available to null when the case does not say. demonstrated_skill_gap must be low unless the case really shows people do not know how.
+Percentages in cause_breakdown must sum to 100. Provide 3 to 6 actions, 2 to 4 kpis and 2 to 5 missing_evidence items. Write all human-readable text in ${lang === 'fr' ? 'French' : 'English'}.`;
 
   return `${ctx}\n\n${shape}`;
 }
 
-function normalise(raw: Record<string, unknown>) {
-  const cb = (raw.cause_breakdown ?? {}) as Record<string, number>;
-  const clean: Record<string, number> = {};
-  let total = 0;
-  for (const k of CAUSE_KEYS) {
-    const v = Number(cb[k]);
-    clean[k] = Number.isFinite(v) && v > 0 ? v : 0;
-    total += clean[k];
-  }
-  if (total <= 0) {
-    for (const k of CAUSE_KEYS) clean[k] = 20;
-  } else if (Math.abs(total - 100) > 0.5) {
-    for (const k of CAUSE_KEYS) clean[k] = Math.round((clean[k] / total) * 100);
-  }
+function boolOrNull(v: unknown): boolean | null {
+  if (v === true || v === 'true' || v === 'yes') return true;
+  if (v === false || v === 'false' || v === 'no') return false;
+  return null;
+}
 
-  const clamp = (n: unknown, min: number, max: number, fallback: number) => {
-    const v = Number(n);
-    return Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : fallback;
+function normalise(raw: Record<string, unknown>, body: DiagnoseBody) {
+  const cause_breakdown = normalizeCauseBreakdown(raw.cause_breakdown);
+  const cause_evidence = normalizeCauseEvidence(raw.cause_evidence);
+
+  const rawSignals = (raw.training_fit_signals ?? {}) as Record<string, unknown>;
+  const signals: TrainingFitSignals = {
+    capability_share: Number(rawSignals.capability_share ?? cause_breakdown.skill),
+    demonstrated_skill_gap:
+      rawSignals.demonstrated_skill_gap === null || rawSignals.demonstrated_skill_gap === undefined
+        ? null
+        : Number(rawSignals.demonstrated_skill_gap),
+    barrier_load:
+      rawSignals.barrier_load === null || rawSignals.barrier_load === undefined
+        ? null
+        : Number(rawSignals.barrier_load),
+    high_performers_succeed: boolOrNull(rawSignals.high_performers_succeed),
+    standards_and_tools_available: boolOrNull(rawSignals.standards_and_tools_available),
   };
 
+  // The score is computed here, never taken from the model.
+  const fit = computeTrainingFit(signals, cause_breakdown);
+
+  const completeness = evidenceCompleteness({
+    problem_description: body.problem_description,
+    symptoms: body.symptoms,
+    business_kpis: body.business_kpis,
+    evidence_sources: body.evidence_sources,
+    pulse_responses: body.evidence_pulse?.responses ?? 0,
+  });
+
   return {
-    cause_breakdown: clean,
-    training_fit_score: clamp(raw.training_fit_score, 0, 100, clean.skill),
-    ai_confidence: clamp(raw.ai_confidence, 0, 100, 60),
-    ai_verdict: String(raw.ai_verdict ?? ''),
-    ai_summary: String(raw.ai_summary ?? ''),
+    cause_breakdown,
+    cause_evidence,
+    training_fit_score: fit.score,
+    training_fit_explanation: fit.factors,
+    training_fit_signals: fit.signals,
+    evidence_completeness: completeness,
+    ai_confidence: computeConfidence(raw.ai_confidence, completeness),
+    ai_verdict: String(raw.ai_verdict ?? '').slice(0, 400),
+    ai_summary: String(raw.ai_summary ?? '').slice(0, 2000),
     estimated_training_cost_mad: Number(raw.estimated_training_cost_mad) || 0,
     avoided_training_cost_mad: Number(raw.avoided_training_cost_mad) || 0,
     trainable_headcount: Number(raw.trainable_headcount) || 0,
     actions: Array.isArray(raw.actions) ? raw.actions.slice(0, 8) : [],
     kpis: Array.isArray(raw.kpis) ? raw.kpis.slice(0, 6) : [],
-    missing_evidence: Array.isArray(raw.missing_evidence) ? raw.missing_evidence.slice(0, 6) : [],
+    missing_evidence: Array.isArray(raw.missing_evidence)
+      ? raw.missing_evidence.map((m) => String(m ?? '').slice(0, 300)).filter(Boolean).slice(0, 6)
+      : [],
+    methodology: 'Qimatak Training Fit Score — version pilote',
+    cause_model_version: CAUSE_KEYS.length,
   };
 }
 
@@ -213,7 +287,7 @@ Deno.serve(async (req) => {
       return json({ error: 'AI returned malformed JSON' }, 502);
     }
 
-    return json(normalise(parsed));
+    return json(normalise(parsed, body));
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : 'Unexpected error' }, 500);
   }
