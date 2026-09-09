@@ -20,13 +20,19 @@ export default function EvidencePulsePublic() {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [done, setDone] = useState(false);
+  // One-time token so a reload of this page cannot duplicate the same answer set.
+  const [token] = useState(() =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now())
+  );
 
   const fr = (pulse?.locale ?? 'fr') === 'fr';
+  const isCapability = pulse?.kind === 'capability';
   const questions = pulse?.questions ?? [];
   const complete = useMemo(
     () => questions.length > 0 && questions.every((q) => !!answers[q.id]),
     [questions, answers]
   );
+
 
   const shell = (children: React.ReactNode) => (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-4 py-10">
