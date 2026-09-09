@@ -202,7 +202,7 @@ export const OnboardingChecklist = () => {
     setDismissed(true);
   };
 
-  const welcomeTitle = fr ? 'Bienvenue sur QimataQ !' : 'Welcome to QimataQ!';
+  const welcomeTitle = fr ? 'Bienvenue sur Qimatak !' : 'Welcome to Qimatak!';
   const welcomeDesc = fr
     ? 'Votre plateforme intelligente de gestion de formation. Suivez les étapes pour commencer.'
     : 'Your intelligent training management platform. Follow the steps to get started.';

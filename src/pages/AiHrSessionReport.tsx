@@ -24,7 +24,7 @@ export default function AiHrSessionReport() {
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6 print:p-0">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">QimataQ · AI × HR Diagnostic Engine</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Qimatak · AI × HR Diagnostic Engine</p>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Rapport de diagnostic de session</h1>
           <p className="text-sm text-muted-foreground">
             {session?.title ?? '—'}
@@ -77,7 +77,7 @@ export default function AiHrSessionReport() {
       </Card>
 
       <p className="pt-4 text-center text-[11px] text-muted-foreground">
-        © {new Date().getFullYear()} QimataQ — Diagnostiquer → Prioriser → Apprendre → Expérimenter → Mesurer
+        © {new Date().getFullYear()} Qimatak — Diagnostiquer → Prioriser → Apprendre → Expérimenter → Mesurer
       </p>
     </div>
   );

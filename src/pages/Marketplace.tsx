@@ -163,7 +163,7 @@ export default function Marketplace() {
     name: listing.title,
     description: listing.short_description || listing.description || listing.title,
     ...(listing.cover_image_url ? { image: listing.cover_image_url } : {}),
-    provider: { '@type': 'Organization', name: 'QimataQ' },
+    provider: { '@type': 'Organization', name: 'Qimatak' },
     offers: {
       '@type': 'Offer',
       price: ((listing.price_cents || 0) / 100).toFixed(2),
@@ -176,7 +176,7 @@ export default function Marketplace() {
     <div className="container mx-auto py-8 space-y-6">
       <Seo
         path="/workflow/execute/marketplace"
-        title={`${m.title} | QimataQ`}
+        title={`${m.title} | Qimatak`}
         description={m.subtitle}
         jsonLd={listingsJsonLd.length > 0 ? listingsJsonLd : undefined}
       />

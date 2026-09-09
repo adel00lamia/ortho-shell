@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { lazy, Suspense } from "react";
 
@@ -72,6 +72,13 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Keeps old /diagnostic/... participant links working by forwarding them to /pulse/... */
+const LegacyDiagnosticRedirect = ({ kind }: { kind?: "live" | "report" }) => {
+  const { code } = useParams();
+  const suffix = kind ? `${kind}/${code}` : code ?? "";
+  return <Navigate to={`/pulse/${suffix}`} replace />;
+};
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -129,11 +136,20 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
 
-              {/* AI × HR Diagnostic — public participant + projected screens */}
-              <Route path="/diagnostic" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
-              <Route path="/diagnostic/live/:code" element={<Suspense fallback={<PageLoader />}><AiHrLiveScreen /></Suspense>} />
-              <Route path="/diagnostic/report/:code" element={<Suspense fallback={<PageLoader />}><AiHrSessionReport /></Suspense>} />
-              <Route path="/diagnostic/:code" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
+              {/* Qimatak Pulse — public AI × HR participant + projected screens */}
+              <Route path="/pulse" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
+              <Route path="/pulse/live/:code" element={<Suspense fallback={<PageLoader />}><AiHrLiveScreen /></Suspense>} />
+              <Route path="/pulse/report/:code" element={<Suspense fallback={<PageLoader />}><AiHrSessionReport /></Suspense>} />
+              <Route path="/pulse/:code" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
+
+              {/* Backwards-compatible redirects from the old public /diagnostic URLs */}
+              <Route path="/diagnostic" element={<Navigate to="/pulse" replace />} />
+              <Route path="/diagnostic/live/:code" element={<LegacyDiagnosticRedirect kind="live" />} />
+              <Route path="/diagnostic/report/:code" element={<LegacyDiagnosticRedirect kind="report" />} />
+              <Route path="/diagnostic/:code" element={<LegacyDiagnosticRedirect />} />
+
+              {/* Enterprise root-cause product */}
+              <Route path="/diagnose" element={<Navigate to="/workflow/assess/root-cause" replace />} />
 
               {/* Participant portal — code-based access */}
               <Route path="/portail" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
@@ -195,7 +211,6 @@ const App = () => (
               <Route path="/student" element={<ProtectedLayout featureName="Student Hub"><StudentHub /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
-              <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
               <Route path="/performance-evaluation" element={<Navigate to="/workflow/assess/performance" replace />} />
               <Route path="/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               <Route path="/ai-plan-builder" element={<Navigate to="/workflow/plan/builder" replace />} />

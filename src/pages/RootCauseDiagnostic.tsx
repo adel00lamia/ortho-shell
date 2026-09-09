@@ -161,7 +161,7 @@ export default function RootCauseDiagnostic() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            <Sparkles className="mr-1 h-3 w-3" /> QimataQ
+            <Sparkles className="mr-1 h-3 w-3" /> Qimatak
           </Badge>
           <Badge variant="secondary">AI</Badge>
         </div>
@@ -359,7 +359,14 @@ export default function RootCauseDiagnostic() {
             <>
               <div className="grid gap-4 lg:grid-cols-3">
                 <Card className="lg:col-span-1">
-                  <CardHeader><CardTitle className="text-base">Training Fit Score</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle className="text-base">Training Fit Score</CardTitle>
+                    <CardDescription>
+                      {fr
+                        ? 'Score d’aide à la décision — à confirmer par les preuves disponibles.'
+                        : 'Decision-support score — to be confirmed by the available evidence.'}
+                    </CardDescription>
+                  </CardHeader>
                   <CardContent className="flex flex-col items-center gap-4">
                     <TrainingFitScore
                       score={selected.training_fit_score ?? 0}
@@ -377,6 +384,19 @@ export default function RootCauseDiagnostic() {
                         <span className="text-muted-foreground">{fr ? 'Confiance IA' : 'AI confidence'}</span>
                         <span className="font-semibold">{selected.ai_confidence ?? 0}%</span>
                       </div>
+                      {(selected.missing_evidence ?? []).length > 0 && (
+                        <div className="space-y-1.5 rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5">
+                          <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                            <FileSearch className="h-3.5 w-3.5" />
+                            {fr ? 'Preuves manquantes / Ce qui augmenterait la confiance' : 'Missing evidence / What would raise confidence'}
+                          </p>
+                          <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                            {(selected.missing_evidence ?? []).map((m, i) => (
+                              <li key={`${i}-${m}`}>{m}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <TrendingDown className="h-3.5 w-3.5" />
@@ -396,8 +416,14 @@ export default function RootCauseDiagnostic() {
 
                 <Card className="lg:col-span-2">
                   <CardHeader>
-                    <CardTitle className="text-base">{fr ? 'Analyse des causes racines' : 'Root cause analysis'}</CardTitle>
-                    <CardDescription>{selected.title}</CardDescription>
+                    <CardTitle className="text-base">
+                      {fr ? 'Causes racines probables (hypothèses)' : 'Likely root causes (hypotheses)'}
+                    </CardTitle>
+                    <CardDescription>
+                      {selected.title} — {fr
+                        ? 'Les pourcentages sont des hypothèses appuyées par les preuves fournies, pas une vérité absolue.'
+                        : 'Percentages are hypotheses supported by the evidence provided, not absolute truth.'}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <CauseBreakdownChart breakdown={selected.cause_breakdown} language={lang} />

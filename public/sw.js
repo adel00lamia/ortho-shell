@@ -1,4 +1,4 @@
-// QimataQ - Service Worker
+// Qimatak - Service Worker
 // Caches app shell + module content for offline access
 
 const CACHE_NAME = 'trainpro-v1';

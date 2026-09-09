@@ -235,7 +235,7 @@ export const exportModuleToPDF = (data: ModuleExportData) => {
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(
-      `Page ${i}/${pageCount} — ${data.title} — QimataQ`,
+      `Page ${i}/${pageCount} — ${data.title} — Qimatak`,
       pageWidth / 2, 290, { align: 'center' }
     );
   }

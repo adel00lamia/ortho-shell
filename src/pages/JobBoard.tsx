@@ -48,14 +48,14 @@ const JobBoard = () => {
     ...(job.closing_date ? { validThrough: job.closing_date } : {}),
     ...(job.location ? { jobLocation: { '@type': 'Place', address: job.location } } : {}),
     ...(job.employment_type ? { employmentType: job.employment_type } : {}),
-    hiringOrganization: { '@type': 'Organization', name: 'QimataQ' },
+    hiringOrganization: { '@type': 'Organization', name: 'Qimatak' },
   }));
 
   return (
     <div className="container max-w-4xl py-6 space-y-6">
       <Seo
         path="/career/jobs"
-        title={language === 'fr' ? 'Postes ouverts | QimataQ' : 'Open Positions | QimataQ'}
+        title={language === 'fr' ? 'Postes ouverts | Qimatak' : 'Open Positions | Qimatak'}
         description={
           language === 'fr'
             ? 'Consultez les postes et stages ouverts, classés par compatibilité avec vos compétences.'

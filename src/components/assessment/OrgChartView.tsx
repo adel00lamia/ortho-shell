@@ -696,7 +696,7 @@ export const OrgChartView = ({ companyId, departments, positions, onRefresh, job
             <Button
               variant="ghost" size="sm"
               onClick={() => {
-                exportOrgChartPDF({ companyName: 'QimataQ', departments, positions, lang: language });
+                exportOrgChartPDF({ companyName: 'Qimatak', departments, positions, lang: language });
                 toast.success(fr ? 'PDF téléchargé' : 'PDF downloaded');
               }}
               className="h-8 gap-1.5 text-xs"

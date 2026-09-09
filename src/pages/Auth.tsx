@@ -149,7 +149,7 @@ const Auth = () => {
               <Sparkles className="h-6 w-6 text-primary-foreground" />
             </div>
             <span className="text-3xl font-extrabold text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans' }}>
-              QimataQ
+              Qimatak
             </span>
           </div>
           <p className="text-lg text-white/70 leading-relaxed">
@@ -198,7 +198,7 @@ const Auth = () => {
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-2xl font-extrabold text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans' }}>
-              QimataQ
+              Qimatak
             </span>
           </div>
 
@@ -323,7 +323,7 @@ const Auth = () => {
           </Card>
 
           <p className="text-center text-xs text-white/40 mt-6">
-            © {new Date().getFullYear()} QimataQ · contact@trainproacademy.ma
+            © {new Date().getFullYear()} Qimatak · Diagnostiquer avant de former.
           </p>
         </motion.div>
       </div>

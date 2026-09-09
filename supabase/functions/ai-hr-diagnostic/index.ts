@@ -146,7 +146,7 @@ serve(async (req) => {
     const { profile, answers, baseline, catalog, locale } = parsed.data;
     const lang = locale === 'en' ? 'English' : 'French';
 
-    const systemPrompt = `You are a senior AI × HR transformation consultant working with Moroccan organizations for QimataQ.
+    const systemPrompt = `You are a senior AI × HR transformation consultant working with Moroccan organizations for Qimatak.
 You analyse a real HR practitioner's diagnostic answers and produce a personalised AI × HR roadmap.
 
 Rules:
