@@ -154,6 +154,9 @@ const App = () => (
               {/* Participant portal — code-based access */}
               <Route path="/portail" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
               <Route path="/portail/:code" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
+              <Route path="/preuves/:code" element={<Suspense fallback={<PageLoader />}><EvidencePulsePublic /></Suspense>} />
+              <Route path="/evidence/:code" element={<Suspense fallback={<PageLoader />}><EvidencePulsePublic /></Suspense>} />
+
               
               {/* Protected routes with sidebar */}
               <Route path="/dashboard" element={<ProtectedLayout featureName="Dashboard"><Dashboard /></ProtectedLayout>} />
