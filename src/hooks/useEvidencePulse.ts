@@ -165,9 +165,16 @@ export interface CapabilityVerification {
   respondents: number;
   gap_confirmed: number;
   trainable_headcount: number;
+  /** Headcount the check was sent to, when known. */
+  invited?: number;
+  /** Share of respondents with a confirmed know-how gap. */
+  gap_confirmed_pct?: number;
+  /** Pilot methodology marker — not a validated psychometric test. */
+  method?: string;
   note?: string;
   pulse_code?: string;
 }
+
 
 /**
  * Stores a practical, scenario-based capability check result on the diagnostic.
