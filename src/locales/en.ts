@@ -609,6 +609,8 @@ export const en = {
     person: 'person',
     eligibleAmount: 'Eligible amount',
     reimbursementRate: 'Reimbursement',
+    referenceOnly: 'reference',
+    referenceWarning: "Rates and caps are shown for reference only. Eligibility and amounts depend on the official OFPPT/CSF rules in force when the dossier is filed.",
     totalAmountHint: 'Leave empty to use the calculated eligible amount',
     statuses: {
       draft: 'Draft',

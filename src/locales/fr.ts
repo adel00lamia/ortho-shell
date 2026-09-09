@@ -599,6 +599,8 @@ export const fr: Translations = {
     person: 'personne',
     eligibleAmount: 'Montant éligible',
     reimbursementRate: 'Remboursement',
+    referenceOnly: 'référence',
+    referenceWarning: "Taux et plafonds indiqués à titre de référence. L'éligibilité et les montants dépendent des règles OFPPT/CSF officielles en vigueur au moment du dossier.",
     totalAmountHint: 'Laisser vide pour utiliser le montant éligible calculé',
     statuses: {
       draft: 'Brouillon',
