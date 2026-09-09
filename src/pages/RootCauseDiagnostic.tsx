@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Activity, ArrowRight, Brain, ClipboardList, FileSearch, Gauge, Loader2, MessagesSquare,
-  Plus, Sparkles, Target, Trash2, TrendingDown, Users, Wrench,
+  Plus, Radio, Sparkles, Target, Trash2, TrendingDown, Users, Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,12 +18,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TrainingFitScore } from '@/components/diagnostic/TrainingFitScore';
+import { TrainingFitExplanation } from '@/components/diagnostic/TrainingFitExplanation';
+import { DecisionCard } from '@/components/diagnostic/DecisionCard';
+import { EvidencePulsePanel } from '@/components/diagnostic/EvidencePulsePanel';
 import { CauseBreakdownChart, CAUSE_LABELS } from '@/components/diagnostic/CauseBreakdownChart';
 import { ImpactTracker } from '@/components/diagnostic/ImpactTracker';
+import { LEGACY_CAUSE_MAP, CAUSE_KEYS, type CauseKey } from '@/lib/rootCauseModel';
 import {
   useDeleteDiagnostic, useDiagnosticDetail, useDiagnostics, useRunDiagnostic,
   useDeleteMeasurement, useUpdateAction, useUpsertMeasurement, type DiagnosticRow,
 } from '@/hooks/useRootCauseDiagnostics';
+
+/** Action types reuse cause keys; map legacy/free-form values to a known label. */
+function actionCauseKey(actionType: string): CauseKey {
+  if (actionType === 'training') return 'skill';
+  if ((CAUSE_KEYS as readonly string[]).includes(actionType)) return actionType as CauseKey;
+  return (LEGACY_CAUSE_MAP[actionType] ?? 'process') as CauseKey;
+}
+
 
 const SYMPTOM_OPTIONS = [
   { key: 'complaints', fr: 'Réclamations clients', en: 'Customer complaints' },
@@ -92,6 +104,17 @@ export default function RootCauseDiagnostic() {
   const updateAction = useUpdateAction(selectedId);
   const upsertMeasurement = useUpsertMeasurement(selectedId);
   const deleteMeasurement = useDeleteMeasurement(selectedId);
+
+  /** Cost of the Qimatak plan = sum of the costed recommended actions. */
+  const planCost = useMemo(() => {
+    const actions = detail?.actions ?? [];
+    const costed = actions.filter((a) => Number(a.estimated_cost_mad ?? 0) > 0);
+    return {
+      total: costed.reduce((sum, a) => sum + Number(a.estimated_cost_mad ?? 0), 0),
+      costed: costed.length,
+    };
+  }, [detail?.actions]);
+
 
   // ---- intake form state ----
   const [title, setTitle] = useState('');
@@ -176,12 +199,14 @@ export default function RootCauseDiagnostic() {
       </motion.div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="intake">{fr ? '1. Problème' : '1. Problem'}</TabsTrigger>
           <TabsTrigger value="result" disabled={!selected}>{fr ? '2. Diagnostic' : '2. Diagnostic'}</TabsTrigger>
-          <TabsTrigger value="impact" disabled={!selected}>{fr ? '3. Impact' : '3. Impact'}</TabsTrigger>
+          <TabsTrigger value="evidence" disabled={!selected}>{fr ? '3. Preuves' : '3. Evidence'}</TabsTrigger>
+          <TabsTrigger value="impact" disabled={!selected}>{fr ? '4. Impact' : '4. Impact'}</TabsTrigger>
           <TabsTrigger value="history">{fr ? 'Historique' : 'History'}</TabsTrigger>
         </TabsList>
+
 
         {/* ---------- 1. INTAKE ---------- */}
         <TabsContent value="intake" className="mt-4">
@@ -363,8 +388,8 @@ export default function RootCauseDiagnostic() {
                     <CardTitle className="text-base">Training Fit Score</CardTitle>
                     <CardDescription>
                       {fr
-                        ? 'Score d’aide à la décision — à confirmer par les preuves disponibles.'
-                        : 'Decision-support score — to be confirmed by the available evidence.'}
+                        ? 'Qimatak Training Fit Score — version pilote. Score d’aide à la décision, à confirmer par les preuves disponibles.'
+                        : 'Qimatak Training Fit Score — pilot version. Decision-support score, to be confirmed by the available evidence.'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center gap-4">
@@ -379,6 +404,9 @@ export default function RootCauseDiagnostic() {
                       }
                       verdict={selected.ai_verdict ?? undefined}
                     />
+                    <div className="w-full rounded-lg border border-border/60 bg-muted/40 p-3">
+                      <TrainingFitExplanation factors={selected.training_fit_explanation ?? []} language={lang} />
+                    </div>
                     <div className="w-full space-y-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{fr ? 'Confiance IA' : 'AI confidence'}</span>
@@ -395,8 +423,13 @@ export default function RootCauseDiagnostic() {
                               <li key={`${i}-${m}`}>{m}</li>
                             ))}
                           </ul>
+                          <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('evidence')}>
+                            <Radio className="mr-1.5 h-3.5 w-3.5" />
+                            {fr ? 'Collecter les preuves' : 'Collect the evidence'}
+                          </Button>
                         </div>
                       )}
+
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <TrendingDown className="h-3.5 w-3.5" />
@@ -426,7 +459,12 @@ export default function RootCauseDiagnostic() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <CauseBreakdownChart breakdown={selected.cause_breakdown} language={lang} />
+                    <CauseBreakdownChart
+                      breakdown={selected.cause_breakdown}
+                      causeEvidence={selected.cause_evidence ?? []}
+                      language={lang}
+                    />
+
                     {selected.ai_summary && (
                       <p className="rounded-lg bg-muted/40 p-3 text-sm leading-relaxed text-muted-foreground">
                         {selected.ai_summary}
@@ -475,7 +513,7 @@ export default function RootCauseDiagnostic() {
                               ) : (
                                 <Wrench className="mr-1 h-3 w-3" />
                               )}
-                              {CAUSE_LABELS[lang][(a.action_type === 'training' ? 'skill' : a.action_type) as never] ?? a.action_type}
+                              {CAUSE_LABELS[lang][actionCauseKey(a.action_type)] ?? a.action_type}
                             </Badge>
                             <span className="text-sm font-semibold text-foreground">{a.title}</span>
                             <Badge variant="secondary" className="text-[10px] uppercase">{a.priority}</Badge>
@@ -504,11 +542,36 @@ export default function RootCauseDiagnostic() {
                   ))}
                 </CardContent>
               </Card>
+
+              <DecisionCard
+                language={lang}
+                trainEveryoneCost={selected.estimated_training_cost_mad}
+                qimatakPlanCost={planCost.total}
+                costedActions={planCost.costed}
+                totalActions={(detail?.actions ?? []).length}
+                headcount={selected.headcount_affected}
+              />
             </>
           )}
         </TabsContent>
 
-        {/* ---------- 3. IMPACT ---------- */}
+        {/* ---------- 3. EVIDENCE PULSE ---------- */}
+        <TabsContent value="evidence" className="mt-4">
+          {!selected ? (
+            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
+              {fr ? 'Lancez un diagnostic pour collecter des preuves.' : 'Run a diagnostic to collect evidence.'}
+            </CardContent></Card>
+          ) : (
+            <EvidencePulsePanel
+              diagnostic={selected}
+              language={lang}
+              onReassessed={(id) => { setSelectedId(id); setTab('result'); }}
+            />
+          )}
+        </TabsContent>
+
+        {/* ---------- 4. IMPACT ---------- */}
+
         <TabsContent value="impact" className="mt-4">
           <ImpactTracker
             fr={fr}
@@ -540,7 +603,13 @@ export default function RootCauseDiagnostic() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {(d.version ?? 1) > 1 && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {fr ? `Réévaluation v${d.version}` : `Reassessment v${d.version}`}
+                    </Badge>
+                  )}
                   <Badge variant="outline">Fit {d.training_fit_score ?? 0}/100</Badge>
+
                   <Button size="sm" variant="secondary" onClick={() => { setSelectedId(d.id); setTab('result'); }}>
                     {fr ? 'Ouvrir' : 'Open'}
                   </Button>
