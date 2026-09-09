@@ -475,7 +475,7 @@ export default function RootCauseDiagnostic() {
                               ) : (
                                 <Wrench className="mr-1 h-3 w-3" />
                               )}
-                              {CAUSE_LABELS[lang][(a.action_type === 'training' ? 'skill' : a.action_type) as never] ?? a.action_type}
+                              {CAUSE_LABELS[lang][actionCauseKey(a.action_type)] ?? a.action_type}
                             </Badge>
                             <span className="text-sm font-semibold text-foreground">{a.title}</span>
                             <Badge variant="secondary" className="text-[10px] uppercase">{a.priority}</Badge>
