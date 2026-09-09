@@ -176,12 +176,14 @@ export default function RootCauseDiagnostic() {
       </motion.div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="intake">{fr ? '1. Problème' : '1. Problem'}</TabsTrigger>
           <TabsTrigger value="result" disabled={!selected}>{fr ? '2. Diagnostic' : '2. Diagnostic'}</TabsTrigger>
-          <TabsTrigger value="impact" disabled={!selected}>{fr ? '3. Impact' : '3. Impact'}</TabsTrigger>
+          <TabsTrigger value="evidence" disabled={!selected}>{fr ? '3. Preuves' : '3. Evidence'}</TabsTrigger>
+          <TabsTrigger value="impact" disabled={!selected}>{fr ? '4. Impact' : '4. Impact'}</TabsTrigger>
           <TabsTrigger value="history">{fr ? 'Historique' : 'History'}</TabsTrigger>
         </TabsList>
+
 
         {/* ---------- 1. INTAKE ---------- */}
         <TabsContent value="intake" className="mt-4">
