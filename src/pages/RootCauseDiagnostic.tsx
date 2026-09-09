@@ -140,6 +140,8 @@ export default function RootCauseDiagnostic() {
   const [kpiValue, setKpiValue] = useState('');
   const [kpis, setKpis] = useState<Array<{ name: string; value: string }>>([]);
   const [evidence, setEvidence] = useState<Record<string, number>>({});
+  const [costPerPerson, setCostPerPerson] = useState('');
+  const [totalBudget, setTotalBudget] = useState('');
   const [tab, setTab] = useState('intake');
 
   const toggleSymptom = (key: string) =>
@@ -162,6 +164,10 @@ export default function RootCauseDiagnostic() {
       }),
       business_kpis: kpis,
       evidence_sources: evidence,
+      cost_assumptions: {
+        training_cost_per_person_mad: costPerPerson ? Number(costPerPerson) : null,
+        total_training_budget_mad: totalBudget ? Number(totalBudget) : null,
+      },
       language: lang,
     });
     setSelectedId(result.diagnosticId);
@@ -285,6 +291,31 @@ export default function RootCauseDiagnostic() {
                 <div className="space-y-2">
                   <Label htmlFor="d-head">{fr ? 'Nombre de personnes' : 'Headcount'}</Label>
                   <Input id="d-head" type="number" min={0} value={headcount} onChange={(e) => setHeadcount(e.target.value)} />
+                </div>
+              </div>
+
+              <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
+                <Label className="text-sm">
+                  {fr ? 'Hypothèses de coût (optionnel)' : 'Cost assumptions (optional)'}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {fr
+                    ? 'Qimatak n’invente aucun coût. Sans hypothèse saisie ici, les montants restent « à chiffrer ».'
+                    : 'Qimatak never invents a cost. Without an assumption here, amounts stay "to be costed".'}
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="d-cpp" className="text-xs text-muted-foreground">
+                      {fr ? 'Coût de formation par personne (MAD)' : 'Training cost per person (MAD)'}
+                    </Label>
+                    <Input id="d-cpp" type="number" min={0} value={costPerPerson} onChange={(e) => setCostPerPerson(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="d-tb" className="text-xs text-muted-foreground">
+                      {fr ? 'Budget formation total envisagé (MAD)' : 'Total training budget considered (MAD)'}
+                    </Label>
+                    <Input id="d-tb" type="number" min={0} value={totalBudget} onChange={(e) => setTotalBudget(e.target.value)} />
+                  </div>
                 </div>
               </div>
 

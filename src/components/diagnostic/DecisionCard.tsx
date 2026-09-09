@@ -88,8 +88,8 @@ export function DecisionCard({
         </CardTitle>
         <CardDescription>
           {fr
-            ? 'Trois chemins possibles face au même problème. Tous les montants sont des estimations issues des données saisies.'
-            : 'Three possible paths for the same problem. All amounts are estimates based on the data you entered.'}
+            ? 'Trois chemins possibles face au même problème. Aucun coût n’est inventé : les montants n’apparaissent que si vous avez saisi une hypothèse de coût, sinon « à chiffrer ».'
+            : 'Three possible paths for the same problem. No cost is invented: amounts appear only if you entered a cost assumption, otherwise "to be costed".'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -102,7 +102,7 @@ export function DecisionCard({
               </div>
               <p className="mt-1 text-sm font-semibold text-foreground">{s.title}</p>
               <p className="mt-2 text-lg font-extrabold tabular-nums text-foreground">
-                {s.cost ?? (fr ? 'Coût à estimer' : 'Cost to estimate')}
+                {s.cost ?? (fr ? 'À chiffrer' : 'To be costed')}
               </p>
               {s.cost && (
                 <Badge variant="secondary" className="mt-1 text-[10px]">{fr ? 'estimation' : 'estimate'}</Badge>

@@ -124,6 +124,11 @@ export interface DiagnosticInput {
   business_kpis: Array<{ name?: string; value?: string; unit?: string }>;
   evidence_sources: Record<string, number>;
   source_channel?: string;
+  /** Optional user-supplied cost assumptions; nothing is inferred when absent. */
+  cost_assumptions?: {
+    training_cost_per_person_mad?: number | null;
+    total_training_budget_mad?: number | null;
+  };
   language: 'fr' | 'en';
 }
 
