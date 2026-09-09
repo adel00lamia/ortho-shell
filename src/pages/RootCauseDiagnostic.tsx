@@ -540,7 +540,13 @@ export default function RootCauseDiagnostic() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {(d.version ?? 1) > 1 && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {fr ? `Réévaluation v${d.version}` : `Reassessment v${d.version}`}
+                    </Badge>
+                  )}
                   <Badge variant="outline">Fit {d.training_fit_score ?? 0}/100</Badge>
+
                   <Button size="sm" variant="secondary" onClick={() => { setSelectedId(d.id); setTab('result'); }}>
                     {fr ? 'Ouvrir' : 'Open'}
                   </Button>
