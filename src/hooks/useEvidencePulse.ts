@@ -178,3 +178,7 @@ export function useSubmitPulse() {
     },
   });
 }
+
+// Reassessment lives with the diagnostic hooks; re-exported here so the
+// Evidence Pulse panel has a single import surface.
+export { useReassessDiagnostic as useReassessFromPulse } from '@/hooks/useRootCauseDiagnostics';
