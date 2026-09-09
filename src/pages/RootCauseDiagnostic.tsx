@@ -504,11 +504,36 @@ export default function RootCauseDiagnostic() {
                   ))}
                 </CardContent>
               </Card>
+
+              <DecisionCard
+                language={lang}
+                trainEveryoneCost={selected.estimated_training_cost_mad}
+                qimatakPlanCost={planCost.total}
+                costedActions={planCost.costed}
+                totalActions={(detail?.actions ?? []).length}
+                headcount={selected.headcount_affected}
+              />
             </>
           )}
         </TabsContent>
 
-        {/* ---------- 3. IMPACT ---------- */}
+        {/* ---------- 3. EVIDENCE PULSE ---------- */}
+        <TabsContent value="evidence" className="mt-4">
+          {!selected ? (
+            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
+              {fr ? 'Lancez un diagnostic pour collecter des preuves.' : 'Run a diagnostic to collect evidence.'}
+            </CardContent></Card>
+          ) : (
+            <EvidencePulsePanel
+              diagnostic={selected}
+              language={lang}
+              onReassessed={(id) => { setSelectedId(id); setTab('result'); }}
+            />
+          )}
+        </TabsContent>
+
+        {/* ---------- 4. IMPACT ---------- */}
+
         <TabsContent value="impact" className="mt-4">
           <ImpactTracker
             fr={fr}
