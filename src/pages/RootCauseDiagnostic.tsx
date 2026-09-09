@@ -93,6 +93,17 @@ export default function RootCauseDiagnostic() {
   const upsertMeasurement = useUpsertMeasurement(selectedId);
   const deleteMeasurement = useDeleteMeasurement(selectedId);
 
+  /** Cost of the Qimatak plan = sum of the costed recommended actions. */
+  const planCost = useMemo(() => {
+    const actions = detail?.actions ?? [];
+    const costed = actions.filter((a) => Number(a.estimated_cost_mad ?? 0) > 0);
+    return {
+      total: costed.reduce((sum, a) => sum + Number(a.estimated_cost_mad ?? 0), 0),
+      costed: costed.length,
+    };
+  }, [detail?.actions]);
+
+
   // ---- intake form state ----
   const [title, setTitle] = useState('');
   const [problem, setProblem] = useState('');
