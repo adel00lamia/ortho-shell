@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Info, ArrowRight, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { computeTFP, computeReimbursementCap, formatDH } from '@/lib/ofpptFinancials';
+import { FundingRulesDisclaimer } from '@/components/funding/FundingRulesDisclaimer';
 import type { IngenierieDossier } from '@/hooks/useIngenierie';
 import { useFicheSignaletiquePreFill } from '@/hooks/useIngenieriePreFill';
 
@@ -143,7 +144,7 @@ export function FicheSignaletiqueStep({ dossier, onSave, onNext }: Props) {
               {payroll > 0 && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-blue-50 rounded-lg p-3">
-                    <p className="text-xs text-blue-600 font-medium">{fr ? 'TFP (1,6%)' : 'TFP (1.6%)'}</p>
+                    <p className="text-xs text-blue-600 font-medium">{fr ? 'TFP (taux paramétrable)' : 'TFP (configurable rate)'}</p>
                     <p className="text-lg font-bold text-blue-800">{formatDH(tfp)}</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
@@ -218,7 +219,7 @@ export function FicheSignaletiqueStep({ dossier, onSave, onNext }: Props) {
                         {fr ? 'Diagnostic stratégique réalisé (taux GIAC 80%)' : 'Strategic diagnostic completed (80% GIAC rate)'}
                       </FormLabel>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {fr ? 'Sans diagnostic : taux de 70%' : 'Without diagnostic: 70% rate'}
+                        {fr ? 'Sans diagnostic : taux standard des paramètres de référence (à vérifier)' : 'Without diagnostic: standard rate from reference parameters (to verify)'}
                       </p>
                     </div>
                   </FormItem>

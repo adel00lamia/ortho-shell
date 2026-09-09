@@ -162,8 +162,8 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
               <AlertTriangle className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-xs text-orange-700">
                 {fr
-                  ? `À titre indicatif, le coût dépasse le plafond OFPPT de référence de 40 DH/h/pers. : le remboursement serait plafonné à ${formatDH(reimbInfo.ofpptHourlyCapAmount)}. L'éligibilité dépend des règles officielles en vigueur.`
-                  : `For reference only: cost exceeds the OFPPT reference cap of 40 DH/h/person, so reimbursement would be capped at ${formatDH(reimbInfo.ofpptHourlyCapAmount)}. Eligibility depends on the official rules in force.`}
+                  ? `Hypothèse de référence (non vérifiée) : le coût dépasse le plafond horaire paramétré, le remboursement serait plafonné à ${formatDH(reimbInfo.ofpptHourlyCapAmount ?? 0)}. L'éligibilité et les plafonds dépendent du cadre officiel applicable à la date du dossier.`
+                  : `Reference assumption (unverified): cost exceeds the configured hourly ceiling, so reimbursement would be capped at ${formatDH(reimbInfo.ofpptHourlyCapAmount ?? 0)}. Eligibility and ceilings depend on the official framework applicable at the dossier date.`}
               </AlertDescription>
             </Alert>
           )}

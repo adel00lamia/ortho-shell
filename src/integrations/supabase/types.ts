@@ -2499,6 +2499,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_profile_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      evidence_pulse_aggregate: { Args: { _pulse_id: string }; Returns: Json }
       evidence_pulse_get: { Args: { _code: string }; Returns: Json }
       evidence_pulse_submit: {
         Args: {
@@ -2566,6 +2571,7 @@ export type Database = {
         Args: { _code: string; _module_id: string; _status: string }
         Returns: undefined
       }
+      qimatak_executive_overview: { Args: never; Returns: Json }
       seed_default_skills: {
         Args: { p_company_id: string }
         Returns: undefined

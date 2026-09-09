@@ -39,6 +39,8 @@ interface DiagnoseBody {
   language?: 'fr' | 'en';
   /** Aggregated Evidence Pulse results for a reassessment. */
   evidence_pulse?: PulseAggregate;
+  /** Optional, user-supplied cost assumptions. Nothing is inferred when absent. */
+  cost_assumptions?: { training_cost_per_person_mad?: number | null; total_training_budget_mad?: number | null };
   /** Confidence of the diagnosis being reassessed, for context only. */
   previous?: { training_fit_score?: number; ai_confidence?: number; ai_summary?: string };
 }
@@ -56,9 +58,9 @@ Rules:
 - Evidence must quote ONLY what the case supplies: the problem text, the symptoms, the KPI values, the declared evidence counts, the Evidence Pulse results. NEVER invent a document, an interview, a person or a figure that was not given.
 - You do NOT decide the Training Fit Score. Instead return training_fit_signals; Qimatak computes the score from them.
 - Most recommended actions must be NON-training (fix the workflow, coach supervisors, clarify the standard, change the tool, rebalance workload). Add a training action only for the population that genuinely needs it, and say how many people.
-- Costs in MAD. Assume ~40 MAD/hour/person as the OFPPT reimbursable reference and ~2 training days (14h) per person unless the problem says otherwise.
-- estimated_training_cost_mad = cost of training the whole affected population.
-- avoided_training_cost_mad = what is saved by training only the population that truly needs it.
+- NEVER infer a training cost from any regulatory or reimbursement reference. Do NOT invent a price per hour, a number of training days, or a budget.
+- Only return estimated_training_cost_mad / avoided_training_cost_mad when the case explicitly supplies a cost assumption (COST ASSUMPTIONS block). Otherwise return 0 for both; the interface will display "to be costed".
+- Always return trainable_headcount (how many people genuinely need training).
 - Be concrete and operational. No filler. Never recommend "train everyone".`;
   }
   return `Tu es Qimatak, diagnosticien senior de la performance organisationnelle pour les entreprises marocaines.
@@ -72,9 +74,9 @@ Règles :
 - Les preuves doivent citer UNIQUEMENT ce que le dossier fournit : le texte du problème, les symptômes, les valeurs d'indicateurs, les sources de preuve déclarées, les résultats de l'Evidence Pulse. N'invente JAMAIS un document, un entretien, une personne ou un chiffre non fourni.
 - Tu ne décides PAS du Training Fit Score. Renvoie training_fit_signals ; Qimatak calcule le score à partir de ces signaux.
 - La majorité des actions recommandées doivent être NON formatives (corriger le workflow, coacher les superviseurs, clarifier le standard, changer l'outil, rééquilibrer la charge). N'ajoute une action de formation que pour la population qui en a réellement besoin, en précisant le nombre de personnes.
-- Coûts en MAD. Référence : ~40 MAD/heure/personne (plafond OFPPT) et ~2 jours (14h) par personne sauf indication contraire.
-- estimated_training_cost_mad = coût si l'on formait toute la population concernée.
-- avoided_training_cost_mad = économie réalisée en ne formant que la population réellement concernée.
+- N'infère JAMAIS un coût de formation à partir d'une référence réglementaire ou d'un taux de remboursement. N'invente ni prix horaire, ni nombre de jours, ni budget.
+- Ne renseigne estimated_training_cost_mad / avoided_training_cost_mad que si le dossier fournit explicitement une hypothèse de coût (bloc COST ASSUMPTIONS). Sinon renvoie 0 pour les deux : l'interface affichera « à chiffrer ».
+- Renvoie toujours trainable_headcount (nombre de personnes réellement concernées par une formation).
 - Sois concret et opérationnel. Pas de remplissage. Ne recommande jamais « former tout le monde ».`;
 }
 
@@ -95,6 +97,9 @@ function userPrompt(b: DiagnoseBody, lang: 'fr' | 'en') {
           pulse.comments?.length ? `\nFIELD COMMENTS: ${JSON.stringify(pulse.comments.slice(0, 15))}` : ''
         }`
       : '',
+    b.cost_assumptions && (b.cost_assumptions.training_cost_per_person_mad || b.cost_assumptions.total_training_budget_mad)
+      ? `COST ASSUMPTIONS (supplied by the user, the ONLY basis for any amount): ${JSON.stringify(b.cost_assumptions)}`
+      : 'COST ASSUMPTIONS: none supplied — return 0 for every cost field.',
     b.previous
       ? `PREVIOUS ASSESSMENT (for continuity only, re-judge freely): fit=${b.previous.training_fit_score}, confidence=${b.previous.ai_confidence}`
       : '',
@@ -197,8 +202,7 @@ function normalise(raw: Record<string, unknown>, body: DiagnoseBody) {
     ai_confidence: computeConfidence(raw.ai_confidence, completeness),
     ai_verdict: String(raw.ai_verdict ?? '').slice(0, 400),
     ai_summary: String(raw.ai_summary ?? '').slice(0, 2000),
-    estimated_training_cost_mad: Number(raw.estimated_training_cost_mad) || 0,
-    avoided_training_cost_mad: Number(raw.avoided_training_cost_mad) || 0,
+    ...costEstimates(body, Number(raw.trainable_headcount) || 0),
     trainable_headcount: Number(raw.trainable_headcount) || 0,
     actions: Array.isArray(raw.actions) ? raw.actions.slice(0, 8) : [],
     kpis: Array.isArray(raw.kpis) ? raw.kpis.slice(0, 6) : [],
@@ -207,6 +211,31 @@ function normalise(raw: Record<string, unknown>, body: DiagnoseBody) {
       : [],
     methodology: 'Qimatak Training Fit Score — version pilote',
     cause_model_version: CAUSE_KEYS.length,
+  };
+}
+
+/**
+ * Costs are NEVER inferred from a regulatory reimbursement reference.
+ * They exist only when the user supplied a cost assumption.
+ */
+function costEstimates(body: DiagnoseBody, trainableHeadcount: number) {
+  const perPerson = Number(body.cost_assumptions?.training_cost_per_person_mad) || 0;
+  const totalBudget = Number(body.cost_assumptions?.total_training_budget_mad) || 0;
+  const headcount = Number(body.headcount_affected) || 0;
+
+  let estimated = 0;
+  if (perPerson > 0 && headcount > 0) estimated = perPerson * headcount;
+  else if (totalBudget > 0) estimated = totalBudget;
+
+  let avoided = 0;
+  if (estimated > 0 && headcount > 0 && trainableHeadcount > 0 && trainableHeadcount < headcount) {
+    avoided = Math.round((estimated * (headcount - trainableHeadcount)) / headcount);
+  }
+
+  return {
+    estimated_training_cost_mad: Math.round(estimated),
+    avoided_training_cost_mad: avoided,
+    cost_basis: estimated > 0 ? 'user_supplied_assumption' : 'none',
   };
 }
 

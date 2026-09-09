@@ -67,11 +67,44 @@ function progressToTarget(baseline: number | null, target: number | null, actual
   return Math.max(0, Math.min(100, Math.round(pct)));
 }
 
+/** Case-level verdict, computed only from real readings. */
+function caseStatus(groups: KpiGroup[]) {
+  let improving = 0, worsening = 0, stable = 0, insufficient = 0;
+  for (const g of groups) {
+    const base = g.definition.baseline_value;
+    const latest = g.readings[g.readings.length - 1]?.actual_value ?? null;
+    if (base == null || latest == null) { insufficient++; continue; }
+    const better = g.definition.direction === 'increase' ? latest > base : latest < base;
+    const worse = g.definition.direction === 'increase' ? latest < base : latest > base;
+    if (better) improving++;
+    else if (worse) worsening++;
+    else stable++;
+  }
+  const measured = improving + worsening + stable;
+  const verdict =
+    measured === 0 ? 'insufficient' : improving > worsening ? 'improving' : worsening > improving ? 'worsening' : 'stable';
+  return { improving, worsening, stable, insufficient, measured, verdict } as const;
+}
+
 export function ImpactTracker({
   fr, measurements, disabled, onAddKpi, onAddReading, onUpdate, onDelete,
   problemTitle, problemDescription,
 }: ImpactTrackerProps) {
   const groups = useMemo(() => groupByKpi(measurements), [measurements]);
+  const status = useMemo(() => caseStatus(groups), [groups]);
+
+  const statusLabel = {
+    improving: fr ? 'Problème en amélioration' : 'Problem improving',
+    stable: fr ? 'Problème stable' : 'Problem stable',
+    worsening: fr ? 'Problème en dégradation' : 'Problem worsening',
+    insufficient: fr ? 'Données insuffisantes' : 'Not enough data',
+  }[status.verdict];
+  const statusTone = {
+    improving: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600',
+    stable: 'border-amber-500/40 bg-amber-500/10 text-amber-600',
+    worsening: 'border-destructive/40 bg-destructive/10 text-destructive',
+    insufficient: 'border-border bg-muted/40 text-muted-foreground',
+  }[status.verdict];
 
   return (
     <div className="space-y-4">
@@ -101,6 +134,19 @@ export function ImpactTracker({
               </p>
             </div>
           )}
+
+          <div className={`rounded-lg border p-3 ${statusTone}`}>
+            <p className="text-sm font-semibold">{statusLabel}</p>
+            <p className="mt-1 text-xs opacity-80">
+              {status.measured === 0
+                ? fr
+                  ? 'Ajoutez une référence et au moins un relevé réel pour juger l’évolution.'
+                  : 'Add a baseline and at least one real reading to judge the trend.'
+                : fr
+                  ? `${status.improving} en amélioration · ${status.stable} stable(s) · ${status.worsening} en dégradation · ${status.insufficient} sans données`
+                  : `${status.improving} improving · ${status.stable} stable · ${status.worsening} worsening · ${status.insufficient} without data`}
+            </p>
+          </div>
 
           {groups.length === 0 && (
             <p className="text-sm text-muted-foreground">

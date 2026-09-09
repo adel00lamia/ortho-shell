@@ -29,6 +29,10 @@ export interface PulseResponseRow {
 export interface PulseQuestionAggregate {
   id: string;
   question: string;
+  /** 'agreement' or 'text'. */
+  type?: 'agreement' | 'text';
+  /** Anonymous written answers, only for 'text' questions. */
+  texts?: string[];
   /** Mean agreement 0-100, or null when nobody gave a scorable answer. */
   agreement: number | null;
   answers: number;
@@ -69,6 +73,8 @@ export function aggregatePulse(
     return {
       id: q.id,
       question: q.text,
+      type: q.type ?? 'agreement',
+      texts: [],
       agreement: scored > 0 ? Math.round(total / scored) : null,
       answers: scored + unknown,
       unknown,
