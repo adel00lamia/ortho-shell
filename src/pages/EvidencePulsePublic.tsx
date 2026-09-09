@@ -197,6 +197,8 @@ export default function EvidencePulsePublic() {
                 free_text: freeText.trim() || undefined,
                 name: pulse.allow_identity ? name.trim() || undefined : undefined,
                 role: pulse.allow_identity ? role.trim() || undefined : undefined,
+                token,
+
               },
               { onSuccess: () => setDone(true) }
             )
