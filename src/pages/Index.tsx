@@ -228,7 +228,7 @@ const Index = () => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => navigate('/pulse')}
+                onClick={() => navigate('/exemple')}
                 className="border-white/20 text-white hover:bg-white/10 px-8 py-6 text-base font-semibold rounded-xl bg-white/5"
               >
                 {fr ? 'Voir un exemple' : 'See an example'}
@@ -349,7 +349,7 @@ const Index = () => {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate('/pulse')}
+              onClick={() => navigate('/exemple')}
               className="border-white/20 text-white hover:bg-white/10 px-10 py-6 text-base font-semibold rounded-xl bg-white/5"
             >
               {fr ? 'Voir un exemple' : 'See an example'}

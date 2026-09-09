@@ -56,6 +56,7 @@ const AiHrLiveScreen = lazy(() => import("./pages/AiHrLiveScreen"));
 const AiHrSessionReport = lazy(() => import("./pages/AiHrSessionReport"));
 const ParticipantPortal = lazy(() => import("./pages/ParticipantPortal"));
 const EvidencePulsePublic = lazy(() => import("./pages/EvidencePulsePublic"));
+const QimatakExample = lazy(() => import("./pages/QimatakExample"));
 
 
 // Lazy loaded components
@@ -156,6 +157,8 @@ const App = () => (
               {/* Participant portal — code-based access */}
               <Route path="/portail" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
               <Route path="/portail/:code" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
+              <Route path="/exemple" element={<Suspense fallback={<PageLoader />}><QimatakExample /></Suspense>} />
+              <Route path="/example" element={<Navigate to="/exemple" replace />} />
               <Route path="/preuves/:code" element={<Suspense fallback={<PageLoader />}><EvidencePulsePublic /></Suspense>} />
               <Route path="/evidence/:code" element={<Suspense fallback={<PageLoader />}><EvidencePulsePublic /></Suspense>} />
 
