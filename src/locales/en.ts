@@ -72,6 +72,8 @@ export const en = {
     talentPipeline: 'Talent Pipeline',
     hrKnowledge: 'HR Knowledge Base',
     aiHrDiagnostic: 'AI × HR Diagnostic',
+    qimatakPulse: 'Qimatak Pulse (workshop)',
+    evidenceHub: 'Field evidence',
     rootCauseDiagnostic: 'Root Cause Diagnostic',
     ingenieriePlan: 'Training Engineering',
   },

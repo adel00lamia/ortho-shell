@@ -72,6 +72,8 @@ export const fr: Translations = {
     talentPipeline: 'Pipeline de talents',
     hrKnowledge: 'Base de connaissances RH',
     aiHrDiagnostic: 'Diagnostic AI × RH',
+    qimatakPulse: 'Qimatak Pulse (atelier)',
+    evidenceHub: 'Preuves terrain',
     rootCauseDiagnostic: 'Diagnostic Causes Racines',
     ingenieriePlan: 'Ingénierie de Formation',
   },

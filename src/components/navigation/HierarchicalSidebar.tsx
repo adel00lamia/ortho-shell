@@ -12,6 +12,7 @@ import {
   GraduationCap, Gift, CreditCard, PanelLeftClose, PanelLeft, Briefcase, UserCheck, Brain, Menu, X,
   Stethoscope,
   Sparkles,
+  ClipboardList,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
