@@ -122,8 +122,10 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       {
         titleKey: 'evidence',
         items: [
-          { path: '/workflow/assess/ai-hr', labelKey: 'aiHrDiagnostic', icon: Sparkles, badge: 'AI' },
+          { path: '/workflow/assess/evidence', labelKey: 'evidenceHub', icon: ClipboardList },
           { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
+          { path: '/workflow/assess/ai-hr', labelKey: 'qimatakPulse', icon: Sparkles },
+
         ],
       },
       {
