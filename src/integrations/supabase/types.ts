@@ -633,6 +633,7 @@ export type Database = {
           pulse_id: string
           respondent_name: string | null
           respondent_role: string | null
+          submission_token: string | null
         }
         Insert: {
           answers?: Json
@@ -642,6 +643,7 @@ export type Database = {
           pulse_id: string
           respondent_name?: string | null
           respondent_role?: string | null
+          submission_token?: string | null
         }
         Update: {
           answers?: Json
@@ -651,6 +653,7 @@ export type Database = {
           pulse_id?: string
           respondent_name?: string | null
           respondent_role?: string | null
+          submission_token?: string | null
         }
         Relationships: [
           {
@@ -2505,16 +2508,28 @@ export type Database = {
       }
       evidence_pulse_aggregate: { Args: { _pulse_id: string }; Returns: Json }
       evidence_pulse_get: { Args: { _code: string }; Returns: Json }
-      evidence_pulse_submit: {
-        Args: {
-          _answers: Json
-          _code: string
-          _free_text?: string
-          _name?: string
-          _role?: string
-        }
-        Returns: string
-      }
+      evidence_pulse_submit:
+        | {
+            Args: {
+              _answers: Json
+              _code: string
+              _free_text?: string
+              _name?: string
+              _role?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _answers: Json
+              _code: string
+              _free_text?: string
+              _name?: string
+              _role?: string
+              _token?: string
+            }
+            Returns: string
+          }
       get_user_company_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
