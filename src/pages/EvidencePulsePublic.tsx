@@ -97,7 +97,6 @@ export default function EvidencePulsePublic() {
         <CardTitle className="text-lg">{pulse.title}</CardTitle>
         <CardDescription className="flex items-start gap-1.5">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          {fr
           {pulse.allow_identity
             ? fr
               ? '2 minutes. Vos réponses sont regroupées. Si vous choisissez de laisser votre nom et votre fonction, ils pourront être vus par les personnes autorisées de votre entreprise.'
@@ -105,6 +104,7 @@ export default function EvidencePulsePublic() {
             : fr
               ? '2 minutes. Réponses anonymes : votre entreprise ne voit que des résultats regroupés et des commentaires sans nom.'
               : '2 minutes. Anonymous answers: your company only sees grouped results and unnamed comments.'}
+
 
         </CardDescription>
       </CardHeader>
