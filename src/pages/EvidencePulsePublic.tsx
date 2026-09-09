@@ -103,17 +103,20 @@ export default function EvidencePulsePublic() {
         <CardTitle className="text-lg">{pulse.title}</CardTitle>
         <CardDescription className="flex items-start gap-1.5">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          {pulse.allow_identity
+          {isCapability
             ? fr
-              ? '2 minutes. Vos réponses sont regroupées. Si vous choisissez de laisser votre nom et votre fonction, ils pourront être vus par les personnes autorisées de votre entreprise.'
-              : '2 minutes. Your answers are grouped. If you choose to leave your name and role, authorised people in your company may see them.'
-            : fr
-              ? '2 minutes. Réponses anonymes : votre entreprise ne voit que des résultats regroupés et des commentaires sans nom.'
-              : '2 minutes. Anonymous answers: your company only sees grouped results and unnamed comments.'}
-
-
+              ? 'Environ 5 minutes. Vos réponses écrites seront lues par les personnes autorisées de votre entreprise pour comprendre la pratique réelle du métier. Votre nom n’est pas demandé, mais le contenu de vos réponses sera visible.'
+              : 'About 5 minutes. Your written answers will be read by authorised people in your company to understand real working practice. Your name is not requested, but the content of your answers will be visible.'
+            : pulse.allow_identity
+              ? fr
+                ? '2 minutes. Vos réponses sont regroupées. Si vous choisissez de laisser votre nom et votre fonction, ils pourront être vus par les personnes autorisées de votre entreprise.'
+                : '2 minutes. Your answers are grouped. If you choose to leave your name and role, authorised people in your company may see them.'
+              : fr
+                ? '2 minutes. Réponses anonymes : aucune identité n’est enregistrée, et votre entreprise ne voit que des résultats regroupés et des commentaires sans nom.'
+                : '2 minutes. Anonymous answers: no identity is stored, and your company only sees grouped results and unnamed comments.'}
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-6">
         {questions.map((q, i) => (
           <fieldset key={q.id} className="space-y-2">
