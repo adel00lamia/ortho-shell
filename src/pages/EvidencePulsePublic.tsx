@@ -98,8 +98,14 @@ export default function EvidencePulsePublic() {
         <CardDescription className="flex items-start gap-1.5">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           {fr
-            ? '2 minutes. Réponses anonymes et agrégées : aucune réponse individuelle n’est montrée à votre manager.'
-            : '2 minutes. Anonymous, aggregated answers: no individual answer is shown to your manager.'}
+          {pulse.allow_identity
+            ? fr
+              ? '2 minutes. Vos réponses sont regroupées. Si vous choisissez de laisser votre nom et votre fonction, ils pourront être vus par les personnes autorisées de votre entreprise.'
+              : '2 minutes. Your answers are grouped. If you choose to leave your name and role, authorised people in your company may see them.'
+            : fr
+              ? '2 minutes. Réponses anonymes : votre entreprise ne voit que des résultats regroupés et des commentaires sans nom.'
+              : '2 minutes. Anonymous answers: your company only sees grouped results and unnamed comments.'}
+
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
