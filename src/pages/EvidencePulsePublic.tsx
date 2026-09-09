@@ -88,10 +88,15 @@ export default function EvidencePulsePublic() {
           <CheckCircle2 className="mb-2 h-10 w-10 text-primary" />
           <CardTitle className="text-lg">{fr ? 'Merci !' : 'Thank you!'}</CardTitle>
           <CardDescription>
-            {fr
-              ? 'Votre réponse est enregistrée. Elle sera agrégée avec les autres, sans être lue individuellement.'
-              : 'Your answer is recorded. It will be aggregated with the others, never read individually.'}
+            {isCapability
+              ? fr
+                ? 'Votre réponse est enregistrée. Elle sera lue par les personnes autorisées de votre entreprise, sans votre nom.'
+                : 'Your answer is recorded. It will be read by authorised people in your company, without your name.'
+              : fr
+                ? 'Votre réponse est enregistrée. Elle sera regroupée avec les autres, sans votre nom.'
+                : 'Your answer is recorded. It will be grouped with the others, without your name.'}
           </CardDescription>
+
         </CardHeader>
       </Card>
     );
