@@ -21,6 +21,7 @@ import { TrainingFitScore } from '@/components/diagnostic/TrainingFitScore';
 import { TrainingFitExplanation } from '@/components/diagnostic/TrainingFitExplanation';
 import { DecisionCard } from '@/components/diagnostic/DecisionCard';
 import { EvidencePulsePanel } from '@/components/diagnostic/EvidencePulsePanel';
+import { CapabilityCheckPanel } from '@/components/diagnostic/CapabilityCheckPanel';
 import { CauseBreakdownChart, CAUSE_LABELS } from '@/components/diagnostic/CauseBreakdownChart';
 import { ImpactTracker } from '@/components/diagnostic/ImpactTracker';
 import { LEGACY_CAUSE_MAP, CAUSE_KEYS, type CauseKey } from '@/lib/rootCauseModel';
@@ -109,11 +110,23 @@ export default function RootCauseDiagnostic() {
   const planCost = useMemo(() => {
     const actions = detail?.actions ?? [];
     const costed = actions.filter((a) => Number(a.estimated_cost_mad ?? 0) > 0);
+    const training = costed.filter((a) => a.action_type === 'training');
     return {
       total: costed.reduce((sum, a) => sum + Number(a.estimated_cost_mad ?? 0), 0),
+      nonTraining: costed
+        .filter((a) => a.action_type !== 'training')
+        .reduce((sum, a) => sum + Number(a.estimated_cost_mad ?? 0), 0),
       costed: costed.length,
+      trainingActions: training.length,
     };
   }, [detail?.actions]);
+
+  /** Share of the diagnosis attributed to a capability/skill gap, 0-100. */
+  const capabilityShare = useMemo(() => {
+    const b = (selected?.cause_breakdown ?? {}) as Record<string, number>;
+    return Number(b.capability ?? b.skill ?? 0);
+  }, [selected?.cause_breakdown]);
+
 
 
   // ---- intake form state ----
@@ -546,27 +559,36 @@ export default function RootCauseDiagnostic() {
               <DecisionCard
                 language={lang}
                 trainEveryoneCost={selected.estimated_training_cost_mad}
-                qimatakPlanCost={planCost.total}
+                planCost={planCost.total}
+                nonTrainingCost={planCost.nonTraining}
                 costedActions={planCost.costed}
                 totalActions={(detail?.actions ?? []).length}
+                trainingActions={planCost.trainingActions}
                 headcount={selected.headcount_affected}
+                capabilityShare={capabilityShare}
+                verifiedTrainableHeadcount={
+                  (selected.capability_verification as { trainable_headcount?: number } | null)?.trainable_headcount ?? null
+                }
               />
             </>
           )}
         </TabsContent>
 
         {/* ---------- 3. EVIDENCE PULSE ---------- */}
-        <TabsContent value="evidence" className="mt-4">
+        <TabsContent value="evidence" className="mt-4 space-y-4">
           {!selected ? (
             <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
               {fr ? 'Lancez un diagnostic pour collecter des preuves.' : 'Run a diagnostic to collect evidence.'}
             </CardContent></Card>
           ) : (
-            <EvidencePulsePanel
-              diagnostic={selected}
-              language={lang}
-              onReassessed={(id) => { setSelectedId(id); setTab('result'); }}
-            />
+            <>
+              <EvidencePulsePanel
+                diagnostic={selected}
+                language={lang}
+                onReassessed={(id) => { setSelectedId(id); setTab('result'); }}
+              />
+              {capabilityShare >= 25 && <CapabilityCheckPanel diagnostic={selected} language={lang} />}
+            </>
           )}
         </TabsContent>
 
@@ -577,11 +599,14 @@ export default function RootCauseDiagnostic() {
             fr={fr}
             measurements={detail?.measurements ?? []}
             disabled={!selectedId}
+            problemTitle={selected?.title ?? null}
+            problemDescription={selected?.problem_description ?? null}
             onAddKpi={(row) => upsertMeasurement.mutate(row)}
             onAddReading={(row) => upsertMeasurement.mutate(row)}
             onUpdate={(row) => upsertMeasurement.mutate(row)}
             onDelete={(id) => deleteMeasurement.mutate(id)}
           />
+
 
         </TabsContent>
 

@@ -132,7 +132,7 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
             <Switch checked={action.is_planned} onCheckedChange={(v) => update('is_planned', v)} id={`planned-${action.id}`} />
             <Label htmlFor={`planned-${action.id}`} className="cursor-pointer text-sm">
               {action.is_planned
-                ? (fr ? 'Formation planifiée (70% remboursé)' : 'Planned training (70% reimbursed)')
+                ? (fr ? 'Formation planifiée (70% remboursé — taux de référence)' : 'Planned training (70% reimbursed — reference rate)')
                 : (fr ? 'Formation non planifiée (40% remboursé)' : 'Unplanned training (40% reimbursed)')}
             </Label>
           </div>
@@ -162,8 +162,8 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
               <AlertTriangle className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-xs text-orange-700">
                 {fr
-                  ? `Le coût dépasse le plafond OFPPT de 40 DH/h/pers. Le remboursement sera plafonné à ${formatDH(reimbInfo.ofpptHourlyCapAmount)}.`
-                  : `Cost exceeds OFPPT cap of 40 DH/h/person. Reimbursement capped at ${formatDH(reimbInfo.ofpptHourlyCapAmount)}.`}
+                  ? `À titre indicatif, le coût dépasse le plafond OFPPT de référence de 40 DH/h/pers. : le remboursement serait plafonné à ${formatDH(reimbInfo.ofpptHourlyCapAmount)}. L'éligibilité dépend des règles officielles en vigueur.`
+                  : `For reference only: cost exceeds the OFPPT reference cap of 40 DH/h/person, so reimbursement would be capped at ${formatDH(reimbInfo.ofpptHourlyCapAmount)}. Eligibility depends on the official rules in force.`}
               </AlertDescription>
             </Alert>
           )}

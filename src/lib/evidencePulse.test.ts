@@ -53,6 +53,7 @@ describe('codes and questions', () => {
     expect(toPulseQuestion('  Le process est-il suivi ?  ', 0)).toEqual({
       id: 'q1',
       text: 'Le process est-il suivi ?',
+      type: 'agreement',
     });
     expect(toPulseQuestion('x'.repeat(500), 4).text).toHaveLength(300);
   });

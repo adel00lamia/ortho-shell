@@ -673,6 +673,7 @@ export type Database = {
           diagnostic_id: string
           id: string
           is_open: boolean
+          kind: string
           locale: string
           questions: Json
           title: string
@@ -688,6 +689,7 @@ export type Database = {
           diagnostic_id: string
           id?: string
           is_open?: boolean
+          kind?: string
           locale?: string
           questions?: Json
           title?: string
@@ -703,6 +705,7 @@ export type Database = {
           diagnostic_id?: string
           id?: string
           is_open?: boolean
+          kind?: string
           locale?: string
           questions?: Json
           title?: string
@@ -1823,6 +1826,7 @@ export type Database = {
           ai_verdict: string | null
           avoided_training_cost_mad: number | null
           business_kpis: Json
+          capability_verification: Json
           cause_breakdown: Json
           cause_evidence: Json
           company_id: string
@@ -1855,6 +1859,7 @@ export type Database = {
           ai_verdict?: string | null
           avoided_training_cost_mad?: number | null
           business_kpis?: Json
+          capability_verification?: Json
           cause_breakdown?: Json
           cause_evidence?: Json
           company_id: string
@@ -1887,6 +1892,7 @@ export type Database = {
           ai_verdict?: string | null
           avoided_training_cost_mad?: number | null
           business_kpis?: Json
+          capability_verification?: Json
           cause_breakdown?: Json
           cause_evidence?: Json
           company_id?: string

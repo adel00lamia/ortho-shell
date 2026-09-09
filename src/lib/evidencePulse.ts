@@ -3,6 +3,8 @@
 export interface PulseQuestion {
   id: string;
   text: string;
+  /** 'agreement' = fixed 5-option scale (default), 'text' = short written answer. */
+  type?: 'agreement' | 'text';
 }
 
 export const PULSE_ANSWER_OPTIONS = [
@@ -93,5 +95,33 @@ export function makePulseCode(length = 6): string {
 
 /** Turns a missing-evidence line into a question a field respondent can answer. */
 export function toPulseQuestion(text: string, index: number): PulseQuestion {
-  return { id: `q${index + 1}`, text: String(text ?? '').trim().slice(0, 300) };
+  return { id: `q${index + 1}`, text: String(text ?? '').trim().slice(0, 300), type: 'agreement' };
+}
+
+/**
+ * Practical, job-realistic scenarios used to check whether the gap is really
+ * a capability gap. Short written answers, no scoring, no scientific claim.
+ */
+export function buildCapabilityScenarios(
+  ctx: { problem: string; population?: string | null; department?: string | null },
+  fr: boolean
+): PulseQuestion[] {
+  const who = ctx.population || ctx.department || (fr ? 'votre poste' : 'your role');
+  const problem = (ctx.problem ?? '').trim().slice(0, 180) || (fr ? 'la situation décrite' : 'the described situation');
+
+  const fields = fr
+    ? [
+        `Décrivez, étape par étape, comment vous traitez aujourd'hui une situation liée à : ${problem}`,
+        `Un cas difficile arrive dans ${who} : que faites-vous en premier, et pourquoi ?`,
+        `Qu'est-ce qui vous empêche de bien faire cette tâche : le savoir-faire, l'outil, le temps, ou les consignes ?`,
+        'Donnez un exemple récent où le résultat n’a pas été celui attendu. Qu’auriez-vous besoin pour réussir ?',
+      ]
+    : [
+        `Describe, step by step, how you handle a situation related to: ${problem}`,
+        `A difficult case arrives in ${who}: what do you do first, and why?`,
+        'What stops you doing this task well: know-how, tools, time, or unclear instructions?',
+        'Give a recent example where the outcome was not the expected one. What would you need to succeed?',
+      ];
+
+  return fields.map((text, i) => ({ id: `s${i + 1}`, text, type: 'text' as const }));
 }

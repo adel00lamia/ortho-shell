@@ -108,28 +108,38 @@ export default function EvidencePulsePublic() {
             <legend className="text-sm font-medium text-foreground">
               {i + 1}. {q.text}
             </legend>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {PULSE_ANSWER_OPTIONS.map((opt) => {
-                const active = answers[q.id] === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: opt.value }))}
-                    aria-pressed={active}
-                    className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
-                      active
-                        ? 'border-primary bg-primary/10 font-medium text-foreground'
-                        : 'border-border text-muted-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    {fr ? opt.fr : opt.en}
-                  </button>
-                );
-              })}
-            </div>
+            {q.type === 'text' ? (
+              <Textarea
+                rows={4}
+                value={answers[q.id] ?? ''}
+                onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value.slice(0, 800) }))}
+                placeholder={fr ? 'Répondez avec vos mots, en quelques phrases…' : 'Answer in your own words, a few sentences…'}
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {PULSE_ANSWER_OPTIONS.map((opt) => {
+                  const active = answers[q.id] === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: opt.value }))}
+                      aria-pressed={active}
+                      className={`rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
+                        active
+                          ? 'border-primary bg-primary/10 font-medium text-foreground'
+                          : 'border-border text-muted-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {fr ? opt.fr : opt.en}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </fieldset>
         ))}
+
 
         <div className="space-y-1.5">
           <Label className="text-xs">
