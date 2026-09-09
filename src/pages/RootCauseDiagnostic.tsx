@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Activity, ArrowRight, Brain, ClipboardList, FileSearch, Gauge, Loader2, MessagesSquare,
-  Plus, Sparkles, Target, Trash2, TrendingDown, Users, Wrench,
+  Plus, Radio, Sparkles, Target, Trash2, TrendingDown, Users, Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,12 +18,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TrainingFitScore } from '@/components/diagnostic/TrainingFitScore';
+import { TrainingFitExplanation } from '@/components/diagnostic/TrainingFitExplanation';
+import { DecisionCard } from '@/components/diagnostic/DecisionCard';
+import { EvidencePulsePanel } from '@/components/diagnostic/EvidencePulsePanel';
 import { CauseBreakdownChart, CAUSE_LABELS } from '@/components/diagnostic/CauseBreakdownChart';
 import { ImpactTracker } from '@/components/diagnostic/ImpactTracker';
+import { LEGACY_CAUSE_MAP, CAUSE_KEYS, type CauseKey } from '@/lib/rootCauseModel';
 import {
   useDeleteDiagnostic, useDiagnosticDetail, useDiagnostics, useRunDiagnostic,
   useDeleteMeasurement, useUpdateAction, useUpsertMeasurement, type DiagnosticRow,
 } from '@/hooks/useRootCauseDiagnostics';
+
+/** Action types reuse cause keys; map legacy/free-form values to a known label. */
+function actionCauseKey(actionType: string): CauseKey {
+  if (actionType === 'training') return 'skill';
+  if ((CAUSE_KEYS as readonly string[]).includes(actionType)) return actionType as CauseKey;
+  return (LEGACY_CAUSE_MAP[actionType] ?? 'process') as CauseKey;
+}
+
 
 const SYMPTOM_OPTIONS = [
   { key: 'complaints', fr: 'Réclamations clients', en: 'Customer complaints' },
