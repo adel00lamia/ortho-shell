@@ -65,7 +65,12 @@ export function CapabilityCheckPanel({
     .map((s) => ({ ...s, text: edited[s.id] ?? s.text }));
 
   const pulse = pulses[0];
-  const respondents = pulse?.responsesRaw.length ?? 0;
+  const respondents = pulse?.summary.responses ?? 0;
+  const invited = diagnostic.headcount_affected ?? null;
+  const gapPct =
+    respondents > 0 && gapConfirmed !== '' ? Math.round((Number(gapConfirmed) / respondents) * 100) : null;
+  const confidence =
+    respondents === 0 ? null : respondents < 3 ? (fr ? 'faible' : 'low') : respondents < 8 ? (fr ? 'moyenne' : 'medium') : (fr ? 'bonne' : 'good');
 
   return (
     <div className="space-y-4">
@@ -151,6 +156,30 @@ export function CapabilityCheckPanel({
                 </Button>
               </div>
 
+              <div className="grid gap-2 rounded-lg bg-muted/40 p-3 text-xs sm:grid-cols-3">
+                <p className="text-muted-foreground">
+                  {fr ? 'Invitées' : 'Invited'} :{' '}
+                  <span className="font-semibold text-foreground">{invited ?? (fr ? 'non précisé' : 'not set')}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  {fr ? 'Réponses' : 'Responded'} : <span className="font-semibold text-foreground">{respondents}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  {fr ? 'Écart confirmé (provisoire)' : 'Confirmed gap (provisional)'} :{' '}
+                  <span className="font-semibold text-foreground">
+                    {gapPct === null ? (fr ? '—' : '—') : `${gapPct}%`}
+                  </span>
+                </p>
+                <p className="text-muted-foreground sm:col-span-3">
+                  {fr ? 'Fiabilité de l’échantillon' : 'Sample reliability'} :{' '}
+                  <span className="font-semibold text-foreground">{confidence ?? (fr ? 'aucune donnée' : 'no data')}</span>
+                  {' — '}
+                  {fr
+                    ? 'vérification pratique par mises en situation, méthodologie pilote, ce n’est pas un test psychométrique validé scientifiquement.'
+                    : 'practical scenario-based verification, pilot methodology, not a scientifically validated psychometric test.'}
+                </p>
+              </div>
+
               {respondents === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   {fr
@@ -159,24 +188,31 @@ export function CapabilityCheckPanel({
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {pulse.responsesRaw.map((r, i) => (
-                    <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-3">
-                      <p className="text-xs font-semibold text-foreground">
-                        {fr ? `Réponse ${i + 1}` : `Response ${i + 1}`}
-                      </p>
-                      {pulse.questions.map((q) => {
-                        const answer = (r.answers ?? {})[q.id];
-                        if (!answer) return null;
-                        return (
-                          <div key={q.id} className="text-xs">
-                            <p className="text-muted-foreground">{q.text}</p>
-                            <p className="text-foreground">« {answer} »</p>
-                          </div>
-                        );
-                      })}
-                      {r.free_text && <p className="text-xs italic text-muted-foreground">« {r.free_text} »</p>}
+                  <p className="text-[11px] text-muted-foreground">
+                    {fr
+                      ? 'Réponses regroupées et anonymes : aucune réponse individuelle n’est reliée à une personne.'
+                      : 'Answers are grouped and anonymous: no individual answer is linked to a person.'}
+                  </p>
+                  {pulse.summary.questions.map((q) => (
+                    <div key={q.id} className="space-y-1.5 rounded-lg border border-border/60 p-3">
+                      <p className="text-xs font-semibold text-foreground">{q.question}</p>
+                      {(q.texts ?? []).length === 0 ? (
+                        <p className="text-xs text-muted-foreground">{fr ? 'Aucune réponse écrite.' : 'No written answer.'}</p>
+                      ) : (
+                        (q.texts ?? []).map((txt, i) => (
+                          <p key={i} className="text-xs text-foreground">« {txt} »</p>
+                        ))
+                      )}
                     </div>
                   ))}
+                  {pulse.summary.comments.length > 0 && (
+                    <div className="space-y-1 rounded-lg border border-border/60 p-3">
+                      <p className="text-xs font-semibold text-foreground">{fr ? 'Commentaires libres' : 'Free comments'}</p>
+                      {pulse.summary.comments.map((c, i) => (
+                        <p key={i} className="text-xs italic text-muted-foreground">« {c} »</p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -211,6 +247,9 @@ export function CapabilityCheckPanel({
                       result: {
                         verified_at: new Date().toISOString(),
                         respondents,
+                        invited: invited ?? undefined,
+                        gap_confirmed_pct: gapPct ?? undefined,
+                        method: 'practical_scenarios_pilot',
                         gap_confirmed: Number(gapConfirmed) || 0,
                         trainable_headcount: Number(gapConfirmed) || 0,
                         note: note || undefined,
