@@ -44,6 +44,15 @@ export interface DiagnosticRow {
   training_fit_signals: Record<string, unknown>;
   version: number;
   parent_diagnostic_id: string | null;
+  /** Result of a practical capability check, when one was run. */
+  capability_verification: {
+    verified_at?: string;
+    respondents?: number;
+    gap_confirmed?: number;
+    trainable_headcount?: number;
+    note?: string;
+    pulse_code?: string;
+  } | null;
   status: string;
   linked_training_plan_id: string | null;
   diagnosed_at: string | null;

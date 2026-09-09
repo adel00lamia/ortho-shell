@@ -15,11 +15,22 @@ import {
 
 const db = supabase as any;
 
+export type PulseKind = 'evidence' | 'capability';
+
+export interface PulseRawResponse {
+  answers: Record<string, string>;
+  free_text: string | null;
+  respondent_name?: string | null;
+  respondent_role?: string | null;
+  created_at?: string;
+}
+
 export interface EvidencePulseRow {
   id: string;
   diagnostic_id: string;
   company_id: string;
   code: string;
+  kind: PulseKind;
   title: string;
   audience: string;
   locale: string;
@@ -31,6 +42,7 @@ export interface EvidencePulseRow {
 
 export interface EvidencePulseWithSummary extends EvidencePulseRow {
   summary: PulseSummary;
+  responsesRaw: PulseRawResponse[];
 }
 
 export const PULSE_AUDIENCES = [
@@ -40,15 +52,18 @@ export const PULSE_AUDIENCES = [
 ] as const;
 
 /** Pulses attached to one diagnostic, with their aggregated responses. */
-export function useEvidencePulses(diagnosticId: string | null) {
+export function useEvidencePulses(diagnosticId: string | null, kind?: PulseKind) {
   return useQuery({
-    queryKey: ['evidence-pulses', diagnosticId],
+    queryKey: ['evidence-pulses', diagnosticId, kind ?? 'all'],
     queryFn: async (): Promise<EvidencePulseWithSummary[]> => {
-      const { data, error } = await db
+      let query = db
         .from('evidence_pulses')
         .select('*')
         .eq('diagnostic_id', diagnosticId)
         .order('created_at', { ascending: false });
+      if (kind) query = query.eq('kind', kind);
+
+      const { data, error } = await query;
       if (error) throw error;
 
       const pulses = (data ?? []) as EvidencePulseRow[];
@@ -56,19 +71,23 @@ export function useEvidencePulses(diagnosticId: string | null) {
 
       const { data: responses, error: rErr } = await db
         .from('evidence_pulse_responses')
-        .select('pulse_id, answers, free_text')
+        .select('pulse_id, answers, free_text, respondent_name, respondent_role, created_at')
         .in('pulse_id', pulses.map((p) => p.id));
       if (rErr) throw rErr;
 
-      return pulses.map((p) => ({
-        ...p,
-        questions: Array.isArray(p.questions) ? p.questions : [],
-        summary: aggregatePulse(
-          Array.isArray(p.questions) ? p.questions : [],
-          ((responses ?? []) as Array<{ pulse_id: string; answers: Record<string, string>; free_text: string | null }>)
-            .filter((r) => r.pulse_id === p.id)
-        ),
-      }));
+      const all = (responses ?? []) as Array<PulseRawResponse & { pulse_id: string }>;
+
+      return pulses.map((p) => {
+        const mine = all.filter((r) => r.pulse_id === p.id);
+        const questions = Array.isArray(p.questions) ? p.questions : [];
+        return {
+          ...p,
+          kind: (p.kind ?? 'evidence') as PulseKind,
+          questions,
+          summary: aggregatePulse(questions, mine),
+          responsesRaw: mine,
+        };
+      });
     },
     enabled: !!diagnosticId,
   });
@@ -86,6 +105,7 @@ export function useCreateEvidencePulse(diagnosticId: string | null) {
       locale: 'fr' | 'en';
       questions: PulseQuestion[];
       allow_identity: boolean;
+      kind?: PulseKind;
     }) => {
       if (!companyId || !user || !diagnosticId) throw new Error('NO_COMPANY');
       if (input.questions.length === 0 || input.questions.length > 5) {
@@ -99,6 +119,7 @@ export function useCreateEvidencePulse(diagnosticId: string | null) {
           company_id: companyId,
           created_by: user.id,
           code: makePulseCode(6),
+          kind: input.kind ?? 'evidence',
           title: input.title.slice(0, 160),
           audience: input.audience,
           locale: input.locale,
@@ -127,6 +148,37 @@ export function useTogglePulseOpen(diagnosticId: string | null) {
   });
 }
 
+export interface CapabilityVerification {
+  verified_at: string;
+  respondents: number;
+  gap_confirmed: number;
+  trainable_headcount: number;
+  note?: string;
+  pulse_code?: string;
+}
+
+/**
+ * Stores a practical, scenario-based capability check result on the diagnostic.
+ * This is a field observation, not a validated psychometric assessment.
+ */
+export function useSaveCapabilityVerification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ diagnosticId, result }: { diagnosticId: string; result: CapabilityVerification }) => {
+      const { error } = await db
+        .from('root_cause_diagnostics')
+        .update({ capability_verification: result })
+        .eq('id', diagnosticId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Vérification enregistrée');
+      qc.invalidateQueries({ queryKey: ['root-cause-diagnostics'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Public (no login) side
 // ---------------------------------------------------------------------------
@@ -134,6 +186,7 @@ export function useTogglePulseOpen(diagnosticId: string | null) {
 export interface PublicPulse {
   id: string;
   code: string;
+  kind: PulseKind;
   title: string;
   audience: string;
   locale: 'fr' | 'en';
@@ -150,7 +203,11 @@ export function usePublicPulse(code: string | undefined) {
       if (error) throw error;
       if (!data) return null;
       const p = data as PublicPulse;
-      return { ...p, questions: Array.isArray(p.questions) ? p.questions : [] };
+      return {
+        ...p,
+        kind: (p.kind ?? 'evidence') as PulseKind,
+        questions: Array.isArray(p.questions) ? p.questions : [],
+      };
     },
     enabled: !!code && code.trim().length > 0,
     retry: false,

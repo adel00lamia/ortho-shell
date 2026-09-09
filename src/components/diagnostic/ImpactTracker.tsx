@@ -23,6 +23,9 @@ interface ImpactTrackerProps {
   fr: boolean;
   measurements: MeasurementRow[];
   disabled?: boolean;
+  /** The original business problem this impact loop closes. */
+  problemTitle?: string | null;
+  problemDescription?: string | null;
   onAddKpi: (row: KpiDefinition) => void;
   onAddReading: (row: KpiDefinition & { actual_value: number; measured_at: string; notes: string | null }) => void;
   onUpdate: (row: Partial<MeasurementRow> & { id: string; kpi_name: string }) => void;
@@ -66,6 +69,7 @@ function progressToTarget(baseline: number | null, target: number | null, actual
 
 export function ImpactTracker({
   fr, measurements, disabled, onAddKpi, onAddReading, onUpdate, onDelete,
+  problemTitle, problemDescription,
 }: ImpactTrackerProps) {
   const groups = useMemo(() => groupByKpi(measurements), [measurements]);
 
@@ -81,6 +85,23 @@ export function ImpactTracker({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {problemTitle && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                {fr ? 'Problème d’origine' : 'Original problem'}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{problemTitle}</p>
+              {problemDescription && (
+                <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{problemDescription}</p>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                {fr
+                  ? 'Chaque indicateur ci-dessous suit ce problème : Référence → Cible → Réel.'
+                  : 'Every indicator below tracks this problem: Baseline → Target → Actual.'}
+              </p>
+            </div>
+          )}
+
           {groups.length === 0 && (
             <p className="text-sm text-muted-foreground">
               {fr ? 'Aucun indicateur suivi. Ajoutez-en un ci-dessous.' : 'No indicator tracked yet. Add one below.'}
