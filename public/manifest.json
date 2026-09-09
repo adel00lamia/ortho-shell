@@ -1,6 +1,6 @@
 {
-  "name": "QimataQ",
-  "short_name": "QimataQ",
+  "name": "Qimatak",
+  "short_name": "Qimatak",
   "description": "Plateforme de gestion de la formation pour les entreprises marocaines",
   "start_url": "/",
   "display": "standalone",

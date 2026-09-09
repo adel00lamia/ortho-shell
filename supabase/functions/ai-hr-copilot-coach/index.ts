@@ -74,7 +74,7 @@ serve(async (req) => {
     const lang = input.locale === 'en' ? 'English' : 'French';
     const ctx = input.context ?? {};
 
-    const systemPrompt = `You are a senior AI × HR trainer for QimataQ, coaching HR practitioners in Morocco.
+    const systemPrompt = `You are a senior AI × HR trainer for Qimatak, coaching HR practitioners in Morocco.
 You review one short practical exercise from a Copilot learning module and give teaching feedback.
 
 Rules:

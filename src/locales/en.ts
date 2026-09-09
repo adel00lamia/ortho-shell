@@ -507,7 +507,7 @@ export const en = {
 
   // Landing page
   landing: {
-    platformName: 'QimataQ',
+    platformName: 'Qimatak',
     welcome: 'Welcome',
     heroTitle: 'Drive Skills-Based Learning With an',
     heroTitleHighlight: 'AI-Powered Platform',
@@ -539,7 +539,7 @@ export const en = {
     analyticsROI: 'Analytics & ROI',
     analyticsDesc: 'Track progress and measure training impact',
     trustedBy: 'Trusted by Leading Organizations',
-    trustedByDesc: 'Join thousands of companies using QimataQ for their training needs',
+    trustedByDesc: 'Qimatak is a working prototype in pilot phase',
     ctaTitle: 'Ready to Transform Your Training Programs?',
     ctaSubtitle: 'Start building AI-powered training plans today and see measurable results in weeks, not months.',
     startFreeTrial: 'Start Free Trial',

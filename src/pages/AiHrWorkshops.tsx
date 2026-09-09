@@ -36,7 +36,7 @@ export default function AiHrWorkshops() {
     [participants, filters],
   );
 
-  const participantUrl = active ? `${window.location.origin}/diagnostic/${active.code}` : '';
+  const participantUrl = active ? `${window.location.origin}/pulse/${active.code}` : '';
 
   const create = async () => {
     if (!form.title.trim()) return;
@@ -64,7 +64,7 @@ export default function AiHrWorkshops() {
           </p>
         </div>
         <Button asChild variant="outline" className="gap-2">
-          <Link to="/diagnostic" target="_blank">
+          <Link to="/pulse" target="_blank">
             <ExternalLink className="h-4 w-4" /> Ouvrir le diagnostic
           </Link>
         </Button>
@@ -162,12 +162,12 @@ export default function AiHrWorkshops() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button asChild variant="outline" size="sm" className="gap-2">
-                        <Link to={`/diagnostic/live/${active.code}`} target="_blank">
+                        <Link to={`/pulse/live/${active.code}`} target="_blank">
                           <Presentation className="h-4 w-4" /> Écran live
                         </Link>
                       </Button>
                       <Button asChild variant="outline" size="sm" className="gap-2">
-                        <Link to={`/diagnostic/report/${active.code}`} target="_blank">
+                        <Link to={`/pulse/report/${active.code}`} target="_blank">
                           <FileText className="h-4 w-4" /> Rapport de session
                         </Link>
                       </Button>

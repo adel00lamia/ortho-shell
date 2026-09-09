@@ -1733,6 +1733,7 @@ export type Database = {
           headcount_affected: number | null
           id: string
           linked_training_plan_id: string | null
+          missing_evidence: Json
           problem_description: string
           source_channel: string
           status: string
@@ -1759,6 +1760,7 @@ export type Database = {
           headcount_affected?: number | null
           id?: string
           linked_training_plan_id?: string | null
+          missing_evidence?: Json
           problem_description?: string
           source_channel?: string
           status?: string
@@ -1785,6 +1787,7 @@ export type Database = {
           headcount_affected?: number | null
           id?: string
           linked_training_plan_id?: string | null
+          missing_evidence?: Json
           problem_description?: string
           source_channel?: string
           status?: string

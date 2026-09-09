@@ -16,14 +16,14 @@ export default function AiHrLiveScreen() {
   useDiagnosticRealtime(session?.id);
   const insights = useMemo(() => buildCohortInsights(participants), [participants]);
 
-  const url = `${window.location.origin}/diagnostic/${code}`;
+  const url = `${window.location.origin}/pulse/${code}`;
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-10">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-6">
         <div>
           <div className="mb-1.5 flex items-center gap-2">
-            <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-extrabold text-primary">QimataQ</span>
+            <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-extrabold text-primary">Qimatak</span>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">AI × HR Live</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">

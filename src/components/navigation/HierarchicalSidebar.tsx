@@ -44,7 +44,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
   const { signOut, user } = useAuth();
   const { role } = useUserRole();
   const { t, language, setLanguage } = useLanguage();
-  const [openSections, setOpenSections] = useState<string[]>(['workflow', 'assess']);
+  const [openSections, setOpenSections] = useState<string[]>(['diagnostics', 'evidence', 'actionplans']);
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) =>
@@ -109,48 +109,50 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       ];
     }
 
+    // Qimatak architecture for admin / hr_manager.
+    // Training-delivery and talent features stay routable but are hidden from the primary nav.
     return [
       {
-        titleKey: 'assess',
+        titleKey: 'diagnostics',
         items: [
-          { path: '/company-profile', labelKey: 'companyProfile', icon: Building2 },
           { path: '/workflow/assess/root-cause', labelKey: 'rootCauseDiagnostic', icon: Stethoscope, badge: 'AI' },
-          { path: '/workflow/assess/ai-hr', labelKey: 'aiHrDiagnostic', icon: Sparkles, badge: 'AI' },
-
-          { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
-          { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
-          { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },
-          { path: '/workflow/assess/report', labelKey: 'assessmentReport', icon: TrendingUp },
+          { path: '/company-profile', labelKey: 'companyProfile', icon: Building2 },
         ],
       },
       {
-        titleKey: 'plan',
+        titleKey: 'evidence',
+        items: [
+          { path: '/workflow/assess/ai-hr', labelKey: 'aiHrDiagnostic', icon: Sparkles, badge: 'AI' },
+          { path: '/workflow/assess/performance', labelKey: 'performanceReview', icon: FileText },
+        ],
+      },
+      {
+        titleKey: 'actionPlans',
         items: [
           { path: '/workflow/plan/builder', labelKey: 'aiPlanBuilder', icon: Lightbulb, badge: 'AI' },
           { path: '/workflow/plan/plans', labelKey: 'myPlans', icon: Target },
-          { path: '/workflow/plan/ingenierie', labelKey: 'ingenieriePlan', icon: FileText, badge: 'GIAC' },
         ],
       },
       {
-        titleKey: 'execute',
+        titleKey: 'capabilities',
         items: [
-          { path: '/workflow/execute/modules', labelKey: 'moduleStudio', icon: BookOpen },
-          { path: '/workflow/execute/marketplace', labelKey: 'courseMarketplace', icon: ShoppingBag },
+          { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },
+          { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
         ],
       },
       {
-        titleKey: 'trackCertify',
+        titleKey: 'impact',
         items: [
-          { path: '/manager', labelKey: 'managerDashboard', icon: Gauge },
           { path: '/workflow/track/analytics', labelKey: 'analyticsROI', icon: BarChart3 },
-          { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },
-          { path: '/workflow/track/reimbursement', labelKey: 'ofpptReimbursement', icon: FileText },
+          { path: '/workflow/assess/report', labelKey: 'assessmentReport', icon: TrendingUp },
+          { path: '/manager', labelKey: 'managerDashboard', icon: Gauge },
         ],
       },
       {
-        titleKey: 'knowledge',
+        titleKey: 'funding',
         items: [
-          { path: '/hr-knowledge', labelKey: 'hrKnowledge', icon: Brain, badge: 'AI' },
+          { path: '/workflow/plan/ingenierie', labelKey: 'ingenieriePlan', icon: FileText, badge: 'GIAC' },
+          { path: '/workflow/track/reimbursement', labelKey: 'ofpptReimbursement', icon: FileText },
         ],
       },
     ];
@@ -159,20 +161,14 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
   const getManagementItems = (): NavItem[] => {
     if (role === 'admin') {
       return [
-        { path: '/manage/talent', labelKey: 'talentPipeline', icon: Briefcase },
         { path: '/manage/users', labelKey: 'userManagement', icon: Users },
-        { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
         { path: '/billing', labelKey: 'billing', icon: CreditCard },
-        { path: '/referrals', labelKey: 'referrals', icon: Gift },
         { path: '/manage/settings', labelKey: 'settings', icon: Settings },
       ];
     }
     if (role === 'hr_manager') {
       return [
-        { path: '/manage/talent', labelKey: 'talentPipeline', icon: Briefcase },
-        { path: '/manage/team', labelKey: 'teamCollaboration', icon: Building2 },
         { path: '/billing', labelKey: 'billing', icon: CreditCard },
-        { path: '/referrals', labelKey: 'referrals', icon: Gift },
         { path: '/manage/settings', labelKey: 'settings', icon: Settings },
       ];
     }
@@ -193,6 +189,12 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       management: t.nav.management,
       career: (t.nav as any).career || (language === 'fr' ? 'Carrière' : 'Career'),
       knowledge: language === 'fr' ? 'Connaissances' : 'Knowledge',
+      diagnostics: language === 'fr' ? 'Diagnostics' : 'Diagnostics',
+      evidence: language === 'fr' ? 'Preuves' : 'Evidence',
+      actionPlans: language === 'fr' ? 'Plans d’action' : 'Action plans',
+      capabilities: language === 'fr' ? 'Compétences' : 'Capabilities',
+      impact: language === 'fr' ? 'Impact' : 'Impact',
+      funding: language === 'fr' ? 'Financement' : 'Funding',
     };
     return map[key] || key;
   };
@@ -255,11 +257,11 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       <div className="p-3 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">TP</span>
+            <span className="text-primary-foreground font-bold text-sm">Q</span>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-sidebar-foreground text-sm truncate">QimataQ</h2>
+              <h2 className="font-semibold text-sidebar-foreground text-sm truncate">Qimatak</h2>
               <div className="flex items-center gap-1.5">
                 <div className={`h-2 w-2 rounded-full bg-gradient-to-r ${shell.color}`} />
                 <span className="text-xs text-sidebar-foreground/60 truncate">{shellLabel}</span>

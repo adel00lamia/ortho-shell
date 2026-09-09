@@ -72,7 +72,7 @@ export async function exportJDToWord(data: JDExportData, lang: string = 'en') {
             new Paragraph({
               alignment: AlignmentType.RIGHT,
               children: [
-                new TextRun({ text: data.companyName || 'QimataQ', font: 'Calibri', size: 18, color: '999999' }),
+                new TextRun({ text: data.companyName || 'Qimatak', font: 'Calibri', size: 18, color: '999999' }),
               ],
               border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD', space: 4 } },
             }),
@@ -158,8 +158,8 @@ export async function exportJDToWord(data: JDExportData, lang: string = 'en') {
         new Paragraph({
           alignment: AlignmentType.CENTER,
           children: [new TextRun({
-            text: fr ? `Document généré le ${today} — ${data.companyName || 'QimataQ'}`
-              : `Generated on ${today} — ${data.companyName || 'QimataQ'}`,
+            text: fr ? `Document généré le ${today} — ${data.companyName || 'Qimatak'}`
+              : `Generated on ${today} — ${data.companyName || 'Qimatak'}`,
             size: 18, color: 'AAAAAA', italics: true,
           })],
         }),

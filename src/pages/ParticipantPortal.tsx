@@ -98,7 +98,7 @@ export default function ParticipantPortal() {
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               Pas encore de diagnostic ?{' '}
-              <Link to="/diagnostic" className="text-primary underline underline-offset-4">
+              <Link to="/pulse" className="text-primary underline underline-offset-4">
                 Le faire en 5 minutes
               </Link>
             </p>
@@ -131,7 +131,7 @@ function PortalContent({ code, participant }: { code: string; participant: Porta
 
       <div className="relative mx-auto max-w-3xl px-4 py-8 space-y-6">
         <motion.header initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-          <Badge variant="secondary" className="tracking-wide">QimataQ × AI × HR</Badge>
+          <Badge variant="secondary" className="tracking-wide">Qimatak × AI × HR</Badge>
           <h1 className="text-2xl font-bold sm:text-3xl">Mon espace AI × HR</h1>
           <p className="text-sm text-muted-foreground">
             {participant.session_title

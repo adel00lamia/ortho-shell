@@ -63,7 +63,7 @@ export function CalendarExport({
     const lines = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//QimataQ//CalendarSync//EN",
+      "PRODID:-//Qimatak//CalendarSync//EN",
       "BEGIN:VEVENT",
       `DTSTART:${formatDateForIcs(startDate)}`,
       `DTEND:${formatDateForIcs(resolvedEndDate)}`,

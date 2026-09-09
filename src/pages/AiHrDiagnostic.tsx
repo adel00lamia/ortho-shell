@@ -175,7 +175,7 @@ export default function AiHrDiagnostic() {
   return (
     <div className="diagnostic-immersive min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Seo
-        path="/diagnostic"
+        path="/pulse"
         title="Diagnostic AI × HR | Où l'IA vous fait gagner du temps en RH"
         description="En 5 minutes, identifiez vos irritants RH, votre maturité IA et les cas d'usage à plus fort impact pour votre fonction. Résultat personnalisé, sans prérequis technique."
       />
@@ -189,7 +189,7 @@ export default function AiHrDiagnostic() {
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-extrabold tracking-tight text-primary">
-              QimataQ
+              Qimatak
             </span>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               AI × HR
@@ -420,7 +420,7 @@ export default function AiHrDiagnostic() {
                         className="mt-0.5"
                       />
                       <span>
-                        J’accepte que QimataQ utilise mes coordonnées pour m’envoyer mon diagnostic et des
+                        J’accepte que Qimatak utilise mes coordonnées pour m’envoyer mon diagnostic et des
                         informations sur les parcours AI × HR.
                       </span>
                     </label>

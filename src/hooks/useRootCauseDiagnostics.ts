@@ -28,6 +28,8 @@ export interface DiagnosticRow {
   avoided_training_cost_mad: number | null;
   estimated_training_cost_mad: number | null;
   evidence_sources: Record<string, number>;
+  /** What extra proof would raise confidence in this diagnosis. */
+  missing_evidence: string[];
   status: string;
   linked_training_plan_id: string | null;
   diagnosed_at: string | null;
@@ -178,6 +180,7 @@ export function useRunDiagnostic() {
           ai_verdict: diagnosis.ai_verdict,
           estimated_training_cost_mad: diagnosis.estimated_training_cost_mad,
           avoided_training_cost_mad: diagnosis.avoided_training_cost_mad,
+          missing_evidence: Array.isArray(diagnosis.missing_evidence) ? diagnosis.missing_evidence : [],
           status: 'diagnosed',
           diagnosed_at: new Date().toISOString(),
         } as never)
