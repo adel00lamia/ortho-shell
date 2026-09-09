@@ -363,8 +363,8 @@ export default function RootCauseDiagnostic() {
                     <CardTitle className="text-base">Training Fit Score</CardTitle>
                     <CardDescription>
                       {fr
-                        ? 'Score d’aide à la décision — à confirmer par les preuves disponibles.'
-                        : 'Decision-support score — to be confirmed by the available evidence.'}
+                        ? 'Qimatak Training Fit Score — version pilote. Score d’aide à la décision, à confirmer par les preuves disponibles.'
+                        : 'Qimatak Training Fit Score — pilot version. Decision-support score, to be confirmed by the available evidence.'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center gap-4">
@@ -379,6 +379,9 @@ export default function RootCauseDiagnostic() {
                       }
                       verdict={selected.ai_verdict ?? undefined}
                     />
+                    <div className="w-full rounded-lg border border-border/60 bg-muted/40 p-3">
+                      <TrainingFitExplanation factors={selected.training_fit_explanation ?? []} language={lang} />
+                    </div>
                     <div className="w-full space-y-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{fr ? 'Confiance IA' : 'AI confidence'}</span>
@@ -395,8 +398,13 @@ export default function RootCauseDiagnostic() {
                               <li key={`${i}-${m}`}>{m}</li>
                             ))}
                           </ul>
+                          <Button size="sm" variant="outline" className="w-full" onClick={() => setTab('evidence')}>
+                            <Radio className="mr-1.5 h-3.5 w-3.5" />
+                            {fr ? 'Collecter les preuves' : 'Collect the evidence'}
+                          </Button>
                         </div>
                       )}
+
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <TrendingDown className="h-3.5 w-3.5" />
