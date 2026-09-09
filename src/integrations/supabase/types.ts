@@ -624,6 +624,107 @@ export type Database = {
           },
         ]
       }
+      evidence_pulse_responses: {
+        Row: {
+          answers: Json
+          created_at: string
+          free_text: string | null
+          id: string
+          pulse_id: string
+          respondent_name: string | null
+          respondent_role: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          free_text?: string | null
+          id?: string
+          pulse_id: string
+          respondent_name?: string | null
+          respondent_role?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          free_text?: string | null
+          id?: string
+          pulse_id?: string
+          respondent_name?: string | null
+          respondent_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_pulse_responses_pulse_id_fkey"
+            columns: ["pulse_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_pulses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evidence_pulses: {
+        Row: {
+          allow_identity: boolean
+          audience: string
+          code: string
+          company_id: string
+          created_at: string
+          created_by: string
+          diagnostic_id: string
+          id: string
+          is_open: boolean
+          locale: string
+          questions: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_identity?: boolean
+          audience?: string
+          code: string
+          company_id: string
+          created_at?: string
+          created_by: string
+          diagnostic_id: string
+          id?: string
+          is_open?: boolean
+          locale?: string
+          questions?: Json
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          allow_identity?: boolean
+          audience?: string
+          code?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          diagnostic_id?: string
+          id?: string
+          is_open?: boolean
+          locale?: string
+          questions?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_pulses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_pulses_diagnostic_id_fkey"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "root_cause_diagnostics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_chat_messages: {
         Row: {
           company_id: string
@@ -1723,6 +1824,7 @@ export type Database = {
           avoided_training_cost_mad: number | null
           business_kpis: Json
           cause_breakdown: Json
+          cause_evidence: Json
           company_id: string
           created_at: string
           created_by: string
@@ -1734,13 +1836,17 @@ export type Database = {
           id: string
           linked_training_plan_id: string | null
           missing_evidence: Json
+          parent_diagnostic_id: string | null
           problem_description: string
           source_channel: string
           status: string
           symptoms: string[]
           title: string
+          training_fit_explanation: Json
           training_fit_score: number | null
+          training_fit_signals: Json
           updated_at: string
+          version: number
         }
         Insert: {
           affected_population?: string | null
@@ -1750,6 +1856,7 @@ export type Database = {
           avoided_training_cost_mad?: number | null
           business_kpis?: Json
           cause_breakdown?: Json
+          cause_evidence?: Json
           company_id: string
           created_at?: string
           created_by?: string
@@ -1761,13 +1868,17 @@ export type Database = {
           id?: string
           linked_training_plan_id?: string | null
           missing_evidence?: Json
+          parent_diagnostic_id?: string | null
           problem_description?: string
           source_channel?: string
           status?: string
           symptoms?: string[]
           title: string
+          training_fit_explanation?: Json
           training_fit_score?: number | null
+          training_fit_signals?: Json
           updated_at?: string
+          version?: number
         }
         Update: {
           affected_population?: string | null
@@ -1777,6 +1888,7 @@ export type Database = {
           avoided_training_cost_mad?: number | null
           business_kpis?: Json
           cause_breakdown?: Json
+          cause_evidence?: Json
           company_id?: string
           created_at?: string
           created_by?: string
@@ -1788,13 +1900,17 @@ export type Database = {
           id?: string
           linked_training_plan_id?: string | null
           missing_evidence?: Json
+          parent_diagnostic_id?: string | null
           problem_description?: string
           source_channel?: string
           status?: string
           symptoms?: string[]
           title?: string
+          training_fit_explanation?: Json
           training_fit_score?: number | null
+          training_fit_signals?: Json
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -1809,6 +1925,13 @@ export type Database = {
             columns: ["linked_training_plan_id"]
             isOneToOne: false
             referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "root_cause_diagnostics_parent_diagnostic_id_fkey"
+            columns: ["parent_diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "root_cause_diagnostics"
             referencedColumns: ["id"]
           },
         ]
@@ -2370,6 +2493,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      evidence_pulse_get: { Args: { _code: string }; Returns: Json }
+      evidence_pulse_submit: {
+        Args: {
+          _answers: Json
+          _code: string
+          _free_text?: string
+          _name?: string
+          _role?: string
+        }
+        Returns: string
+      }
       get_user_company_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
