@@ -351,7 +351,7 @@ export default function OFPPTReimbursement() {
                       <span className="font-medium">{newCalc.totalEligible.toLocaleString()} MAD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">{r.reimbursementRate} (70% — {isFr ? "référence" : "reference"}):</span>
+                      <span className="text-muted-foreground">{r.reimbursementRate} (70% — {r.referenceOnly}):</span>
                       <span className="font-bold text-primary">{newCalc.reimbursement.toLocaleString()} MAD</span>
                     </div>
                   </div>
