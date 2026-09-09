@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCompanyId } from '@/hooks/useCompanyId';
 import { toast } from 'sonner';
 import {
-  aggregatePulse,
   makePulseCode,
   type PulseQuestion,
   type PulseSummary,
@@ -17,12 +16,11 @@ const db = supabase as any;
 
 export type PulseKind = 'evidence' | 'capability';
 
-export interface PulseRawResponse {
-  answers: Record<string, string>;
-  free_text: string | null;
-  respondent_name?: string | null;
-  respondent_role?: string | null;
-  created_at?: string;
+/** Only present when the pulse explicitly allows identity. */
+export interface PulseIdentifiedRespondent {
+  name: string | null;
+  role: string | null;
+  created_at: string | null;
 }
 
 export interface EvidencePulseRow {
@@ -41,8 +39,9 @@ export interface EvidencePulseRow {
 }
 
 export interface EvidencePulseWithSummary extends EvidencePulseRow {
+  /** Aggregated server-side; respondent-level answer rows are never fetched. */
   summary: PulseSummary;
-  responsesRaw: PulseRawResponse[];
+  identified: PulseIdentifiedRespondent[];
 }
 
 export const PULSE_AUDIENCES = [
@@ -51,7 +50,11 @@ export const PULSE_AUDIENCES = [
   { value: 'supervisors', fr: 'Superviseurs', en: 'Supervisors' },
 ] as const;
 
-/** Pulses attached to one diagnostic, with their aggregated responses. */
+/**
+ * Pulses attached to one diagnostic, with their responses aggregated by the
+ * database. Individual respondent answers are never exposed to the client:
+ * for anonymous pulses only totals, averages and sanitized comments come back.
+ */
 export function useEvidencePulses(diagnosticId: string | null, kind?: PulseKind) {
   return useQuery({
     queryKey: ['evidence-pulses', diagnosticId, kind ?? 'all'],
@@ -69,23 +72,32 @@ export function useEvidencePulses(diagnosticId: string | null, kind?: PulseKind)
       const pulses = (data ?? []) as EvidencePulseRow[];
       if (pulses.length === 0) return [];
 
-      const { data: responses, error: rErr } = await db
-        .from('evidence_pulse_responses')
-        .select('pulse_id, answers, free_text, respondent_name, respondent_role, created_at')
-        .in('pulse_id', pulses.map((p) => p.id));
-      if (rErr) throw rErr;
+      const aggregates = await Promise.all(
+        pulses.map(async (p) => {
+          const { data: agg, error: aErr } = await db.rpc('evidence_pulse_aggregate', { _pulse_id: p.id });
+          if (aErr) throw aErr;
+          return (agg ?? null) as {
+            responses?: number;
+            questions?: PulseSummary['questions'];
+            comments?: string[];
+            identified?: PulseIdentifiedRespondent[];
+          } | null;
+        })
+      );
 
-      const all = (responses ?? []) as Array<PulseRawResponse & { pulse_id: string }>;
-
-      return pulses.map((p) => {
-        const mine = all.filter((r) => r.pulse_id === p.id);
+      return pulses.map((p, i) => {
+        const agg = aggregates[i];
         const questions = Array.isArray(p.questions) ? p.questions : [];
         return {
           ...p,
           kind: (p.kind ?? 'evidence') as PulseKind,
           questions,
-          summary: aggregatePulse(questions, mine),
-          responsesRaw: mine,
+          summary: {
+            responses: agg?.responses ?? 0,
+            questions: (agg?.questions ?? []).map((q) => ({ ...q, texts: q.texts ?? [] })),
+            comments: agg?.comments ?? [],
+          },
+          identified: agg?.identified ?? [],
         };
       });
     },
