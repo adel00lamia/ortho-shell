@@ -6,7 +6,7 @@
  * comme manquant, et les coûts absents restent « à chiffrer ».
  */
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import {
   CAUSE_LABELS,
   CAUSE_HINTS,
@@ -173,7 +173,6 @@ const PAGE_H = 297;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
 interface AutoTableDoc extends jsPDF {
-  autoTable: (options: Record<string, unknown>) => void;
   lastAutoTable?: { finalY: number };
 }
 
@@ -258,7 +257,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
     const columnStyles = widths
       ? Object.fromEntries(widths.map((w, i) => [i, { cellWidth: w }]))
       : undefined;
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       head: [head],
       body: rows,
