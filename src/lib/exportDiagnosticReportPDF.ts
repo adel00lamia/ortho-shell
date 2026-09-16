@@ -36,6 +36,8 @@ const T = {
     symptoms: 'Symptômes retenus',
     kpis: 'Indicateurs métiers fournis',
     evidence: '2. Preuves utilisées',
+    evidenceItem: 'Preuve',
+    evidenceCount: 'Nombre',
     evidenceNone: 'Aucune preuve chiffrée n’a été enregistrée pour ce diagnostic.',
     conversations: 'Conversations analysées',
     documents: 'Documents analysés',
@@ -68,6 +70,7 @@ const T = {
     aCost: 'Coût estimé',
     aImpact: 'Impact attendu',
     toBeCosted: 'à chiffrer',
+    prio: { high: 'Haute', medium: 'Moyenne', low: 'Basse' } as Record<string, string>,
     training: 'Formation',
     nonTraining: 'Hors formation',
     measure: '6. Mesure du résultat',
@@ -105,6 +108,8 @@ const T = {
     symptoms: 'Selected symptoms',
     kpis: 'Business indicators provided',
     evidence: '2. Evidence used',
+    evidenceItem: 'Evidence',
+    evidenceCount: 'Count',
     evidenceNone: 'No quantified evidence was recorded for this diagnostic.',
     conversations: 'Conversations analysed',
     documents: 'Documents analysed',
@@ -137,6 +142,7 @@ const T = {
     aCost: 'Estimated cost',
     aImpact: 'Expected impact',
     toBeCosted: 'to be costed',
+    prio: { high: 'High', medium: 'Medium', low: 'Low' } as Record<string, string>,
     training: 'Training',
     nonTraining: 'Non-training',
     measure: '6. Measuring the result',
@@ -160,7 +166,7 @@ const T = {
     of: 'of',
     footer: 'Qimatak — internal working document',
   },
-} as const;
+};
 
 const NAVY: [number, number, number] = [17, 24, 39];
 const ACCENT: [number, number, number] = [37, 99, 235];
@@ -185,7 +191,7 @@ export interface DiagnosticReportInput {
 }
 
 const fmtMad = (n?: number | null, lang: Lang = 'fr') =>
-  new Intl.NumberFormat(lang === 'fr' ? 'fr-MA' : 'en-MA', { maximumFractionDigits: 0 }).format(
+  new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { maximumFractionDigits: 0 }).format(
     Number(n ?? 0)
   ) + ' MAD';
 
@@ -265,6 +271,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
       styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 2.2, textColor: NAVY, lineColor: [220, 222, 228], lineWidth: 0.1, overflow: 'linebreak' },
       headStyles: { fillColor: NAVY, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
       alternateRowStyles: { fillColor: [250, 250, 252] },
+      rowPageBreak: 'avoid',
       columnStyles,
     });
     y = (doc.lastAutoTable?.finalY ?? y) + 7;
@@ -348,7 +355,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
     .map(([key, label]) => [label, Number(src[key] ?? 0)])
     .filter((row) => Number(row[1]) > 0);
   if (evidenceRows.length) {
-    table([t.evidence, ''], evidenceRows, [CONTENT_W - 30, 30]);
+    table([t.evidenceItem, t.evidenceCount], evidenceRows, [CONTENT_W - 30, 30]);
   } else {
     body(t.evidenceNone, { muted: true, italic: true });
   }
@@ -406,7 +413,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
   if (factors.length) {
     body(`${t.factors}:`, { muted: true, size: 9 });
     bullets(
-      factors.map((f) => `${f.direction === 'up' ? '+' : '−'} ${language === 'fr' ? f.fr : f.en}`)
+      factors.map((f) => `${f.direction === 'up' ? '+' : '-'} ${language === 'fr' ? f.fr : f.en}`)
     );
   }
   if (d.ai_verdict) body(`${t.verdict}: ${d.ai_verdict}`);
@@ -431,7 +438,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
         a.title + (a.description ? `\n${a.description}` : ''),
         a.is_training || a.action_type === 'training' ? t.training : t.nonTraining,
         [a.target_population, a.headcount ? `(${a.headcount})` : null].filter(Boolean).join(' ') || '—',
-        a.priority ?? '—',
+        t.prio[a.priority ?? ''] ?? a.priority ?? '—',
         Number(a.estimated_cost_mad ?? 0) > 0 ? fmtMad(a.estimated_cost_mad, language) : t.toBeCosted,
         a.expected_impact ?? '—',
       ]),
