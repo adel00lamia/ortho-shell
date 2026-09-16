@@ -107,6 +107,24 @@ export default function RootCauseDiagnostic() {
   const updateAction = useUpdateAction(selectedId);
   const upsertMeasurement = useUpsertMeasurement(selectedId);
   const deleteMeasurement = useDeleteMeasurement(selectedId);
+  const { context: companyContext } = useCompanyProfile();
+
+  /** Council-ready report: only what this diagnostic actually contains. */
+  const handleExportReport = () => {
+    if (!selected) return;
+    try {
+      downloadDiagnosticReportPDF({
+        diagnostic: selected,
+        actions: detail?.actions ?? [],
+        measurements: detail?.measurements ?? [],
+        companyName: companyContext?.company?.name ?? null,
+        language: lang,
+      });
+      toast.success(fr ? 'Rapport de diagnostic généré' : 'Diagnostic report generated');
+    } catch {
+      toast.error(fr ? 'Impossible de générer le rapport' : 'Could not generate the report');
+    }
+  };
 
   /** Cost of the Qimatak plan = sum of the costed recommended actions. */
   const planCost = useMemo(() => {
