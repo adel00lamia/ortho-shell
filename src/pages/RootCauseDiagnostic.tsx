@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Activity, ArrowRight, Brain, ClipboardList, FileSearch, Gauge, Loader2, MessagesSquare,
+  Activity, ArrowRight, Brain, ClipboardList, FileDown, FileSearch, Gauge, Loader2, MessagesSquare,
   Plus, Radio, Sparkles, Target, Trash2, TrendingDown, Users, Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ import { CapabilityCheckPanel } from '@/components/diagnostic/CapabilityCheckPan
 import { CauseBreakdownChart, CAUSE_LABELS } from '@/components/diagnostic/CauseBreakdownChart';
 import { ImpactTracker } from '@/components/diagnostic/ImpactTracker';
 import { LEGACY_CAUSE_MAP, CAUSE_KEYS, type CauseKey } from '@/lib/rootCauseModel';
+import { downloadDiagnosticReportPDF } from '@/lib/exportDiagnosticReportPDF';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import {
   useDeleteDiagnostic, useDiagnosticDetail, useDiagnostics, useRunDiagnostic,
   useDeleteMeasurement, useUpdateAction, useUpsertMeasurement, type DiagnosticRow,
@@ -105,6 +107,24 @@ export default function RootCauseDiagnostic() {
   const updateAction = useUpdateAction(selectedId);
   const upsertMeasurement = useUpsertMeasurement(selectedId);
   const deleteMeasurement = useDeleteMeasurement(selectedId);
+  const { context: companyContext } = useCompanyProfile();
+
+  /** Council-ready report: only what this diagnostic actually contains. */
+  const handleExportReport = () => {
+    if (!selected) return;
+    try {
+      downloadDiagnosticReportPDF({
+        diagnostic: selected,
+        actions: detail?.actions ?? [],
+        measurements: detail?.measurements ?? [],
+        companyName: companyContext?.company?.name ?? null,
+        language: lang,
+      });
+      toast.success(fr ? 'Rapport de diagnostic généré' : 'Diagnostic report generated');
+    } catch {
+      toast.error(fr ? 'Impossible de générer le rapport' : 'Could not generate the report');
+    }
+  };
 
   /** Cost of the Qimatak plan = sum of the costed recommended actions. */
   const planCost = useMemo(() => {
@@ -426,6 +446,18 @@ export default function RootCauseDiagnostic() {
             </CardContent></Card>
           ) : (
             <>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">
+                  {fr
+                    ? 'Rapport de diagnostic : document en français à présenter en comité de direction et à joindre à un dossier de financement.'
+                    : 'Diagnostic report: a document to present to the leadership committee and to attach to a funding application.'}
+                </p>
+                <Button size="sm" variant="outline" onClick={handleExportReport}>
+                  <FileDown className="mr-1.5 h-4 w-4" />
+                  {fr ? 'Télécharger le rapport PDF' : 'Download the PDF report'}
+                </Button>
+              </div>
+
               <div className="grid gap-4 lg:grid-cols-3">
                 <Card className="lg:col-span-1">
                   <CardHeader>
