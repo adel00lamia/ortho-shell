@@ -193,7 +193,7 @@ export interface DiagnosticReportInput {
 const fmtMad = (n?: number | null, lang: Lang = 'fr') =>
   new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { maximumFractionDigits: 0 }).format(
     Number(n ?? 0)
-  ) + ' MAD';
+  ).replace(/[\u202f\u00a0]/g, ' ') + ' MAD';
 
 const fmtDate = (iso?: string | null, lang: Lang = 'fr') =>
   iso ? new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-MA' : 'en-GB') : '—';
@@ -212,7 +212,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
   };
 
   const heading = (text: string) => {
-    ensure(16);
+    ensure(30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(...NAVY);
@@ -442,7 +442,7 @@ export function generateDiagnosticReportPDF(input: DiagnosticReportInput): jsPDF
         Number(a.estimated_cost_mad ?? 0) > 0 ? fmtMad(a.estimated_cost_mad, language) : t.toBeCosted,
         a.expected_impact ?? '—',
       ]),
-      [48, 20, 26, 16, 24, CONTENT_W - 134]
+      [44, 22, 25, 20, 24, CONTENT_W - 135]
     );
   }
 
