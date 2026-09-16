@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Activity, ArrowRight, Brain, ClipboardList, FileSearch, Gauge, Loader2, MessagesSquare,
+  Activity, ArrowRight, Brain, ClipboardList, FileDown, FileSearch, Gauge, Loader2, MessagesSquare,
   Plus, Radio, Sparkles, Target, Trash2, TrendingDown, Users, Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ import { CapabilityCheckPanel } from '@/components/diagnostic/CapabilityCheckPan
 import { CauseBreakdownChart, CAUSE_LABELS } from '@/components/diagnostic/CauseBreakdownChart';
 import { ImpactTracker } from '@/components/diagnostic/ImpactTracker';
 import { LEGACY_CAUSE_MAP, CAUSE_KEYS, type CauseKey } from '@/lib/rootCauseModel';
+import { downloadDiagnosticReportPDF } from '@/lib/exportDiagnosticReportPDF';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import {
   useDeleteDiagnostic, useDiagnosticDetail, useDiagnostics, useRunDiagnostic,
   useDeleteMeasurement, useUpdateAction, useUpsertMeasurement, type DiagnosticRow,
