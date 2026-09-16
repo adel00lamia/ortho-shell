@@ -446,6 +446,18 @@ export default function RootCauseDiagnostic() {
             </CardContent></Card>
           ) : (
             <>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">
+                  {fr
+                    ? 'Rapport de diagnostic : document en français à présenter en comité de direction et à joindre à un dossier de financement.'
+                    : 'Diagnostic report: a document to present to the leadership committee and to attach to a funding application.'}
+                </p>
+                <Button size="sm" variant="outline" onClick={handleExportReport}>
+                  <FileDown className="mr-1.5 h-4 w-4" />
+                  {fr ? 'Télécharger le rapport PDF' : 'Download the PDF report'}
+                </Button>
+              </div>
+
               <div className="grid gap-4 lg:grid-cols-3">
                 <Card className="lg:col-span-1">
                   <CardHeader>
