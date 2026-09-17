@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Stethoscope, ClipboardCheck, Target, BookOpen, TrendingUp, UserCheck,
   Plus, Check, Trash2, Loader2,
