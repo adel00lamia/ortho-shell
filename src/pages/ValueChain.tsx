@@ -306,13 +306,8 @@ export default function ValueChain() {
                   ? 'Prenez en charge un écart ci-dessus, ou partez d’un diagnostic de cause racine.'
                   : 'Take on a gap above, or start from a root-cause diagnostic.'
               }
-              action={
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/workflow/assess/root-cause">
-                    {fr ? 'Ouvrir un diagnostic' : 'Open a diagnostic'}
-                  </Link>
-                </Button>
-              }
+              actionLabel={fr ? 'Ouvrir un diagnostic' : 'Open a diagnostic'}
+              onAction={() => navigate('/workflow/assess/root-cause')}
             />
           ) : (
             <div className="overflow-x-auto">
