@@ -51,6 +51,7 @@ const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
 const StudentHub = lazy(() => import("./pages/StudentHub"));
 const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
 const EvidenceHub = lazy(() => import("./pages/EvidenceHub"));
+const ValueChain = lazy(() => import("./pages/ValueChain"));
 
 const AiHrDiagnostic = lazy(() => import("./pages/AiHrDiagnostic"));
 const AiHrWorkshops = lazy(() => import("./pages/AiHrWorkshops"));
@@ -180,6 +181,9 @@ const App = () => (
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
               <Route path="/workflow/assess/skills" element={<ProtectedLayout featureName="Skills & Gaps"><SkillsGaps /></ProtectedLayout>} />
               <Route path="/workflow/assess/report" element={<ProtectedLayout featureName="360° Report"><AssessmentReportPage /></ProtectedLayout>} />
+
+              {/* Value chain spine: gap → lever → plan → internal training → updated level */}
+              <Route path="/workflow/chain" element={<ProtectedLayout featureName="Value Chain"><ValueChain /></ProtectedLayout>} />
               {/* Legacy assess routes */}
               <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/root-cause" replace />} />
               <Route path="/workflow/assess/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />

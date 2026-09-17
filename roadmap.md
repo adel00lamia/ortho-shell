@@ -1,14 +1,27 @@
 # Roadmap
 
-## Done
-- [x] Secure `diagnostic_participants` (no anonymous read of PII / Realtime leak)
-- [x] Publish the app so participants can take the AI × HR diagnostic publicly
-- [x] Participant portal at `/portail` (personal access code)
-  - [x] Re-access a past diagnostic result
-  - [x] KPI tracking: diagnostic-suggested + custom, dated readings, trend badges
-  - [x] Recommended module tracking (à démarrer / en cours / terminé)
-  - [x] Anonymous cohort comparison (min. 3 participants per session)
+## Vision
+SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin → assessment → plan de formation IA → exécution (formation interne d'abord) → carrière / upskilling-reskilling → mesure d'impact. Le diagnostic est le portillon de la chaîne, pas le produit entier.
 
-## Next ideas
-- Locale switch (AR/EN) for the portal
-- Trainer view of aggregated portal KPI progress after a workshop
+## Done
+- [x] Sécurisation des données participants (Pulse, portail, documents CSF)
+- [x] Pulse terrain public + ateliers + portail participant
+- [x] Diagnostic cause racine (7 causes, Training Fit Score, carte de décision)
+- [x] Rapport de diagnostic PDF FR/EN
+- [x] Page tarifs FR « sur devis » + estimateur du plafond récupérable
+- [x] Rapport d'architecture / technique / cahier des charges
+- [x] Colonne vertébrale de la chaîne : table `development_items` + page « Chaîne de valeur » (/workflow/chain) reliant écart → levier → plan → formation interne → niveau mis à jour sur la personne
+- [x] Formation interne remise en navigation (Studio de modules, Certificats)
+
+## Next
+- [ ] Alimenter la chaîne depuis le diagnostic de cause racine (créer les lignes de développement à partir des actions formation)
+- [ ] Relier une ligne de développement à un module interne précis (et non seulement au plan)
+- [ ] Vue carrière / succession alimentée par les niveaux réellement acquis
+- [ ] Dossier CSF/OFPPT complet
+- [ ] Annuaire de prestataires rattaché aux actions du plan (marketplace seulement après demande prouvée)
+- [ ] 3 études de cas chiffrées dans un même secteur
+- [ ] Espace partenaire marque blanche
+
+## Bloqué (action utilisateur)
+- [ ] Activer la protection contre les mots de passe compromis (tableau de bord Supabase)
+- [ ] Fournir un contact réel (email / téléphone) pour les boutons « Demander un devis »

@@ -13,6 +13,7 @@ import {
   Stethoscope,
   Sparkles,
   ClipboardList,
+  Workflow,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -139,8 +140,16 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       {
         titleKey: 'capabilities',
         items: [
+          { path: '/workflow/chain', labelKey: 'valueChain', icon: Workflow },
           { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },
           { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
+        ],
+      },
+      {
+        titleKey: 'internalTraining',
+        items: [
+          { path: '/workflow/execute/modules', labelKey: 'moduleStudio', icon: BookOpen },
+          { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },
         ],
       },
       {
@@ -196,6 +205,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       evidence: language === 'fr' ? 'Preuves' : 'Evidence',
       actionPlans: language === 'fr' ? 'Plans d’action' : 'Action plans',
       capabilities: language === 'fr' ? 'Compétences' : 'Capabilities',
+      internalTraining: language === 'fr' ? 'Formation interne' : 'Internal training',
       impact: language === 'fr' ? 'Impact' : 'Impact',
       funding: language === 'fr' ? 'Financement' : 'Funding',
     };

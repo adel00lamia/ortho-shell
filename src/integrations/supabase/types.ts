@@ -249,6 +249,120 @@ export type Database = {
           },
         ]
       }
+      development_items: {
+        Row: {
+          achieved_level: number | null
+          action_id: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          current_level: number | null
+          department: string | null
+          employee_email: string | null
+          employee_name: string
+          id: string
+          lever: string
+          notes: string | null
+          position_title: string | null
+          skill_id: string | null
+          skill_name: string
+          source_id: string | null
+          source_type: string
+          status: string
+          target_level: number | null
+          training_module_id: string | null
+          training_plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          achieved_level?: number | null
+          action_id?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_level?: number | null
+          department?: string | null
+          employee_email?: string | null
+          employee_name: string
+          id?: string
+          lever?: string
+          notes?: string | null
+          position_title?: string | null
+          skill_id?: string | null
+          skill_name: string
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          target_level?: number | null
+          training_module_id?: string | null
+          training_plan_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          achieved_level?: number | null
+          action_id?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_level?: number | null
+          department?: string | null
+          employee_email?: string | null
+          employee_name?: string
+          id?: string
+          lever?: string
+          notes?: string | null
+          position_title?: string | null
+          skill_id?: string | null
+          skill_name?: string
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          target_level?: number | null
+          training_module_id?: string | null
+          training_plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_items_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "root_cause_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_items_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_items_training_module_id_fkey"
+            columns: ["training_module_id"]
+            isOneToOne: false
+            referencedRelation: "training_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_items_training_plan_id_fkey"
+            columns: ["training_plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostic_impact_measurements: {
         Row: {
           action_id: string | null
