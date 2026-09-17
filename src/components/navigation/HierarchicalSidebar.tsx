@@ -139,8 +139,16 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       {
         titleKey: 'capabilities',
         items: [
+          { path: '/workflow/chain', labelKey: 'valueChain', icon: Workflow },
           { path: '/workflow/assess/skills', labelKey: 'skillsGaps', icon: ClipboardCheck },
           { path: '/workflow/assess/workforce', labelKey: 'workforceOrg', icon: Users },
+        ],
+      },
+      {
+        titleKey: 'internalTraining',
+        items: [
+          { path: '/workflow/execute/modules', labelKey: 'moduleStudio', icon: BookOpen },
+          { path: '/workflow/track/certificates', labelKey: 'certificates', icon: Award },
         ],
       },
       {
