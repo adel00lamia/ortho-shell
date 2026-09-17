@@ -48,6 +48,7 @@ export const fr: Translations = {
     workforceOrg: 'Effectifs & Org',
     performanceReview: 'Évaluation de performance',
     skillsGaps: 'Compétences & Écarts',
+    valueChain: 'Chaîne de valeur',
     assessmentReport: 'Rapport 360°',
     skillsDiagnostic: 'Diagnostic des compétences',
     industryBenchmark: 'Benchmark sectoriel',

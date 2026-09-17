@@ -48,6 +48,7 @@ export const en = {
     workforceOrg: 'Workforce & Org',
     performanceReview: 'Performance Review',
     skillsGaps: 'Skills & Gaps',
+    valueChain: 'Value chain',
     assessmentReport: '360° Report',
     skillsDiagnostic: 'Skills Diagnostic',
     industryBenchmark: 'Industry Benchmark',
