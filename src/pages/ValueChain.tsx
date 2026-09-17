@@ -63,6 +63,7 @@ const STAGE_ICONS: Record<DevelopmentStatus, any> = {
 };
 
 export default function ValueChain() {
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const fr = language === 'fr';
   const { companyId } = useCompanyId();
