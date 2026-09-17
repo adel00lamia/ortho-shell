@@ -66,8 +66,8 @@ export default function ValueChain() {
   const { language } = useLanguage();
   const fr = language === 'fr';
   const { companyId } = useCompanyId();
-  const { isAdmin, isHR } = useUserRole();
-  const canEdit = isAdmin || isHR;
+  const { role } = useUserRole();
+  const canEdit = role === 'admin' || role === 'hr_manager';
   const {
     items, untrackedGaps, stats, loading,
     addGaps, updateItem, completeItem, deleteItem,
