@@ -318,12 +318,12 @@ export const createPlanPDF = (
       autoTable(doc, {
         ...tableBase,
         startY: y,
-        head: [['Département', 'Effectif', 'Part de l’effectif']],
+        head: [['Département', 'Effectif', 'Part']],
         body: facts.departments.slice(0, 15).map(dept => {
           const total = facts.headcount || facts.departments.reduce((sum, d) => sum + d.headcount, 0);
           return [dept.name, String(dept.headcount), total > 0 ? `${Math.round((dept.headcount / total) * 100)} %` : 'À confirmer'];
         }),
-        columnStyles: { 1: { halign: 'right', cellWidth: 26 }, 2: { halign: 'right', cellWidth: 34 } },
+        columnStyles: { 0: { cellWidth: 100 }, 1: { halign: 'right', cellWidth: 24 }, 2: { halign: 'right', cellWidth: 24 } },
       });
       advance();
     } else {
@@ -337,7 +337,7 @@ export const createPlanPDF = (
         startY: y,
         head: [['Poste', 'Titulaires', 'Criticité']],
         body: facts.positions.map(position => [position.title, String(position.headcount), position.isCritical ? 'Poste critique' : '—']),
-        columnStyles: { 1: { halign: 'right', cellWidth: 26 }, 2: { cellWidth: 34 } },
+        columnStyles: { 0: { cellWidth: 96 }, 1: { halign: 'right', cellWidth: 24 }, 2: { cellWidth: 28 } },
       });
       advance();
     } else {
@@ -357,7 +357,7 @@ export const createPlanPDF = (
           skill.gap !== undefined ? String(skill.gap) : 'À confirmer',
           String(skill.assessedEmployees ?? 0),
         ]),
-        columnStyles: { 0: { cellWidth: 62 }, 1: { halign: 'right', cellWidth: 26 }, 2: { halign: 'right', cellWidth: 26 }, 3: { halign: 'right', cellWidth: 20 }, 4: { halign: 'right', cellWidth: 26 } },
+        columnStyles: { 0: { cellWidth: 56 }, 1: { halign: 'right', cellWidth: 24 }, 2: { halign: 'right', cellWidth: 24 }, 3: { halign: 'right', cellWidth: 18 }, 4: { halign: 'right', cellWidth: 24 } },
       });
       advance();
       const gapped = facts.skills.filter(skill => (skill.gap ?? 0) > 0).slice(0, 8);
@@ -406,7 +406,7 @@ export const createPlanPDF = (
           'Taux de référence à vérifier',
         ],
       ],
-      columnStyles: { 0: { cellWidth: 62, fontStyle: 'bold' }, 1: { cellWidth: 52 }, 2: { cellWidth: 46 } },
+      columnStyles: { 0: { cellWidth: 58, fontStyle: 'bold' }, 1: { cellWidth: 48 }, 2: { cellWidth: 42 } },
     });
     advance();
     paragraph('Les taux et plafonds ci-dessus sont des références paramétrables non vérifiées : ils doivent être confirmés auprès de l’OFPPT avant tout engagement. Aucun droit à remboursement n’est garanti par ce rapport.');
