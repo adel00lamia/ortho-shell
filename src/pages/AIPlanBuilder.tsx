@@ -72,6 +72,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { GeneratedPlan, GeneratedPlanSnapshot, PlanRequirements, PreviousPlanFile } from '@/types/trainingPlan';
 
 import { ContextualActions } from '@/components/ContextualActions';
 import { 
@@ -129,94 +130,6 @@ interface TrainingPack {
   bestFor: string[];
 }
 
-interface PreviousPlanFile {
-  name: string;
-  year: string;
-  content: string;
-}
-
-interface PlanRequirements {
-  company: string;
-  country: string;
-  industry: string;
-  companySize: string;
-  budget: number;
-  duration: number;
-  objectives: string[];
-  targetSkills: string[];
-  constraints: string[];
-  aiModel: string;
-  context: string;
-  template?: string;
-  pack?: string;
-  previousPlans?: PreviousPlanFile[];
-  customizations: {
-    deliveryMethods: string[];
-    certification: boolean;
-    mentorship: boolean;
-    gamification: boolean;
-    microlearning: boolean;
-    socialLearning: boolean;
-    videoProduction: boolean;
-    interactiveContent: boolean;
-    virtualReality: boolean;
-    mobileApp: boolean;
-  };
-}
-
-interface GeneratedPlan {
-  title: string;
-  description: string;
-  modules: any[];
-  timeline: string;
-  budget_breakdown: any;
-  kpis: any[];
-  recommendations: string[];
-  risk_assessment?: any;
-  success_metrics?: string[];
-  regulatory_framework?: {
-    country?: string;
-    governing_bodies?: string[];
-    key_regulations?: string[];
-    funding_programs?: string[];
-    mandatory_training?: string[];
-    certification_standards?: string[];
-    compliance_checklist?: string[];
-  };
-  market_research?: {
-    market_overview?: string;
-    market_size?: string;
-    growth_rate?: string;
-    key_trends?: string[];
-    competitive_landscape?: string;
-    target_audience_analysis?: string;
-    demand_drivers?: string[];
-    market_challenges?: string[];
-  };
-  swot_analysis?: {
-    strengths?: string[];
-    weaknesses?: string[];
-    opportunities?: string[];
-    threats?: string[];
-    strategic_implications?: string;
-  };
-  pestel_analysis?: {
-    political?: string[];
-    economic?: string[];
-    social?: string[];
-    technological?: string[];
-    environmental?: string[];
-    legal?: string[];
-    key_implications?: string;
-  };
-  innovation_features?: any;
-  sustainability_plan?: any;
-  executive_summary?: string;
-  implementation_roadmap?: {
-    phases?: { name: string; duration: string; activities: string[]; deliverables: string[] }[];
-  };
-}
-
 export default function AIPlanBuilder() {
   const [step, setStep] = useState(0); // Start with template selection
   const [isGenerating, setIsGenerating] = useState(false);
@@ -251,7 +164,8 @@ export default function AIPlanBuilder() {
     }
   });
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
-  const [generatedPlans, setGeneratedPlans] = useState<Array<{plan: GeneratedPlan; requirements: PlanRequirements; generatedAt: Date}>>([]);
+  const [activeSnapshot, setActiveSnapshot] = useState<GeneratedPlanSnapshot | null>(null);
+  const [generatedPlans, setGeneratedPlans] = useState<GeneratedPlanSnapshot[]>([]);
   const [researchData, setResearchData] = useState<CompanyResearchData | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [planVersions, setPlanVersions] = useState<any[]>([]);
@@ -653,7 +567,14 @@ export default function AIPlanBuilder() {
     if (config) {
       setRequirements(prev => ({
         ...prev,
-        ...config,
+        objectives: Array.isArray(config.objectives) ? config.objectives : prev.objectives,
+        targetSkills: Array.isArray(config.targetSkills) ? config.targetSkills : prev.targetSkills,
+        constraints: Array.isArray(config.constraints) ? config.constraints : prev.constraints,
+        duration: typeof config.duration === 'number' ? config.duration : prev.duration,
+        budget: typeof config.budget === 'number' ? config.budget : prev.budget,
+        context: typeof config.context === 'string' ? config.context : prev.context,
+        template: typeof config.template === 'string' ? config.template : prev.template,
+        pack: typeof config.pack === 'string' ? config.pack : prev.pack,
         customizations: { ...prev.customizations, ...(config.customizations || {}) }
       }));
       toast({ title: 'Template Loaded', description: `Configuration from "${template.name}" applied.` });
@@ -745,16 +666,23 @@ export default function AIPlanBuilder() {
 
 
 
+      const generatedAt = new Date();
+      const snapshotRequirements: PlanRequirements = {
+        ...safeRequirements,
+        objectives: [...safeRequirements.objectives],
+        targetSkills: [...safeRequirements.targetSkills],
+        constraints: [...safeRequirements.constraints],
+        previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles.map(plan => ({ ...plan })) : undefined,
+        customizations: { ...safeRequirements.customizations, deliveryMethods: [...safeRequirements.customizations.deliveryMethods] },
+      };
+      const snapshot: GeneratedPlanSnapshot = { plan: data.plan, requirements: snapshotRequirements, generatedAt };
+
       setProgress(100);
       
       // Store previous plan for comparison
-      if (generatedPlan) {
-        setGeneratedPlans(prev => [...prev, { plan: generatedPlan, requirements: { ...requirements }, generatedAt: new Date() }]);
-      }
-      
       setGeneratedPlan(data.plan);
-      // Also store the new plan
-      setGeneratedPlans(prev => [...prev, { plan: data.plan, requirements: { ...requirements }, generatedAt: new Date() }]);
+      setActiveSnapshot(snapshot);
+      setGeneratedPlans(prev => [...prev, snapshot]);
       setStep(5);
       
       toast({
@@ -1147,9 +1075,9 @@ export default function AIPlanBuilder() {
                   setResearchData(data);
                   setRequirements(prev => ({
                     ...prev,
-                    company: data.company.name,
-                    industry: data.company.industry,
-                    companySize: data.company.companySize,
+                    company: prev.company.trim() || data.company.name,
+                    industry: prev.industry || data.company.industry,
+                    companySize: prev.companySize || data.company.companySize,
                     objectives: [...new Set([...prev.objectives, ...data.recommendations.suggestedObjectives])],
                     targetSkills: [...new Set([...prev.targetSkills, ...data.recommendations.prioritySkills])],
                     budget: parseInt(data.recommendations.suggestedBudget.replace(/[^\d]/g, '')) || prev.budget,
@@ -1817,7 +1745,11 @@ export default function AIPlanBuilder() {
                 <div className="flex flex-wrap gap-2 justify-end">
                   <Button 
                     variant="outline" 
-                    onClick={() => exportPlanToPDF(generatedPlan, requirements)}
+                    onClick={() => {
+                      const snapshot = activeSnapshot;
+                      if (!snapshot) return;
+                      exportPlanToPDF(snapshot.plan, snapshot.requirements, snapshot.generatedAt);
+                    }}
                   >
                     <FileDown className="h-4 w-4 mr-2" />
                     Export PDF
@@ -2447,11 +2379,14 @@ export default function AIPlanBuilder() {
                       <PlanComparison 
                         plans={generatedPlans}
                         onSelectPlan={(index) => {
-                          setGeneratedPlan(generatedPlans[index].plan);
-                          setRequirements(generatedPlans[index].requirements);
+                          const snapshot = generatedPlans[index];
+                          if (!snapshot) return;
+                          setGeneratedPlan(snapshot.plan);
+                          setActiveSnapshot(snapshot);
+                          setRequirements(snapshot.requirements);
                           toast({
                             title: "Plan Selected",
-                            description: `Now viewing: ${generatedPlans[index].plan.title}`,
+                            description: `Now viewing: ${snapshot.plan.title}`,
                           });
                         }}
                       />
