@@ -60,6 +60,26 @@ export interface TrainingModule {
   target_audience?: string;
   priority?: string;
   rationale?: string;
+  training_axis?: string;
+  observed_difficulty?: string;
+  learning_objectives?: string[];
+  content_outline?: string[];
+  support_measures?: string[];
+  workplace_transfer?: string[];
+  accountable_owner?: string;
+  provider?: string;
+  planned_period?: string;
+  group_count?: number;
+  participant_count?: number;
+}
+
+export interface TrainingAxis {
+  name: string;
+  rationale?: string;
+  observed_difficulties?: string[];
+  target_competencies?: string[];
+  operational_objectives?: string[];
+  support_measures?: string[];
 }
 
 export interface GeneratedPlan {
@@ -79,6 +99,14 @@ export interface GeneratedPlan {
     source?: string;
   }>;
   recommendations: string[];
+  training_axes?: TrainingAxis[];
+  evidence_register?: Array<{
+    evidence: string;
+    source?: string;
+    owner?: string;
+    timing?: string;
+    status?: string;
+  }>;
   report_meta?: ReportMeta;
   risk_assessment?: {
     high_risks?: string[];

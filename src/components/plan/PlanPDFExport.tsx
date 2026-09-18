@@ -285,17 +285,43 @@ export const createPlanPDF = (
     paragraph(requirements.context);
   }
 
+  if (plan.training_axes?.length) {
+    section('02B', 'Axes d’ingénierie de formation', 'Lecture structurée des difficultés, compétences, objectifs et mesures d’accompagnement.', 52);
+    plan.training_axes.forEach((axis, index) => {
+      ensureSpace(38);
+      subheading(`${String(index + 1).padStart(2, '0')} · ${safe(axis.name)}`);
+      if (axis.rationale) paragraph(axis.rationale);
+      autoTable(doc, {
+        startY: y,
+        head: [['Difficultés / constats', 'Compétences cibles', 'Objectifs opérationnels', 'Accompagnement']],
+        body: [[
+          numbered(axis.observed_difficulties).join('\n') || 'À confirmer',
+          numbered(axis.target_competencies).join('\n') || 'À confirmer',
+          numbered(axis.operational_objectives).join('\n') || 'À valider',
+          numbered(axis.support_measures).join('\n') || 'À définir',
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [...PAPER] },
+        columnStyles: { 0: { cellWidth: 42 }, 1: { cellWidth: 40 }, 2: { cellWidth: 44 }, 3: { cellWidth: 40 } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7.2, cellPadding: 3, valign: 'top', lineColor: [...LINE], overflow: 'linebreak' },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 8;
+    });
+  }
+
   if (plan.modules?.length) {
     section('03', 'Portefeuille de formation priorisé', 'Chaque action doit être validée avec son sponsor, sa population et son résultat attendu.');
     autoTable(doc, {
       startY: y,
-      head: [['#', 'Action', 'Public / niveau', 'Modalité', 'Durée', 'Budget']],
+      head: [['#', 'Action / axe', 'Public / niveau', 'Modalité', 'Période', 'Budget']],
       body: plan.modules.map((module, index) => [
         String(index + 1),
-        safe(module.title || module.name),
+        `${safe(module.title || module.name)}\n${textOr(module.training_axis, 'Axe à confirmer')}`,
         `${textOr(module.target_audience)}\n${textOr(module.certification_level)}`,
         textOr(module.delivery_method || module.type),
-        textOr(module.duration),
+        `${textOr(module.duration)}\n${textOr(module.planned_period, 'À planifier')}`,
         typeof module.estimated_cost === 'number' ? formatMoney(module.estimated_cost) : 'À chiffrer',
       ]),
       theme: 'grid',
@@ -308,13 +334,60 @@ export const createPlanPDF = (
     });
     y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
     plan.modules.forEach((module, index) => {
-      subheading(`${index + 1}. ${safe(module.title || module.name)}`);
+      ensureSpace(72);
+      subheading(`Fiche-action ${String(index + 1).padStart(2, '0')} · ${safe(module.title || module.name)}`);
+      badge(textOr(module.priority, 'PRIORITÉ À ARBITRER').toUpperCase(), 'assumption');
       paragraph(module.description);
-      if (module.skills_covered?.length) {
-        doc.setFontSize(8);
-        doc.setTextColor(...MUTED);
-        paragraph(`Compétences : ${module.skills_covered.join(', ')}`, 3);
-      }
+      autoTable(doc, {
+        startY: y,
+        head: [['Axe', 'Public', 'Modalité', 'Durée / période', 'Responsable']],
+        body: [[
+          textOr(module.training_axis),
+          textOr(module.target_audience),
+          textOr(module.delivery_method || module.type),
+          `${textOr(module.duration)}\n${textOr(module.planned_period, 'À planifier')}`,
+          textOr(module.accountable_owner),
+        ]],
+        theme: 'plain',
+        headStyles: { fillColor: [...NAVY], textColor: 255 },
+        bodyStyles: { fillColor: [...PAPER], textColor: [...INK] },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7.3, cellPadding: 2.5, overflow: 'linebreak', valign: 'top' },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 5;
+      autoTable(doc, {
+        startY: y,
+        head: [['Difficulté constatée', 'Objectifs pédagogiques', 'Contenu / séquences']],
+        body: [[
+          textOr(module.observed_difficulty),
+          numbered(module.learning_objectives).join('\n') || 'À préciser',
+          numbered(module.content_outline).join('\n') || 'À concevoir',
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [...BLUE], textColor: 255 },
+        alternateRowStyles: { fillColor: [...PAPER] },
+        columnStyles: { 0: { cellWidth: 48 }, 1: { cellWidth: 59 }, 2: { cellWidth: 59 } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7.2, cellPadding: 3, overflow: 'linebreak', valign: 'top', lineColor: [...LINE] },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Évaluation', 'Transfert en poste', 'Mesures d’accompagnement', 'Programmation']],
+        body: [[
+          numbered(module.assessment_methods).join('\n') || 'À définir',
+          numbered(module.workplace_transfer).join('\n') || 'À définir',
+          numbered(module.support_measures).join('\n') || 'À définir',
+          `Groupes : ${typeof module.group_count === 'number' ? module.group_count : 'À planifier'}\nParticipants : ${typeof module.participant_count === 'number' ? module.participant_count : 'À confirmer'}\nPrestataire : ${textOr(module.provider, 'À sélectionner')}\nCoût : ${typeof module.estimated_cost === 'number' ? formatMoney(module.estimated_cost) : 'À chiffrer'}`,
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [...NAVY], textColor: 255 },
+        alternateRowStyles: { fillColor: [...PAPER] },
+        columnStyles: { 0: { cellWidth: 39 }, 1: { cellWidth: 43 }, 2: { cellWidth: 43 }, 3: { cellWidth: 41 } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak', valign: 'top', lineColor: [...LINE] },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
     });
   }
 
@@ -403,6 +476,24 @@ export const createPlanPDF = (
       columnStyles: { 0: { cellWidth: 41, fontStyle: 'bold' }, 1: { cellWidth: 29 }, 2: { cellWidth: 32 }, 3: { cellWidth: 26 }, 4: { cellWidth: 38 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.5, cellPadding: 2.5 },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
+  }
+
+  if (plan.evidence_register?.length) {
+    section('06B', 'Dispositif de preuve et d’évaluation', 'Éléments à collecter avant, pendant et après la formation.', 48);
+    autoTable(doc, {
+      startY: y,
+      head: [['Preuve attendue', 'Source', 'Responsable', 'Moment', 'Statut']],
+      body: plan.evidence_register.map(item => [
+        safe(item.evidence), textOr(item.source), textOr(item.owner), textOr(item.timing), textOr(item.status, 'À collecter'),
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: 255 },
+      alternateRowStyles: { fillColor: [...PAPER] },
+      columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' }, 1: { cellWidth: 32 }, 2: { cellWidth: 31 }, 3: { cellWidth: 24 }, 4: { cellWidth: 24 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.3, cellPadding: 2.8, overflow: 'linebreak', valign: 'top' },
     });
     y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
   }

@@ -97,6 +97,10 @@ DATA INTEGRITY RULES:
 - If budget is zero, every cost must be omitted or marked "À chiffrer"; never fabricate a cost. If budget is provided, allocations must total that exact budget.
 - CSF, GIAC and OFPPT are reference frameworks to verify. Never promise eligibility or reimbursement.
 - Distinguish supplied facts, arithmetic calculations, and assumptions requiring validation.
+- Build a traceable engineering chain: observed difficulty -> target competency -> operational objective -> training action -> support measure -> workplace evidence.
+- Group actions into company-specific training axes. Do not default to generic axes when the supplied context indicates better ones.
+- For every module, provide concrete learning objectives, a content outline, assessment methods, support measures and workplace-transfer activities.
+- Never invent provider names, exact delivery dates, group counts or participant counts. Use "À sélectionner", "À planifier" or omit numeric fields when absent.
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
@@ -140,6 +144,16 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "legal": ["Legal/regulatory requirement for training compliance"],
       "key_implications": "Summary of how PESTEL factors shape the training plan"
     },
+    "training_axes": [
+      {
+        "name": "Coherent training axis grounded in the supplied context",
+        "rationale": "Why this axis matters operationally",
+        "observed_difficulties": ["Difficulty supported by supplied information, otherwise À confirmer"],
+        "target_competencies": ["Competency to develop"],
+        "operational_objectives": ["Observable operational objective without invented improvement percentage"],
+        "support_measures": ["Managerial, process, tool or workplace measure required alongside training"]
+      }
+    ],
     "modules": [
       {
         "title": "Module Title",
@@ -153,7 +167,18 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "estimated_cost": 5000,
         "engagement_features": ["gamification", "social_learning", "ai_assistance"],
         "assessment_methods": ["practical", "theoretical", "peer_review"],
-        "certification_level": "basic/intermediate/advanced/expert"
+        "certification_level": "basic/intermediate/advanced/expert",
+        "training_axis": "Name of the related training axis",
+        "observed_difficulty": "The supplied difficulty or À confirmer",
+        "learning_objectives": ["Observable learning objective 1", "Observable learning objective 2"],
+        "content_outline": ["Sequence or topic 1", "Sequence or topic 2"],
+        "support_measures": ["Non-training measure needed for success"],
+        "workplace_transfer": ["Post-training workplace application activity"],
+        "accountable_owner": "Accountable role or À confirmer",
+        "provider": "À sélectionner unless explicitly supplied",
+        "planned_period": "Broad plan window or À planifier; never invent exact dates",
+        "group_count": null,
+        "participant_count": null
       }
     ],
     "budget_breakdown": {
@@ -179,6 +204,15 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       }
     ],
     "recommendations": ["Strategic recommendation with innovation focus"],
+    "evidence_register": [
+      {
+        "evidence": "Evidence required to validate need, delivery, learning or workplace transfer",
+        "source": "Supplied source or À confirmer",
+        "owner": "Accountable role or À confirmer",
+        "timing": "Before/During/After training",
+        "status": "À collecter unless explicitly supplied"
+      }
+    ],
     "risk_assessment": {
       "high_risks": ["Risk 1"],
       "medium_risks": ["Medium risk 1"],
