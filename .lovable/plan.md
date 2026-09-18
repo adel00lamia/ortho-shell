@@ -1,115 +1,26 @@
+# Réparer la génération du plan IA
 
+## Ce qui a été vérifié
 
-## Comprehensive Audit Report & Fix Plan
+J'ai appelé le service de génération directement avec un jeu de données simple : il a répondu correctement, en français, un plan complet (budget, phases, KPI). Le service n'est donc pas en panne — c'est la demande envoyée depuis l'écran qui est refusée dans certains cas.
 
-### Critical Findings
+Deux causes confirmées par lecture du code et de la liste des modèles disponibles :
 
-**1. MISSING DATABASE TABLES (breaks Skills & Gaps feature)**
-- `skill_categories`, `skills`, `employee_skills` tables do NOT exist in the database
-- `seed_default_skills` RPC function does NOT exist
-- `useSkillsTaxonomy.ts` hook references all three — every query will fail silently
-- The entire Skills & Gaps page, Gap Analysis, Employee Skill sync, and Manager Dashboard skills tab are broken
+1. **Choix du modèle** — l'écran propose 4 modèles, dont deux ne sont plus servis aujourd'hui (« GPT-5 Mini », « Gemini 2.5 Pro ») et un troisième est en fin de vie (« Gemini 2.5 Flash »). Si l'utilisateur en choisit un, la demande est rejetée et l'écran affiche seulement « Generation Failed ».
+2. **Champs durée / budget vides** — si le champ « durée » est vidé, la valeur envoyée est 0, ce que le service refuse (minimum 1 mois). Même message d'erreur générique.
 
-**2. SECURITY: Job descriptions RLS allows cross-company insertion**
-- INSERT policy on `job_descriptions` only checks `created_by = auth.uid()` but not `company_id`
-- Any authenticated user can insert JDs into another company's data
+À cela s'ajoute un problème de diagnostic : en cas d'échec, l'écran affiche toujours le même message et n'indique jamais la raison réelle (modèle indisponible, champ invalide, crédits, limite de débit).
 
-**3. SECURITY: Dual role storage (profiles.role + user_roles)**
-- `profiles.role` column exists AND `user_roles` table exists
-- Some RLS policies check `profiles.role` (training_plans, training_diagnostics, learner_module_progress, inferred_skills, job_applications)
-- Other policies use `has_role()` / `is_admin_or_hr()` which query `user_roles`
-- These can be out of sync — a user could have `admin` in `user_roles` but `employee` in `profiles.role`, or vice versa
-- This is a privilege escalation risk since `profiles` table allows self-update
+## Ce que je vais faire
 
-**4. SECURITY: Leaked password protection disabled**
-- Supabase Auth setting — users can sign up with known-breached passwords
+1. **Nettoyer la liste des modèles** : ne garder que des modèles réellement servis (rapide / équilibré / avancé), avec le modèle rapide par défaut, et aligner la liste autorisée côté serveur sur la même liste.
+2. **Empêcher une demande invalide** : durée et budget ramenés à des valeurs valides (durée 1–60 mois, budget ≥ 0), et bouton « Générer » désactivé tant qu'un champ obligatoire est vide, avec un message clair sous le champ.
+3. **Afficher la vraie raison de l'échec** : remonter le message du serveur dans l'alerte (champ invalide, modèle indisponible, crédits insuffisants, trop de demandes — réessayez dans un instant) au lieu du texte générique.
+4. **Vérifier ensuite** en générant un plan de bout en bout sur l'écran, et en relisant les journaux du service.
 
-### Moderate Findings
+## Détails techniques
 
-**5. ACCESSIBILITY: Missing DialogTitle in CommandDialog**
-- `src/components/ui/command.tsx` `CommandDialog` wraps content in `DialogContent` without a `DialogTitle`
-- Causes console errors on every command palette open
-- Fix: Add a visually hidden `DialogTitle`
-
-**6. PUBLIC PLAN TEMPLATES expose config across companies**
-- `plan_templates` SELECT policy allows `is_public = true` to be read by any user
-- `configuration` JSONB may contain sensitive business data
-
-**7. TRAINING PLANS cannot be deleted**
-- No DELETE policy on `training_plans` — users cannot remove draft plans
-
-### Implementation Plan
-
-#### Step 1: Create missing skills taxonomy tables (Migration)
-```sql
--- skill_categories table
-CREATE TABLE public.skill_categories (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  name_fr text NOT NULL,
-  name_en text NOT NULL,
-  ofppt_sector_code text,
-  icon text NOT NULL DEFAULT 'BookOpen',
-  sort_order integer NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- skills table  
-CREATE TABLE public.skills (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  category_id uuid NOT NULL REFERENCES skill_categories(id) ON DELETE CASCADE,
-  name_fr text NOT NULL,
-  name_en text NOT NULL,
-  description text,
-  max_level integer NOT NULL DEFAULT 5,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- employee_skills table
-CREATE TABLE public.employee_skills (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  employee_name text NOT NULL,
-  employee_email text,
-  skill_id uuid NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
-  current_level integer NOT NULL DEFAULT 1,
-  target_level integer NOT NULL DEFAULT 3,
-  assessed_at timestamptz NOT NULL DEFAULT now(),
-  notes text,
-  UNIQUE(company_id, employee_name, skill_id)
-);
-
--- RLS for all three tables
--- seed_default_skills RPC function
-```
-
-#### Step 2: Fix job_descriptions INSERT RLS policy
-- Add `company_id = get_user_company_id(auth.uid())` to the WITH CHECK
-
-#### Step 3: Consolidate role checks
-- Update RLS policies that reference `profiles.role` to use `has_role()` / `is_admin_or_hr()` instead
-- Affected tables: `training_plans`, `training_diagnostics`, `learner_module_progress`, `inferred_skills`, `job_applications`
-
-#### Step 4: Fix CommandDialog accessibility
-- Add `<DialogTitle className="sr-only">Command palette</DialogTitle>` inside `CommandDialog` in `command.tsx`
-
-#### Step 5: Add DELETE policy for training_plans
-- Allow HR/admin to delete plans in their company
-
-### Files Changed
-- `supabase/migrations/` — new migration for tables, RLS, RPC, policy fixes
-- `src/components/ui/command.tsx` — add hidden DialogTitle
-
-### Summary Table
-
-| # | Severity | Issue | Status |
-|---|----------|-------|--------|
-| 1 | CRITICAL | 3 missing DB tables break Skills feature | Fix |
-| 2 | ERROR | JD cross-company insertion | Fix |
-| 3 | ERROR | Dual role storage inconsistency | Fix |
-| 4 | WARN | Leaked password protection | Manual toggle in Supabase dashboard |
-| 5 | WARN | Missing DialogTitle accessibility | Fix |
-| 6 | WARN | Public plan templates data leak | Fix |
-| 7 | INFO | No DELETE on training_plans | Fix |
-
+- `src/data/diagnosticConstants.ts` → `AI_MODELS` : remplacer par des ids non dépréciés issus du listing (`google/gemini-3-flash-preview`, `google/gemini-3.8-flash`, `google/gemini-3.1-pro-preview`).
+- `supabase/functions/ai-advanced-planner/index.ts` : `allowedModels` synchronisé sur cette liste, fallback inchangé.
+- `src/pages/AIPlanBuilder.tsx` : `generatePlan()` — extraire `error.message` / `data.error` de la réponse Supabase (la fonction renvoie déjà `{ error }` avec statuts 400/402/429) et l'afficher dans le toast ; clamp de `duration`/`budget` aux lignes ~1551/1561 ; garde sur le bouton de génération.
+- Vérification : `tsgo`, `vitest run`, `vite build`, puis appel réel de la fonction et lecture des logs.
