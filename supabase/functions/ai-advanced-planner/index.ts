@@ -82,19 +82,42 @@ serve(async (req) => {
       ? '\n\nCRITICAL: You MUST write ALL content in French. Every title, description, recommendation, analysis, and text field must be in French. Only the JSON keys should remain in English.'
       : '';
 
-    const systemPrompt = `You are an expert training consultant, market analyst, and strategist with deep knowledge of modern learning methodologies, industry best practices, and training ROI optimization. Create a comprehensive, actionable training plan with full market and strategic analysis.${languageInstruction}
+    const generatedAt = new Date();
+    const planEnd = new Date(generatedAt);
+    planEnd.setMonth(planEnd.getMonth() + requirements.duration);
+    const canonicalCompany = requirements.company.trim() || (language === 'fr' ? 'Entreprise à confirmer' : 'Company to confirm');
+
+    const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined training plan comparable in structure and clarity to a leading consulting firm's deliverable.${languageInstruction}
+
+DATA INTEGRITY RULES:
+- The current company is exactly "${canonicalCompany}". Never use another company name anywhere.
+- The report issue date is ${generatedAt.toISOString().slice(0, 10)}. The plan runs from ${generatedAt.toISOString().slice(0, 10)} to ${planEnd.toISOString().slice(0, 10)}.
+- Previous plans are historical evidence only. Never copy their company identity, dates, targets, claims, baselines, budgets, or market facts into the current plan.
+- Do not invent baselines, ROI, market size, growth rates, reimbursement rates, performance improvements, legal obligations, or current-state facts. Write "À confirmer" / "À mesurer" when absent.
+- If budget is zero, every cost must be omitted or marked "À chiffrer"; never fabricate a cost. If budget is provided, allocations must total that exact budget.
+- CSF, GIAC and OFPPT are reference frameworks to verify. Never promise eligibility or reimbursement.
+- Distinguish supplied facts, arithmetic calculations, and assumptions requiring validation.
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
   "plan": {
     "title": "Comprehensive Training Plan Title",
+    "report_meta": {
+      "company": "Exact current company",
+      "country": "Current country",
+      "industry": "Current industry",
+      "generated_at": "ISO date",
+      "plan_start_date": "ISO date",
+      "plan_end_date": "ISO date",
+      "data_status": "provided_and_ai_synthesized"
+    },
     "executive_summary": "A 2-3 paragraph executive summary covering the strategic rationale, key objectives, expected outcomes, and ROI justification for this training investment.",
     "description": "Detailed plan description with innovative approach",
     "timeline": "Detailed timeline breakdown with phases and milestones",
     "market_research": {
       "market_overview": "Comprehensive overview of the training market in this industry and country",
-      "market_size": "Estimated market size for training in this sector",
-      "growth_rate": "Annual growth rate of the training market",
+      "market_size": "À confirmer unless explicitly supplied with a dated source",
+      "growth_rate": "À confirmer unless explicitly supplied with a dated source",
       "key_trends": ["Trend 1 with detailed explanation", "Trend 2"],
       "competitive_landscape": "Analysis of training providers, competitors, and market positioning",
       "target_audience_analysis": "Detailed profile of the target learners, their needs, learning styles, and motivations",
@@ -147,10 +170,12 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       {
         "name": "KPI Name",
         "description": "How to measure this KPI with specific metrics",
-        "target": "Specific target value with timeline",
+        "target": "Target supplied by the user, otherwise À valider",
         "measurement_frequency": "Monthly/Quarterly/Bi-annual",
-        "baseline": "Current state measurement",
-        "improvement_expected": "Expected improvement percentage"
+        "baseline": "Supplied baseline, otherwise À mesurer",
+        "improvement_expected": "Supplied improvement, otherwise À valider",
+        "source": "Source system or À confirmer",
+        "owner": "Accountable role or À confirmer"
       }
     ],
     "recommendations": ["Strategic recommendation with innovation focus"],
@@ -167,7 +192,8 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
           "name": "Phase 1: Foundation",
           "duration": "Month 1-2",
           "activities": ["Activity 1", "Activity 2"],
-          "deliverables": ["Deliverable 1", "Deliverable 2"]
+          "deliverables": ["Deliverable 1", "Deliverable 2"],
+          "owner": "Accountable role"
         }
       ]
     },
@@ -200,12 +226,14 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
 
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
-Company: ${requirements.company || 'Not specified'}
+Company: ${canonicalCompany}
 Country/Market: ${requirements.country || 'Not specified'}
 Industry: ${requirements.industry}
 Company Size: ${requirements.companySize}
-Budget: ${requirements.budget} ${requirements.country === 'Morocco' || !requirements.country ? 'MAD' : requirements.country === 'United States' ? 'USD' : requirements.country === 'United Kingdom' ? 'GBP' : ['France','Germany','Spain','Italy','Netherlands','Belgium','Portugal','Austria','Ireland'].includes(requirements.country) ? 'EUR' : 'local currency'}
+Budget ceiling: ${requirements.budget > 0 ? `${requirements.budget} ${requirements.country === 'Morocco' || !requirements.country ? 'MAD' : requirements.country === 'United States' ? 'USD' : requirements.country === 'United Kingdom' ? 'GBP' : ['France','Germany','Spain','Italy','Netherlands','Belgium','Portugal','Austria','Ireland'].includes(requirements.country) ? 'EUR' : 'local currency'}` : 'Not supplied — all costs must be À chiffrer'}
 Duration: ${requirements.duration} months
+Report issue date: ${generatedAt.toISOString().slice(0, 10)}
+Plan period: ${generatedAt.toISOString().slice(0, 10)} to ${planEnd.toISOString().slice(0, 10)}
 
 IMPORTANT: Tailor this plan to the ${requirements.country || 'global'} market context. Consider local labor regulations, training standards, available certifications, local training providers, language considerations, and regional industry benchmarks for ${requirements.country || 'the target market'}.
 
@@ -252,7 +280,7 @@ The company has provided their previous training plans below. You MUST:
 2. AVOID repeating the same training topics, modules, or skills already addressed
 3. Build upon previous training — advance to higher levels or complementary skills
 4. Explicitly mention in your recommendations what was already covered and what is new
-5. In the executive summary, reference continuity with previous plans
+5. In the executive summary, reference continuity without importing any old identity, date, target or unverified claim
 
 ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.content}\n--- END ---`).join('\n\n')}
 ` : ''}`;
@@ -266,7 +294,7 @@ ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}
       'google/gemini-3.1-pro-preview',
     ];
     const selectedModel = allowedModels.includes(requirements.aiModel || '')
-      ? requirements.aiModel!
+      ? requirements.aiModel
       : 'google/gemini-3-flash-preview';
 
 
@@ -351,7 +379,31 @@ ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}
       };
     }
 
-    return new Response(JSON.stringify(planData), {
+    const rawPlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    const normalizedPlan = {
+      ...rawPlan,
+      title: language === 'fr'
+        ? `Plan de développement des compétences — ${canonicalCompany}`
+        : `Skills Development Plan — ${canonicalCompany}`,
+      budget_breakdown: requirements.budget > 0 ? (rawPlan.budget_breakdown || {}) : {},
+      modules: Array.isArray(rawPlan.modules)
+        ? rawPlan.modules.map((module: Record<string, unknown>) => ({
+            ...module,
+            estimated_cost: requirements.budget > 0 && typeof module.estimated_cost === 'number' ? module.estimated_cost : undefined,
+          }))
+        : [],
+      report_meta: {
+        company: canonicalCompany,
+        country: requirements.country || (language === 'fr' ? 'À confirmer' : 'To confirm'),
+        industry: requirements.industry || (language === 'fr' ? 'À confirmer' : 'To confirm'),
+        generated_at: generatedAt.toISOString(),
+        plan_start_date: generatedAt.toISOString(),
+        plan_end_date: planEnd.toISOString(),
+        data_status: 'provided_and_ai_synthesized',
+      },
+    };
+
+    return new Response(JSON.stringify({ plan: normalizedPlan }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
