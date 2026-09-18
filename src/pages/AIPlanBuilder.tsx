@@ -750,11 +750,16 @@ export default function AIPlanBuilder() {
       });
     } catch (error) {
       console.error('Plan generation error:', error);
+      const raw = error instanceof Error ? error.message : String(error);
+      const fallback = language === 'fr'
+        ? "Impossible de générer le plan. Vérifiez la durée, le budget et le modèle sélectionné, puis réessayez."
+        : 'Could not generate the training plan. Check duration, budget and the selected model, then try again.';
       toast({
-        title: "Generation Failed",
-        description: "Could not generate the training plan. Please try again.",
+        title: language === 'fr' ? 'Échec de la génération' : 'Generation Failed',
+        description: raw && raw !== 'Failed to fetch' ? raw : fallback,
         variant: "destructive",
       });
+
     } finally {
       setIsGenerating(false);
       setProgress(0);
