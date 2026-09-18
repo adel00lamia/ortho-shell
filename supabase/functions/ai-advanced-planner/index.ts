@@ -139,6 +139,7 @@ serve(async (req) => {
     const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined training plan comparable in structure and clarity to a leading consulting firm's deliverable.${languageInstruction}
 
 DATA INTEGRITY RULES:
+- A "VERIFIED COMPANY DATA" block may be supplied below. It is the only factual source for headcount, departments, positions, current/target skill levels, training budget, payroll and CSF rates. Reuse those figures exactly; never substitute estimates or industry averages, and never invent a figure the block does not contain.
 - The current company is exactly "${canonicalCompany}". Never use another company name anywhere.
 - The report issue date is ${generatedAt.toISOString().slice(0, 10)}. The plan runs from ${generatedAt.toISOString().slice(0, 10)} to ${planEnd.toISOString().slice(0, 10)}.
 - Previous plans are historical evidence only. Never copy their company identity, dates, targets, claims, baselines, budgets, or market facts into the current plan.
