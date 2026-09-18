@@ -14,6 +14,7 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Formation interne remise en navigation (Studio de modules, Certificats)
 - [x] Rapport du plan de formation niveau comité de direction : identité et période figées, synthèse, portefeuille, calendrier, budget contrôlé, KPI, gouvernance, risques et cadre CSF/OFPPT
 - [x] Enrichissement visuel du rapport : indicateurs de synthèse, chronologie, graphe budgétaire, matrice SWOT et tableau/empreinte PESTEL
+- [x] Ingénierie détaillée du rapport : axes, chaîne constat-compétence-objectif, fiches-actions, programmation et registre de preuves inspirés du rapport de référence
 
 ## Next
 - [ ] Alimenter la chaîne depuis le diagnostic de cause racine (créer les lignes de développement à partir des actions formation)
