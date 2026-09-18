@@ -710,10 +710,16 @@ export default function AIPlanBuilder() {
     setProgress(10);
 
     try {
+      const safeRequirements = {
+        ...requirements,
+        duration: Math.min(60, Math.max(1, Number(requirements.duration) || 12)),
+        budget: Math.max(0, Number(requirements.budget) || 0),
+      };
+
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
         body: {
           requirements: {
-            ...requirements,
+            ...safeRequirements,
             previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles : undefined
           },
           userId: user?.id || 'anonymous',
@@ -721,7 +727,23 @@ export default function AIPlanBuilder() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Non-2xx responses hide the server message inside error.context — read it.
+        let serverMessage = '';
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx && typeof ctx.text === 'function') {
+            const body = await ctx.text();
+            const parsedBody = body ? JSON.parse(body) : null;
+            serverMessage = parsedBody?.error || '';
+          }
+        } catch { /* keep generic message */ }
+        throw new Error(serverMessage || error.message);
+      }
+      if (data?.error) throw new Error(data.error);
+      if (!data?.plan) throw new Error(language === 'fr' ? 'Réponse incomplète du service de génération.' : 'Incomplete response from the generation service.');
+
+
 
       setProgress(100);
       
@@ -741,11 +763,16 @@ export default function AIPlanBuilder() {
       });
     } catch (error) {
       console.error('Plan generation error:', error);
+      const raw = error instanceof Error ? error.message : String(error);
+      const fallback = language === 'fr'
+        ? "Impossible de générer le plan. Vérifiez la durée, le budget et le modèle sélectionné, puis réessayez."
+        : 'Could not generate the training plan. Check duration, budget and the selected model, then try again.';
       toast({
-        title: "Generation Failed",
-        description: "Could not generate the training plan. Please try again.",
+        title: language === 'fr' ? 'Échec de la génération' : 'Generation Failed',
+        description: raw && raw !== 'Failed to fetch' ? raw : fallback,
         variant: "destructive",
       });
+
     } finally {
       setIsGenerating(false);
       setProgress(0);
@@ -1548,7 +1575,10 @@ export default function AIPlanBuilder() {
                   <Input
                     type="number"
                     value={requirements.duration}
-                    onChange={(e) => setRequirements({...requirements, duration: parseInt(e.target.value) || 0})}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value);
+                      setRequirements({ ...requirements, duration: Number.isFinite(n) ? Math.min(60, Math.max(1, n)) : 1 });
+                    }}
                     min="1"
                     max="36"
                   />
@@ -1558,10 +1588,14 @@ export default function AIPlanBuilder() {
                   <Input
                     type="number"
                     value={requirements.budget}
-                    onChange={(e) => setRequirements({...requirements, budget: parseInt(e.target.value) || 0})}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value);
+                      setRequirements({ ...requirements, budget: Number.isFinite(n) ? Math.max(0, n) : 0 });
+                    }}
                     min="1000"
                     step="1000"
                   />
+
                 </div>
               </div>
             </CardContent>
