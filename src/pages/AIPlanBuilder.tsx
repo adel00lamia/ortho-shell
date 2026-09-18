@@ -637,6 +637,8 @@ export default function AIPlanBuilder() {
         ...requirements,
         duration: Math.min(60, Math.max(1, Number(requirements.duration) || 12)),
         budget: Math.max(0, Number(requirements.budget) || 0),
+        // Real company data (headcount, positions, assessed skills, budget, CSF rates).
+        companyData: factbase ?? undefined,
       };
 
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
