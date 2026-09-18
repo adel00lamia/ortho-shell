@@ -20,7 +20,7 @@ const MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juill
 
 const formatDate = (date: Date) => `${date.getDate()} ${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
 const formatMonthYear = (date: Date) => `${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
-const formatMoney = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value)} MAD`;
+const formatMoney = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value).replace(/[\u00a0\u202f]/g, ' ')} MAD`;
 const labelize = (value: string) => value.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
 const textOr = (value: unknown, fallback = 'À confirmer') => typeof value === 'string' && value.trim() ? value.trim() : fallback;
 
@@ -326,7 +326,8 @@ export const createPlanPDF = (
     const phaseWidth = (contentWidth - phaseGap * (phases.length - 1)) / phases.length;
     phases.forEach((phase, index) => {
       const x = margin + index * (phaseWidth + phaseGap);
-      doc.setFillColor(...(index % 2 === 0 ? NAVY : BLUE));
+      const phaseColor: readonly [number, number, number] = index % 2 === 0 ? NAVY : BLUE;
+      doc.setFillColor(...phaseColor);
       doc.rect(x, y, phaseWidth, 12, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(6.8);
