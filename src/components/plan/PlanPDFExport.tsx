@@ -323,7 +323,7 @@ export const createPlanPDF = (
           const total = facts.headcount || facts.departments.reduce((sum, d) => sum + d.headcount, 0);
           return [dept.name, String(dept.headcount), total > 0 ? `${Math.round((dept.headcount / total) * 100)} %` : 'À confirmer'];
         }),
-        columnStyles: { 0: { cellWidth: 100 }, 1: { halign: 'right', cellWidth: 24 }, 2: { halign: 'right', cellWidth: 24 } },
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
       });
       advance();
     } else {
@@ -337,7 +337,7 @@ export const createPlanPDF = (
         startY: y,
         head: [['Poste', 'Titulaires', 'Criticité']],
         body: facts.positions.map(position => [position.title, String(position.headcount), position.isCritical ? 'Poste critique' : '—']),
-        columnStyles: { 0: { cellWidth: 96 }, 1: { halign: 'right', cellWidth: 24 }, 2: { cellWidth: 28 } },
+        columnStyles: { 1: { halign: 'right' } },
       });
       advance();
     } else {
@@ -357,7 +357,7 @@ export const createPlanPDF = (
           skill.gap !== undefined ? String(skill.gap) : 'À confirmer',
           String(skill.assessedEmployees ?? 0),
         ]),
-        columnStyles: { 0: { cellWidth: 56 }, 1: { halign: 'right', cellWidth: 24 }, 2: { halign: 'right', cellWidth: 24 }, 3: { halign: 'right', cellWidth: 18 }, 4: { halign: 'right', cellWidth: 24 } },
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
       });
       advance();
       const gapped = facts.skills.filter(skill => (skill.gap ?? 0) > 0).slice(0, 8);
@@ -406,7 +406,7 @@ export const createPlanPDF = (
           'Taux de référence à vérifier',
         ],
       ],
-      columnStyles: { 0: { cellWidth: 58, fontStyle: 'bold' }, 1: { cellWidth: 48 }, 2: { cellWidth: 42 } },
+      columnStyles: { 0: { fontStyle: 'bold' } },
     });
     advance();
     paragraph('Les taux et plafonds ci-dessus sont des références paramétrables non vérifiées : ils doivent être confirmés auprès de l’OFPPT avant tout engagement. Aucun droit à remboursement n’est garanti par ce rapport.');
