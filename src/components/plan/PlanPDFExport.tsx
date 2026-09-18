@@ -61,8 +61,8 @@ export const createPlanPDF = (
       y = 22;
     }
   };
-  const section = (number: string, title: string, subtitle?: string) => {
-    ensureSpace(subtitle ? 27 : 20);
+  const section = (number: string, title: string, subtitle?: string, minimumBodySpace = 32) => {
+    ensureSpace((subtitle ? 27 : 20) + minimumBodySpace);
     doc.setFillColor(...NAVY);
     doc.rect(margin, y - 4, 4, 14, 'F');
     doc.setFont('helvetica', 'bold');
@@ -93,7 +93,7 @@ export const createPlanPDF = (
     y += 7;
   };
   const paragraph = (value: unknown, indent = 0) => {
-    const lines = doc.splitTextToSize(safe(value), contentWidth - indent);
+    const lines = doc.splitTextToSize(safe(value), contentWidth - indent - 4);
     ensureSpace(lines.length * 5 + 4);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
@@ -270,7 +270,7 @@ export const createPlanPDF = (
       theme: 'grid',
       headStyles: { fillColor: [...NAVY], textColor: 255 },
       alternateRowStyles: { fillColor: [...PAPER] },
-      columnStyles: { 0: { cellWidth: 34, fontStyle: 'bold' }, 1: { cellWidth: 23 }, 2: { cellWidth: 48 }, 3: { cellWidth: 43 }, 4: { cellWidth: 24 } },
+      columnStyles: { 0: { cellWidth: 32, fontStyle: 'bold' }, 1: { cellWidth: 22 }, 2: { cellWidth: 46 }, 3: { cellWidth: 42 }, 4: { cellWidth: 24 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.2, cellPadding: 2.5, valign: 'top' },
     });
@@ -306,7 +306,7 @@ export const createPlanPDF = (
   paragraph("Les dispositifs CSF/GIAC/OFPPT sont présentés comme pistes de financement. L'éligibilité, les plafonds et les taux doivent être confirmés sur pièces auprès des organismes compétents.");
 
   if (plan.kpis?.length) {
-    section('06', 'Pilotage de la performance', 'Les baselines absentes doivent être mesurées avant le démarrage.');
+    section('06', 'Pilotage de la performance', 'Les baselines absentes doivent être mesurées avant le démarrage.', 48);
     autoTable(doc, {
       startY: y,
       head: [['Indicateur', 'Baseline', 'Cible', 'Fréquence', 'Source / responsable']],
@@ -316,14 +316,14 @@ export const createPlanPDF = (
       theme: 'grid',
       headStyles: { fillColor: [...NAVY], textColor: 255 },
       alternateRowStyles: { fillColor: [...PAPER] },
-      columnStyles: { 0: { cellWidth: 43, fontStyle: 'bold' }, 1: { cellWidth: 30 }, 2: { cellWidth: 34 }, 3: { cellWidth: 27 }, 4: { cellWidth: 38 } },
+      columnStyles: { 0: { cellWidth: 41, fontStyle: 'bold' }, 1: { cellWidth: 29 }, 2: { cellWidth: 32 }, 3: { cellWidth: 26 }, 4: { cellWidth: 38 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.5, cellPadding: 2.5 },
     });
     y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
   }
 
-  section('07', 'Gouvernance, risques et arbitrages');
+  section('07', 'Gouvernance, risques et arbitrages', undefined, 70);
   subheading('Gouvernance recommandée');
   bullets([
     'Sponsor de direction : valide les priorités, le budget et les arbitrages.',
@@ -352,6 +352,10 @@ export const createPlanPDF = (
 
   const hasAppendix = Boolean(plan.swot_analysis || plan.pestel_analysis || plan.market_research);
   if (hasAppendix) {
+    if (y > 70) {
+      doc.addPage();
+      y = 22;
+    }
     section('A', 'Annexes analytiques', 'Analyses générées par IA à confronter aux données internes et à des sources datées.');
     badge('HYPOTHÈSES À VALIDER', 'assumption');
     if (plan.swot_analysis) {
