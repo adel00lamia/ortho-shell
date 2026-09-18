@@ -767,7 +767,7 @@ export default function AIPlanBuilder() {
           ai_generated: true,
           modules: generatedPlan.modules,
           kpis: generatedPlan.kpis
-        })
+        } as any)
         .select()
         .single();
 
@@ -2280,7 +2280,7 @@ export default function AIPlanBuilder() {
                                     <h4 className="font-semibold text-sm">{item.label}</h4>
                                   </div>
                                   <p className="text-sm text-muted-foreground">
-                                    {String(generatedPlan.innovation_features[item.key as keyof typeof generatedPlan.innovation_features])}
+                                    {String(generatedPlan.innovation_features?.[item.key] ?? '')}
                                   </p>
                                 </div>
                               ))}
@@ -2314,7 +2314,7 @@ export default function AIPlanBuilder() {
                                     <h4 className="font-semibold text-sm">{item.label}</h4>
                                   </div>
                                   <p className="text-sm text-muted-foreground">
-                                    {String(generatedPlan.sustainability_plan[item.key as keyof typeof generatedPlan.sustainability_plan])}
+                                    {String(generatedPlan.sustainability_plan?.[item.key] ?? '')}
                                   </p>
                                 </div>
                               ))}

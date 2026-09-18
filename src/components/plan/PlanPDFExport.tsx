@@ -116,7 +116,7 @@ export const createPlanPDF = (
     y += 2;
   };
   const badge = (label: string, tone: 'source' | 'calculation' | 'assumption') => {
-    const colors = tone === 'source' ? GREEN : tone === 'calculation' ? NAVY : AMBER;
+    const colors: readonly [number, number, number] = tone === 'source' ? GREEN : tone === 'calculation' ? NAVY : AMBER;
     const badgeWidth = doc.getTextWidth(label) + 8;
     doc.setDrawColor(...colors);
     doc.setFillColor(...PAPER);

@@ -44,10 +44,10 @@ export interface ReportMeta {
 }
 
 export interface TrainingModule {
-  title?: string;
+  title: string;
   name?: string;
   description?: string;
-  duration?: string;
+  duration: string;
   type?: string;
   delivery_method?: string;
   skills_covered?: string[];
