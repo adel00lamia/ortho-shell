@@ -55,6 +55,8 @@ export const createPlanPDF = (
   const margin = 18;
   const contentWidth = width - margin * 2;
   const meta = getMeta(plan, requirements, generatedAt);
+  // Real company data read from the client's own records — no AI-generated figure here.
+  const facts = requirements.companyData;
   const issuedAt = new Date(meta.generated_at);
   const startsAt = new Date(meta.plan_start_date);
   const endsAt = new Date(meta.plan_end_date);
@@ -261,7 +263,11 @@ export const createPlanPDF = (
       ['Période', `${formatDate(startsAt)} — ${formatDate(endsAt)}`, 'Calcul'],
       ['Durée', `${requirements.duration} mois`, 'Donnée fournie'],
       ['Budget plafond', requirements.budget > 0 ? formatMoney(requirements.budget) : 'À chiffrer', requirements.budget > 0 ? 'Donnée fournie' : 'À valider'],
-      ['Population', requirements.companySize || 'À confirmer', requirements.companySize ? 'Donnée fournie' : 'À valider'],
+      [
+        'Effectif couvert',
+        facts?.headcount ? `${facts.headcount} salariés` : (requirements.companySize || 'À confirmer'),
+        facts?.headcountSource === 'employee_records' ? 'Fiches salariés internes' : facts?.headcount ? 'Profil entreprise' : requirements.companySize ? 'Donnée fournie' : 'À valider',
+      ],
     ],
     theme: 'plain',
     headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
@@ -285,8 +291,6 @@ export const createPlanPDF = (
     paragraph(requirements.context);
   }
 
-  // Real company data read from the client's own records — no AI-generated figure here.
-  const facts = requirements.companyData;
   if (facts) {
     const tableBase = {
       theme: 'plain' as const,
