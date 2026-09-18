@@ -1548,7 +1548,10 @@ export default function AIPlanBuilder() {
                   <Input
                     type="number"
                     value={requirements.duration}
-                    onChange={(e) => setRequirements({...requirements, duration: parseInt(e.target.value) || 0})}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value);
+                      setRequirements({ ...requirements, duration: Number.isFinite(n) ? Math.min(60, Math.max(1, n)) : 1 });
+                    }}
                     min="1"
                     max="36"
                   />
@@ -1558,10 +1561,14 @@ export default function AIPlanBuilder() {
                   <Input
                     type="number"
                     value={requirements.budget}
-                    onChange={(e) => setRequirements({...requirements, budget: parseInt(e.target.value) || 0})}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value);
+                      setRequirements({ ...requirements, budget: Number.isFinite(n) ? Math.max(0, n) : 0 });
+                    }}
                     min="1000"
                     step="1000"
                   />
+
                 </div>
               </div>
             </CardContent>

@@ -262,13 +262,13 @@ ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}
     // Validate and use the selected AI model
     const allowedModels = [
       'google/gemini-3-flash-preview',
-      'google/gemini-2.5-flash',
-      'google/gemini-2.5-pro',
-      'openai/gpt-5-mini',
+      'google/gemini-3.8-flash',
+      'google/gemini-3.1-pro-preview',
     ];
     const selectedModel = allowedModels.includes(requirements.aiModel || '')
       ? requirements.aiModel!
       : 'google/gemini-3-flash-preview';
+
 
     console.log('Using AI model:', selectedModel);
 
