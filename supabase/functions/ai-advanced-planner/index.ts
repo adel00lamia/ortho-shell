@@ -118,6 +118,24 @@ serve(async (req) => {
     planEnd.setMonth(planEnd.getMonth() + requirements.duration);
     const canonicalCompany = requirements.company.trim() || (language === 'fr' ? 'Entreprise à confirmer' : 'Company to confirm');
 
+    // Real company data block — the ONLY factual source for headcount, positions,
+    // current skill levels, training budget and CSF rates.
+    const cd = requirements.companyData;
+    const pct = (rate?: number) => (typeof rate === 'number' ? `${Math.round(rate * 1000) / 10}%` : 'À confirmer');
+    const companyFacts = cd ? [
+      'VERIFIED COMPANY DATA (from the client database — the ONLY allowed factual source):',
+      cd.headcount ? `- Headcount: ${cd.headcount} employees (source: ${cd.headcountSource === 'employee_records' ? 'employee records' : 'declared company profile'})` : '- Headcount: not available, write "À confirmer"',
+      cd.departments?.length ? `- Departments and real headcount: ${cd.departments.map(d => `${d.name} (${d.headcount})`).join(', ')}` : '- Departments: not available',
+      cd.positions?.length ? `- Positions and real headcount: ${cd.positions.map(p => `${p.title} (${p.headcount})${p.isCritical ? ' [critical]' : ''}`).join(', ')}` : '- Positions: not available',
+      cd.skills?.length
+        ? `- Assessed skill levels (average current -> target, scale max ${cd.skills[0]?.maxLevel ?? 5}): ${cd.skills.map(s => `${s.name} ${s.currentLevel ?? '?'}->${s.targetLevel ?? '?'} (gap ${s.gap ?? '?'}; ${s.assessedEmployees ?? 0} assessed)`).join(', ')}`
+        : '- Assessed skill levels: not available, never invent a current level',
+      cd.trainingBudget ? `- Training budget on record: ${cd.trainingBudget.amount} ${cd.trainingBudget.currency} (source: ${cd.trainingBudget.source})` : '- Training budget on record: not available',
+      cd.payroll ? `- Gross annual payroll ${cd.payroll.exerciseYear}: ${cd.payroll.grossAnnual} MAD` : '- Gross annual payroll: not available',
+      cd.csf ? `- CSF/OFPPT reference rates (UNVERIFIED reference, must be shown as "à vérifier"): planned action ${pct(cd.csf.plannedRate)}, non-planned ${pct(cd.csf.unplannedRate)}, TFP levy ${pct(cd.csf.tfpRate)}, hourly cap per person ${cd.csf.hourlyCapPerPerson ?? 'none'}${cd.csf.tfpAmount ? `, levy on record ${cd.csf.tfpAmount} MAD` : ''}` : '',
+      'RULE: use these figures verbatim for headcount, departments, positions, current/target skill levels, budget and rates. Never replace them with estimates, industry averages or illustrative numbers. Where a figure above is "not available", write "À confirmer".',
+    ].filter(Boolean).join('\n') : '';
+
     const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined training plan comparable in structure and clarity to a leading consulting firm's deliverable.${languageInstruction}
 
 DATA INTEGRITY RULES:
@@ -334,6 +352,8 @@ ${requirements.customizations?.microlearning ? '- Microlearning' : ''}
 Template/Pack Context:
 ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
+
+${companyFacts}
 
 Additional Context:
 ${requirements.context || 'No additional context provided'}
