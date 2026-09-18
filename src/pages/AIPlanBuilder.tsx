@@ -727,9 +727,22 @@ export default function AIPlanBuilder() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Non-2xx responses hide the server message inside error.context — read it.
+        let serverMessage = '';
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx && typeof ctx.text === 'function') {
+            const body = await ctx.text();
+            const parsedBody = body ? JSON.parse(body) : null;
+            serverMessage = parsedBody?.error || '';
+          }
+        } catch { /* keep generic message */ }
+        throw new Error(serverMessage || error.message);
+      }
       if (data?.error) throw new Error(data.error);
       if (!data?.plan) throw new Error(language === 'fr' ? 'Réponse incomplète du service de génération.' : 'Incomplete response from the generation service.');
+
 
 
       setProgress(100);
