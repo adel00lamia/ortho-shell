@@ -13,6 +13,7 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Colonne vertébrale de la chaîne : table `development_items` + page « Chaîne de valeur » (/workflow/chain) reliant écart → levier → plan → formation interne → niveau mis à jour sur la personne
 - [x] Formation interne remise en navigation (Studio de modules, Certificats)
 - [x] Rapport du plan de formation niveau comité de direction : identité et période figées, synthèse, portefeuille, calendrier, budget contrôlé, KPI, gouvernance, risques et cadre CSF/OFPPT
+- [x] Enrichissement visuel du rapport : indicateurs de synthèse, chronologie, graphe budgétaire, matrice SWOT et tableau/empreinte PESTEL
 
 ## Next
 - [ ] Alimenter la chaîne depuis le diagnostic de cause racine (créer les lignes de développement à partir des actions formation)

@@ -9,12 +9,18 @@ const LINE = [210, 216, 223] as const;
 const PAPER = [248, 250, 252] as const;
 const AMBER = [180, 120, 20] as const;
 const GREEN = [28, 122, 87] as const;
+const BLUE = [35, 101, 145] as const;
+const RED = [164, 62, 62] as const;
+const SOFT_GREEN = [238, 247, 243] as const;
+const SOFT_AMBER = [252, 247, 232] as const;
+const SOFT_BLUE = [238, 245, 250] as const;
+const SOFT_RED = [252, 240, 240] as const;
 
 const MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
 const formatDate = (date: Date) => `${date.getDate()} ${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
 const formatMonthYear = (date: Date) => `${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
-const formatMoney = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value)} MAD`;
+const formatMoney = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value).replace(/[\u00a0\u202f]/g, ' ')} MAD`;
 const labelize = (value: string) => value.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
 const textOr = (value: unknown, fallback = 'À confirmer') => typeof value === 'string' && value.trim() ? value.trim() : fallback;
 
@@ -127,6 +133,54 @@ export const createPlanPDF = (
     doc.text(label, margin + 4, y + 0.5);
     y += 10;
   };
+  const metricStrip = (items: Array<{ value: string; label: string; status: string }>) => {
+    ensureSpace(28);
+    const gap = 4;
+    const itemWidth = (contentWidth - gap * (items.length - 1)) / items.length;
+    items.forEach((item, index) => {
+      const x = margin + index * (itemWidth + gap);
+      doc.setDrawColor(...LINE);
+      doc.setFillColor(...PAPER);
+      doc.rect(x, y, itemWidth, 23, 'FD');
+      doc.setFillColor(...NAVY);
+      doc.rect(x, y, 2, 23, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(...NAVY);
+      doc.text(item.value, x + 6, y + 9);
+      doc.setFontSize(7);
+      doc.setTextColor(...INK);
+      doc.text(item.label.toUpperCase(), x + 6, y + 15.5, { maxWidth: itemWidth - 10 });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.4);
+      doc.setTextColor(...MUTED);
+      doc.text(item.status, x + 6, y + 20.5, { maxWidth: itemWidth - 10 });
+    });
+    y += 31;
+  };
+  const horizontalBars = (items: Array<{ label: string; value: number; display: string }>, color: readonly [number, number, number] = NAVY) => {
+    const usable = items.filter(item => Number.isFinite(item.value) && item.value >= 0).slice(0, 8);
+    if (!usable.length) return;
+    const maximum = Math.max(...usable.map(item => item.value), 1);
+    ensureSpace(usable.length * 9 + 8);
+    usable.forEach(item => {
+      const label = doc.splitTextToSize(item.label, 42)[0] || item.label;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...INK);
+      doc.text(label, margin, y + 3);
+      doc.setFillColor(...PAPER);
+      doc.rect(margin + 47, y, 86, 4, 'F');
+      doc.setFillColor(...color);
+      doc.rect(margin + 47, y, 86 * (item.value / maximum), 4, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...NAVY);
+      doc.text(item.display, width - margin, y + 3.2, { align: 'right' });
+      y += 9;
+    });
+    y += 4;
+  };
+  const numbered = (items: string[] | undefined) => (items || []).filter(Boolean).map((item, index) => `${String(index + 1).padStart(2, '0')}  ${item}`);
 
   // Cover — restrained consulting direction selected by the user.
   doc.setFillColor(...NAVY);
@@ -190,6 +244,11 @@ export const createPlanPDF = (
   y = 22;
   section('01', 'Synthèse décisionnelle', 'Les éléments chiffrés non fournis sont signalés comme hypothèses à valider.');
   badge('SYNTHÈSE IA À VALIDER', 'assumption');
+  metricStrip([
+    { value: String(plan.modules?.length || 0), label: 'Actions proposées', status: 'Calcul sur le plan généré' },
+    { value: `${requirements.duration} mois`, label: 'Horizon du plan', status: 'Donnée fournie' },
+    { value: requirements.budget > 0 ? formatMoney(requirements.budget) : 'À chiffrer', label: 'Budget plafond', status: requirements.budget > 0 ? 'Donnée fournie' : 'À valider' },
+  ]);
   paragraph(plan.executive_summary || plan.description);
   subheading('Décisions proposées');
   bullets((plan.recommendations || []).slice(0, 5));
@@ -261,6 +320,24 @@ export const createPlanPDF = (
 
   if (plan.implementation_roadmap?.phases?.length) {
     section('04', 'Feuille de route de mise en œuvre', `${formatMonthYear(startsAt)} — ${formatMonthYear(endsAt)}`);
+    const phases = plan.implementation_roadmap.phases;
+    ensureSpace(24);
+    const phaseGap = 2;
+    const phaseWidth = (contentWidth - phaseGap * (phases.length - 1)) / phases.length;
+    phases.forEach((phase, index) => {
+      const x = margin + index * (phaseWidth + phaseGap);
+      const phaseColor: readonly [number, number, number] = index % 2 === 0 ? NAVY : BLUE;
+      doc.setFillColor(...phaseColor);
+      doc.rect(x, y, phaseWidth, 12, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`${index + 1}. ${safe(phase.name)}`, x + 3, y + 5, { maxWidth: phaseWidth - 6 });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.2);
+      doc.text(safe(phase.duration), x + 3, y + 9.5, { maxWidth: phaseWidth - 6 });
+    });
+    y += 19;
     autoTable(doc, {
       startY: y,
       head: [['Phase', 'Fenêtre', 'Activités clés', 'Livrables', 'Responsable']],
@@ -284,6 +361,13 @@ export const createPlanPDF = (
     .map(([key, value]) => [labelize(key), formatMoney(value as number)]);
   const calculatedTotal = Object.values(plan.budget_breakdown || {}).reduce<number>((sum, value) => sum + (typeof value === 'number' ? value : 0), 0);
   if (budgetRows.length) {
+    subheading('Répartition du budget proposé');
+    horizontalBars(
+      Object.entries(plan.budget_breakdown || {})
+        .filter(([, value]) => typeof value === 'number')
+        .map(([key, value]) => ({ label: labelize(key), value: value as number, display: formatMoney(value as number) })),
+      BLUE,
+    );
     budgetRows.push(['TOTAL CALCULÉ', formatMoney(calculatedTotal)]);
     autoTable(doc, {
       startY: y,
@@ -360,20 +444,84 @@ export const createPlanPDF = (
       doc.addPage();
       y = 22;
     }
-    section('A', 'Annexes analytiques', 'Analyses générées par IA à confronter aux données internes et à des sources datées.');
+    section('A', 'Exhibits analytiques', 'Analyses générées par IA à confronter aux données internes et à des sources datées.');
     badge('HYPOTHÈSES À VALIDER', 'assumption');
     if (plan.swot_analysis) {
-      subheading('SWOT');
-      bullets([
-        ...(plan.swot_analysis.strengths || []).map(item => `Force — ${item}`),
-        ...(plan.swot_analysis.weaknesses || []).map(item => `Faiblesse — ${item}`),
-        ...(plan.swot_analysis.opportunities || []).map(item => `Opportunité — ${item}`),
-        ...(plan.swot_analysis.threats || []).map(item => `Menace — ${item}`),
-      ]);
+      subheading('Exhibit A1 — Matrice SWOT analytique');
+      const swot = plan.swot_analysis;
+      autoTable(doc, {
+        startY: y,
+        head: [['INTERNE · Capacités à exploiter', 'INTERNE · Fragilités à traiter']],
+        body: [[numbered(swot.strengths).join('\n'), numbered(swot.weaknesses).join('\n')]],
+        foot: [['EXTERNE · Opportunités à saisir', 'EXTERNE · Menaces à anticiper']],
+        theme: 'grid',
+        headStyles: { fillColor: [...GREEN], textColor: 255, fontStyle: 'bold', cellPadding: 3 },
+        footStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold', cellPadding: 3 },
+        bodyStyles: { minCellHeight: 35, valign: 'top', textColor: [...INK], cellPadding: 4 },
+        columnStyles: { 0: { fillColor: [...SOFT_GREEN], cellWidth: contentWidth / 2 }, 1: { fillColor: [...SOFT_AMBER], cellWidth: contentWidth / 2 } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 8, lineColor: [...LINE], lineWidth: 0.2, overflow: 'linebreak' },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 2;
+      autoTable(doc, {
+        startY: y,
+        body: [[numbered(swot.opportunities).join('\n'), numbered(swot.threats).join('\n')]],
+        theme: 'grid',
+        bodyStyles: { minCellHeight: 35, valign: 'top', textColor: [...INK], cellPadding: 4 },
+        columnStyles: { 0: { fillColor: [...SOFT_BLUE], cellWidth: contentWidth / 2 }, 1: { fillColor: [...SOFT_RED], cellWidth: contentWidth / 2 } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 8, lineColor: [...LINE], lineWidth: 0.2, overflow: 'linebreak' },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 8;
+      autoTable(doc, {
+        startY: y,
+        head: [['Lecture stratégique', 'Implication pour le plan']],
+        body: [[
+          `${swot.strengths?.length || 0} forces · ${swot.weaknesses?.length || 0} faiblesses · ${swot.opportunities?.length || 0} opportunités · ${swot.threats?.length || 0} menaces`,
+          textOr(swot.strategic_implications, 'Implications à valider avec la direction.'),
+        ]],
+        theme: 'plain',
+        headStyles: { fillColor: [...NAVY], textColor: 255 },
+        bodyStyles: { fillColor: [...PAPER], textColor: [...INK] },
+        columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
     }
     if (plan.pestel_analysis) {
-      subheading('PESTEL — implications principales');
-      paragraph(plan.pestel_analysis.key_implications);
+      ensureSpace(105);
+      subheading('Exhibit A2 — Facteurs PESTEL et exposition du plan');
+      const pestel = plan.pestel_analysis;
+      const pestelRows = [
+        ['P', 'Politique', pestel.political || []],
+        ['E', 'Économique', pestel.economic || []],
+        ['S', 'Social', pestel.social || []],
+        ['T', 'Technologique', pestel.technological || []],
+        ['E', 'Environnemental', pestel.environmental || []],
+        ['L', 'Légal', pestel.legal || []],
+      ] as const;
+      autoTable(doc, {
+        startY: y,
+        head: [['', 'Facteur', 'Signaux identifiés', 'Volume']],
+        body: pestelRows.map(([letter, label, items]) => [letter, label, numbered([...items]).join('\n') || 'À documenter', String(items.length)]),
+        theme: 'grid',
+        headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [...PAPER] },
+        columnStyles: {
+          0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [...NAVY] },
+          1: { cellWidth: 31, fontStyle: 'bold' },
+          2: { cellWidth: 112 },
+          3: { cellWidth: 13, halign: 'center', fontStyle: 'bold' },
+        },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 7.6, cellPadding: 3, textColor: [...INK], lineColor: [...LINE], overflow: 'linebreak', valign: 'top' },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 8;
+      subheading('Empreinte analytique par facteur');
+      horizontalBars(pestelRows.map(([, label, items]) => ({ label, value: items.length, display: `${items.length} signal${items.length > 1 ? 'aux' : ''}` })), NAVY);
+      badge('VOLUME DE SIGNAUX · PAS UN SCORE DE RISQUE', 'calculation');
+      paragraph(pestel.key_implications || 'Implications principales à consolider avec les parties prenantes.');
     }
     if (plan.market_research) {
       subheading('Contexte marché');
