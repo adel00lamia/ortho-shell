@@ -4,6 +4,38 @@ export interface PreviousPlanFile {
   content: string;
 }
 
+/** Real company data read from the database — never AI-generated. */
+export interface CompanyFactbase {
+  companyName?: string;
+  industry?: string;
+  city?: string;
+  companySize?: string;
+  headcount?: number;
+  headcountSource: 'employee_records' | 'declared_profile' | 'none';
+  departments: Array<{ name: string; headcount: number }>;
+  positions: Array<{ title: string; headcount: number; isCritical?: boolean }>;
+  skills: Array<{
+    name: string;
+    currentLevel?: number;
+    targetLevel?: number;
+    gap?: number;
+    assessedEmployees: number;
+    maxLevel?: number;
+  }>;
+  payroll?: { grossAnnual: number; exerciseYear: number };
+  trainingBudget?: { amount: number; currency: string; source: string };
+  csf?: {
+    tfpRate?: number;
+    plannedRate?: number;
+    unplannedRate?: number;
+    hourlyCapPerPerson?: number | null;
+    tfpAmount?: number;
+    estimatedReimbursement?: number;
+    verified: boolean;
+    source: string;
+  };
+}
+
 export interface PlanRequirements {
   company: string;
   country: string;
@@ -19,6 +51,8 @@ export interface PlanRequirements {
   template?: string;
   pack?: string;
   previousPlans?: PreviousPlanFile[];
+  /** Real company data read from the database, attached at generation time. */
+  companyData?: CompanyFactbase;
   customizations: {
     deliveryMethods: string[];
     certification: boolean;

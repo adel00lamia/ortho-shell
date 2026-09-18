@@ -73,6 +73,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { GeneratedPlan, GeneratedPlanSnapshot, PlanRequirements, PreviousPlanFile } from '@/types/trainingPlan';
+import { useCompanyFactbase } from '@/hooks/useCompanyFactbase';
 
 import { ContextualActions } from '@/components/ContextualActions';
 import { 
@@ -131,6 +132,7 @@ interface TrainingPack {
 }
 
 export default function AIPlanBuilder() {
+  const { factbase } = useCompanyFactbase();
   const [step, setStep] = useState(0); // Start with template selection
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -635,6 +637,8 @@ export default function AIPlanBuilder() {
         ...requirements,
         duration: Math.min(60, Math.max(1, Number(requirements.duration) || 12)),
         budget: Math.max(0, Number(requirements.budget) || 0),
+        // Real company data (headcount, positions, assessed skills, budget, CSF rates).
+        companyData: factbase ?? undefined,
       };
 
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {

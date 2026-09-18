@@ -26,6 +26,37 @@ const requirementsSchema = z.object({
       year: z.string().max(10),
       content: z.string().max(10000),
     })).max(3).optional().default([]),
+    // Real company data read from the database — used as the only factual source.
+    companyData: z.object({
+      companyName: z.string().max(200).optional(),
+      industry: z.string().max(200).optional(),
+      city: z.string().max(200).optional(),
+      companySize: z.string().max(100).optional(),
+      headcount: z.number().min(0).max(5_000_000).optional(),
+      headcountSource: z.enum(['employee_records', 'declared_profile', 'none']).optional(),
+      departments: z.array(z.object({ name: z.string().max(200), headcount: z.number() })).max(60).optional().default([]),
+      positions: z.array(z.object({ title: z.string().max(200), headcount: z.number(), isCritical: z.boolean().optional() })).max(60).optional().default([]),
+      skills: z.array(z.object({
+        name: z.string().max(200),
+        currentLevel: z.number().optional(),
+        targetLevel: z.number().optional(),
+        gap: z.number().optional(),
+        assessedEmployees: z.number().optional(),
+        maxLevel: z.number().optional(),
+      })).max(60).optional().default([]),
+      payroll: z.object({ grossAnnual: z.number(), exerciseYear: z.number() }).optional(),
+      trainingBudget: z.object({ amount: z.number(), currency: z.string().max(10), source: z.string().max(100) }).optional(),
+      csf: z.object({
+        tfpRate: z.number().optional(),
+        plannedRate: z.number().optional(),
+        unplannedRate: z.number().optional(),
+        hourlyCapPerPerson: z.number().nullable().optional(),
+        tfpAmount: z.number().optional(),
+        estimatedReimbursement: z.number().optional(),
+        verified: z.boolean().optional(),
+        source: z.string().max(200).optional(),
+      }).optional(),
+    }).optional(),
     template: z.string().max(200).optional().default(''),
     pack: z.string().max(200).optional().default(''),
     aiModel: z.string().max(100).optional().default('google/gemini-3-flash-preview'),
@@ -87,9 +118,28 @@ serve(async (req) => {
     planEnd.setMonth(planEnd.getMonth() + requirements.duration);
     const canonicalCompany = requirements.company.trim() || (language === 'fr' ? 'Entreprise à confirmer' : 'Company to confirm');
 
+    // Real company data block — the ONLY factual source for headcount, positions,
+    // current skill levels, training budget and CSF rates.
+    const cd = requirements.companyData;
+    const pct = (rate?: number) => (typeof rate === 'number' ? `${Math.round(rate * 1000) / 10}%` : 'À confirmer');
+    const companyFacts = cd ? [
+      'VERIFIED COMPANY DATA (from the client database — the ONLY allowed factual source):',
+      cd.headcount ? `- Headcount: ${cd.headcount} employees (source: ${cd.headcountSource === 'employee_records' ? 'employee records' : 'declared company profile'})` : '- Headcount: not available, write "À confirmer"',
+      cd.departments?.length ? `- Departments and real headcount: ${cd.departments.map(d => `${d.name} (${d.headcount})`).join(', ')}` : '- Departments: not available',
+      cd.positions?.length ? `- Positions and real headcount: ${cd.positions.map(p => `${p.title} (${p.headcount})${p.isCritical ? ' [critical]' : ''}`).join(', ')}` : '- Positions: not available',
+      cd.skills?.length
+        ? `- Assessed skill levels (average current -> target, scale max ${cd.skills[0]?.maxLevel ?? 5}): ${cd.skills.map(s => `${s.name} ${s.currentLevel ?? '?'}->${s.targetLevel ?? '?'} (gap ${s.gap ?? '?'}; ${s.assessedEmployees ?? 0} assessed)`).join(', ')}`
+        : '- Assessed skill levels: not available, never invent a current level',
+      cd.trainingBudget ? `- Training budget on record: ${cd.trainingBudget.amount} ${cd.trainingBudget.currency} (source: ${cd.trainingBudget.source})` : '- Training budget on record: not available',
+      cd.payroll ? `- Gross annual payroll ${cd.payroll.exerciseYear}: ${cd.payroll.grossAnnual} MAD` : '- Gross annual payroll: not available',
+      cd.csf ? `- CSF/OFPPT reference rates (UNVERIFIED reference, must be shown as "à vérifier"): planned action ${pct(cd.csf.plannedRate)}, non-planned ${pct(cd.csf.unplannedRate)}, TFP levy ${pct(cd.csf.tfpRate)}, hourly cap per person ${cd.csf.hourlyCapPerPerson ?? 'none'}${cd.csf.tfpAmount ? `, levy on record ${cd.csf.tfpAmount} MAD` : ''}` : '',
+      'RULE: use these figures verbatim for headcount, departments, positions, current/target skill levels, budget and rates. Never replace them with estimates, industry averages or illustrative numbers. Where a figure above is "not available", write "À confirmer".',
+    ].filter(Boolean).join('\n') : '';
+
     const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined training plan comparable in structure and clarity to a leading consulting firm's deliverable.${languageInstruction}
 
 DATA INTEGRITY RULES:
+- A "VERIFIED COMPANY DATA" block may be supplied below. It is the only factual source for headcount, departments, positions, current/target skill levels, training budget, payroll and CSF rates. Reuse those figures exactly; never substitute estimates or industry averages, and never invent a figure the block does not contain.
 - The current company is exactly "${canonicalCompany}". Never use another company name anywhere.
 - The report issue date is ${generatedAt.toISOString().slice(0, 10)}. The plan runs from ${generatedAt.toISOString().slice(0, 10)} to ${planEnd.toISOString().slice(0, 10)}.
 - Previous plans are historical evidence only. Never copy their company identity, dates, targets, claims, baselines, budgets, or market facts into the current plan.
@@ -303,6 +353,8 @@ ${requirements.customizations?.microlearning ? '- Microlearning' : ''}
 Template/Pack Context:
 ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
+
+${companyFacts}
 
 Additional Context:
 ${requirements.context || 'No additional context provided'}
