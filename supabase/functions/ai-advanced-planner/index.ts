@@ -380,35 +380,59 @@ ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}
       console.error('Failed to parse AI response as JSON:', parseError);
       planData = {
         plan: {
-          title: `Training Plan for ${requirements.company || 'Your Organization'}`,
-          description: "AI-generated comprehensive training plan based on your requirements.",
-          timeline: `${requirements.duration} months implementation period`,
+          title: language === 'fr' ? `Plan de développement des compétences — ${canonicalCompany}` : `Skills Development Plan — ${canonicalCompany}`,
+          description: language === 'fr'
+            ? 'Trame de secours à compléter et à valider avec les parties prenantes.'
+            : 'Fallback framework to complete and validate with stakeholders.',
+          timeline: language === 'fr' ? 'À planifier' : 'To be scheduled',
+          training_axes: [{
+            name: language === 'fr' ? 'Axe à confirmer' : 'Axis to confirm',
+            rationale: language === 'fr' ? 'À valider à partir du diagnostic des besoins.' : 'To validate from the needs assessment.',
+            observed_difficulties: [language === 'fr' ? 'À confirmer' : 'To confirm'],
+            target_competencies: requirements.targetSkills.length ? requirements.targetSkills : [language === 'fr' ? 'À confirmer' : 'To confirm'],
+            operational_objectives: [language === 'fr' ? 'À valider' : 'To validate'],
+            support_measures: [language === 'fr' ? 'À définir' : 'To define'],
+          }],
           modules: [{
-            title: "Foundation Skills Development",
-            description: "Building core competencies aligned with organizational objectives",
-            duration: "4 weeks",
+            title: language === 'fr' ? 'Action de formation à cadrer' : 'Training action to scope',
+            description: language === 'fr' ? 'Contenu à construire après validation du besoin.' : 'Content to build after validating the need.',
+            duration: language === 'fr' ? 'À planifier' : 'To be scheduled',
             type: "mixed",
             skills_covered: requirements.targetSkills.slice(0, 3),
             prerequisites: [],
             delivery_method: "hybrid",
-            resources_needed: ["Training materials", "Online platform access"],
-            estimated_cost: Math.round(requirements.budget * 0.3),
-            engagement_features: ["gamification", "peer_learning"],
-            assessment_methods: ["practical", "peer_review"],
-            certification_level: "intermediate"
+            resources_needed: [],
+            assessment_methods: [language === 'fr' ? 'À définir' : 'To define'],
+            training_axis: language === 'fr' ? 'Axe à confirmer' : 'Axis to confirm',
+            observed_difficulty: language === 'fr' ? 'À confirmer' : 'To confirm',
+            learning_objectives: [language === 'fr' ? 'À préciser' : 'To specify'],
+            content_outline: [language === 'fr' ? 'À concevoir' : 'To design'],
+            support_measures: [language === 'fr' ? 'À définir' : 'To define'],
+            workplace_transfer: [language === 'fr' ? 'À définir' : 'To define'],
+            accountable_owner: language === 'fr' ? 'À confirmer' : 'To confirm',
+            provider: language === 'fr' ? 'À sélectionner' : 'To select',
+            planned_period: language === 'fr' ? 'À planifier' : 'To be scheduled'
           }],
-          budget_breakdown: {
-            internal_training: Math.round(requirements.budget * 0.3),
-            external_courses: Math.round(requirements.budget * 0.25),
-            materials_resources: Math.round(requirements.budget * 0.15),
-            technology_platform: Math.round(requirements.budget * 0.1),
-            assessment_certification: Math.round(requirements.budget * 0.1),
-            contingency: Math.round(requirements.budget * 0.1)
-          },
-          kpis: [{ name: "Training Completion Rate", description: "Percentage of enrolled participants completing the program", target: "90%", measurement_frequency: "Monthly", baseline: "Current completion rates", improvement_expected: "20% improvement" }],
-          recommendations: ["Start with a pilot group to refine the program", "Integrate regular feedback loops"],
-          risk_assessment: { high_risks: ["Low participation rates"], medium_risks: ["Technology adoption challenges"], mitigation_strategies: ["Mandatory participation with manager support"], contingency_plans: ["Virtual alternatives for in-person sessions"] },
-          success_metrics: ["90% training completion rate", "40% improvement in assessed skills"]
+          budget_breakdown: {},
+          kpis: [{
+            name: language === 'fr' ? 'Transfert en situation de travail' : 'Workplace transfer',
+            description: language === 'fr' ? 'Indicateur à définir avec le responsable opérationnel.' : 'Indicator to define with the operational owner.',
+            target: language === 'fr' ? 'À valider' : 'To validate',
+            baseline: language === 'fr' ? 'À mesurer' : 'To measure',
+            improvement_expected: language === 'fr' ? 'À valider' : 'To validate',
+            source: language === 'fr' ? 'À confirmer' : 'To confirm',
+            owner: language === 'fr' ? 'À confirmer' : 'To confirm',
+          }],
+          evidence_register: [{
+            evidence: language === 'fr' ? 'Validation documentée du besoin' : 'Documented needs validation',
+            source: language === 'fr' ? 'À confirmer' : 'To confirm',
+            owner: language === 'fr' ? 'À confirmer' : 'To confirm',
+            timing: language === 'fr' ? 'Avant la formation' : 'Before training',
+            status: language === 'fr' ? 'À collecter' : 'To collect',
+          }],
+          recommendations: [language === 'fr' ? 'Valider le diagnostic, les populations et les responsables avant programmation.' : 'Validate the diagnosis, audiences and owners before scheduling.'],
+          risk_assessment: { high_risks: [], medium_risks: [], mitigation_strategies: [], contingency_plans: [] },
+          success_metrics: []
         }
       };
     }
