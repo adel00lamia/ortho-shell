@@ -339,6 +339,10 @@ export const createPlanPDF = (
   }
 
   if (plan.regulatory_framework) {
+    if (y > 115) {
+      doc.addPage();
+      y = 22;
+    }
     section('08', 'Cadre réglementaire et financement', 'Référentiel indicatif — validation documentaire obligatoire.');
     badge('À VÉRIFIER AUPRÈS DES ORGANISMES COMPÉTENTS', 'assumption');
     subheading('Organismes et références');
