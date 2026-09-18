@@ -132,6 +132,7 @@ interface TrainingPack {
 }
 
 export default function AIPlanBuilder() {
+  const { factbase } = useCompanyFactbase();
   const [step, setStep] = useState(0); // Start with template selection
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
