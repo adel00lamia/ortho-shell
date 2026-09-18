@@ -710,10 +710,16 @@ export default function AIPlanBuilder() {
     setProgress(10);
 
     try {
+      const safeRequirements = {
+        ...requirements,
+        duration: Math.min(60, Math.max(1, Number(requirements.duration) || 12)),
+        budget: Math.max(0, Number(requirements.budget) || 0),
+      };
+
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
         body: {
           requirements: {
-            ...requirements,
+            ...safeRequirements,
             previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles : undefined
           },
           userId: user?.id || 'anonymous',
@@ -722,6 +728,9 @@ export default function AIPlanBuilder() {
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.plan) throw new Error(language === 'fr' ? 'Réponse incomplète du service de génération.' : 'Incomplete response from the generation service.');
+
 
       setProgress(100);
       
