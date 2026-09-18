@@ -1,617 +1,409 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import type { GeneratedPlan, PlanRequirements, ReportMeta } from '@/types/trainingPlan';
 
-interface GeneratedPlan {
-  title: string;
-  description: string;
-  modules: any[];
-  timeline: string;
-  budget_breakdown: any;
-  kpis: any[];
-  recommendations: string[];
-  risk_assessment?: any;
-  success_metrics?: string[];
-  innovation_features?: any;
-  sustainability_plan?: any;
-  executive_summary?: string;
-  market_research?: {
-    market_overview?: string;
-    market_size?: string;
-    growth_rate?: string;
-    key_trends?: string[];
-    competitive_landscape?: string;
-    target_audience_analysis?: string;
-    demand_drivers?: string[];
-    market_challenges?: string[];
+const NAVY = [0, 43, 73] as const;
+const INK = [27, 37, 48] as const;
+const MUTED = [93, 105, 116] as const;
+const LINE = [210, 216, 223] as const;
+const PAPER = [248, 250, 252] as const;
+const AMBER = [180, 120, 20] as const;
+const GREEN = [28, 122, 87] as const;
+
+const MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+const formatDate = (date: Date) => `${date.getDate()} ${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
+const formatMonthYear = (date: Date) => `${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
+const formatMoney = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value)} MAD`;
+const labelize = (value: string) => value.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
+const textOr = (value: unknown, fallback = 'À confirmer') => typeof value === 'string' && value.trim() ? value.trim() : fallback;
+
+const addMonths = (date: Date, months: number) => {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + Math.max(1, months));
+  return result;
+};
+
+const getMeta = (plan: GeneratedPlan, requirements: PlanRequirements, generatedAt: Date): ReportMeta => {
+  const start = plan.report_meta?.plan_start_date ? new Date(plan.report_meta.plan_start_date) : generatedAt;
+  const end = plan.report_meta?.plan_end_date ? new Date(plan.report_meta.plan_end_date) : addMonths(start, requirements.duration);
+  return {
+    company: plan.report_meta?.company?.trim() || requirements.company.trim() || 'Entreprise à confirmer',
+    country: plan.report_meta?.country?.trim() || requirements.country.trim() || 'Maroc',
+    industry: plan.report_meta?.industry?.trim() || requirements.industry.trim() || 'Secteur à confirmer',
+    generated_at: plan.report_meta?.generated_at || generatedAt.toISOString(),
+    plan_start_date: start.toISOString(),
+    plan_end_date: end.toISOString(),
+    data_status: 'provided_and_ai_synthesized',
   };
-  swot_analysis?: {
-    strengths?: string[];
-    weaknesses?: string[];
-    opportunities?: string[];
-    threats?: string[];
-    strategic_implications?: string;
-  };
-  pestel_analysis?: {
-    political?: string[];
-    economic?: string[];
-    social?: string[];
-    technological?: string[];
-    environmental?: string[];
-    legal?: string[];
-    key_implications?: string;
-  };
-  regulatory_framework?: any;
-  implementation_roadmap?: {
-    phases?: { name: string; duration: string; activities: string[]; deliverables: string[] }[];
-  };
-}
+};
 
-interface PlanRequirements {
-  company: string;
-  industry: string;
-  companySize: string;
-  budget: number;
-  duration: number;
-  objectives: string[];
-  targetSkills: string[];
-  constraints: string[];
-}
+export const createPlanPDF = (
+  plan: GeneratedPlan,
+  requirements: PlanRequirements,
+  generatedAt = new Date(),
+) => {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const width = doc.internal.pageSize.getWidth();
+  const height = doc.internal.pageSize.getHeight();
+  const margin = 18;
+  const contentWidth = width - margin * 2;
+  const meta = getMeta(plan, requirements, generatedAt);
+  const issuedAt = new Date(meta.generated_at);
+  const startsAt = new Date(meta.plan_start_date);
+  const endsAt = new Date(meta.plan_end_date);
+  let y = 20;
 
-// Colors
-const PRIMARY = [30, 64, 175] as const;    // Deep blue
-const ACCENT = [220, 38, 38] as const;     // Red accent
-const DARK = [30, 30, 30] as const;
-const GRAY = [100, 100, 100] as const;
-const LIGHT_GRAY = [200, 200, 200] as const;
-
-export const exportPlanToPDF = (plan: GeneratedPlan, requirements: PlanRequirements) => {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  const contentWidth = pageWidth - margin * 2;
-  let yPos = 0;
-
-  const checkPageBreak = (requiredSpace: number) => {
-    if (yPos + requiredSpace > pageHeight - 30) {
+  const safe = (value: unknown) => textOr(value);
+  const ensureSpace = (space: number) => {
+    if (y + space > height - 22) {
       doc.addPage();
-      yPos = 25;
+      y = 22;
     }
   };
-
-  const drawSectionHeader = (title: string, icon?: string) => {
-    checkPageBreak(20);
-    doc.setDrawColor(...PRIMARY);
-    doc.setFillColor(...PRIMARY);
-    doc.rect(margin, yPos - 5, 4, 14, 'F');
-    doc.setFontSize(15);
-    doc.setTextColor(...PRIMARY);
-    doc.text(`${icon ? icon + ' ' : ''}${title}`, margin + 10, yPos + 5);
-    yPos += 18;
-    doc.setDrawColor(...LIGHT_GRAY);
-    doc.line(margin, yPos - 5, pageWidth - margin, yPos - 5);
-    yPos += 2;
-  };
-
-  const drawSubHeader = (title: string) => {
-    checkPageBreak(14);
-    doc.setFontSize(11);
-    doc.setTextColor(...PRIMARY);
+  const section = (number: string, title: string, subtitle?: string) => {
+    ensureSpace(subtitle ? 27 : 20);
+    doc.setFillColor(...NAVY);
+    doc.rect(margin, y - 4, 4, 14, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.text(title, margin + 5, yPos);
-    yPos += 7;
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text(number, margin + 9, y);
+    doc.setFontSize(15);
+    doc.setTextColor(...NAVY);
+    doc.text(title, margin + 9, y + 7);
+    y += 14;
+    if (subtitle) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...MUTED);
+      doc.text(subtitle, margin + 9, y);
+      y += 7;
+    }
+    doc.setDrawColor(...LINE);
+    doc.line(margin, y, width - margin, y);
+    y += 8;
+  };
+  const subheading = (title: string) => {
+    ensureSpace(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...NAVY);
+    doc.text(title, margin, y);
+    y += 7;
+  };
+  const paragraph = (value: unknown, indent = 0) => {
+    const lines = doc.splitTextToSize(safe(value), contentWidth - indent);
+    ensureSpace(lines.length * 5 + 4);
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...INK);
+    doc.text(lines, margin + indent, y);
+    y += lines.length * 5 + 5;
   };
-
-  const drawParagraph = (text: string, indent = 0) => {
-    doc.setFontSize(10);
-    doc.setTextColor(...DARK);
-    const lines = doc.splitTextToSize(text, contentWidth - indent);
-    lines.forEach((line: string) => {
-      checkPageBreak(6);
-      doc.text(line, margin + indent, yPos);
-      yPos += 5.5;
+  const bullets = (items: unknown[] | undefined) => {
+    (items || []).filter(Boolean).forEach(item => {
+      const lines = doc.splitTextToSize(safe(item), contentWidth - 10);
+      ensureSpace(lines.length * 5 + 3);
+      doc.setFillColor(...NAVY);
+      doc.circle(margin + 2, y - 1.2, 0.8, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.2);
+      doc.setTextColor(...INK);
+      doc.text(lines, margin + 7, y);
+      y += lines.length * 5 + 3;
     });
-    yPos += 3;
+    y += 2;
   };
-
-  const drawBulletList = (items: string[], indent = 5) => {
-    doc.setFontSize(10);
-    doc.setTextColor(...DARK);
-    items.forEach(item => {
-      checkPageBreak(8);
-      const lines = doc.splitTextToSize(`${item}`, contentWidth - indent - 8);
-      doc.text('•', margin + indent, yPos);
-      doc.text(lines, margin + indent + 6, yPos);
-      yPos += lines.length * 5.5 + 2;
-    });
-    yPos += 3;
-  };
-
-  // ═══════════════════════════════════════════
-  // COVER PAGE
-  // ═══════════════════════════════════════════
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, pageWidth, 100, 'F');
-  
-  doc.setFontSize(28);
-  doc.setTextColor(255, 255, 255);
-  doc.text(plan.title || 'Training Plan Report', pageWidth / 2, 40, { align: 'center' });
-  
-  doc.setFontSize(14);
-  doc.text('Strategic Training & Development Report', pageWidth / 2, 55, { align: 'center' });
-
-  doc.setFontSize(11);
-  doc.setTextColor(220, 220, 255);
-  doc.text(`${requirements.company || 'Company'} | ${requirements.industry || 'Industry'}`, pageWidth / 2, 72, { align: 'center' });
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageWidth / 2, 82, { align: 'center' });
-
-  // Info box
-  yPos = 115;
-  doc.setFillColor(245, 245, 250);
-  doc.roundedRect(margin, yPos - 5, contentWidth, 50, 3, 3, 'F');
-  
-  doc.setFontSize(10);
-  doc.setTextColor(...DARK);
-  const infoItems = [
-    [`Duration: ${requirements.duration} months`, `Budget: ${requirements.budget?.toLocaleString()} MAD`],
-    [`Company Size: ${requirements.companySize}`, `Modules: ${plan.modules?.length || 0}`],
-    [`Skills Targeted: ${requirements.targetSkills?.length || 0}`, `Objectives: ${requirements.objectives?.length || 0}`],
-  ];
-  infoItems.forEach((row, i) => {
-    doc.text(row[0], margin + 10, yPos + 8 + i * 14);
-    doc.text(row[1], pageWidth / 2 + 10, yPos + 8 + i * 14);
-  });
-
-  // Table of contents
-  yPos = 185;
-  doc.setFontSize(14);
-  doc.setTextColor(...PRIMARY);
-  doc.text('Table of Contents', margin, yPos);
-  yPos += 12;
-  
-  const tocItems = [
-    '1. Executive Summary',
-    '2. Market Research Analysis',
-    '3. SWOT Analysis',
-    '4. PESTEL Analysis',
-    '5. Training Plan Overview',
-    '6. Training Modules',
-    '7. Budget Breakdown',
-    '8. Key Performance Indicators',
-    '9. Implementation Roadmap',
-    '10. Risk Assessment',
-    '11. Strategic Recommendations',
-    '12. Regulatory Framework',
-    '13. Innovation & Sustainability',
-  ];
-  doc.setFontSize(10);
-  doc.setTextColor(...GRAY);
-  tocItems.forEach(item => {
-    doc.text(item, margin + 10, yPos);
-    yPos += 7;
-  });
-
-  // ═══════════════════════════════════════════
-  // 1. EXECUTIVE SUMMARY
-  // ═══════════════════════════════════════════
-  doc.addPage();
-  yPos = 25;
-  drawSectionHeader('1. Executive Summary');
-  if (plan.executive_summary) {
-    drawParagraph(plan.executive_summary);
-  } else {
-    drawParagraph(plan.description || 'No executive summary available.');
-  }
-
-  // ═══════════════════════════════════════════
-  // 2. MARKET RESEARCH
-  // ═══════════════════════════════════════════
-  drawSectionHeader('2. Market Research Analysis');
-  if (plan.market_research) {
-    const mr = plan.market_research;
-    if (mr.market_overview) {
-      drawSubHeader('Market Overview');
-      drawParagraph(mr.market_overview);
-    }
-
-    if (mr.market_size || mr.growth_rate) {
-      checkPageBreak(30);
-      autoTable(doc, {
-        startY: yPos,
-        head: [['Metric', 'Value']],
-        body: [
-          ...(mr.market_size ? [['Market Size', mr.market_size]] : []),
-          ...(mr.growth_rate ? [['Growth Rate', mr.growth_rate]] : []),
-        ],
-        theme: 'grid',
-        headStyles: { fillColor: [...PRIMARY] as any },
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 9 },
-      });
-      yPos = (doc as any).lastAutoTable.finalY + 10;
-    }
-
-    if (mr.key_trends?.length) {
-      drawSubHeader('Key Market Trends');
-      drawBulletList(mr.key_trends);
-    }
-    if (mr.competitive_landscape) {
-      drawSubHeader('Competitive Landscape');
-      drawParagraph(mr.competitive_landscape);
-    }
-    if (mr.target_audience_analysis) {
-      drawSubHeader('Target Audience Analysis');
-      drawParagraph(mr.target_audience_analysis);
-    }
-    if (mr.demand_drivers?.length) {
-      drawSubHeader('Demand Drivers');
-      drawBulletList(mr.demand_drivers);
-    }
-    if (mr.market_challenges?.length) {
-      drawSubHeader('Market Challenges');
-      drawBulletList(mr.market_challenges);
-    }
-  } else {
-    drawParagraph('Market research data not available for this plan.');
-  }
-
-  // ═══════════════════════════════════════════
-  // 3. SWOT ANALYSIS
-  // ═══════════════════════════════════════════
-  drawSectionHeader('3. SWOT Analysis');
-  if (plan.swot_analysis) {
-    const swot = plan.swot_analysis;
-    const swotSections: [string, string[], [number, number, number]][] = [
-      ['Strengths', swot.strengths || [], [22, 163, 74]],
-      ['Weaknesses', swot.weaknesses || [], [220, 38, 38]],
-      ['Opportunities', swot.opportunities || [], [37, 99, 235]],
-      ['Threats', swot.threats || [], [234, 88, 12]],
-    ];
-
-    swotSections.forEach(([label, items, color]) => {
-      if (items.length > 0) {
-        checkPageBreak(20);
-        doc.setFontSize(11);
-        doc.setTextColor(...(color as [number, number, number]));
-        doc.setFont('helvetica', 'bold');
-        doc.text(label, margin + 5, yPos);
-        yPos += 7;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...DARK);
-        drawBulletList(items, 10);
-      }
-    });
-
-    if (swot.strategic_implications) {
-      drawSubHeader('Strategic Implications');
-      drawParagraph(swot.strategic_implications);
-    }
-  } else {
-    drawParagraph('SWOT analysis not available for this plan.');
-  }
-
-  // ═══════════════════════════════════════════
-  // 4. PESTEL ANALYSIS
-  // ═══════════════════════════════════════════
-  drawSectionHeader('4. PESTEL Analysis');
-  if (plan.pestel_analysis) {
-    const pestel = plan.pestel_analysis;
-    const pestelSections: [string, string[]][] = [
-      ['Political', pestel.political || []],
-      ['Economic', pestel.economic || []],
-      ['Social', pestel.social || []],
-      ['Technological', pestel.technological || []],
-      ['Environmental', pestel.environmental || []],
-      ['Legal', pestel.legal || []],
-    ];
-
-    pestelSections.forEach(([label, items]) => {
-      if (items.length > 0) {
-        drawSubHeader(label);
-        drawBulletList(items, 10);
-      }
-    });
-
-    if (pestel.key_implications) {
-      drawSubHeader('Key Implications');
-      drawParagraph(pestel.key_implications);
-    }
-  } else {
-    drawParagraph('PESTEL analysis not available for this plan.');
-  }
-
-  // ═══════════════════════════════════════════
-  // 5. PLAN OVERVIEW
-  // ═══════════════════════════════════════════
-  drawSectionHeader('5. Training Plan Overview');
-  drawParagraph(plan.description);
-
-  if (requirements.objectives?.length > 0) {
-    drawSubHeader('Training Objectives');
-    drawBulletList(requirements.objectives);
-  }
-  if (requirements.targetSkills?.length > 0) {
-    drawSubHeader('Target Skills');
-    drawParagraph(requirements.targetSkills.join(', '));
-  }
-
-  // ═══════════════════════════════════════════
-  // 6. MODULES
-  // ═══════════════════════════════════════════
-  if (plan.modules?.length > 0) {
-    drawSectionHeader('6. Training Modules');
-    
-    const moduleData = plan.modules.map((m: any, idx: number) => [
-      (idx + 1).toString(),
-      m.title || m.name || '',
-      m.duration || 'N/A',
-      m.type || m.delivery_method || 'Mixed',
-      m.certification_level || 'N/A',
-      typeof m.estimated_cost === 'number' ? `${m.estimated_cost.toLocaleString()} MAD` : 'N/A',
-    ]);
-
-    checkPageBreak(40);
-    autoTable(doc, {
-      startY: yPos,
-      head: [['#', 'Module', 'Duration', 'Type', 'Level', 'Cost']],
-      body: moduleData,
-      theme: 'grid',
-      headStyles: { fillColor: [...PRIMARY] as any, fontSize: 9 },
-      styles: { fontSize: 8 },
-      margin: { left: margin, right: margin },
-      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 55 } },
-    });
-    yPos = (doc as any).lastAutoTable.finalY + 10;
-
-    // Module details
-    plan.modules.forEach((m: any, idx: number) => {
-      drawSubHeader(`Module ${idx + 1}: ${m.title || m.name}`);
-      if (m.description) drawParagraph(m.description, 5);
-      if (m.skills_covered?.length) {
-        doc.setFontSize(9);
-        doc.setTextColor(...GRAY);
-        checkPageBreak(8);
-        doc.text(`Skills: ${m.skills_covered.join(', ')}`, margin + 10, yPos);
-        yPos += 7;
-      }
-      if (m.assessment_methods?.length) {
-        doc.setFontSize(9);
-        doc.setTextColor(...GRAY);
-        checkPageBreak(8);
-        doc.text(`Assessment: ${m.assessment_methods.join(', ')}`, margin + 10, yPos);
-        yPos += 7;
-      }
-      yPos += 3;
-    });
-  }
-
-  // ═══════════════════════════════════════════
-  // 7. BUDGET
-  // ═══════════════════════════════════════════
-  if (plan.budget_breakdown) {
-    drawSectionHeader('7. Budget Breakdown');
-    const budgetData = Object.entries(plan.budget_breakdown).map(([key, value]) => [
-      key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      typeof value === 'number' ? `${value.toLocaleString()} MAD` : String(value),
-    ]);
-    const total = Object.values(plan.budget_breakdown).reduce((sum: number, v) => sum + (typeof v === 'number' ? v : 0), 0);
-    budgetData.push(['TOTAL', `${(total as number).toLocaleString()} MAD`]);
-
-    checkPageBreak(40);
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Category', 'Amount']],
-      body: budgetData,
-      theme: 'grid',
-      headStyles: { fillColor: [...PRIMARY] as any },
-      margin: { left: margin, right: margin },
-      styles: { fontSize: 9 },
-      didParseCell: (data: any) => {
-        if (data.row.index === budgetData.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [240, 240, 250];
-        }
-      },
-    });
-    yPos = (doc as any).lastAutoTable.finalY + 12;
-  }
-
-  // ═══════════════════════════════════════════
-  // 8. KPIs
-  // ═══════════════════════════════════════════
-  if (plan.kpis?.length > 0) {
-    drawSectionHeader('8. Key Performance Indicators');
-    const kpiData = plan.kpis.map((kpi: any) => [
-      kpi.name,
-      kpi.target,
-      kpi.measurement_frequency || 'Quarterly',
-      kpi.baseline || 'N/A',
-      kpi.improvement_expected || 'N/A',
-    ]);
-
-    checkPageBreak(40);
-    autoTable(doc, {
-      startY: yPos,
-      head: [['KPI', 'Target', 'Frequency', 'Baseline', 'Expected Improvement']],
-      body: kpiData,
-      theme: 'grid',
-      headStyles: { fillColor: [...PRIMARY] as any, fontSize: 8 },
-      styles: { fontSize: 8 },
-      margin: { left: margin, right: margin },
-    });
-    yPos = (doc as any).lastAutoTable.finalY + 12;
-  }
-
-  // ═══════════════════════════════════════════
-  // 9. IMPLEMENTATION ROADMAP
-  // ═══════════════════════════════════════════
-  if (plan.implementation_roadmap?.phases?.length) {
-    drawSectionHeader('9. Implementation Roadmap');
-    plan.implementation_roadmap.phases.forEach((phase: any) => {
-      drawSubHeader(`${phase.name} (${phase.duration})`);
-      if (phase.activities?.length) {
-        doc.setFontSize(9);
-        doc.setTextColor(...GRAY);
-        checkPageBreak(6);
-        doc.text('Activities:', margin + 5, yPos);
-        yPos += 6;
-        drawBulletList(phase.activities, 10);
-      }
-      if (phase.deliverables?.length) {
-        doc.setFontSize(9);
-        doc.setTextColor(...GRAY);
-        checkPageBreak(6);
-        doc.text('Deliverables:', margin + 5, yPos);
-        yPos += 6;
-        drawBulletList(phase.deliverables, 10);
-      }
-    });
-  }
-
-  // ═══════════════════════════════════════════
-  // 10. RISK ASSESSMENT
-  // ═══════════════════════════════════════════
-  if (plan.risk_assessment) {
-    drawSectionHeader('10. Risk Assessment');
-    const ra = plan.risk_assessment;
-    if (ra.high_risks?.length) {
-      drawSubHeader('High Risks');
-      drawBulletList(ra.high_risks, 10);
-    }
-    if (ra.medium_risks?.length) {
-      drawSubHeader('Medium Risks');
-      drawBulletList(ra.medium_risks, 10);
-    }
-    if (ra.mitigation_strategies?.length) {
-      drawSubHeader('Mitigation Strategies');
-      drawBulletList(ra.mitigation_strategies, 10);
-    }
-    if (ra.contingency_plans?.length) {
-      drawSubHeader('Contingency Plans');
-      drawBulletList(ra.contingency_plans, 10);
-    }
-  }
-
-  // ═══════════════════════════════════════════
-  // 11. RECOMMENDATIONS
-  // ═══════════════════════════════════════════
-  if (plan.recommendations?.length > 0) {
-    drawSectionHeader('11. Strategic Recommendations');
-    plan.recommendations.forEach((rec: string, idx: number) => {
-      checkPageBreak(12);
-      doc.setFontSize(10);
-      doc.setTextColor(...DARK);
-      const lines = doc.splitTextToSize(`${idx + 1}. ${rec}`, contentWidth - 10);
-      doc.text(lines, margin + 5, yPos);
-      yPos += lines.length * 5.5 + 3;
-    });
-    yPos += 5;
-  }
-
-  // ═══════════════════════════════════════════
-  // 12. REGULATORY FRAMEWORK
-  // ═══════════════════════════════════════════
-  if (plan.regulatory_framework) {
-    drawSectionHeader('12. Regulatory Framework');
-    const rf = plan.regulatory_framework;
-    if (rf.country) {
-      drawSubHeader(`Country: ${rf.country}`);
-    }
-    if (rf.governing_bodies?.length) {
-      drawSubHeader('Governing Bodies');
-      drawBulletList(rf.governing_bodies, 10);
-    }
-    if (rf.key_regulations?.length) {
-      drawSubHeader('Key Regulations');
-      drawBulletList(rf.key_regulations, 10);
-    }
-    if (rf.funding_programs?.length) {
-      drawSubHeader('Funding Programs');
-      drawBulletList(rf.funding_programs, 10);
-    }
-    if (rf.compliance_checklist?.length) {
-      drawSubHeader('Compliance Checklist');
-      drawBulletList(rf.compliance_checklist, 10);
-    }
-  }
-
-  // ═══════════════════════════════════════════
-  // 13. INNOVATION & SUSTAINABILITY
-  // ═══════════════════════════════════════════
-  if (plan.innovation_features || plan.sustainability_plan) {
-    drawSectionHeader('13. Innovation & Sustainability');
-    
-    if (plan.innovation_features) {
-      drawSubHeader('Innovation Features');
-      Object.entries(plan.innovation_features).forEach(([key, value]) => {
-        if (value && typeof value === 'string') {
-          checkPageBreak(12);
-          doc.setFontSize(9);
-          doc.setTextColor(...PRIMARY);
-          doc.setFont('helvetica', 'bold');
-          doc.text(key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':', margin + 5, yPos);
-          yPos += 5;
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...DARK);
-          const lines = doc.splitTextToSize(value, contentWidth - 15);
-          doc.text(lines, margin + 10, yPos);
-          yPos += lines.length * 5 + 4;
-        }
-      });
-    }
-
-    if (plan.sustainability_plan) {
-      drawSubHeader('Sustainability Plan');
-      Object.entries(plan.sustainability_plan).forEach(([key, value]) => {
-        if (value && typeof value === 'string') {
-          checkPageBreak(12);
-          doc.setFontSize(9);
-          doc.setTextColor(...PRIMARY);
-          doc.setFont('helvetica', 'bold');
-          doc.text(key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':', margin + 5, yPos);
-          yPos += 5;
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...DARK);
-          const lines = doc.splitTextToSize(value, contentWidth - 15);
-          doc.text(lines, margin + 10, yPos);
-          yPos += lines.length * 5 + 4;
-        }
-      });
-    }
-  }
-
-  // SUCCESS METRICS
-  if (plan.success_metrics?.length) {
-    drawSectionHeader('Success Metrics');
-    drawBulletList(plan.success_metrics.map(m => `✓ ${m}`));
-  }
-
-  // ═══════════════════════════════════════════
-  // FOOTER ON ALL PAGES
-  // ═══════════════════════════════════════════
-  const pageCount = doc.internal.pages.length - 1;
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    // Footer line
-    doc.setDrawColor(...LIGHT_GRAY);
-    doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+  const badge = (label: string, tone: 'source' | 'calculation' | 'assumption') => {
+    const colors = tone === 'source' ? GREEN : tone === 'calculation' ? NAVY : AMBER;
+    const badgeWidth = doc.getTextWidth(label) + 8;
+    doc.setDrawColor(...colors);
+    doc.setFillColor(...PAPER);
+    doc.roundedRect(margin, y - 4, badgeWidth, 7, 1, 1, 'FD');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
-    doc.setTextColor(...GRAY);
-    doc.text(
-      `${requirements.company || 'Company'} — Strategic Training Report`,
-      margin,
-      pageHeight - 8
-    );
-    doc.text(
-      `Page ${i} of ${pageCount}`,
-      pageWidth - margin,
-      pageHeight - 8,
-      { align: 'right' }
-    );
+    doc.setTextColor(...colors);
+    doc.text(label, margin + 4, y + 0.5);
+    y += 10;
+  };
+
+  // Cover — restrained consulting direction selected by the user.
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, width, 4, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...NAVY);
+  doc.setFontSize(9);
+  doc.text(meta.company.toUpperCase(), margin, 31);
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.7);
+  doc.line(margin, 39, margin + 18, 39);
+  doc.setFontSize(27);
+  doc.setTextColor(...INK);
+  const titleLines = doc.splitTextToSize('Plan de développement des compétences', contentWidth - 10);
+  doc.text(titleLines, margin, 63);
+  const titleBottom = 63 + titleLines.length * 11;
+  doc.setFillColor(...PAPER);
+  doc.rect(margin, titleBottom + 5, 77, 10, 'F');
+  doc.setFillColor(...NAVY);
+  doc.rect(margin, titleBottom + 5, 3, 10, 'F');
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(`PÉRIODE  ${formatMonthYear(startsAt).toUpperCase()} — ${formatMonthYear(endsAt).toUpperCase()}`, margin + 7, titleBottom + 11.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(...MUTED);
+  const coverDescription = doc.splitTextToSize(
+    `Rapport stratégique d'ingénierie de formation pour ${meta.company}, secteur ${meta.industry}.`,
+    contentWidth - 20,
+  );
+  doc.text(coverDescription, margin, titleBottom + 38);
+  doc.setFillColor(...PAPER);
+  doc.rect(0, 212, width, height - 212, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text('STATUT DU DOCUMENT', margin, 229);
+  doc.text("DATE D'ÉMISSION", 83, 229);
+  doc.text('PÉRIMÈTRE', 145, 229);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text('Pour validation', margin, 236);
+  doc.text(formatDate(issuedAt), 83, 236);
+  doc.text(`${meta.country} · ${meta.industry}`, 145, 236, { maxWidth: 47 });
+  doc.setDrawColor(...LINE);
+  doc.line(margin, 250, width - margin, 250);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text('RÉFÉRENCES À VÉRIFIER', margin, 261);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...INK);
+  doc.text('CSF / OFPPT · Éligibilité et taux non garantis', margin, 268);
+  doc.setTextColor(...NAVY);
+  doc.text('CONFIDENTIEL', width - margin, 268, { align: 'right' });
+
+  // Executive decision brief.
+  doc.addPage();
+  y = 22;
+  section('01', 'Synthèse décisionnelle', 'Les éléments chiffrés non fournis sont signalés comme hypothèses à valider.');
+  badge('SYNTHÈSE IA À VALIDER', 'assumption');
+  paragraph(plan.executive_summary || plan.description);
+  subheading('Décisions proposées');
+  bullets((plan.recommendations || []).slice(0, 5));
+  subheading('Paramètres validés de la demande');
+  autoTable(doc, {
+    startY: y,
+    head: [['Paramètre', 'Valeur', 'Statut']],
+    body: [
+      ['Entreprise', meta.company, 'Donnée fournie'],
+      ['Période', `${formatDate(startsAt)} — ${formatDate(endsAt)}`, 'Calcul'],
+      ['Durée', `${requirements.duration} mois`, 'Donnée fournie'],
+      ['Budget plafond', requirements.budget > 0 ? formatMoney(requirements.budget) : 'À chiffrer', requirements.budget > 0 ? 'Donnée fournie' : 'À valider'],
+      ['Population', requirements.companySize || 'À confirmer', requirements.companySize ? 'Donnée fournie' : 'À valider'],
+    ],
+    theme: 'plain',
+    headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { textColor: [...INK], lineColor: [...LINE], lineWidth: { bottom: 0.1 } },
+    columnStyles: { 0: { cellWidth: 42, fontStyle: 'bold' }, 2: { cellWidth: 34 } },
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 8.5, cellPadding: 3 },
+  });
+  y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
+
+  section('02', 'Diagnostic des besoins', 'Traçabilité entre les besoins exprimés et le portefeuille proposé.');
+  badge('DONNÉES FOURNIES', 'source');
+  subheading('Objectifs déclarés');
+  bullets(requirements.objectives.length ? requirements.objectives : ['Objectifs détaillés à confirmer avec la direction.']);
+  subheading('Compétences cibles');
+  bullets(requirements.targetSkills.length ? requirements.targetSkills : ['Référentiel de compétences à consolider.']);
+  subheading('Contraintes de mise en œuvre');
+  bullets(requirements.constraints.length ? requirements.constraints : ['Contraintes opérationnelles à documenter avant lancement.']);
+  if (requirements.context) {
+    subheading('Contexte fourni');
+    paragraph(requirements.context);
   }
 
-  const fileName = `${(plan.title || 'Training_Plan').replace(/[^a-z0-9]/gi, '_')}_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+  if (plan.modules?.length) {
+    section('03', 'Portefeuille de formation priorisé', 'Chaque action doit être validée avec son sponsor, sa population et son résultat attendu.');
+    autoTable(doc, {
+      startY: y,
+      head: [['#', 'Action', 'Public / niveau', 'Modalité', 'Durée', 'Budget']],
+      body: plan.modules.map((module, index) => [
+        String(index + 1),
+        safe(module.title || module.name),
+        `${textOr(module.target_audience)}\n${textOr(module.certification_level)}`,
+        textOr(module.delivery_method || module.type),
+        textOr(module.duration),
+        typeof module.estimated_cost === 'number' ? formatMoney(module.estimated_cost) : 'À chiffrer',
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { textColor: [...INK], lineColor: [...LINE] },
+      alternateRowStyles: { fillColor: [...PAPER] },
+      columnStyles: { 0: { cellWidth: 8 }, 1: { cellWidth: 53 }, 2: { cellWidth: 37 }, 3: { cellWidth: 25 }, 4: { cellWidth: 20 }, 5: { cellWidth: 27 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.5, cellPadding: 2.5, overflow: 'linebreak' },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
+    plan.modules.forEach((module, index) => {
+      subheading(`${index + 1}. ${safe(module.title || module.name)}`);
+      paragraph(module.description);
+      if (module.skills_covered?.length) {
+        doc.setFontSize(8);
+        doc.setTextColor(...MUTED);
+        paragraph(`Compétences : ${module.skills_covered.join(', ')}`, 3);
+      }
+    });
+  }
+
+  if (plan.implementation_roadmap?.phases?.length) {
+    section('04', 'Feuille de route de mise en œuvre', `${formatMonthYear(startsAt)} — ${formatMonthYear(endsAt)}`);
+    autoTable(doc, {
+      startY: y,
+      head: [['Phase', 'Fenêtre', 'Activités clés', 'Livrables', 'Responsable']],
+      body: plan.implementation_roadmap.phases.map(phase => [
+        safe(phase.name), safe(phase.duration), (phase.activities || []).join('\n• '), (phase.deliverables || []).join('\n• '), textOr(phase.owner),
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: 255 },
+      alternateRowStyles: { fillColor: [...PAPER] },
+      columnStyles: { 0: { cellWidth: 34, fontStyle: 'bold' }, 1: { cellWidth: 23 }, 2: { cellWidth: 48 }, 3: { cellWidth: 43 }, 4: { cellWidth: 24 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.2, cellPadding: 2.5, valign: 'top' },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
+  }
+
+  section('05', 'Budget et principes économiques', 'Le budget affiché est un plafond de cadrage, pas une promesse de remboursement.');
+  badge(requirements.budget > 0 ? 'BUDGET FOURNI' : 'HYPOTHÈSE À VALIDER', requirements.budget > 0 ? 'source' : 'assumption');
+  const budgetRows = Object.entries(plan.budget_breakdown || {})
+    .filter(([, value]) => typeof value === 'number')
+    .map(([key, value]) => [labelize(key), formatMoney(value as number)]);
+  const calculatedTotal = Object.values(plan.budget_breakdown || {}).reduce<number>((sum, value) => sum + (typeof value === 'number' ? value : 0), 0);
+  if (budgetRows.length) {
+    budgetRows.push(['TOTAL CALCULÉ', formatMoney(calculatedTotal)]);
+    autoTable(doc, {
+      startY: y,
+      head: [['Poste', 'Montant']],
+      body: budgetRows,
+      theme: 'plain',
+      headStyles: { fillColor: [...NAVY], textColor: 255 },
+      bodyStyles: { lineColor: [...LINE], lineWidth: { bottom: 0.1 } },
+      columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 8.5, cellPadding: 3 },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 7;
+    if (requirements.budget > 0 && calculatedTotal !== requirements.budget) {
+      paragraph(`Point de contrôle : le total proposé (${formatMoney(calculatedTotal)}) diffère du budget plafond (${formatMoney(requirements.budget)}). Arbitrage requis avant validation.`);
+    }
+  } else {
+    paragraph('Aucune ventilation budgétaire exploitable. Les coûts restent à chiffrer avant décision.');
+  }
+  paragraph("Les dispositifs CSF/GIAC/OFPPT sont présentés comme pistes de financement. L'éligibilité, les plafonds et les taux doivent être confirmés sur pièces auprès des organismes compétents.");
+
+  if (plan.kpis?.length) {
+    section('06', 'Pilotage de la performance', 'Les baselines absentes doivent être mesurées avant le démarrage.');
+    autoTable(doc, {
+      startY: y,
+      head: [['Indicateur', 'Baseline', 'Cible', 'Fréquence', 'Source / responsable']],
+      body: plan.kpis.map(kpi => [
+        safe(kpi.name), textOr(kpi.baseline, 'À mesurer'), textOr(kpi.target, 'À valider'), textOr(kpi.measurement_frequency), `${textOr(kpi.source)} / ${textOr(kpi.owner)}`,
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: 255 },
+      alternateRowStyles: { fillColor: [...PAPER] },
+      columnStyles: { 0: { cellWidth: 43, fontStyle: 'bold' }, 1: { cellWidth: 30 }, 2: { cellWidth: 34 }, 3: { cellWidth: 27 }, 4: { cellWidth: 38 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.5, cellPadding: 2.5 },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 10;
+  }
+
+  section('07', 'Gouvernance, risques et arbitrages');
+  subheading('Gouvernance recommandée');
+  bullets([
+    'Sponsor de direction : valide les priorités, le budget et les arbitrages.',
+    'Direction RH / Formation : pilote le portefeuille, les prestataires et la conformité documentaire.',
+    'Managers opérationnels : libèrent les participants et valident le transfert en situation de travail.',
+    'Revue mensuelle : avancement, consommation budgétaire, risques et décisions correctives.',
+  ]);
+  if (plan.risk_assessment) {
+    subheading('Risques prioritaires');
+    bullets([...(plan.risk_assessment.high_risks || []), ...(plan.risk_assessment.medium_risks || [])]);
+    subheading('Mesures de maîtrise');
+    bullets(plan.risk_assessment.mitigation_strategies);
+  }
+
+  if (plan.regulatory_framework) {
+    section('08', 'Cadre réglementaire et financement', 'Référentiel indicatif — validation documentaire obligatoire.');
+    badge('À VÉRIFIER AUPRÈS DES ORGANISMES COMPÉTENTS', 'assumption');
+    subheading('Organismes et références');
+    bullets(plan.regulatory_framework.governing_bodies);
+    bullets(plan.regulatory_framework.key_regulations);
+    subheading('Pistes de financement');
+    bullets(plan.regulatory_framework.funding_programs);
+    subheading('Liste de contrôle');
+    bullets(plan.regulatory_framework.compliance_checklist);
+  }
+
+  const hasAppendix = Boolean(plan.swot_analysis || plan.pestel_analysis || plan.market_research);
+  if (hasAppendix) {
+    section('A', 'Annexes analytiques', 'Analyses générées par IA à confronter aux données internes et à des sources datées.');
+    badge('HYPOTHÈSES À VALIDER', 'assumption');
+    if (plan.swot_analysis) {
+      subheading('SWOT');
+      bullets([
+        ...(plan.swot_analysis.strengths || []).map(item => `Force — ${item}`),
+        ...(plan.swot_analysis.weaknesses || []).map(item => `Faiblesse — ${item}`),
+        ...(plan.swot_analysis.opportunities || []).map(item => `Opportunité — ${item}`),
+        ...(plan.swot_analysis.threats || []).map(item => `Menace — ${item}`),
+      ]);
+    }
+    if (plan.pestel_analysis) {
+      subheading('PESTEL — implications principales');
+      paragraph(plan.pestel_analysis.key_implications);
+    }
+    if (plan.market_research) {
+      subheading('Contexte marché');
+      paragraph(plan.market_research.market_overview);
+      paragraph('Les estimations de taille et de croissance du marché ne sont pas reprises sans source explicite et datée.');
+    }
+  }
+
+  const pageCount = doc.getNumberOfPages();
+  for (let page = 1; page <= pageCount; page += 1) {
+    doc.setPage(page);
+    doc.setDrawColor(...LINE);
+    doc.line(margin, height - 15, width - margin, height - 15);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
+    doc.text(`${meta.company} · Plan de développement des compétences · Confidentiel`, margin, height - 9);
+    doc.text(`Page ${page} / ${pageCount}`, width - margin, height - 9, { align: 'right' });
+  }
+
+  doc.setProperties({
+    title: `Plan de développement des compétences — ${meta.company}`,
+    subject: `Période ${formatMonthYear(startsAt)} — ${formatMonthYear(endsAt)}`,
+    author: 'Qimatak',
+    creator: 'Qimatak',
+  });
+  return doc;
+};
+
+export const exportPlanToPDF = (
+  plan: GeneratedPlan,
+  requirements: PlanRequirements,
+  generatedAt = new Date(),
+) => {
+  const doc = createPlanPDF(plan, requirements, generatedAt);
+  const company = plan.report_meta?.company || requirements.company || 'Entreprise';
+  const safeCompany = company.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_');
+  const fileName = `Plan_Developpement_Competences_${safeCompany}_${generatedAt.toISOString().slice(0, 10)}.pdf`;
   doc.save(fileName);
   return fileName;
 };
