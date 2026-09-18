@@ -285,6 +285,129 @@ export const createPlanPDF = (
     paragraph(requirements.context);
   }
 
+  // Real company data read from the client's own records — no AI-generated figure here.
+  const facts = requirements.companyData;
+  if (facts) {
+    const tableBase = {
+      theme: 'plain' as const,
+      headStyles: { fillColor: [...NAVY] as [number, number, number], textColor: 255, fontStyle: 'bold' as const },
+      bodyStyles: { textColor: [...INK] as [number, number, number], lineColor: [...LINE] as [number, number, number], lineWidth: { bottom: 0.1 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 8, cellPadding: 2.6, overflow: 'linebreak' as const },
+    };
+    const advance = () => { y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 8; };
+
+    section('02A', 'Données réelles de l’entreprise', 'Effectifs, postes, compétences évaluées, budget et taux issus de vos propres enregistrements.', 48);
+    badge(facts.headcountSource === 'employee_records' ? 'DONNÉES INTERNES VÉRIFIÉES' : 'DONNÉES INTERNES PARTIELLES', 'source');
+    metricStrip([
+      {
+        value: facts.headcount ? String(facts.headcount) : 'À confirmer',
+        label: 'Effectif couvert',
+        status: facts.headcountSource === 'employee_records' ? 'Fiches salariés' : facts.headcountSource === 'declared_profile' ? 'Profil déclaré' : 'Non renseigné',
+      },
+      { value: facts.departments.length ? String(facts.departments.length) : 'À confirmer', label: 'Départements', status: 'Enregistrements internes' },
+      { value: facts.skills.length ? String(facts.skills.length) : 'À confirmer', label: 'Compétences évaluées', status: 'Évaluations internes' },
+    ]);
+
+    subheading('Répartition des effectifs par département');
+    if (facts.departments.length) {
+      autoTable(doc, {
+        ...tableBase,
+        startY: y,
+        head: [['Département', 'Effectif', 'Part de l’effectif']],
+        body: facts.departments.slice(0, 15).map(dept => {
+          const total = facts.headcount || facts.departments.reduce((sum, d) => sum + d.headcount, 0);
+          return [dept.name, String(dept.headcount), total > 0 ? `${Math.round((dept.headcount / total) * 100)} %` : 'À confirmer'];
+        }),
+        columnStyles: { 1: { halign: 'right', cellWidth: 26 }, 2: { halign: 'right', cellWidth: 34 } },
+      });
+      advance();
+    } else {
+      paragraph('Aucune fiche salarié enregistrée. Renseignez les effectifs dans l’espace entreprise pour supprimer cette mention.');
+    }
+
+    subheading('Postes recensés');
+    if (facts.positions.length) {
+      autoTable(doc, {
+        ...tableBase,
+        startY: y,
+        head: [['Poste', 'Titulaires', 'Criticité']],
+        body: facts.positions.map(position => [position.title, String(position.headcount), position.isCritical ? 'Poste critique' : '—']),
+        columnStyles: { 1: { halign: 'right', cellWidth: 26 }, 2: { cellWidth: 34 } },
+      });
+      advance();
+    } else {
+      paragraph('Aucun poste enregistré. Les fiches de poste restent à documenter.');
+    }
+
+    subheading('Niveaux de compétences actuels et cibles');
+    if (facts.skills.length) {
+      autoTable(doc, {
+        ...tableBase,
+        startY: y,
+        head: [['Compétence', 'Niveau actuel', 'Niveau cible', 'Écart', 'Salariés évalués']],
+        body: facts.skills.map(skill => [
+          skill.name,
+          skill.currentLevel !== undefined ? `${skill.currentLevel}${skill.maxLevel ? ` / ${skill.maxLevel}` : ''}` : 'À confirmer',
+          skill.targetLevel !== undefined ? `${skill.targetLevel}${skill.maxLevel ? ` / ${skill.maxLevel}` : ''}` : 'À confirmer',
+          skill.gap !== undefined ? String(skill.gap) : 'À confirmer',
+          String(skill.assessedEmployees ?? 0),
+        ]),
+        columnStyles: { 0: { cellWidth: 62 }, 1: { halign: 'right', cellWidth: 26 }, 2: { halign: 'right', cellWidth: 26 }, 3: { halign: 'right', cellWidth: 20 }, 4: { halign: 'right', cellWidth: 26 } },
+      });
+      advance();
+      const gapped = facts.skills.filter(skill => (skill.gap ?? 0) > 0).slice(0, 8);
+      if (gapped.length) {
+        subheading('Écarts de compétences mesurés');
+        horizontalBars(gapped.map(skill => ({ label: skill.name, value: skill.gap as number, display: `${skill.gap} niveau(x)` })), RED);
+      }
+    } else {
+      paragraph('Aucune évaluation de compétences enregistrée. Les niveaux actuels restent à mesurer avant arbitrage.');
+    }
+
+    subheading('Budget formation et cadre de financement');
+    autoTable(doc, {
+      ...tableBase,
+      startY: y,
+      head: [['Élément', 'Valeur', 'Source']],
+      body: [
+        [
+          'Budget formation enregistré',
+          facts.trainingBudget ? formatMoney(facts.trainingBudget.amount) : 'À confirmer',
+          facts.trainingBudget ? (facts.trainingBudget.source === 'ingenierie_de_formation' ? 'Dossier d’ingénierie' : 'Plan de formation') : 'Non renseigné',
+        ],
+        [
+          'Masse salariale brute annuelle',
+          facts.payroll ? `${formatMoney(facts.payroll.grossAnnual)} (${facts.payroll.exerciseYear})` : 'À confirmer',
+          facts.payroll ? 'Dossier d’ingénierie' : 'Non renseigné',
+        ],
+        [
+          'Taxe de formation professionnelle (TFP)',
+          facts.csf?.tfpAmount ? formatMoney(facts.csf.tfpAmount) : 'À confirmer',
+          facts.csf?.tfpAmount ? 'Dossier d’ingénierie' : 'Non renseigné',
+        ],
+        [
+          'Taux CSF — action planifiée',
+          facts.csf?.plannedRate !== undefined ? `${Math.round(facts.csf.plannedRate * 1000) / 10} %` : 'À confirmer',
+          'Taux de référence à vérifier',
+        ],
+        [
+          'Taux CSF — action non planifiée',
+          facts.csf?.unplannedRate !== undefined ? `${Math.round(facts.csf.unplannedRate * 1000) / 10} %` : 'À confirmer',
+          'Taux de référence à vérifier',
+        ],
+        [
+          'Plafond horaire par participant',
+          facts.csf?.hourlyCapPerPerson != null ? `${facts.csf.hourlyCapPerPerson} MAD / h` : 'À confirmer',
+          'Taux de référence à vérifier',
+        ],
+      ],
+      columnStyles: { 0: { cellWidth: 62, fontStyle: 'bold' }, 1: { cellWidth: 52 }, 2: { cellWidth: 46 } },
+    });
+    advance();
+    paragraph('Les taux et plafonds ci-dessus sont des références paramétrables non vérifiées : ils doivent être confirmés auprès de l’OFPPT avant tout engagement. Aucun droit à remboursement n’est garanti par ce rapport.');
+  }
+
   if (plan.training_axes?.length) {
     section('02B', 'Axes d’ingénierie de formation', 'Lecture structurée des difficultés, compétences, objectifs et mesures d’accompagnement.', 52);
     plan.training_axes.forEach((axis, index) => {
