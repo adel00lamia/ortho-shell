@@ -51,6 +51,8 @@ export interface PlanRequirements {
   template?: string;
   pack?: string;
   previousPlans?: PreviousPlanFile[];
+  /** Real company data read from the database, attached at generation time. */
+  companyData?: CompanyFactbase;
   customizations: {
     deliveryMethods: string[];
     certification: boolean;
