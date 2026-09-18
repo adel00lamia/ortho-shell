@@ -303,7 +303,7 @@ export const createPlanPDF = (
         theme: 'grid',
         headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [...PAPER] },
-        columnStyles: { 0: { cellWidth: 42 }, 1: { cellWidth: 40 }, 2: { cellWidth: 44 }, 3: { cellWidth: 40 } },
+        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 38 }, 2: { cellWidth: 42 }, 3: { cellWidth: 38 } },
         margin: { left: margin, right: margin },
         styles: { fontSize: 7.2, cellPadding: 3, valign: 'top', lineColor: [...LINE], overflow: 'linebreak' },
       });
@@ -328,7 +328,7 @@ export const createPlanPDF = (
       headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
       bodyStyles: { textColor: [...INK], lineColor: [...LINE] },
       alternateRowStyles: { fillColor: [...PAPER] },
-      columnStyles: { 0: { cellWidth: 8 }, 1: { cellWidth: 53 }, 2: { cellWidth: 37 }, 3: { cellWidth: 25 }, 4: { cellWidth: 20 }, 5: { cellWidth: 27 } },
+      columnStyles: { 0: { cellWidth: 8 }, 1: { cellWidth: 48 }, 2: { cellWidth: 34 }, 3: { cellWidth: 22 }, 4: { cellWidth: 19 }, 5: { cellWidth: 27 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.5, cellPadding: 2.5, overflow: 'linebreak' },
     });
@@ -366,7 +366,7 @@ export const createPlanPDF = (
         theme: 'grid',
         headStyles: { fillColor: [...BLUE], textColor: 255 },
         alternateRowStyles: { fillColor: [...PAPER] },
-        columnStyles: { 0: { cellWidth: 48 }, 1: { cellWidth: 59 }, 2: { cellWidth: 59 } },
+        columnStyles: { 0: { cellWidth: 46 }, 1: { cellWidth: 56 }, 2: { cellWidth: 56 } },
         margin: { left: margin, right: margin },
         styles: { fontSize: 7.2, cellPadding: 3, overflow: 'linebreak', valign: 'top', lineColor: [...LINE] },
       });
@@ -383,7 +383,7 @@ export const createPlanPDF = (
         theme: 'grid',
         headStyles: { fillColor: [...NAVY], textColor: 255 },
         alternateRowStyles: { fillColor: [...PAPER] },
-        columnStyles: { 0: { cellWidth: 39 }, 1: { cellWidth: 43 }, 2: { cellWidth: 43 }, 3: { cellWidth: 41 } },
+        columnStyles: { 0: { cellWidth: 37 }, 1: { cellWidth: 41 }, 2: { cellWidth: 41 }, 3: { cellWidth: 39 } },
         margin: { left: margin, right: margin },
         styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak', valign: 'top', lineColor: [...LINE] },
       });
@@ -420,7 +420,7 @@ export const createPlanPDF = (
       theme: 'grid',
       headStyles: { fillColor: [...NAVY], textColor: 255 },
       alternateRowStyles: { fillColor: [...PAPER] },
-      columnStyles: { 0: { cellWidth: 32, fontStyle: 'bold' }, 1: { cellWidth: 22 }, 2: { cellWidth: 46 }, 3: { cellWidth: 42 }, 4: { cellWidth: 24 } },
+      columnStyles: { 0: { cellWidth: 30, fontStyle: 'bold' }, 1: { cellWidth: 21 }, 2: { cellWidth: 44 }, 3: { cellWidth: 40 }, 4: { cellWidth: 23 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.2, cellPadding: 2.5, valign: 'top' },
     });
@@ -473,7 +473,7 @@ export const createPlanPDF = (
       theme: 'grid',
       headStyles: { fillColor: [...NAVY], textColor: 255 },
       alternateRowStyles: { fillColor: [...PAPER] },
-      columnStyles: { 0: { cellWidth: 41, fontStyle: 'bold' }, 1: { cellWidth: 29 }, 2: { cellWidth: 32 }, 3: { cellWidth: 26 }, 4: { cellWidth: 38 } },
+      columnStyles: { 0: { cellWidth: 39, fontStyle: 'bold' }, 1: { cellWidth: 27 }, 2: { cellWidth: 30 }, 3: { cellWidth: 25 }, 4: { cellWidth: 37 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.5, cellPadding: 2.5 },
     });
@@ -491,7 +491,7 @@ export const createPlanPDF = (
       theme: 'grid',
       headStyles: { fillColor: [...NAVY], textColor: 255 },
       alternateRowStyles: { fillColor: [...PAPER] },
-      columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' }, 1: { cellWidth: 32 }, 2: { cellWidth: 31 }, 3: { cellWidth: 24 }, 4: { cellWidth: 24 } },
+      columnStyles: { 0: { cellWidth: 52, fontStyle: 'bold' }, 1: { cellWidth: 30 }, 2: { cellWidth: 29 }, 3: { cellWidth: 23 }, 4: { cellWidth: 24 } },
       margin: { left: margin, right: margin },
       styles: { fontSize: 7.3, cellPadding: 2.8, overflow: 'linebreak', valign: 'top' },
     });
@@ -602,7 +602,7 @@ export const createPlanPDF = (
         columnStyles: {
           0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [...NAVY] },
           1: { cellWidth: 31, fontStyle: 'bold' },
-          2: { cellWidth: 112 },
+          2: { cellWidth: 104 },
           3: { cellWidth: 13, halign: 'center', fontStyle: 'bold' },
         },
         margin: { left: margin, right: margin },
