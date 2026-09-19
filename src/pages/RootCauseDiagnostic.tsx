@@ -166,6 +166,22 @@ export default function RootCauseDiagnostic() {
   const [totalBudget, setTotalBudget] = useState('');
   const [tab, setTab] = useState('intake');
 
+  /**
+   * Deep link (e.g. /workflow/assess/root-cause?diagnostic=<id> from Field
+   * evidence): preselect the diagnostic once the list is loaded, land on the
+   * result tab, and clean the URL. Stale ids are dropped without selecting.
+   */
+  useEffect(() => {
+    const fromUrl = searchParams.get('diagnostic');
+    if (!fromUrl) return;
+    if (isLoading) return;
+    if (diagnostics.some((d) => d.id === fromUrl)) {
+      setSelectedId(fromUrl);
+      setTab('result');
+    }
+    setSearchParams({}, { replace: true });
+  }, [searchParams, diagnostics, isLoading, setSearchParams]);
+
   const toggleSymptom = (key: string) =>
     setSymptoms((s) => (s.includes(key) ? s.filter((x) => x !== key) : [...s, key]));
 
