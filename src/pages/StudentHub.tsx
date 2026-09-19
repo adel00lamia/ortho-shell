@@ -1006,15 +1006,15 @@ const StudentHub = () => {
         onAskHelp={() =>
           sendInterviewAnswer(
             fr
-              ? "Aide-moi : je ne sais pas quoi répondre. Donne-moi la structure attendue en 3 points, un exemple de réponse court (5 phrases max) que je peux adapter, puis repose-moi la même question."
-              : "Help me: I don't know what to answer. Give me the expected structure in 3 points, a short sample answer (max 5 sentences) I can adapt, then ask me the same question again.",
+              ? "Je bloque sur ta question. Donne-moi une RÉPONSE MODÈLE complète et structurée, prête à dire à voix haute à la première personne, en suivant exactement cette trame : 1) Situation : ... 2) Tâche : ... 3) Action : ... 4) Résultat : ... (avec un résultat chiffré réaliste). 6 à 8 phrases maximum, ton naturel et professionnel. Après le modèle, ajoute une ligne 'À adapter :' avec 2 éléments que je dois personnaliser avec ma propre expérience, puis repose-moi la même question."
+              : "I'm stuck on your question. Give me a complete, structured MODEL ANSWER, ready to say out loud in the first person, following exactly this frame: 1) Situation: ... 2) Task: ... 3) Action: ... 4) Result: ... (with a realistic quantified result). Max 6-8 sentences, natural professional tone. After the model, add a 'Adapt this:' line with 2 elements I should personalize with my own experience, then ask me the same question again.",
           )
         }
         onAskTips={() =>
           sendInterviewAnswer(
             fr
-              ? "Donne-moi tes recommandations pour la question que tu viens de poser : 3 conseils concrets, les 2 points clés que le recruteur attend, 1 piège à éviter, et 2 phrases d'accroche que je peux utiliser. Ne repose pas la question, attends ma réponse."
-              : "Give me your recommendations for the question you just asked: 3 concrete tips, the 2 key points the recruiter expects, 1 trap to avoid, and 2 opening sentences I can use. Do not repeat the question, wait for my answer.",
+              ? "Donne-moi tes recommandations structurées pour la question que tu viens de poser, dans cet ordre exact : 1) Ce que le recruteur évalue vraiment (1 phrase) 2) La structure de réponse attendue en 3 étapes numérotées 3) 2 phrases d'accroche percutantes que je peux dire mot pour mot 4) 1 erreur à éviter absolument. Sois concrète et directe. Ne repose pas la question, attends ma réponse."
+              : "Give me your structured recommendations for the question you just asked, in this exact order: 1) What the recruiter is really assessing (1 sentence) 2) The expected answer structure in 3 numbered steps 3) 2 punchy opening sentences I can say word for word 4) 1 mistake to absolutely avoid. Be concrete and direct. Do not repeat the question, wait for my answer.",
           )
         }
       />
