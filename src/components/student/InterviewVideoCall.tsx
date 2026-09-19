@@ -626,10 +626,11 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   {onAskHelp && (
                     <Button
                       size="sm"
+                      type="button"
                       variant="ghost"
-                      className="h-8 px-3 text-xs bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-50"
-                      disabled={chatLoading || streamingAssistant || !hasStarted}
-                      onClick={onAskHelp}
+                      className="h-10 px-4 text-xs bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-50 disabled:opacity-60"
+                      disabled={chatLoading || streamingAssistant}
+                      onClick={() => { try { window.speechSynthesis.cancel(); } catch { /* noop */ } onAskHelp(); }}
                     >
                       {fr ? 'Réponse modèle structurée' : ar ? 'جواب نموذجي منظم' : 'Structured model answer'}
                     </Button>
@@ -637,10 +638,11 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   {onAskTips && (
                     <Button
                       size="sm"
+                      type="button"
                       variant="ghost"
-                      className="h-8 px-3 text-xs bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-50"
-                      disabled={chatLoading || streamingAssistant || !hasStarted}
-                      onClick={onAskTips}
+                      className="h-10 px-4 text-xs bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-50 disabled:opacity-60"
+                      disabled={chatLoading || streamingAssistant}
+                      onClick={() => { try { window.speechSynthesis.cancel(); } catch { /* noop */ } onAskTips(); }}
                     >
                       {fr ? 'Recommandations' : ar ? 'توصيات' : 'Recommendations'}
                     </Button>

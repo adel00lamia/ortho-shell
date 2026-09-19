@@ -271,6 +271,7 @@ const StudentHub = () => {
         body: JSON.stringify({
           mode: 'interview', position, difficulty, style,
           studentProfile: profile ?? draft, history,
+          resumeText: resumeText.trim() || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
       });
@@ -366,6 +367,61 @@ const StudentHub = () => {
 
   const [videoCallOpen, setVideoCallOpen] = useState(false);
 
+  /* ------------------------ Resume (CV) intake ------------------------ */
+  const RESUME_KEY = 'student-resume-v1';
+  const [resumeText, setResumeText] = useState<string>(() => {
+    try { return localStorage.getItem(RESUME_KEY) ?? ''; } catch { return ''; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(RESUME_KEY, resumeText); } catch { /* ignore */ }
+  }, [resumeText]);
+  const [prepLoading, setPrepLoading] = useState(false);
+  const [prep, setPrep] = useState<any>(null);
+  const [openPrep, setOpenPrep] = useState<number | null>(null);
+
+  const handleResumeFile = async (file: File | null) => {
+    if (!file) return;
+    const isText = /\.(txt|md|csv|json)$/i.test(file.name) || file.type.startsWith('text/');
+    if (!isText) {
+      toast.error(fr
+        ? 'Format non lisible ici : ouvre ton CV (PDF/Word) et copie-colle le texte ci-dessous.'
+        : 'Unsupported here: open your CV (PDF/Word) and paste the text below.');
+      return;
+    }
+    const text = await file.text();
+    setResumeText(text.slice(0, 20000));
+    toast.success(fr ? 'CV importé' : 'Resume imported');
+  };
+
+  const analyzeResume = async () => {
+    if (resumeText.trim().length < 80) {
+      toast.error(fr ? 'Colle au moins quelques lignes de ton CV' : 'Paste at least a few lines of your resume');
+      return;
+    }
+    setPrepLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('student-coach', {
+        body: { mode: 'resumeprep', resumeText: resumeText.trim(), jobTarget: position || cvTarget, language: fr ? 'fr' : 'en' },
+      });
+      if (error) throw error;
+      const result = (data as { prep: any }).prep;
+      if (result?.error) throw new Error(result.error);
+      setPrep(result);
+      toast.success(fr ? 'Questions préparées' : 'Questions ready');
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setPrepLoading(false);
+    }
+  };
+
+  const rehearseQuestion = (question: string) => {
+    if (!position.trim()) setPosition(cvTarget || (fr ? 'Poste ciblé' : 'Target role'));
+    setChat([{ role: 'assistant', content: question }]);
+    setFeedback(null);
+    setVideoCallOpen(true);
+  };
+
   /* --------------------------- CV ----------------------------- */
   const [cvTarget, setCvTarget] = useState('');
   const [cvLoading, setCvLoading] = useState(false);
@@ -379,7 +435,7 @@ const StudentHub = () => {
     setCvLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: { mode: 'cv', studentProfile: profile ?? draft, jobTarget: cvTarget, language: fr ? 'fr' : 'en' },
+        body: { mode: 'cv', studentProfile: profile ?? draft, resumeText: resumeText.trim() || undefined, jobTarget: cvTarget, language: fr ? 'fr' : 'en' },
       });
       if (error) throw error;
       setCvResult((data as { cv: unknown }).cv);
@@ -738,6 +794,116 @@ const StudentHub = () => {
 
         {/* CV & INTERVIEW */}
         <TabsContent value="cv" className="space-y-4">
+          {/* RESUME-BASED PREPARATION */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />{fr ? 'Mon CV → mes questions d\'entretien' : 'My resume → my interview questions'}</CardTitle>
+              <CardDescription>
+                {fr
+                  ? 'Colle le texte de ton CV (ou importe un fichier .txt). Sarah en tire les questions probables, ce qu\'il faut répondre, et s\'en sert pendant la simulation.'
+                  : 'Paste your resume text (or import a .txt file). Sarah derives the likely questions, what to answer, and uses it during the simulation.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                rows={6}
+                placeholder={fr ? 'Colle ici le contenu de ton CV : formation, expériences, projets, compétences...' : 'Paste your resume here: education, experience, projects, skills...'}
+                value={resumeText}
+                onChange={(e) => setResumeText(e.target.value)}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".txt,.md,.csv,.json,text/plain"
+                  className="max-w-[240px]"
+                  onChange={(e) => handleResumeFile(e.target.files?.[0] ?? null)}
+                />
+                <Button onClick={analyzeResume} disabled={prepLoading}>
+                  {prepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  <span className="ml-2">{fr ? 'Préparer mes questions' : 'Prepare my questions'}</span>
+                </Button>
+                {resumeText.trim() && (
+                  <Button variant="outline" onClick={() => { setResumeText(''); setPrep(null); }}>
+                    <X className="h-4 w-4 mr-1" />{fr ? 'Effacer' : 'Clear'}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {fr
+                  ? 'CV en PDF ou Word : ouvre-le, sélectionne tout, copie, puis colle le texte ci-dessus.'
+                  : 'PDF or Word resume: open it, select all, copy, then paste the text above.'}
+              </p>
+
+              {prep && (
+                <div className="space-y-3 pt-2">
+                  {prep.summary && <p className="text-sm text-muted-foreground italic">{prep.summary}</p>}
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {prep.strengths?.length > 0 && (
+                      <div className="rounded-lg border p-3">
+                        <div className="text-xs font-semibold text-emerald-600 mb-1">✓ {fr ? 'Atouts de ton CV' : 'Resume strengths'}</div>
+                        <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
+                          {prep.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {prep.risks?.length > 0 && (
+                      <div className="rounded-lg border p-3">
+                        <div className="text-xs font-semibold text-amber-600 mb-1">⚡ {fr ? 'Ce que le recruteur va creuser' : 'What the recruiter will dig into'}</div>
+                        <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
+                          {prep.risks.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {prep.questions?.map((q: any, i: number) => (
+                      <div key={i} className="rounded-lg border">
+                        <button
+                          type="button"
+                          className="w-full text-left px-3 py-2.5 flex items-start gap-2 hover:bg-muted/50"
+                          onClick={() => setOpenPrep(openPrep === i ? null : i)}
+                        >
+                          <Badge variant="secondary" className="shrink-0">{i + 1}</Badge>
+                          <span className="text-sm font-medium">{q.question}</span>
+                        </button>
+                        {openPrep === i && (
+                          <div className="px-3 pb-3 space-y-2 text-sm">
+                            {q.why && <p className="text-xs text-muted-foreground">🎯 {q.why}</p>}
+                            {q.keyPoints?.length > 0 && (
+                              <ul className="text-xs list-disc pl-4 space-y-0.5">
+                                {q.keyPoints.map((k: string, j: number) => <li key={j}>{k}</li>)}
+                              </ul>
+                            )}
+                            {q.modelAnswer && (
+                              <div className="rounded-md bg-muted/50 p-2">
+                                <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-1">{fr ? 'Réponse modèle' : 'Model answer'}</div>
+                                <p className="whitespace-pre-wrap leading-relaxed">{q.modelAnswer}</p>
+                              </div>
+                            )}
+                            {q.personalize?.length > 0 && (
+                              <p className="text-xs text-amber-600">{fr ? 'À adapter : ' : 'Adapt: '}{q.personalize.join(' · ')}</p>
+                            )}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              <Button size="sm" onClick={() => rehearseQuestion(q.question)}>
+                                <Video className="h-4 w-4 mr-1" />{fr ? 'Répéter avec Sarah' : 'Rehearse with Sarah'}
+                              </Button>
+                              {q.modelAnswer && (
+                                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(q.modelAnswer); toast.success(fr ? 'Copié' : 'Copied'); }}>
+                                  <Copy className="h-4 w-4 mr-1" />{fr ? 'Copier' : 'Copy'}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid lg:grid-cols-2 gap-4">
             {/* INTERVIEW SIM */}
             <Card>

@@ -11,6 +11,7 @@ interface InterviewBody {
   difficulty?: 'warmup' | 'junior' | 'mid' | 'senior';
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
+  resumeText?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
@@ -19,6 +20,7 @@ interface InterviewBody {
 interface CvBody {
   mode: 'cv';
   studentProfile: Record<string, unknown>;
+  resumeText?: string;
   jobTarget?: string;
   language?: 'en' | 'fr';
 }
@@ -39,7 +41,14 @@ interface SoftSkillBody {
   language?: 'en' | 'fr';
 }
 
-type Body = InterviewBody | CvBody | FeedbackBody | SoftSkillBody;
+interface ResumePrepBody {
+  mode: 'resumeprep';
+  resumeText: string;
+  jobTarget?: string;
+  language?: 'en' | 'fr';
+}
+
+type Body = InterviewBody | CvBody | FeedbackBody | SoftSkillBody | ResumePrepBody;
 
 async function callGemini(messages: Array<{ role: string; content: string }>, expectJson = false) {
   const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -245,7 +254,13 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nMODE ÉCHAUFFEMENT ACTIVÉ: Reste UNIQUEMENT sur des questions très simples d'introduction (présentation, motivation, qualités, centres d'intérêt, projet d'études). N'augmente JAMAIS la difficulté. Le but est de mettre l'étudiant en confiance. Après 4-5 questions, propose gentiment de passer à un niveau supérieur.`
           : `\n\nWARM-UP MODE ACTIVE: Stay ONLY on very simple introduction questions (self-intro, motivation, strengths, interests, studies). NEVER increase difficulty. The goal is to build the student's confidence. After 4-5 questions, gently suggest moving to a higher level.`)
         : '';
-      const finalSystem = system + warmupOverride + toneBlock;
+      const resume = (body.resumeText ?? '').trim().slice(0, 12000);
+      const resumeBlock = resume
+        ? (fr
+          ? `\n\nCV DE L'ÉTUDIANT (seule source de vérité, ne rien inventer) :\n<<<${resume}>>>\n- Base tes questions sur CE CV : expériences, projets, compétences, trous ou changements de parcours.\n- Cite parfois un élément précis du CV ("Sur ton stage chez X…").\n- Ne mentionne JAMAIS une expérience absente du CV.`
+          : `\n\nSTUDENT RESUME (sole source of truth, invent nothing):\n<<<${resume}>>>\n- Base your questions on THIS resume: experiences, projects, skills, gaps or career switches.\n- Sometimes quote a precise resume item ("About your internship at X…").\n- NEVER mention an experience that is not in the resume.`)
+        : '';
+      const finalSystem = system + warmupOverride + resumeBlock + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
@@ -324,11 +339,45 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
       const reply = await callGemini(
         [
           { role: 'system', content: system },
-          { role: 'user', content: JSON.stringify(body.studentProfile) },
+          { role: 'user', content: JSON.stringify({ profile: body.studentProfile, resumeText: (body.resumeText ?? '').slice(0, 12000) }) },
         ],
         true,
       );
       return new Response(JSON.stringify({ cv: safeParseJson(reply) }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (body.mode === 'resumeprep') {
+      const resume = (body.resumeText ?? '').trim().slice(0, 12000);
+      if (!resume) {
+        return new Response(JSON.stringify({ error: fr ? 'CV vide' : 'Empty resume' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const system = fr
+        ? `Tu es Sarah, RH senior. À partir du CV fourni (et du poste ciblé si présent), prépare l'étudiant à son entretien. N'invente AUCUNE expérience : appuie-toi uniquement sur le CV ; si une information manque, écris "À compléter".
+Réponds en JSON pur :
+{"summary": string (2 phrases sur le profil tel qu'un recruteur le lit),
+ "strengths": string[] (3 atouts issus du CV),
+ "risks": string[] (3 points que le recruteur va creuser : trous, changements, manques),
+ "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (8 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier, 1 sur les motivations)}`
+        : `You are Sarah, senior HR. From the provided resume (and target role if present), prepare the student for the interview. Invent NO experience: rely only on the resume; if information is missing write "To complete".
+Respond in pure JSON:
+{"summary": string (2 sentences on how a recruiter reads this profile),
+ "strengths": string[] (3 assets from the resume),
+ "risks": string[] (3 things the recruiter will dig into: gaps, switches, missing items),
+ "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (8 questions: 2 intro, 3 behavioral, 2 technical/role, 1 motivation)}`;
+
+      const reply = await callGemini(
+        [
+          { role: 'system', content: system },
+          { role: 'user', content: JSON.stringify({ jobTarget: body.jobTarget ?? '', resumeText: resume }) },
+        ],
+        true,
+      );
+      return new Response(JSON.stringify({ prep: safeParseJson(reply) }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
