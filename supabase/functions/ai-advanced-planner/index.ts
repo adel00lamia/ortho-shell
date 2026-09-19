@@ -1,12 +1,75 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://esm.sh/zod@3.23.8';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+const exactAllocation = (values: number[], budget: number): number[] => {
+  if (!values.length || budget <= 0) return values.map(() => 0);
+  const clean = values.map(value => Number.isFinite(value) && value > 0 ? value : 0);
+  const sum = clean.reduce((total, value) => total + value, 0);
+  const weights = sum > 0 ? clean.map(value => value / sum) : clean.map(() => 1 / clean.length);
+  const allocated = weights.map(weight => Math.floor(weight * budget));
+  let remainder = budget - allocated.reduce((total, value) => total + value, 0);
+  const order = weights.map((weight, index) => ({ weight, index })).sort((a, b) => b.weight - a.weight);
+  let cursor = 0;
+  while (remainder > 0) {
+    allocated[order[cursor % order.length].index] += 1;
+    remainder -= 1;
+    cursor += 1;
+  }
+  return allocated;
+};
+
+const normalizeBudget = (rawPlan: Record<string, unknown>, budget: number) => {
+  if (budget <= 0) return { budgetBreakdown: {}, modules: Array.isArray(rawPlan.modules) ? rawPlan.modules : [] };
+  const rawModules = Array.isArray(rawPlan.modules) ? rawPlan.modules as Array<Record<string, unknown>> : [];
+  const priorities: Record<string, number> = { critique: 4, haute: 3, moyenne: 2, 'à arbitrer': 1 };
+  const moduleWeights = rawModules.map(module => {
+    const proposed = typeof module.estimated_cost === 'number' ? module.estimated_cost : 0;
+    return proposed > 0 ? proposed : priorities[String(module.priority || '').toLowerCase()] || 1;
+  });
+  const moduleAmounts = exactAllocation(moduleWeights, budget);
+  const modules = rawModules.map((module, index) => ({ ...module, estimated_cost: moduleAmounts[index] }));
+
+  const rawBreakdown = rawPlan.budget_breakdown && typeof rawPlan.budget_breakdown === 'object'
+    ? rawPlan.budget_breakdown as Record<string, unknown>
+    : {};
+  const keys = Object.keys(rawBreakdown).filter(key => typeof rawBreakdown[key] === 'number');
+  const breakdownKeys = keys.length ? keys : ['actions_de_formation'];
+  const breakdownValues = keys.length ? keys.map(key => Number(rawBreakdown[key])) : [1];
+  const amounts = exactAllocation(breakdownValues, budget);
+  const budgetBreakdown = Object.fromEntries(breakdownKeys.map((key, index) => [key, amounts[index]]));
+  return { budgetBreakdown, modules };
+};
+
+const readResponsesStream = async (response: Response) => {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let output = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === '[DONE]') continue;
+      try {
+        const event = JSON.parse(payload);
+        if (event.type === 'response.output_text.delta' && typeof event.delta === 'string') output += event.delta;
+        if (event.type === 'response.completed' && !output && typeof event.response?.output_text === 'string') output = event.response.output_text;
+      } catch { /* ignore non-JSON SSE metadata */ }
+    }
+  }
+  return output;
 };
 
 const requirementsSchema = z.object({
@@ -59,7 +122,7 @@ const requirementsSchema = z.object({
     }).optional(),
     template: z.string().max(200).optional().default(''),
     pack: z.string().max(200).optional().default(''),
-    aiModel: z.string().max(100).optional().default('google/gemini-3-flash-preview'),
+    aiModel: z.string().max(100).optional().default('openai/gpt-6-astra'),
     customizations: z.object({
       deliveryMethods: z.array(z.string().max(50)).max(10).optional().default([]),
       certification: z.boolean().optional().default(false),
@@ -76,13 +139,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.get('Authorization');
   let userId = 'anonymous';
 
   if (authHeader?.startsWith('Bearer ')) {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(JSON.stringify({ error: 'Supabase authentication is not configured' }), { status: 500, headers: jsonHeaders });
+    }
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      supabaseUrl,
+      supabaseAnonKey,
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -127,39 +195,39 @@ serve(async (req) => {
     planEnd.setMonth(planEnd.getMonth() + requirements.duration);
     const canonicalCompany = requirements.company.trim() || (language === 'fr' ? 'Entreprise à confirmer' : 'Company to confirm');
 
-    // Real company data block — the ONLY factual source for headcount, positions,
-    // current skill levels, training budget and CSF rates.
+    // Only facts relevant to this report are forwarded; staffing totals are omitted.
     const cd = requirements.companyData;
     const pct = (rate?: number) => (typeof rate === 'number' ? `${Math.round(rate * 1000) / 10}%` : 'À confirmer');
     const companyFacts = cd ? [
       'VERIFIED COMPANY DATA (from the client database — the ONLY allowed factual source):',
-      cd.headcount ? `- Headcount: ${cd.headcount} employees (source: ${cd.headcountSource === 'employee_records' ? 'employee records' : 'declared company profile'})` : '- Headcount: not available, write "À confirmer"',
-      cd.departments?.length ? `- Departments and real headcount: ${cd.departments.map(d => `${d.name} (${d.headcount})`).join(', ')}` : '- Departments: not available',
-      cd.positions?.length ? `- Positions and real headcount: ${cd.positions.map(p => `${p.title} (${p.headcount})${p.isCritical ? ' [critical]' : ''}`).join(', ')}` : '- Positions: not available',
+      cd.positions?.length ? `- Relevant positions: ${cd.positions.map(p => `${p.title}${p.isCritical ? ' [critical]' : ''}`).join(', ')}` : '- Relevant positions: not available',
       cd.skills?.length
         ? `- Assessed skill levels (average current -> target, scale max ${cd.skills[0]?.maxLevel ?? 5}): ${cd.skills.map(s => `${s.name} ${s.currentLevel ?? '?'}->${s.targetLevel ?? '?'} (gap ${s.gap ?? '?'}; ${s.assessedEmployees ?? 0} assessed)`).join(', ')}`
         : '- Assessed skill levels: not available, never invent a current level',
-      cd.trainingBudget ? `- Training budget on record: ${cd.trainingBudget.amount} ${cd.trainingBudget.currency} (source: ${cd.trainingBudget.source})` : '- Training budget on record: not available',
       cd.payroll ? `- Gross annual payroll ${cd.payroll.exerciseYear}: ${cd.payroll.grossAnnual} MAD` : '- Gross annual payroll: not available',
       cd.csf ? `- CSF/OFPPT reference rates (UNVERIFIED reference, must be shown as "à vérifier"): planned action ${pct(cd.csf.plannedRate)}, non-planned ${pct(cd.csf.unplannedRate)}, TFP levy ${pct(cd.csf.tfpRate)}, hourly cap per person ${cd.csf.hourlyCapPerPerson ?? 'none'}${cd.csf.tfpAmount ? `, levy on record ${cd.csf.tfpAmount} MAD` : ''}` : '',
-      'RULE: use these figures verbatim for headcount, departments, positions, current/target skill levels, budget and rates. Never replace them with estimates, industry averages or illustrative numbers. Where a figure above is "not available", write "À confirmer".',
+      `- Authoritative budget for this plan: ${requirements.budget > 0 ? `${requirements.budget} MAD` : 'not supplied'}`,
+      'RULE: use these figures verbatim for positions, current/target skill levels, payroll and rates. Never mention employee or department counts. The authoritative plan budget is the current user input above, never a historical or suggested amount.',
     ].filter(Boolean).join('\n') : '';
 
     const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined training plan comparable in structure and clarity to a leading consulting firm's deliverable.${languageInstruction}
 
 DATA INTEGRITY RULES:
-- A "VERIFIED COMPANY DATA" block may be supplied below. It is the only factual source for headcount, departments, positions, current/target skill levels, training budget, payroll and CSF rates. Reuse those figures exactly; never substitute estimates or industry averages, and never invent a figure the block does not contain.
+- A "VERIFIED COMPANY DATA" block may be supplied below. It is the only factual source for positions, current/target skill levels, payroll and CSF rates. Never mention headcount or department counts in this report.
 - The current company is exactly "${canonicalCompany}". Never use another company name anywhere.
 - The report issue date is ${generatedAt.toISOString().slice(0, 10)}. The plan runs from ${generatedAt.toISOString().slice(0, 10)} to ${planEnd.toISOString().slice(0, 10)}.
 - Previous plans are historical evidence only. Never copy their company identity, dates, targets, claims, baselines, budgets, or market facts into the current plan.
 - Do not invent baselines, ROI, market size, growth rates, reimbursement rates, performance improvements, legal obligations, or current-state facts. Write "À confirmer" / "À mesurer" when absent.
 - If budget is zero, every cost must be omitted or marked "À chiffrer"; never fabricate a cost. If budget is provided, allocations must total that exact budget.
+- The current user-entered budget is the sole allocation authority. Ignore budget figures in previous plans, research suggestions and company records.
 - CSF, GIAC and OFPPT are reference frameworks to verify. Never promise eligibility or reimbursement.
 - Distinguish supplied facts, arithmetic calculations, and assumptions requiring validation.
 - Build a traceable engineering chain: observed difficulty -> target competency -> operational objective -> training action -> support measure -> workplace evidence.
 - Group actions into company-specific training axes. Do not default to generic axes when the supplied context indicates better ones.
 - For every module, provide concrete learning objectives, a content outline, assessment methods, support measures and workplace-transfer activities.
 - Never invent provider names, exact delivery dates, group counts or participant counts. Use "À sélectionner", "À planifier" or omit numeric fields when absent.
+- Analyze current industry shifts without inventing statistics. Every trend must state its business importance, affected competencies, urgency, recommended training response and evidence status. Use "Analyse à valider par une source datée" when no dated source was supplied.
+- Rank training actions by evidence, strategic objective and competency gap. Recommendations must say what to launch now, prepare next, or withhold pending validation.
 
 IMPORTANT: You must respond with valid JSON in exactly this format:
 {
@@ -182,6 +250,14 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "market_size": "À confirmer unless explicitly supplied with a dated source",
       "growth_rate": "À confirmer unless explicitly supplied with a dated source",
       "key_trends": ["Trend 1 with detailed explanation", "Trend 2"],
+      "trend_signals": [{
+        "trend": "Material industry shift",
+        "why_it_matters": "Business implication for this company",
+        "skills_impacted": ["Competency affected"],
+        "urgency": "immédiate/court terme/à surveiller",
+        "training_response": "Specific training response",
+        "evidence_status": "Analyse à valider par une source datée"
+      }],
       "competitive_landscape": "Analysis of training providers, competitors, and market positioning",
       "target_audience_analysis": "Detailed profile of the target learners, their needs, learning styles, and motivations",
       "demand_drivers": ["Driver 1", "Driver 2"],
@@ -227,6 +303,8 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "engagement_features": ["gamification", "social_learning", "ai_assistance"],
         "assessment_methods": ["practical", "theoretical", "peer_review"],
         "certification_level": "basic/intermediate/advanced/expert",
+        "priority": "critique/haute/moyenne/à arbitrer",
+        "priority_rationale": "Reason grounded in supplied objective, measured gap or critical role",
         "training_axis": "Name of the related training axis",
         "observed_difficulty": "The supplied difficulty or À confirmer",
         "learning_objectives": ["Observable learning objective 1", "Observable learning objective 2"],
@@ -262,7 +340,12 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "owner": "Accountable role or À confirmer"
       }
     ],
-    "recommendations": ["Strategic recommendation with innovation focus"],
+    "recommendations": [{
+      "recommendation": "Concrete executive action",
+      "horizon": "immédiat/court terme/moyen terme",
+      "rationale": "Link to a stated axis, objective, skill gap or missing evidence",
+      "owner": "Accountable role or À confirmer"
+    }],
     "evidence_register": [
       {
         "evidence": "Evidence required to validate need, delivery, learning or workplace transfer",
@@ -317,6 +400,13 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
   }
 }`;
 
+    const historicalPlans = requirements.previousPlans.map(plan => ({
+      ...plan,
+      content: plan.content
+        .replace(/(?:budget|coût|cost|montant)[^\n]{0,80}/gi, '[historical budget removed]')
+        .replace(/\b\d[\d\s,.]*(?:MAD|DH|EUR|USD)\b/gi, '[historical amount removed]'),
+    }));
+
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
 Company: ${canonicalCompany}
@@ -368,7 +458,7 @@ ${companyFacts}
 Additional Context:
 ${requirements.context || 'No additional context provided'}
 
-${requirements.previousPlans && requirements.previousPlans.length > 0 ? `
+${historicalPlans.length > 0 ? `
 PREVIOUS TRAINING PLANS (CRITICAL — AVOID REDUNDANCY):
 The company has provided their previous training plans below. You MUST:
 1. Analyze what was already covered in previous years
@@ -377,58 +467,43 @@ The company has provided their previous training plans below. You MUST:
 4. Explicitly mention in your recommendations what was already covered and what is new
 5. In the executive summary, reference continuity without importing any old identity, date, target or unverified claim
 
-${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.content}\n--- END ---`).join('\n\n')}
+${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.content}\n--- END ---`).join('\n\n')}
 ` : ''}`;
 
     console.log('Calling Lovable AI Gateway...');
 
-    // Validate and use the selected AI model
-    const allowedModels = [
-      'google/gemini-3-flash-preview',
-      'google/gemini-3.8-flash',
-      'google/gemini-3.1-pro-preview',
-    ];
-    const selectedModel = allowedModels.includes(requirements.aiModel || '')
-      ? requirements.aiModel
-      : 'google/gemini-3-flash-preview';
+    const selectedModel = 'openai/gpt-6-astra';
 
 
     console.log('Using AI model:', selectedModel);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Lovable-API-Key': LOVABLE_API_KEY,
+        'X-Lovable-AIG-SDK': 'fetch',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: selectedModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
+        instructions: systemPrompt,
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nReturn valid JSON only.` }] }],
+        stream: true,
+        store: false,
+        reasoning: { effort: 'medium', summary: 'auto' },
+        include: ['reasoning.encrypted_content'],
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI Gateway error:', response.status, errorText);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a few moments.' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'Payment required. Please add credits to continue.' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      throw new Error(`AI Gateway error: ${response.status}`);
+      let safeMessage = `AI Gateway error: ${response.status}`;
+      try { safeMessage = JSON.parse(errorText)?.message || JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
+      return new Response(JSON.stringify({ error: safeMessage }), { status: response.status, headers: jsonHeaders });
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = await readResponsesStream(response);
     if (!content) throw new Error('No content in AI response');
 
     let planData;
@@ -499,18 +574,14 @@ ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}
     }
 
     const rawPlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    const normalizedBudget = normalizeBudget(rawPlan, Math.round(requirements.budget));
     const normalizedPlan = {
       ...rawPlan,
       title: language === 'fr'
         ? `Plan de développement des compétences — ${canonicalCompany}`
         : `Skills Development Plan — ${canonicalCompany}`,
-      budget_breakdown: requirements.budget > 0 ? (rawPlan.budget_breakdown || {}) : {},
-      modules: Array.isArray(rawPlan.modules)
-        ? rawPlan.modules.map((module: Record<string, unknown>) => ({
-            ...module,
-            estimated_cost: requirements.budget > 0 && typeof module.estimated_cost === 'number' ? module.estimated_cost : undefined,
-          }))
-        : [],
+      budget_breakdown: normalizedBudget.budgetBreakdown,
+      modules: normalizedBudget.modules,
       report_meta: {
         company: canonicalCompany,
         country: requirements.country || (language === 'fr' ? 'À confirmer' : 'To confirm'),
@@ -523,12 +594,13 @@ ${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}
     };
 
     return new Response(JSON.stringify({ plan: normalizedPlan }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
   } catch (error) {
     console.error('Error in ai-advanced-planner function:', error);
-    return new Response(JSON.stringify({ error: 'Failed to generate advanced training plan' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const message = error instanceof Error ? error.message : 'Failed to generate advanced training plan';
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500, headers: jsonHeaders,
     });
   }
 });

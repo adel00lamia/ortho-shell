@@ -150,7 +150,7 @@ export default function AIPlanBuilder() {
     objectives: [],
     targetSkills: [],
     constraints: [],
-    aiModel: 'google/gemini-3-flash-preview',
+    aiModel: 'openai/gpt-6-astra',
     context: '',
     customizations: {
       deliveryMethods: ['online'],
@@ -169,6 +169,7 @@ export default function AIPlanBuilder() {
   const [activeSnapshot, setActiveSnapshot] = useState<GeneratedPlanSnapshot | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<GeneratedPlanSnapshot[]>([]);
   const [researchData, setResearchData] = useState<CompanyResearchData | null>(null);
+  const [budgetEdited, setBudgetEdited] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [planVersions, setPlanVersions] = useState<any[]>([]);
   const [planComments, setPlanComments] = useState<any[]>([]);
@@ -475,9 +476,8 @@ export default function AIPlanBuilder() {
           .single();
 
         if (profile?.company_id) {
-          const [companyRes, employeesRes, evalsRes] = await Promise.all([
-            supabase.from('companies').select('name, industry, company_size, employee_count, city').eq('id', profile.company_id).single(),
-            supabase.from('company_employees').select('department, position', { count: 'exact', head: false }).eq('company_id', profile.company_id).eq('status', 'active'),
+          const [companyRes, evalsRes] = await Promise.all([
+            supabase.from('companies').select('name, industry, company_size, city').eq('id', profile.company_id).single(),
             supabase.from('performance_evaluations').select('areas_for_improvement, training_recommendations').eq('company_id', profile.company_id),
           ]);
 
@@ -493,9 +493,6 @@ export default function AIPlanBuilder() {
             const topNeeds = Object.entries(needsCounts).sort(([,a],[,b]) => b - a).slice(0, 5).map(([s]) => s);
             const topGaps = Object.entries(gapCounts).sort(([,a],[,b]) => b - a).slice(0, 3).map(([g]) => g);
 
-            // Get unique departments for context
-            const departments = [...new Set((employeesRes.data || []).map((e: any) => e.department).filter(Boolean))];
-
             setRequirements(prev => ({
               ...prev,
               company: company.name || prev.company,
@@ -508,9 +505,7 @@ export default function AIPlanBuilder() {
                 : prev.objectives,
               // Auto-populate target skills from training recommendations
               targetSkills: prev.targetSkills.length === 0 ? topNeeds : prev.targetSkills,
-              context: prev.context || (departments.length > 0
-                ? `Company has ${employeesRes.count || 0} employees across ${departments.length} departments: ${departments.join(', ')}.`
-                : ''),
+              context: prev.context,
             }));
           }
         }
@@ -573,7 +568,7 @@ export default function AIPlanBuilder() {
         targetSkills: Array.isArray(config.targetSkills) ? config.targetSkills : prev.targetSkills,
         constraints: Array.isArray(config.constraints) ? config.constraints : prev.constraints,
         duration: typeof config.duration === 'number' ? config.duration : prev.duration,
-        budget: typeof config.budget === 'number' ? config.budget : prev.budget,
+        budget: !budgetEdited && typeof config.budget === 'number' ? config.budget : prev.budget,
         context: typeof config.context === 'string' ? config.context : prev.context,
         template: typeof config.template === 'string' ? config.template : prev.template,
         pack: typeof config.pack === 'string' ? config.pack : prev.pack,
@@ -592,7 +587,7 @@ export default function AIPlanBuilder() {
         objectives: [...template.objectives],
         targetSkills: [...template.targetSkills],
         duration: parseInt(template.duration.split('-')[0]) || 6,
-        budget: parseInt(template.budget.split('-')[0].replace(/,/g, '')) || 50000
+        budget: budgetEdited ? prev.budget : parseInt(template.budget.split('-')[0].replace(/,/g, '')) || 50000
       }));
       setSelectedTemplate(templateId);
       setStep(1);
@@ -617,7 +612,7 @@ export default function AIPlanBuilder() {
         objectives: combinedObjectives,
         targetSkills: combinedSkills,
         duration: parseInt(pack.totalDuration.split('-')[0]) || 12,
-        budget: parseInt(pack.totalBudget.split('-')[0].replace(/,/g, '')) || 100000
+        budget: budgetEdited ? prev.budget : parseInt(pack.totalBudget.split('-')[0].replace(/,/g, '')) || 100000
       }));
       setSelectedPack(packId);
       setStep(1);
@@ -638,8 +633,9 @@ export default function AIPlanBuilder() {
       const trimmedFactbase = factbase
         ? {
             ...factbase,
-            departments: (factbase.departments ?? []).slice(0, 60),
-            positions: (factbase.positions ?? []).slice(0, 60),
+            headcount: undefined,
+            departments: [],
+            positions: (factbase.positions ?? []).slice(0, 60).map(position => ({ ...position, headcount: 0 })),
             skills: (factbase.skills ?? []).slice(0, 60),
           }
         : undefined;
@@ -652,7 +648,7 @@ export default function AIPlanBuilder() {
         targetSkills: requirements.targetSkills.slice(0, 80),
         constraints: requirements.constraints.slice(0, 40),
         context: (requirements.context || '').slice(0, 15000),
-        // Real company data (headcount, positions, assessed skills, budget, CSF rates).
+        // Relevant company facts only; staffing and department totals are excluded.
         companyData: trimmedFactbase,
       };
 
@@ -1099,7 +1095,6 @@ export default function AIPlanBuilder() {
                     companySize: prev.companySize || data.company.companySize,
                     objectives: [...new Set([...prev.objectives, ...data.recommendations.suggestedObjectives])],
                     targetSkills: [...new Set([...prev.targetSkills, ...data.recommendations.prioritySkills])],
-                    budget: parseInt(data.recommendations.suggestedBudget.replace(/[^\d]/g, '')) || prev.budget,
                     duration: parseInt(data.recommendations.suggestedDuration) || prev.duration,
                     context: `${data.company.description}\n\nIndustry: ${data.industryAnalysis.overview}`,
                     customizations: {
@@ -1537,6 +1532,7 @@ export default function AIPlanBuilder() {
                     value={requirements.budget}
                     onChange={(e) => {
                       const n = parseInt(e.target.value);
+                      setBudgetEdited(true);
                       setRequirements({ ...requirements, budget: Number.isFinite(n) ? Math.max(0, n) : 0 });
                     }}
                     min="1000"
@@ -1858,7 +1854,10 @@ export default function AIPlanBuilder() {
                             {generatedPlan.recommendations.map((rec, index) => (
                               <div key={index} className="flex items-start gap-2">
                                 <div className="w-2 h-2 bg-primary rounded-full mt-2" />
-                                <p className="text-sm">{rec}</p>
+                                <div className="text-sm">
+                                  <p className="font-medium">{typeof rec === 'string' ? rec : rec.recommendation}</p>
+                                  {typeof rec !== 'string' && <p className="text-muted-foreground">{rec.horizon} · {rec.rationale}</p>}
+                                </div>
                               </div>
                             ))}
                           </div>

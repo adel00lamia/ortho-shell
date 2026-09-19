@@ -23,6 +23,9 @@ const formatMonthYear = (date: Date) => `${MONTHS_FR[date.getMonth()]} ${date.ge
 const formatMoney = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value).replace(/[\u00a0\u202f]/g, ' ')} MAD`;
 const labelize = (value: string) => value.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
 const textOr = (value: unknown, fallback = 'À confirmer') => typeof value === 'string' && value.trim() ? value.trim() : fallback;
+const recommendationText = (value: GeneratedPlan['recommendations'][number]) =>
+  typeof value === 'string' ? value : value.recommendation;
+const priorityRank: Record<string, number> = { critique: 0, haute: 1, moyenne: 2, 'à arbitrer': 3 };
 
 const addMonths = (date: Date, months: number) => {
   const result = new Date(date);
@@ -253,7 +256,7 @@ export const createPlanPDF = (
   ]);
   paragraph(plan.executive_summary || plan.description);
   subheading('Décisions proposées');
-  bullets((plan.recommendations || []).slice(0, 5));
+  bullets((plan.recommendations || []).slice(0, 5).map(recommendationText));
   subheading('Paramètres validés de la demande');
   autoTable(doc, {
     startY: y,
@@ -263,11 +266,6 @@ export const createPlanPDF = (
       ['Période', `${formatDate(startsAt)} — ${formatDate(endsAt)}`, 'Calcul'],
       ['Durée', `${requirements.duration} mois`, 'Donnée fournie'],
       ['Budget plafond', requirements.budget > 0 ? formatMoney(requirements.budget) : 'À chiffrer', requirements.budget > 0 ? 'Donnée fournie' : 'À valider'],
-      [
-        'Effectif couvert',
-        facts?.headcount ? `${facts.headcount} salariés` : (requirements.companySize || 'À confirmer'),
-        facts?.headcountSource === 'employee_records' ? 'Fiches salariés internes' : facts?.headcount ? 'Profil entreprise' : requirements.companySize ? 'Donnée fournie' : 'À valider',
-      ],
     ],
     theme: 'plain',
     headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
@@ -301,63 +299,27 @@ export const createPlanPDF = (
     };
     const advance = () => { y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 8; };
 
-    section('02A', 'Données réelles de l’entreprise', 'Effectifs, postes, compétences évaluées, budget et taux issus de vos propres enregistrements.', 48);
-    badge(facts.headcountSource === 'employee_records' ? 'DONNÉES INTERNES VÉRIFIÉES' : 'DONNÉES INTERNES PARTIELLES', 'source');
+    section('02A', 'Données utiles à la décision', 'Compétences évaluées, budget et références de financement issus de vos enregistrements.', 48);
+    badge('DONNÉES INTERNES', 'source');
     metricStrip([
-      {
-        value: facts.headcount ? String(facts.headcount) : 'À confirmer',
-        label: 'Effectif couvert',
-        status: facts.headcountSource === 'employee_records' ? 'Fiches salariés' : facts.headcountSource === 'declared_profile' ? 'Profil déclaré' : 'Non renseigné',
-      },
-      { value: facts.departments.length ? String(facts.departments.length) : 'À confirmer', label: 'Départements', status: 'Enregistrements internes' },
       { value: facts.skills.length ? String(facts.skills.length) : 'À confirmer', label: 'Compétences évaluées', status: 'Évaluations internes' },
+      { value: facts.trainingBudget ? formatMoney(facts.trainingBudget.amount) : 'À confirmer', label: 'Budget enregistré', status: 'Donnée interne indicative' },
+      { value: requirements.budget > 0 ? formatMoney(requirements.budget) : 'À chiffrer', label: 'Budget du plan', status: 'Saisie actuelle faisant foi' },
     ]);
-
-    subheading('Répartition des effectifs par département');
-    if (facts.departments.length) {
-      autoTable(doc, {
-        ...tableBase,
-        startY: y,
-        head: [['Département', 'Effectif', 'Part']],
-        body: facts.departments.slice(0, 15).map(dept => {
-          const total = facts.headcount || facts.departments.reduce((sum, d) => sum + d.headcount, 0);
-          return [dept.name, String(dept.headcount), total > 0 ? `${Math.round((dept.headcount / total) * 100)} %` : 'À confirmer'];
-        }),
-        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
-      });
-      advance();
-    } else {
-      paragraph('Aucune fiche salarié enregistrée. Renseignez les effectifs dans l’espace entreprise pour supprimer cette mention.');
-    }
-
-    subheading('Postes recensés');
-    if (facts.positions.length) {
-      autoTable(doc, {
-        ...tableBase,
-        startY: y,
-        head: [['Poste', 'Titulaires', 'Criticité']],
-        body: facts.positions.map(position => [position.title, String(position.headcount), position.isCritical ? 'Poste critique' : '—']),
-        columnStyles: { 1: { halign: 'right' } },
-      });
-      advance();
-    } else {
-      paragraph('Aucun poste enregistré. Les fiches de poste restent à documenter.');
-    }
 
     subheading('Niveaux de compétences actuels et cibles');
     if (facts.skills.length) {
       autoTable(doc, {
         ...tableBase,
         startY: y,
-        head: [['Compétence', 'Niveau actuel', 'Niveau cible', 'Écart', 'Salariés évalués']],
+        head: [['Compétence', 'Niveau actuel', 'Niveau cible', 'Écart']],
         body: facts.skills.map(skill => [
           skill.name,
           skill.currentLevel !== undefined ? `${skill.currentLevel}${skill.maxLevel ? ` / ${skill.maxLevel}` : ''}` : 'À confirmer',
           skill.targetLevel !== undefined ? `${skill.targetLevel}${skill.maxLevel ? ` / ${skill.maxLevel}` : ''}` : 'À confirmer',
           skill.gap !== undefined ? String(skill.gap) : 'À confirmer',
-          String(skill.assessedEmployees ?? 0),
         ]),
-        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
       });
       advance();
       const gapped = facts.skills.filter(skill => (skill.gap ?? 0) > 0).slice(0, 8);
@@ -400,11 +362,6 @@ export const createPlanPDF = (
           facts.csf?.unplannedRate !== undefined ? `${Math.round(facts.csf.unplannedRate * 1000) / 10} %` : 'À confirmer',
           'Taux de référence à vérifier',
         ],
-        [
-          'Plafond horaire par participant',
-          facts.csf?.hourlyCapPerPerson != null ? `${facts.csf.hourlyCapPerPerson} MAD / h` : 'À confirmer',
-          'Taux de référence à vérifier',
-        ],
       ],
       columnStyles: { 0: { fontStyle: 'bold' } },
     });
@@ -440,6 +397,25 @@ export const createPlanPDF = (
 
   if (plan.modules?.length) {
     section('03', 'Portefeuille de formation priorisé', 'Chaque action doit être validée avec son sponsor, sa population et son résultat attendu.');
+    subheading('Top formations à arbitrer');
+    const prioritizedModules = [...plan.modules]
+      .sort((a, b) => (priorityRank[String(a.priority || 'à arbitrer').toLowerCase()] ?? 4) - (priorityRank[String(b.priority || 'à arbitrer').toLowerCase()] ?? 4));
+    autoTable(doc, {
+      startY: y,
+      head: [['Rang', 'Formation', 'Priorité', 'Pourquoi maintenant', 'Tendance / axe', 'Budget']],
+      body: prioritizedModules.slice(0, 7).map((module, index) => [
+        String(index + 1), safe(module.title || module.name), textOr(module.priority, 'À arbitrer'),
+        textOr(module.priority_rationale || module.rationale), textOr(module.training_axis),
+        typeof module.estimated_cost === 'number' ? formatMoney(module.estimated_cost) : 'À chiffrer',
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [...PAPER] },
+      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 34 }, 2: { cellWidth: 19 }, 3: { cellWidth: 42 }, 4: { cellWidth: 31 }, 5: { cellWidth: 22 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.1, cellPadding: 2.4, overflow: 'linebreak', valign: 'top' },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 9;
     autoTable(doc, {
       startY: y,
       head: [['#', 'Action / axe', 'Public / niveau', 'Modalité', 'Période', 'Budget']],
@@ -581,8 +557,21 @@ export const createPlanPDF = (
       styles: { fontSize: 8.5, cellPadding: 3 },
     });
     y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 7;
-    if (requirements.budget > 0 && calculatedTotal !== requirements.budget) {
-      paragraph(`Point de contrôle : le total proposé (${formatMoney(calculatedTotal)}) diffère du budget plafond (${formatMoney(requirements.budget)}). Arbitrage requis avant validation.`);
+    if (requirements.budget > 0) {
+      autoTable(doc, {
+        startY: y,
+        body: [
+          ['Budget disponible', formatMoney(requirements.budget)],
+          ['Budget affecté', formatMoney(calculatedTotal)],
+          ['Écart', formatMoney(requirements.budget - calculatedTotal)],
+        ],
+        theme: 'grid',
+        bodyStyles: { textColor: [...INK], lineColor: [...LINE] },
+        columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right', fontStyle: 'bold' } },
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 8.5, cellPadding: 3 },
+      });
+      y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 7;
     }
   } else {
     paragraph('Aucune ventilation budgétaire exploitable. Les coûts restent à chiffrer avant décision.');
@@ -638,6 +627,24 @@ export const createPlanPDF = (
     bullets([...(plan.risk_assessment.high_risks || []), ...(plan.risk_assessment.medium_risks || [])]);
     subheading('Mesures de maîtrise');
     bullets(plan.risk_assessment.mitigation_strategies);
+  }
+
+  if (plan.recommendations?.length) {
+    section('07B', 'Recommandations exécutives', 'Décisions séquencées pour sécuriser l’investissement formation.', 45);
+    autoTable(doc, {
+      startY: y,
+      head: [['Horizon', 'Décision recommandée', 'Justification', 'Responsable']],
+      body: plan.recommendations.map(item => typeof item === 'string'
+        ? ['À arbitrer', item, 'À relier à un axe ou une preuve', 'À confirmer']
+        : [textOr(item.horizon), item.recommendation, item.rationale, textOr(item.owner)]),
+      theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: 255 },
+      alternateRowStyles: { fillColor: [...PAPER] },
+      columnStyles: { 0: { cellWidth: 23, fontStyle: 'bold' }, 1: { cellWidth: 48 }, 2: { cellWidth: 57 }, 3: { cellWidth: 30 } },
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.5, cellPadding: 2.8, overflow: 'linebreak', valign: 'top' },
+    });
+    y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 9;
   }
 
   if (plan.regulatory_framework) {
@@ -742,8 +749,33 @@ export const createPlanPDF = (
       paragraph(pestel.key_implications || 'Implications principales à consolider avec les parties prenantes.');
     }
     if (plan.market_research) {
-      subheading('Contexte marché');
+      subheading('Exhibit A3 — Tendances sectorielles et implications compétences');
       paragraph(plan.market_research.market_overview);
+      if (plan.market_research.trend_signals?.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Tendance', 'Enjeu métier', 'Compétences', 'Urgence', 'Réponse formation']],
+          body: plan.market_research.trend_signals.map(signal => [
+            `${signal.trend}\n${textOr(signal.evidence_status, 'Analyse à valider par une source datée')}`,
+            signal.why_it_matters,
+            signal.skills_impacted.join(', ') || 'À confirmer',
+            signal.urgency,
+            signal.training_response,
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [...BLUE], textColor: 255 },
+          alternateRowStyles: { fillColor: [...SOFT_BLUE] },
+          columnStyles: { 0: { cellWidth: 38, fontStyle: 'bold' }, 1: { cellWidth: 36 }, 2: { cellWidth: 31 }, 3: { cellWidth: 20 }, 4: { cellWidth: 33 } },
+          margin: { left: margin, right: margin },
+          styles: { fontSize: 7, cellPadding: 2.5, overflow: 'linebreak', valign: 'top' },
+        });
+        y = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY || y) + 7;
+      } else {
+        bullets(plan.market_research.key_trends);
+      }
+      subheading('Moteurs de demande et défis');
+      bullets([...(plan.market_research.demand_drivers || []), ...(plan.market_research.market_challenges || [])]);
+      if (plan.market_research.competitive_landscape) paragraph(plan.market_research.competitive_landscape);
       paragraph('Les estimations de taille et de croissance du marché ne sont pas reprises sans source explicite et datée.');
     }
   }
