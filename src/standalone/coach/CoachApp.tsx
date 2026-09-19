@@ -64,15 +64,19 @@ const CoachApp = () => {
 
   const importResume = async (file: File | null) => {
     if (!file) return;
-    const isText = /\.(txt|md|csv|json)$/i.test(file.name) || file.type.startsWith('text/');
-    if (!isText) {
-      toast.error(fr
-        ? 'Format non lisible ici : ouvre ton CV (PDF/Word) et copie-colle le texte.'
-        : 'Unsupported here: open your CV (PDF/Word) and paste the text.');
-      return;
+    try {
+      setResumeText(await extractResumeText(file));
+      toast.success(fr ? 'CV importé et lu' : 'Resume imported and read');
+    } catch (e) {
+      const code = (e as Error).message;
+      toast.error(
+        code === 'DOC_LEGACY'
+          ? (fr ? 'Format .doc trop ancien : enregistre en PDF ou .docx.' : 'Legacy .doc: save as PDF or .docx.')
+          : code === 'EMPTY'
+            ? (fr ? 'Aucun texte lisible (CV scanné ?) : colle le texte à la main.' : 'No readable text (scanned CV?): paste the text manually.')
+            : (fr ? 'Fichier non lisible : utilise un PDF, un .docx ou du texte.' : 'Unreadable file: use a PDF, .docx or text file.'),
+      );
     }
-    setResumeText((await file.text()).slice(0, 20000));
-    toast.success(fr ? 'CV importé' : 'Resume imported');
   };
 
   /* -------------------------- Interview setup --------------------------- */
