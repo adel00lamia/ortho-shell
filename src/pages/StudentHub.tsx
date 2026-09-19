@@ -942,6 +942,13 @@ const StudentHub = () => {
         position={position}
         onStart={() => sendInterviewTurn(true)}
         onUserAnswer={(text) => sendInterviewAnswer(text)}
+        onAskHelp={() =>
+          sendInterviewAnswer(
+            fr
+              ? "Aide-moi : je ne sais pas quoi répondre. Donne-moi la structure attendue en 3 points, un exemple de réponse court (5 phrases max) que je peux adapter, puis repose-moi la même question."
+              : "Help me: I don't know what to answer. Give me the expected structure in 3 points, a short sample answer (max 5 sentences) I can adapt, then ask me the same question again.",
+          )
+        }
       />
     </div>
   );
