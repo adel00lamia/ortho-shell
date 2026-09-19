@@ -4,6 +4,7 @@
 SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin → assessment → plan de formation IA → exécution (formation interne d'abord) → carrière / upskilling-reskilling → mesure d'impact. Le diagnostic est le portillon de la chaîne, pas le produit entier.
 
 ## Done
+- [x] Parcours d'entretien guidé : Pitch en 3 étapes, STAR, Passé/Présent/Futur et Pitch impactant, avec entraînement Sarah
 - [x] Rapport IA recentré sur le budget saisi, les tendances sectorielles, les formations prioritaires et les recommandations exécutives
 - [x] Sécurisation des données participants (Pulse, portail, documents CSF)
 - [x] Pulse terrain public + ateliers + portail participant

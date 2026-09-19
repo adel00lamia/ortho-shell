@@ -211,6 +211,7 @@ const StudentHub = () => {
   const [difficulty, setDifficulty] = useState<'warmup' | 'junior' | 'mid' | 'senior'>('warmup');
   const [style, setStyle] = useState<'behavioral' | 'technical' | 'mixed'>('mixed');
   const [demoKey, setDemoKey] = useState<string | null>(null);
+  const [interviewMethod, setInterviewMethod] = useState<string>('');
 
   const DEMO_SCENARIOS = [
     {
@@ -245,6 +246,64 @@ const StudentHub = () => {
     },
   ];
   const activeDemo = DEMO_SCENARIOS.find((s) => s.key === demoKey) ?? null;
+  const INTERVIEW_METHODS = [
+    {
+      key: 'pitch-3',
+      time: '01:47',
+      title: fr ? 'Le pitch en 3 étapes' : 'The 3-step pitch',
+      use: fr ? 'Pour répondre simplement à « Présentez-vous ».' : 'To answer “Tell me about yourself” simply.',
+      steps: fr
+        ? ['Qui es-tu ?', 'Que recherches-tu ?', 'Pourquoi ce poste ?']
+        : ['Who are you?', 'What are you looking for?', 'Why this role?'],
+      opener: fr ? '« Je suis…, avec… d’expérience. Je souhaite… Ce poste… »' : '“I am…, with… experience. I want to… This role…”',
+      example: fr
+        ? 'Je suis Thomas, avec 6 ans d’expérience en Business Intelligence. Je souhaite évoluer comme chef de projet. Ce poste correspond à mon envie de piloter des projets utiles et des équipes.'
+        : 'I am Thomas, with six years of Business Intelligence experience. I want to grow into project management. This role matches my goal of leading useful projects and teams.',
+      question: fr ? 'Présentez-vous en une minute.' : 'Tell me about yourself in one minute.',
+    },
+    {
+      key: 'star',
+      time: '02:17',
+      title: fr ? 'La méthode STAR' : 'The STAR method',
+      use: fr ? 'Pour raconter une expérience concrète sans se disperser.' : 'To explain a real experience without losing focus.',
+      steps: fr
+        ? ['Situation', 'Tâche', 'Action', 'Résultat']
+        : ['Situation', 'Task', 'Action', 'Result'],
+      opener: fr ? '« Pour vous donner un exemple concret… Mon rôle était… J’ai… Résultat… »' : '“Let me give you a concrete example… My role was… I… As a result…”',
+      example: fr
+        ? 'Lors d’un projet en retard, je devais sécuriser la livraison. J’ai repriorisé les tâches et instauré un point quotidien. Nous avons livré à la date prévue et réduit les erreurs.'
+        : 'When a project fell behind, I had to secure delivery. I reprioritized tasks and introduced a daily check-in. We delivered on time and reduced errors.',
+      question: fr ? 'Parlez-moi d’une situation difficile que vous avez bien gérée.' : 'Tell me about a difficult situation you handled well.',
+    },
+    {
+      key: 'past-present-future',
+      time: '03:25',
+      title: fr ? 'Passé / Présent / Futur' : 'Past / Present / Future',
+      use: fr ? 'Pour donner un fil logique à ton parcours et à ton projet.' : 'To connect your background, current role, and next goal.',
+      steps: fr
+        ? ['Passé : d’où tu viens', 'Présent : ce que tu fais', 'Futur : où tu veux aller']
+        : ['Past: where you come from', 'Present: what you do', 'Future: where you want to go'],
+      opener: fr ? '« J’ai commencé par… Aujourd’hui… Je souhaite maintenant… »' : '“I started with… Today… I now want to…”',
+      example: fr
+        ? 'J’ai commencé en analyse de données. Aujourd’hui, je transforme les besoins métiers en tableaux de bord. Je souhaite maintenant piloter des projets BI de bout en bout.'
+        : 'I started in data analysis. Today, I turn business needs into dashboards. I now want to lead BI projects end to end.',
+      question: fr ? 'Pouvez-vous me résumer votre parcours et votre projet professionnel ?' : 'Can you summarize your background and career goal?',
+    },
+    {
+      key: 'impact',
+      time: '04:08',
+      title: fr ? 'Le pitch impactant' : 'The impactful pitch',
+      use: fr ? 'Pour retenir l’attention avec une preuve et une valeur claire.' : 'To earn attention with proof and clear value.',
+      steps: fr
+        ? ['Une accroche claire', 'Une preuve concrète', 'La valeur pour le poste']
+        : ['A clear hook', 'Concrete proof', 'Value for the role'],
+      opener: fr ? '« Ma force, c’est… Je l’ai démontré en… Je veux l’apporter à… »' : '“My strength is… I proved it by… I want to bring it to…”',
+      example: fr
+        ? 'Ma force est de rendre les données utiles aux décisions. J’ai simplifié un reporting complexe pour accélérer les arbitrages. Je veux apporter cette clarté à vos projets.'
+        : 'My strength is making data useful for decisions. I simplified complex reporting to speed up decisions. I want to bring that clarity to your projects.',
+      question: fr ? 'En une minute, qu’est-ce qui vous distingue pour ce poste ?' : 'In one minute, what sets you apart for this role?',
+    },
+  ];
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -416,8 +475,17 @@ const StudentHub = () => {
   };
 
   const rehearseQuestion = (question: string) => {
+    setInterviewMethod('');
     if (!position.trim()) setPosition(cvTarget || (fr ? 'Poste ciblé' : 'Target role'));
     setChat([{ role: 'assistant', content: question }]);
+    setFeedback(null);
+    setVideoCallOpen(true);
+  };
+
+  const rehearseMethod = (method: (typeof INTERVIEW_METHODS)[number]) => {
+    setInterviewMethod(method.title);
+    if (!position.trim()) setPosition(cvTarget || (fr ? 'Poste ciblé' : 'Target role'));
+    setChat([{ role: 'assistant', content: method.question }]);
     setFeedback(null);
     setVideoCallOpen(true);
   };
@@ -794,31 +862,44 @@ const StudentHub = () => {
 
         {/* CV & INTERVIEW */}
         <TabsContent value="cv" className="space-y-4">
-          {/* INTRO PITCH FORMULA */}
+          {/* INTERVIEW METHODS */}
           <Card className="border-emerald-500/30">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5 text-emerald-600" />{fr ? 'Ton pitch d\'intro en 3 questions' : 'Your intro pitch in 3 questions'}</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5 text-emerald-600" />{fr ? '4 techniques pour réussir ton entretien' : '4 techniques to succeed in your interview'}</CardTitle>
               <CardDescription>
                 {fr
-                  ? '« Présentez-vous » est presque toujours la 1ère question. La clé : une réponse concise, percutante et SIMPLE. C\'est ensuite le recruteur qui enchaîne.'
-                  : '"Tell me about yourself" is almost always the first question. The key: a concise, punchy, SIMPLE answer. Then the recruiter takes over.'}
+                  ? 'Choisis une méthode, lis l’exemple, puis entraîne-toi immédiatement avec Sarah.'
+                  : 'Choose a method, read the example, then practice immediately with Sarah.'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid sm:grid-cols-3 gap-2 text-sm">
-                <div className="rounded-lg bg-emerald-500/10 p-3"><div className="font-semibold">1️⃣ {fr ? 'Qui es-tu ?' : 'Who are you?'}</div><p className="text-xs text-muted-foreground mt-1">{fr ? 'Nom + ton expérience clé en une phrase.' : 'Name + your key experience in one sentence.'}</p></div>
-                <div className="rounded-lg bg-emerald-500/10 p-3"><div className="font-semibold">2️⃣ {fr ? 'Que recherches-tu ?' : 'What are you looking for?'}</div><p className="text-xs text-muted-foreground mt-1">{fr ? 'Ton objectif d\'évolution, en une phrase.' : 'Your next step, in one sentence.'}</p></div>
-                <div className="rounded-lg bg-emerald-500/10 p-3"><div className="font-semibold">3️⃣ {fr ? 'Pourquoi ce poste ?' : 'Why this role?'}</div><p className="text-xs text-muted-foreground mt-1">{fr ? 'Le lien direct entre le poste et tes envies.' : 'The direct link between the role and what you want.'}</p></div>
+            <CardContent>
+              <div className="grid gap-3 lg:grid-cols-2">
+                {INTERVIEW_METHODS.map((method, index) => (
+                  <div key={method.key} className="rounded-lg border bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold text-emerald-600">{method.time} · {fr ? `Astuce N°${index + 1}` : `Tip #${index + 1}`}</div>
+                        <h3 className="font-semibold mt-0.5">{method.title}</h3>
+                      </div>
+                      <Badge variant="secondary">{index + 1}/4</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{method.use}</p>
+                    <ol className="space-y-1">
+                      {method.steps.map((step, stepIndex) => (
+                        <li key={step} className="flex gap-2 text-sm">
+                          <span className="font-semibold text-emerald-600">{stepIndex + 1}.</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="rounded-md bg-emerald-500/10 p-3 text-xs font-medium">{method.opener}</div>
+                    <div className="rounded-md bg-muted/50 p-3 text-sm italic">« {method.example} »</div>
+                    <Button className="w-full" onClick={() => rehearseMethod(method)}>
+                      <Video className="h-4 w-4 mr-1" />{fr ? 'S’entraîner avec Sarah' : 'Practice with Sarah'}
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <div className="rounded-lg bg-muted/50 p-3 text-sm italic">
-                « {fr
-                  ? 'Je suis Thomas, 6 ans d\'expérience en Business Intelligence. Je souhaite évoluer en tant que chef de projet, et ce poste m\'offre exactement cette opportunité.'
-                  : 'I\'m Thomas, 6 years of Business Intelligence experience. I want to grow into a project manager role, and this position offers exactly that opportunity.'} »
-              </div>
-              <p className="text-xs text-muted-foreground">✅ {fr ? 'Un recruteur captivé · une image claire et pro · plus de chances de décrocher le job.' : 'A captivated recruiter · a clear professional image · better odds of landing the job.'}</p>
-              <Button onClick={() => rehearseQuestion(fr ? 'Présentez-vous en une minute.' : 'Tell me about yourself in one minute.')}>
-                <Video className="h-4 w-4 mr-1" />{fr ? 'S\'entraîner avec Sarah sur cette question' : 'Practice this question with Sarah'}
-              </Button>
             </CardContent>
           </Card>
 
@@ -1195,20 +1276,21 @@ const StudentHub = () => {
         streamingAssistant={streamingAssistant}
         language={fr ? 'fr' : 'en'}
         position={position}
+        coachingMethod={interviewMethod}
         onStart={() => sendInterviewTurn(true)}
         onUserAnswer={(text) => sendInterviewAnswer(text)}
         onAskHelp={() =>
           sendInterviewAnswer(
             fr
-              ? "Je bloque sur ta question. Donne-moi une RÉPONSE MODÈLE complète et structurée, prête à dire à voix haute à la première personne, en suivant exactement cette trame : 1) Situation : ... 2) Tâche : ... 3) Action : ... 4) Résultat : ... (avec un résultat chiffré réaliste). 6 à 8 phrases maximum, ton naturel et professionnel. Après le modèle, ajoute une ligne 'À adapter :' avec 2 éléments que je dois personnaliser avec ma propre expérience, puis repose-moi la même question."
-              : "I'm stuck on your question. Give me a complete, structured MODEL ANSWER, ready to say out loud in the first person, following exactly this frame: 1) Situation: ... 2) Task: ... 3) Action: ... 4) Result: ... (with a realistic quantified result). Max 6-8 sentences, natural professional tone. After the model, add a 'Adapt this:' line with 2 elements I should personalize with my own experience, then ask me the same question again.",
+              ? `Je bloque sur ta question. Donne-moi une RÉPONSE MODÈLE complète, naturelle et prête à dire à voix haute à la première personne. ${interviewMethod ? `Utilise précisément la méthode « ${interviewMethod} ». ` : 'Choisis la méthode la plus adaptée parmi : Pitch en 3 étapes, STAR, Passé/Présent/Futur ou Pitch impactant. '}N’invente aucune expérience absente de mon CV : écris [à personnaliser] quand une information manque. 6 à 8 phrases maximum. Termine par « À adapter : » avec 2 éléments personnels à compléter, puis repose la même question.`
+              : `I'm stuck on your question. Give me a complete, natural MODEL ANSWER ready to say out loud in the first person. ${interviewMethod ? `Use the “${interviewMethod}” method precisely. ` : 'Choose the most suitable method: 3-step pitch, STAR, Past/Present/Future, or impactful pitch. '}Do not invent experience absent from my resume: write [personalize] when information is missing. Maximum 6–8 sentences. End with “Adapt:” and two personal details to complete, then repeat the same question.`,
           )
         }
         onAskTips={() =>
           sendInterviewAnswer(
             fr
-              ? "Donne-moi tes recommandations structurées pour la question que tu viens de poser, dans cet ordre exact : 1) Ce que le recruteur évalue vraiment (1 phrase) 2) La structure de réponse attendue en 3 étapes numérotées 3) 2 phrases d'accroche percutantes que je peux dire mot pour mot 4) 1 erreur à éviter absolument. Sois concrète et directe. Ne repose pas la question, attends ma réponse."
-              : "Give me your structured recommendations for the question you just asked, in this exact order: 1) What the recruiter is really assessing (1 sentence) 2) The expected answer structure in 3 numbered steps 3) 2 punchy opening sentences I can say word for word 4) 1 mistake to absolutely avoid. Be concrete and direct. Do not repeat the question, wait for my answer.",
+              ? `Donne-moi tes recommandations pour la question posée. ${interviewMethod ? `Coache-moi avec la méthode « ${interviewMethod} ». ` : 'Indique d’abord laquelle de ces méthodes convient : Pitch en 3 étapes, STAR, Passé/Présent/Futur ou Pitch impactant. '}Puis donne dans cet ordre : 1) ce que le recruteur évalue vraiment 2) les étapes très courtes de la réponse 3) deux phrases d’accroche que je peux dire mot pour mot 4) une erreur à éviter. Sois concrète et directe. Ne repose pas la question ; attends ma réponse.`
+              : `Give me recommendations for the question asked. ${interviewMethod ? `Coach me with the “${interviewMethod}” method. ` : 'First identify the best method: 3-step pitch, STAR, Past/Present/Future, or impactful pitch. '}Then give: 1) what the recruiter assesses 2) the short answer steps 3) two opening lines I can say word for word 4) one mistake to avoid. Be direct. Do not repeat the question; wait for my answer.`,
           )
         }
       />
