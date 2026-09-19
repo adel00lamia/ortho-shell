@@ -210,6 +210,41 @@ const StudentHub = () => {
   const [position, setPosition] = useState('');
   const [difficulty, setDifficulty] = useState<'warmup' | 'junior' | 'mid' | 'senior'>('warmup');
   const [style, setStyle] = useState<'behavioral' | 'technical' | 'mixed'>('mixed');
+  const [demoKey, setDemoKey] = useState<string | null>(null);
+
+  const DEMO_SCENARIOS = [
+    {
+      key: 'chargee-rh',
+      position: fr ? 'Chargé(e) de recrutement RH' : 'HR Recruitment Officer',
+      difficulty: 'warmup' as const,
+      style: 'behavioral' as const,
+      levelLabel: fr ? 'Échauffement · Comportemental' : 'Warm-up · Behavioral',
+      questions: fr
+        ? ['Présentez-vous en 1 minute.', 'Pourquoi les RH ?', 'Racontez une fois où vous avez géré une urgence.', 'Une qualité et un défaut au travail ?']
+        : ['Introduce yourself in 1 minute.', 'Why HR?', 'Tell me about a time you handled an urgent issue.', 'One strength and one weakness at work?'],
+    },
+    {
+      key: 'data-analyst',
+      position: fr ? 'Data Analyst junior' : 'Junior Data Analyst',
+      difficulty: 'junior' as const,
+      style: 'mixed' as const,
+      levelLabel: fr ? 'Junior · Mixte' : 'Junior · Mixed',
+      questions: fr
+        ? ['Quel projet de données êtes-vous le plus fier d\'avoir mené ?', 'Comment vérifiez-vous la fiabilité d\'un fichier ?', 'Expliquez un tableau de bord à un non-initié.', 'Un chiffre semble faux : que faites-vous ?']
+        : ['Which data project are you proudest of?', 'How do you check a dataset is reliable?', 'Explain a dashboard to a non-expert.', 'A figure looks wrong: what do you do?'],
+    },
+    {
+      key: 'chef-projet',
+      position: fr ? 'Chef de projet formation' : 'Training Project Manager',
+      difficulty: 'mid' as const,
+      style: 'technical' as const,
+      levelLabel: fr ? 'Intermédiaire · Technique' : 'Mid-level · Technical',
+      questions: fr
+        ? ['Comment identifiez-vous un besoin de formation réel ?', 'Comment construisez-vous un budget de formation ?', 'Un manager refuse de libérer son équipe : votre approche ?', 'Comment mesurez-vous l\'impact à 90 jours ?']
+        : ['How do you identify a real training need?', 'How do you build a training budget?', 'A manager refuses to release his team: your approach?', 'How do you measure impact at 90 days?'],
+    },
+  ];
+  const activeDemo = DEMO_SCENARIOS.find((s) => s.key === demoKey) ?? null;
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
