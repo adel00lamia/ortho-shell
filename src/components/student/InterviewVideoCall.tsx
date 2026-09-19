@@ -153,7 +153,7 @@ function keepShortSentences(input: string, maxWords = 15): string {
 
 type SR = any;
 
-export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer, onAskHelp }: Props) {
+export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer, onAskHelp, onAskTips }: Props) {
   const fr = language === 'fr';
   const ar = language === 'ar';
   const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
