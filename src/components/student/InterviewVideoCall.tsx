@@ -152,7 +152,7 @@ function keepShortSentences(input: string, maxWords = 15): string {
 
 type SR = any;
 
-export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer }: Props) {
+export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer, onAskHelp }: Props) {
   const fr = language === 'fr';
   const ar = language === 'ar';
   const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
@@ -166,6 +166,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
   const [hasStarted, setHasStarted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [conciseTTS, setConciseTTS] = useState(true);
+  const [showGuide, setShowGuide] = useState(true);
   const [liveCaption, setLiveCaption] = useState('');
   const [spokenFull, setSpokenFull] = useState('');
   const [debugOpen, setDebugOpen] = useState(false);
@@ -411,10 +412,10 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleHangup()}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white">
+      <DialogContent className="max-w-3xl w-[96vw] p-0 overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white">
         <DialogTitle className="sr-only">{fr ? 'Entretien vidéo IA' : 'AI Video Interview'}</DialogTitle>
 
-        <div className="relative h-[600px] flex flex-col">
+        <div className="relative h-[88vh] sm:h-[620px] flex flex-col">
           {/* Aurora background */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
@@ -506,7 +507,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
           </div>
 
           {/* Agent stage */}
-          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-start gap-4 sm:gap-6 px-4 sm:px-6 pt-14 pb-2">
             {/* Animated voice orb */}
             <div className="relative">
               <AnimatePresence>
@@ -532,7 +533,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                     : '0 0 40px rgba(99,102,241,0.35), 0 0 0 3px rgba(255,255,255,0.1)',
                 }}
                 transition={{ duration: 0.8, repeat: isSpeaking ? Infinity : 0 }}
-                className="relative h-48 w-48 rounded-full overflow-hidden ring-2 ring-white/20"
+                className="relative h-24 w-24 sm:h-40 sm:w-40 rounded-full overflow-hidden ring-2 ring-white/20"
               >
                 <img
                   src={coachAvatar}
