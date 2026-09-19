@@ -18,6 +18,7 @@ interface Props {
   streamingAssistant?: boolean;
   language: 'fr' | 'en' | 'ar';
   position: string;
+  coachingMethod?: string;
   onStart: () => void;
   onUserAnswer: (text: string) => void;
   onAskHelp?: () => void;
@@ -153,7 +154,7 @@ function keepShortSentences(input: string, maxWords = 15): string {
 
 type SR = any;
 
-export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer, onAskHelp, onAskTips }: Props) {
+export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, coachingMethod, onStart, onUserAnswer, onAskHelp, onAskTips }: Props) {
   const fr = language === 'fr';
   const ar = language === 'ar';
   const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
@@ -588,6 +589,11 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   : isListening ? (fr ? 'Écoute' : ar ? 'تستمع' : 'Listening')
                   : (fr ? 'En attente' : ar ? 'جاهزة' : 'Ready')}
               </div>
+              {coachingMethod && (
+                <div className="mb-2 inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-100">
+                  {fr ? 'Méthode active' : ar ? 'الطريقة النشطة' : 'Active method'} · {coachingMethod}
+                </div>
+              )}
               <div className="max-h-[38vh] sm:max-h-[220px] overflow-y-auto rounded-xl bg-slate-900/70 border border-white/20 px-4 py-3">
                 <p className="text-base sm:text-lg text-white leading-relaxed whitespace-pre-wrap text-left">
                   {lastAssistant

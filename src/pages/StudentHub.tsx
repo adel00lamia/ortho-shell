@@ -1276,6 +1276,7 @@ const StudentHub = () => {
         streamingAssistant={streamingAssistant}
         language={fr ? 'fr' : 'en'}
         position={position}
+        coachingMethod={interviewMethod}
         onStart={() => sendInterviewTurn(true)}
         onUserAnswer={(text) => sendInterviewAnswer(text)}
         onAskHelp={() =>
