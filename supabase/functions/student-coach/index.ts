@@ -11,6 +11,7 @@ interface InterviewBody {
   difficulty?: 'warmup' | 'junior' | 'mid' | 'senior';
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
+  resumeText?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
@@ -19,6 +20,7 @@ interface InterviewBody {
 interface CvBody {
   mode: 'cv';
   studentProfile: Record<string, unknown>;
+  resumeText?: string;
   jobTarget?: string;
   language?: 'en' | 'fr';
 }
@@ -252,7 +254,13 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nMODE ÉCHAUFFEMENT ACTIVÉ: Reste UNIQUEMENT sur des questions très simples d'introduction (présentation, motivation, qualités, centres d'intérêt, projet d'études). N'augmente JAMAIS la difficulté. Le but est de mettre l'étudiant en confiance. Après 4-5 questions, propose gentiment de passer à un niveau supérieur.`
           : `\n\nWARM-UP MODE ACTIVE: Stay ONLY on very simple introduction questions (self-intro, motivation, strengths, interests, studies). NEVER increase difficulty. The goal is to build the student's confidence. After 4-5 questions, gently suggest moving to a higher level.`)
         : '';
-      const finalSystem = system + warmupOverride + toneBlock;
+      const resume = (body.resumeText ?? '').trim().slice(0, 12000);
+      const resumeBlock = resume
+        ? (fr
+          ? `\n\nCV DE L'ÉTUDIANT (seule source de vérité, ne rien inventer) :\n<<<${resume}>>>\n- Base tes questions sur CE CV : expériences, projets, compétences, trous ou changements de parcours.\n- Cite parfois un élément précis du CV ("Sur ton stage chez X…").\n- Ne mentionne JAMAIS une expérience absente du CV.`
+          : `\n\nSTUDENT RESUME (sole source of truth, invent nothing):\n<<<${resume}>>>\n- Base your questions on THIS resume: experiences, projects, skills, gaps or career switches.\n- Sometimes quote a precise resume item ("About your internship at X…").\n- NEVER mention an experience that is not in the resume.`)
+        : '';
+      const finalSystem = system + warmupOverride + resumeBlock + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
@@ -331,7 +339,7 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
       const reply = await callGemini(
         [
           { role: 'system', content: system },
-          { role: 'user', content: JSON.stringify(body.studentProfile) },
+          { role: 'user', content: JSON.stringify({ profile: body.studentProfile, resumeText: (body.resumeText ?? '').slice(0, 12000) }) },
         ],
         true,
       );
