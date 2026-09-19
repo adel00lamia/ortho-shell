@@ -1238,6 +1238,26 @@ export default function AIPlanBuilder() {
                 )}
               </div>
 
+              {/* Objectives → training choices alignment */}
+              <ObjectiveAlignmentCard
+                objectives={requirements.objectives}
+                targetSkills={requirements.targetSkills}
+                deliveryMethods={requirements.customizations.deliveryMethods}
+                deliveryLabels={deliveryMethodLabels}
+                onAddSkills={(skills) => setRequirements(prev => ({
+                  ...prev,
+                  targetSkills: [...new Set([...prev.targetSkills, ...skills])],
+                }))}
+                onAddDeliveryMethods={(methods) => setRequirements(prev => ({
+                  ...prev,
+                  customizations: {
+                    ...prev.customizations,
+                    deliveryMethods: [...new Set([...prev.customizations.deliveryMethods, ...methods])],
+                  },
+                }))}
+              />
+
+
               {/* Previous Training Plan Upload */}
               <Separator />
               <div>
