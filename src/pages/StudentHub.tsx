@@ -913,8 +913,8 @@ const StudentHub = () => {
               <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />{fr ? 'Mon CV → mes questions d\'entretien' : 'My resume → my interview questions'}</CardTitle>
               <CardDescription>
                 {fr
-                  ? 'Colle le texte de ton CV (ou importe un fichier .txt). Sarah en tire les questions probables, ce qu\'il faut répondre, et s\'en sert pendant la simulation.'
-                  : 'Paste your resume text (or import a .txt file). Sarah derives the likely questions, what to answer, and uses it during the simulation.'}
+                  ? 'Importe ton CV (PDF, Word .docx ou texte) ou colle-le. Sarah en tire les questions probables, des exemples de réponses, et s\'en sert pendant la simulation.'
+                  : 'Upload your resume (PDF, Word .docx or text) or paste it. Sarah derives the likely questions, sample answers, and uses it during the simulation.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -927,7 +927,7 @@ const StudentHub = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <Input
                   type="file"
-                  accept=".txt,.md,.csv,.json,text/plain"
+                  accept={RESUME_FILE_ACCEPT}
                   className="max-w-[240px]"
                   onChange={(e) => handleResumeFile(e.target.files?.[0] ?? null)}
                 />
@@ -943,8 +943,8 @@ const StudentHub = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 {fr
-                  ? 'CV en PDF ou Word : ouvre-le, sélectionne tout, copie, puis colle le texte ci-dessus.'
-                  : 'PDF or Word resume: open it, select all, copy, then paste the text above.'}
+                  ? 'PDF et Word (.docx) sont lus directement dans ton navigateur : rien n\'est envoyé ni stocké sur un serveur. Si ton CV est un scan, copie-colle le texte.'
+                  : 'PDF and Word (.docx) are read directly in your browser: nothing is uploaded or stored. If your CV is a scan, paste the text.'}
               </p>
 
               {prep && (
