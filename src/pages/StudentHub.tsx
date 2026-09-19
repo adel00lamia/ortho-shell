@@ -746,7 +746,33 @@ const StudentHub = () => {
                 <CardDescription>{fr ? 'Choisis le poste, le niveau et le style — puis pratique.' : 'Pick role, level and style — then practice.'}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input placeholder={fr ? 'Poste ciblé (ex: Data Analyst)' : 'Target role (e.g. Data Analyst)'} value={position} onChange={(e) => setPosition(e.target.value)} />
+                <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
+                  <p className="text-sm font-semibold">{fr ? 'Scénarios de démonstration' : 'Demo scenarios'}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {DEMO_SCENARIOS.map((s) => (
+                      <Button
+                        key={s.key}
+                        size="sm"
+                        variant={demoKey === s.key ? 'default' : 'outline'}
+                        onClick={() => { setDemoKey(s.key); setPosition(s.position); setDifficulty(s.difficulty); setStyle(s.style); resetInterview(); }}
+                      >
+                        {s.position}
+                      </Button>
+                    ))}
+                  </div>
+                  {activeDemo && (
+                    <div className="space-y-2 pt-1">
+                      <p className="text-xs text-muted-foreground">{activeDemo.levelLabel}</p>
+                      <ul className="text-xs space-y-1 list-disc pl-4">
+                        {activeDemo.questions.map((q, i) => <li key={i}>{q}</li>)}
+                      </ul>
+                      <Button size="sm" className="w-full" onClick={() => { resetInterview(); setVideoCallOpen(true); }}>
+                        <Video className="h-4 w-4 mr-1" />{fr ? 'Lancer la démo en appel vidéo' : 'Launch demo video call'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <Input placeholder={fr ? 'Poste ciblé (ex: Data Analyst)' : 'Target role (e.g. Data Analyst)'} value={position} onChange={(e) => { setPosition(e.target.value); setDemoKey(null); }} />
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
