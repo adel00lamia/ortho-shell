@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import {
   GraduationCap, Briefcase, Sparkles, FileText, Send, Loader2, ExternalLink, Plus, X,
   Bot, User as UserIcon, Download, Copy, Award, CheckCircle2, RotateCcw, Target, BookOpen,
-  Video, Newspaper, Book, Lightbulb,
+  Video, Newspaper, Book, Lightbulb, Mic,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
@@ -794,6 +794,34 @@ const StudentHub = () => {
 
         {/* CV & INTERVIEW */}
         <TabsContent value="cv" className="space-y-4">
+          {/* INTRO PITCH FORMULA */}
+          <Card className="border-emerald-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5 text-emerald-600" />{fr ? 'Ton pitch d\'intro en 3 questions' : 'Your intro pitch in 3 questions'}</CardTitle>
+              <CardDescription>
+                {fr
+                  ? '« Présentez-vous » est presque toujours la 1ère question. La clé : une réponse concise, percutante et SIMPLE. C\'est ensuite le recruteur qui enchaîne.'
+                  : '"Tell me about yourself" is almost always the first question. The key: a concise, punchy, SIMPLE answer. Then the recruiter takes over.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid sm:grid-cols-3 gap-2 text-sm">
+                <div className="rounded-lg bg-emerald-500/10 p-3"><div className="font-semibold">1️⃣ {fr ? 'Qui es-tu ?' : 'Who are you?'}</div><p className="text-xs text-muted-foreground mt-1">{fr ? 'Nom + ton expérience clé en une phrase.' : 'Name + your key experience in one sentence.'}</p></div>
+                <div className="rounded-lg bg-emerald-500/10 p-3"><div className="font-semibold">2️⃣ {fr ? 'Que recherches-tu ?' : 'What are you looking for?'}</div><p className="text-xs text-muted-foreground mt-1">{fr ? 'Ton objectif d\'évolution, en une phrase.' : 'Your next step, in one sentence.'}</p></div>
+                <div className="rounded-lg bg-emerald-500/10 p-3"><div className="font-semibold">3️⃣ {fr ? 'Pourquoi ce poste ?' : 'Why this role?'}</div><p className="text-xs text-muted-foreground mt-1">{fr ? 'Le lien direct entre le poste et tes envies.' : 'The direct link between the role and what you want.'}</p></div>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3 text-sm italic">
+                « {fr
+                  ? 'Je suis Thomas, 6 ans d\'expérience en Business Intelligence. Je souhaite évoluer en tant que chef de projet, et ce poste m\'offre exactement cette opportunité.'
+                  : 'I\'m Thomas, 6 years of Business Intelligence experience. I want to grow into a project manager role, and this position offers exactly that opportunity.'} »
+              </div>
+              <p className="text-xs text-muted-foreground">✅ {fr ? 'Un recruteur captivé · une image claire et pro · plus de chances de décrocher le job.' : 'A captivated recruiter · a clear professional image · better odds of landing the job.'}</p>
+              <Button onClick={() => rehearseQuestion(fr ? 'Présentez-vous en une minute.' : 'Tell me about yourself in one minute.')}>
+                <Video className="h-4 w-4 mr-1" />{fr ? 'S\'entraîner avec Sarah sur cette question' : 'Practice this question with Sarah'}
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* RESUME-BASED PREPARATION */}
           <Card>
             <CardHeader>
