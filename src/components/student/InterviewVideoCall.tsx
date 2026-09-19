@@ -633,6 +633,17 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                       {fr ? 'Donne-moi un exemple de réponse' : ar ? 'أعطني مثال جواب' : 'Give me a sample answer'}
                     </Button>
                   )}
+                  {onAskTips && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-50"
+                      disabled={chatLoading || streamingAssistant || !hasStarted}
+                      onClick={onAskTips}
+                    >
+                      {fr ? 'Recommandations' : ar ? 'توصيات' : 'Recommendations'}
+                    </Button>
+                  )}
                 </div>
                 {showGuide && (
                   <div className="mt-2 rounded-xl bg-white/5 border border-white/15 px-4 py-3">
