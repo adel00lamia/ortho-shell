@@ -271,6 +271,7 @@ const StudentHub = () => {
         body: JSON.stringify({
           mode: 'interview', position, difficulty, style,
           studentProfile: profile ?? draft, history,
+          resumeText: resumeText.trim() || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
       });
@@ -366,6 +367,61 @@ const StudentHub = () => {
 
   const [videoCallOpen, setVideoCallOpen] = useState(false);
 
+  /* ------------------------ Resume (CV) intake ------------------------ */
+  const RESUME_KEY = 'student-resume-v1';
+  const [resumeText, setResumeText] = useState<string>(() => {
+    try { return localStorage.getItem(RESUME_KEY) ?? ''; } catch { return ''; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(RESUME_KEY, resumeText); } catch { /* ignore */ }
+  }, [resumeText]);
+  const [prepLoading, setPrepLoading] = useState(false);
+  const [prep, setPrep] = useState<any>(null);
+  const [openPrep, setOpenPrep] = useState<number | null>(null);
+
+  const handleResumeFile = async (file: File | null) => {
+    if (!file) return;
+    const isText = /\.(txt|md|csv|json)$/i.test(file.name) || file.type.startsWith('text/');
+    if (!isText) {
+      toast.error(fr
+        ? 'Format non lisible ici : ouvre ton CV (PDF/Word) et copie-colle le texte ci-dessous.'
+        : 'Unsupported here: open your CV (PDF/Word) and paste the text below.');
+      return;
+    }
+    const text = await file.text();
+    setResumeText(text.slice(0, 20000));
+    toast.success(fr ? 'CV importé' : 'Resume imported');
+  };
+
+  const analyzeResume = async () => {
+    if (resumeText.trim().length < 80) {
+      toast.error(fr ? 'Colle au moins quelques lignes de ton CV' : 'Paste at least a few lines of your resume');
+      return;
+    }
+    setPrepLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('student-coach', {
+        body: { mode: 'resumeprep', resumeText: resumeText.trim(), jobTarget: position || cvTarget, language: fr ? 'fr' : 'en' },
+      });
+      if (error) throw error;
+      const result = (data as { prep: any }).prep;
+      if (result?.error) throw new Error(result.error);
+      setPrep(result);
+      toast.success(fr ? 'Questions préparées' : 'Questions ready');
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setPrepLoading(false);
+    }
+  };
+
+  const rehearseQuestion = (question: string) => {
+    if (!position.trim()) setPosition(cvTarget || (fr ? 'Poste ciblé' : 'Target role'));
+    setChat([{ role: 'assistant', content: question }]);
+    setFeedback(null);
+    setVideoCallOpen(true);
+  };
+
   /* --------------------------- CV ----------------------------- */
   const [cvTarget, setCvTarget] = useState('');
   const [cvLoading, setCvLoading] = useState(false);
@@ -379,7 +435,7 @@ const StudentHub = () => {
     setCvLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: { mode: 'cv', studentProfile: profile ?? draft, jobTarget: cvTarget, language: fr ? 'fr' : 'en' },
+        body: { mode: 'cv', studentProfile: profile ?? draft, resumeText: resumeText.trim() || undefined, jobTarget: cvTarget, language: fr ? 'fr' : 'en' },
       });
       if (error) throw error;
       setCvResult((data as { cv: unknown }).cv);
