@@ -440,16 +440,19 @@ const StudentHub = () => {
 
   const handleResumeFile = async (file: File | null) => {
     if (!file) return;
-    const isText = /\.(txt|md|csv|json)$/i.test(file.name) || file.type.startsWith('text/');
-    if (!isText) {
-      toast.error(fr
-        ? 'Format non lisible ici : ouvre ton CV (PDF/Word) et copie-colle le texte ci-dessous.'
-        : 'Unsupported here: open your CV (PDF/Word) and paste the text below.');
-      return;
+    try {
+      const text = await extractResumeText(file);
+      setResumeText(text);
+      toast.success(fr ? 'CV importé et lu' : 'Resume imported and read');
+    } catch (e) {
+      const code = (e as Error).message;
+      const msg = code === 'DOC_LEGACY'
+        ? (fr ? 'Format .doc trop ancien : enregistre en PDF ou .docx.' : 'Legacy .doc: save as PDF or .docx.')
+        : code === 'EMPTY'
+          ? (fr ? 'Aucun texte lisible (CV scanné ?) : copie-colle le texte ci-dessous.' : 'No readable text (scanned CV?): paste the text below.')
+          : (fr ? 'Fichier non lisible : utilise un PDF, un .docx ou du texte.' : 'Unreadable file: use a PDF, .docx or text file.');
+      toast.error(msg);
     }
-    const text = await file.text();
-    setResumeText(text.slice(0, 20000));
-    toast.success(fr ? 'CV importé' : 'Resume imported');
   };
 
   const analyzeResume = async () => {
