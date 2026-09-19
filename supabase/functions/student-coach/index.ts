@@ -348,6 +348,40 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
       });
     }
 
+    if (body.mode === 'resumeprep') {
+      const resume = (body.resumeText ?? '').trim().slice(0, 12000);
+      if (!resume) {
+        return new Response(JSON.stringify({ error: fr ? 'CV vide' : 'Empty resume' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const system = fr
+        ? `Tu es Sarah, RH senior. À partir du CV fourni (et du poste ciblé si présent), prépare l'étudiant à son entretien. N'invente AUCUNE expérience : appuie-toi uniquement sur le CV ; si une information manque, écris "À compléter".
+Réponds en JSON pur :
+{"summary": string (2 phrases sur le profil tel qu'un recruteur le lit),
+ "strengths": string[] (3 atouts issus du CV),
+ "risks": string[] (3 points que le recruteur va creuser : trous, changements, manques),
+ "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (8 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier, 1 sur les motivations)}`
+        : `You are Sarah, senior HR. From the provided resume (and target role if present), prepare the student for the interview. Invent NO experience: rely only on the resume; if information is missing write "To complete".
+Respond in pure JSON:
+{"summary": string (2 sentences on how a recruiter reads this profile),
+ "strengths": string[] (3 assets from the resume),
+ "risks": string[] (3 things the recruiter will dig into: gaps, switches, missing items),
+ "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (8 questions: 2 intro, 3 behavioral, 2 technical/role, 1 motivation)}`;
+
+      const reply = await callGemini(
+        [
+          { role: 'system', content: system },
+          { role: 'user', content: JSON.stringify({ jobTarget: body.jobTarget ?? '', resumeText: resume }) },
+        ],
+        true,
+      );
+      return new Response(JSON.stringify({ prep: safeParseJson(reply) }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown mode' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
