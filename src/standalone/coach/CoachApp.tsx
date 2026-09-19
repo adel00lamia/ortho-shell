@@ -21,6 +21,7 @@ import {
 import jsPDF from 'jspdf';
 import { InterviewCall } from './InterviewCall';
 import { interviewMethods, type InterviewMethod } from './methods';
+import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
 import {
   streamInterviewTurn, prepareFromResume, generateCv, requestFeedback,
   type CoachMsg, type ResumePrep, type GeneratedCv, type InterviewFeedback,
@@ -64,15 +65,19 @@ const CoachApp = () => {
 
   const importResume = async (file: File | null) => {
     if (!file) return;
-    const isText = /\.(txt|md|csv|json)$/i.test(file.name) || file.type.startsWith('text/');
-    if (!isText) {
-      toast.error(fr
-        ? 'Format non lisible ici : ouvre ton CV (PDF/Word) et copie-colle le texte.'
-        : 'Unsupported here: open your CV (PDF/Word) and paste the text.');
-      return;
+    try {
+      setResumeText(await extractResumeText(file));
+      toast.success(fr ? 'CV importé et lu' : 'Resume imported and read');
+    } catch (e) {
+      const code = (e as Error).message;
+      toast.error(
+        code === 'DOC_LEGACY'
+          ? (fr ? 'Format .doc trop ancien : enregistre en PDF ou .docx.' : 'Legacy .doc: save as PDF or .docx.')
+          : code === 'EMPTY'
+            ? (fr ? 'Aucun texte lisible (CV scanné ?) : colle le texte à la main.' : 'No readable text (scanned CV?): paste the text manually.')
+            : (fr ? 'Fichier non lisible : utilise un PDF, un .docx ou du texte.' : 'Unreadable file: use a PDF, .docx or text file.'),
+      );
     }
-    setResumeText((await file.text()).slice(0, 20000));
-    toast.success(fr ? 'CV importé' : 'Resume imported');
   };
 
   /* -------------------------- Interview setup --------------------------- */
@@ -456,8 +461,8 @@ const CoachApp = () => {
                 <CardTitle>{fr ? 'Mon CV → mes questions d’entretien' : 'My CV → my interview questions'}</CardTitle>
                 <CardDescription>
                   {fr
-                    ? 'Colle le texte de ton CV. Rien n’est enregistré sur un serveur : il reste dans ton navigateur.'
-                    : 'Paste your CV text. Nothing is stored on a server: it stays in your browser.'}
+                    ? 'Importe ton CV (PDF, Word .docx) ou colle le texte. La lecture se fait dans ton navigateur : rien n’est stocké sur un serveur.'
+                    : 'Upload your CV (PDF, Word .docx) or paste the text. It is read in your browser: nothing is stored on a server.'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -471,10 +476,10 @@ const CoachApp = () => {
                   <Button variant="outline" size="sm" asChild>
                     <label className="cursor-pointer">
                       <Upload className="h-4 w-4 mr-1.5" />
-                      {fr ? 'Importer un fichier texte' : 'Import a text file'}
+                      {fr ? 'Importer mon CV (PDF, Word, texte)' : 'Upload my CV (PDF, Word, text)'}
                       <input
                         type="file"
-                        accept=".txt,.md,.csv,.json,text/*"
+                        accept={RESUME_FILE_ACCEPT}
                         className="hidden"
                         onChange={(e) => importResume(e.target.files?.[0] ?? null)}
                       />
