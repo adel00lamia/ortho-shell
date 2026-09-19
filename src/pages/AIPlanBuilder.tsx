@@ -89,6 +89,9 @@ import {
   MarketResearchView
 } from '@/components/plan';
 import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
+import { ObjectiveAlignmentCard } from '@/components/plan/ObjectiveAlignmentCard';
+import { suggestedSkillsFromObjectives } from '@/lib/objectiveAlignment';
+
 import {
   PREDEFINED_OBJECTIVES,
   SKILL_CATEGORIES_DETAILED,
