@@ -587,35 +587,69 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   : isListening ? (fr ? 'Écoute' : ar ? 'تستمع' : 'Listening')
                   : (fr ? 'En attente' : ar ? 'جاهزة' : 'Ready')}
               </div>
-              <ScrollArea className="max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3">
-                <p className="text-sm text-white/95 leading-relaxed whitespace-pre-wrap text-left">
-                  {streamingAssistant ? (
-                    <>
-                      <span>{lastAssistant || '…'}</span>
-                      <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
-                    </>
-                  ) : chatLoading && !lastAssistant ? '...' : spokenFull ? (
-                    <>
-                      <span>{liveCaption}</span>
-                      <span className="text-white/30">{spokenFull.slice(liveCaption.length)}</span>
-                      {isSpeaking && (
-                        <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
-                      )}
-                    </>
-                  ) : (lastAssistant || (fr ? "Cliquez sur Démarrer pour commencer l'entretien." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.'))}
+              <div className="max-h-[38vh] sm:max-h-[220px] overflow-y-auto rounded-xl bg-slate-900/70 border border-white/20 px-4 py-3">
+                <p className="text-base sm:text-lg text-white leading-relaxed whitespace-pre-wrap text-left">
+                  {lastAssistant
+                    ? lastAssistant
+                    : chatLoading || streamingAssistant
+                      ? '…'
+                      : (fr ? "Cliquez sur « Démarrer l'entretien » pour commencer." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.')}
+                  {(streamingAssistant || isSpeaking) && (
+                    <span className="inline-block w-[2px] h-4 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                  )}
                 </p>
                 {lastAssistantTips.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {lastAssistantTips.map((t, i) => (
-                      <div key={i} className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-400/30 px-3 py-2 text-left">
-                        <Lightbulb className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-100 leading-relaxed">{t}</p>
+                      <div key={i} className="flex items-start gap-2 rounded-lg bg-amber-500/15 border border-amber-400/40 px-3 py-2 text-left">
+                        <Lightbulb className="h-4 w-4 text-amber-300 mt-0.5 shrink-0" />
+                        <p className="text-sm text-amber-50 leading-relaxed">{t}</p>
                       </div>
                     ))}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
+
+              {/* Souffleur : que dire ? */}
+              <div className="mt-3 text-left">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-3 text-xs bg-white/10 hover:bg-white/20 text-white"
+                    onClick={() => setShowGuide((s) => !s)}
+                  >
+                    <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-amber-300" />
+                    {fr ? (showGuide ? 'Masquer l\'aide' : 'Que dois-je dire ?') : ar ? (showGuide ? 'إخفاء المساعدة' : 'ماذا أقول؟') : showGuide ? 'Hide help' : 'What should I say?'}
+                  </Button>
+                  {onAskHelp && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-50"
+                      disabled={chatLoading || streamingAssistant || !hasStarted}
+                      onClick={onAskHelp}
+                    >
+                      {fr ? 'Donne-moi un exemple de réponse' : ar ? 'أعطني مثال جواب' : 'Give me a sample answer'}
+                    </Button>
+                  )}
+                </div>
+                {showGuide && (
+                  <div className="mt-2 rounded-xl bg-white/5 border border-white/15 px-4 py-3">
+                    <div className="text-xs font-semibold text-indigo-200 mb-1.5">{ANSWER_GUIDE[language].title}</div>
+                    <ol className="list-decimal pl-4 space-y-1 text-sm text-white/90">
+                      {ANSWER_GUIDE[language].steps.map((s, i) => <li key={i}>{s}</li>)}
+                    </ol>
+                    <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                      {ANSWER_GUIDE[language].phrases.map((p, i) => (
+                        <p key={i} className="text-xs text-white/70">{p}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+
 
             {/* User transcript bubble */}
             {(isListening || transcript) && (
