@@ -437,6 +437,12 @@ export default function AIPlanBuilder() {
     { id: 'microlearning', label: 'Micro-learning', description: 'Bite-sized learning modules', icon: <BookOpen className="h-4 w-4" /> }
   ];
 
+  const deliveryMethodLabels: Record<string, string> = deliveryMethods.reduce(
+    (acc, m) => ({ ...acc, [m.id]: m.label }),
+    {} as Record<string, string>
+  );
+
+
   // Enhanced Studio Features
   const studioFeatures = [
     { id: 'videoProduction', label: 'Video Production', description: 'Professional video creation & editing', icon: <Video className="h-4 w-4" /> },
