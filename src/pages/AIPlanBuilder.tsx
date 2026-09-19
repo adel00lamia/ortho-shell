@@ -475,9 +475,8 @@ export default function AIPlanBuilder() {
           .single();
 
         if (profile?.company_id) {
-          const [companyRes, employeesRes, evalsRes] = await Promise.all([
+          const [companyRes, evalsRes] = await Promise.all([
             supabase.from('companies').select('name, industry, company_size, city').eq('id', profile.company_id).single(),
-            Promise.resolve({ data: [] }),
             supabase.from('performance_evaluations').select('areas_for_improvement, training_recommendations').eq('company_id', profile.company_id),
           ]);
 

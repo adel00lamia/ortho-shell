@@ -59,8 +59,8 @@ const readResponsesStream = async (response: Response) => {
     const lines = buffer.split('\n');
     buffer = lines.pop() || '';
     for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const payload = line.slice(6).trim();
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
       if (!payload || payload === '[DONE]') continue;
       try {
         const event = JSON.parse(payload);
@@ -139,13 +139,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.get('Authorization');
   let userId = 'anonymous';
 
   if (authHeader?.startsWith('Bearer ')) {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(JSON.stringify({ error: 'Supabase authentication is not configured' }), { status: 500, headers: jsonHeaders });
+    }
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      supabaseUrl,
+      supabaseAnonKey,
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -395,6 +400,13 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
   }
 }`;
 
+    const historicalPlans = requirements.previousPlans.map(plan => ({
+      ...plan,
+      content: plan.content
+        .replace(/(?:budget|coût|cost|montant)[^\n]{0,80}/gi, '[historical budget removed]')
+        .replace(/\b\d[\d\s,.]*(?:MAD|DH|EUR|USD)\b/gi, '[historical amount removed]'),
+    }));
+
     const userPrompt = `Create an innovative and comprehensive training plan for:
 
 Company: ${canonicalCompany}
@@ -446,7 +458,7 @@ ${companyFacts}
 Additional Context:
 ${requirements.context || 'No additional context provided'}
 
-${requirements.previousPlans && requirements.previousPlans.length > 0 ? `
+${historicalPlans.length > 0 ? `
 PREVIOUS TRAINING PLANS (CRITICAL — AVOID REDUNDANCY):
 The company has provided their previous training plans below. You MUST:
 1. Analyze what was already covered in previous years
@@ -455,7 +467,7 @@ The company has provided their previous training plans below. You MUST:
 4. Explicitly mention in your recommendations what was already covered and what is new
 5. In the executive summary, reference continuity without importing any old identity, date, target or unverified claim
 
-${requirements.previousPlans.map((p: any) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.content}\n--- END ---`).join('\n\n')}
+${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.content}\n--- END ---`).join('\n\n')}
 ` : ''}`;
 
     console.log('Calling Lovable AI Gateway...');
