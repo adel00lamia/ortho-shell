@@ -92,7 +92,8 @@ export interface TrainingModule {
   assessment_methods?: string[];
   certification_level?: string;
   target_audience?: string;
-  priority?: string;
+  priority?: 'critique' | 'haute' | 'moyenne' | 'à arbitrer' | string;
+  priority_rationale?: string;
   rationale?: string;
   training_axis?: string;
   observed_difficulty?: string;
@@ -116,6 +117,22 @@ export interface TrainingAxis {
   support_measures?: string[];
 }
 
+export interface ExecutiveRecommendation {
+  recommendation: string;
+  horizon: 'immédiat' | 'court terme' | 'moyen terme' | string;
+  rationale: string;
+  owner?: string;
+}
+
+export interface IndustryTrendSignal {
+  trend: string;
+  why_it_matters: string;
+  skills_impacted: string[];
+  urgency: 'immédiate' | 'court terme' | 'à surveiller' | string;
+  training_response: string;
+  evidence_status?: string;
+}
+
 export interface GeneratedPlan {
   title: string;
   description: string;
@@ -132,7 +149,7 @@ export interface GeneratedPlan {
     owner?: string;
     source?: string;
   }>;
-  recommendations: string[];
+  recommendations: Array<string | ExecutiveRecommendation>;
   training_axes?: TrainingAxis[];
   evidence_register?: Array<{
     evidence: string;
@@ -157,6 +174,7 @@ export interface GeneratedPlan {
     market_size?: string;
     growth_rate?: string;
     key_trends?: string[];
+    trend_signals?: IndustryTrendSignal[];
     competitive_landscape?: string;
     target_audience_analysis?: string;
     demand_drivers?: string[];
