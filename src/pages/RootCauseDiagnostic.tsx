@@ -110,21 +110,6 @@ export default function RootCauseDiagnostic() {
   const deleteMeasurement = useDeleteMeasurement(selectedId);
   const { context: companyContext } = useCompanyProfile();
 
-  /**
-   * Deep link (e.g. /workflow/assess/root-cause?diagnostic=<id> from Field
-   * evidence): preselect the diagnostic once the list is loaded, land on the
-   * result tab, and clean the URL. Stale ids are removed without selecting.
-   */
-  useEffect(() => {
-    const fromUrl = searchParams.get('diagnostic');
-    if (!fromUrl) return;
-    if (isLoading) return;
-    if (diagnostics.some((d) => d.id === fromUrl)) {
-      setSelectedId(fromUrl);
-      setTab('result');
-    }
-    setSearchParams({}, { replace: true });
-  }, [searchParams, diagnostics, isLoading, setSearchParams]);
 
   /** Council-ready report: only what this diagnostic actually contains. */
   const handleExportReport = () => {
