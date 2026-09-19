@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Activity, ArrowRight, Brain, ClipboardList, FileDown, FileSearch, Gauge, Loader2, MessagesSquare,
@@ -98,7 +98,8 @@ export default function RootCauseDiagnostic() {
   const runDiagnostic = useRunDiagnostic();
   const deleteDiagnostic = useDeleteDiagnostic();
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get('diagnostic'));
   const selected: DiagnosticRow | undefined = useMemo(
     () => diagnostics.find((d) => d.id === selectedId),
     [diagnostics, selectedId]
@@ -108,6 +109,7 @@ export default function RootCauseDiagnostic() {
   const upsertMeasurement = useUpsertMeasurement(selectedId);
   const deleteMeasurement = useDeleteMeasurement(selectedId);
   const { context: companyContext } = useCompanyProfile();
+
 
   /** Council-ready report: only what this diagnostic actually contains. */
   const handleExportReport = () => {
@@ -163,6 +165,22 @@ export default function RootCauseDiagnostic() {
   const [costPerPerson, setCostPerPerson] = useState('');
   const [totalBudget, setTotalBudget] = useState('');
   const [tab, setTab] = useState('intake');
+
+  /**
+   * Deep link (e.g. /workflow/assess/root-cause?diagnostic=<id> from Field
+   * evidence): preselect the diagnostic once the list is loaded, land on the
+   * result tab, and clean the URL. Stale ids are dropped without selecting.
+   */
+  useEffect(() => {
+    const fromUrl = searchParams.get('diagnostic');
+    if (!fromUrl) return;
+    if (isLoading) return;
+    if (diagnostics.some((d) => d.id === fromUrl)) {
+      setSelectedId(fromUrl);
+      setTab('result');
+    }
+    setSearchParams({}, { replace: true });
+  }, [searchParams, diagnostics, isLoading, setSearchParams]);
 
   const toggleSymptom = (key: string) =>
     setSymptoms((s) => (s.includes(key) ? s.filter((x) => x !== key) : [...s, key]));
