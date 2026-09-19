@@ -89,6 +89,9 @@ import {
   MarketResearchView
 } from '@/components/plan';
 import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
+import { ObjectiveAlignmentCard } from '@/components/plan/ObjectiveAlignmentCard';
+import { suggestedSkillsFromObjectives } from '@/lib/objectiveAlignment';
+
 import {
   PREDEFINED_OBJECTIVES,
   SKILL_CATEGORIES_DETAILED,
@@ -436,6 +439,12 @@ export default function AIPlanBuilder() {
     { id: 'workshops', label: 'Interactive Workshops', description: 'Hands-on learning sessions', icon: <PenTool className="h-4 w-4" /> },
     { id: 'microlearning', label: 'Micro-learning', description: 'Bite-sized learning modules', icon: <BookOpen className="h-4 w-4" /> }
   ];
+
+  const deliveryMethodLabels: Record<string, string> = deliveryMethods.reduce(
+    (acc, m) => ({ ...acc, [m.id]: m.label }),
+    {} as Record<string, string>
+  );
+
 
   // Enhanced Studio Features
   const studioFeatures = [
@@ -1238,6 +1247,26 @@ export default function AIPlanBuilder() {
                 )}
               </div>
 
+              {/* Objectives → training choices alignment */}
+              <ObjectiveAlignmentCard
+                objectives={requirements.objectives}
+                targetSkills={requirements.targetSkills}
+                deliveryMethods={requirements.customizations.deliveryMethods}
+                deliveryLabels={deliveryMethodLabels}
+                onAddSkills={(skills) => setRequirements(prev => ({
+                  ...prev,
+                  targetSkills: [...new Set([...prev.targetSkills, ...skills])],
+                }))}
+                onAddDeliveryMethods={(methods) => setRequirements(prev => ({
+                  ...prev,
+                  customizations: {
+                    ...prev.customizations,
+                    deliveryMethods: [...new Set([...prev.customizations.deliveryMethods, ...methods])],
+                  },
+                }))}
+              />
+
+
               {/* Previous Training Plan Upload */}
               <Separator />
               <div>
@@ -1395,8 +1424,44 @@ export default function AIPlanBuilder() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {(() => {
+                const aligned = suggestedSkillsFromObjectives(requirements.objectives, requirements.targetSkills);
+                if (aligned.length === 0) return null;
+                return (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-sm font-medium">
+                        {language === 'fr' ? 'Recommandé par vos objectifs' : 'Recommended by your objectives'}
+                      </p>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setRequirements(prev => ({
+                        ...prev,
+                        targetSkills: [...new Set([...prev.targetSkills, ...aligned])],
+                      }))}>
+                        {language === 'fr' ? 'Tout ajouter' : 'Add all'}
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {aligned.map(skill => (
+                        <Badge
+                          key={skill}
+                          variant="outline"
+                          className="cursor-pointer py-1.5 px-3"
+                          onClick={() => setRequirements(prev => ({
+                            ...prev,
+                            targetSkills: [...new Set([...prev.targetSkills, skill])],
+                          }))}
+                        >
+                          + {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div>
                 <label className="text-sm font-medium">Target Skills</label>
+
                 <div className="space-y-2 mt-2">
                   <div>
                     <Select onValueChange={(value) => {
