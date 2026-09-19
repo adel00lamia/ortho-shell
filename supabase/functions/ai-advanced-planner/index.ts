@@ -17,15 +17,15 @@ const requirementsSchema = z.object({
     companySize: z.string().max(50).optional().default('Medium'),
     budget: z.number().min(0).max(100_000_000).optional().default(50000),
     duration: z.number().int().min(1).max(60).optional().default(12),
-    objectives: z.array(z.string().max(500)).max(20).optional().default([]),
-    targetSkills: z.array(z.string().max(200)).max(50).optional().default([]),
-    constraints: z.array(z.string().max(500)).max(20).optional().default([]),
-    context: z.string().max(5000).optional().default(''),
+    objectives: z.array(z.string().max(1000)).max(60).optional().default([]),
+    targetSkills: z.array(z.string().max(300)).max(120).optional().default([]),
+    constraints: z.array(z.string().max(1000)).max(60).optional().default([]),
+    context: z.string().max(20000).optional().default(''),
     previousPlans: z.array(z.object({
       name: z.string().max(500),
       year: z.string().max(10),
-      content: z.string().max(10000),
-    })).max(3).optional().default([]),
+      content: z.string().max(20000),
+    })).max(5).optional().default([]),
     // Real company data read from the database — used as the only factual source.
     companyData: z.object({
       companyName: z.string().max(200).optional(),
@@ -34,8 +34,8 @@ const requirementsSchema = z.object({
       companySize: z.string().max(100).optional(),
       headcount: z.number().min(0).max(5_000_000).optional(),
       headcountSource: z.enum(['employee_records', 'declared_profile', 'none']).optional(),
-      departments: z.array(z.object({ name: z.string().max(200), headcount: z.number() })).max(60).optional().default([]),
-      positions: z.array(z.object({ title: z.string().max(200), headcount: z.number(), isCritical: z.boolean().optional() })).max(60).optional().default([]),
+      departments: z.array(z.object({ name: z.string().max(200), headcount: z.number() })).max(300).optional().default([]),
+      positions: z.array(z.object({ title: z.string().max(200), headcount: z.number(), isCritical: z.boolean().optional() })).max(300).optional().default([]),
       skills: z.array(z.object({
         name: z.string().max(200),
         currentLevel: z.number().optional(),
@@ -43,7 +43,7 @@ const requirementsSchema = z.object({
         gap: z.number().optional(),
         assessedEmployees: z.number().optional(),
         maxLevel: z.number().optional(),
-      })).max(60).optional().default([]),
+      })).max(300).optional().default([]),
       payroll: z.object({ grossAnnual: z.number(), exerciseYear: z.number() }).optional(),
       trainingBudget: z.object({ amount: z.number(), currency: z.string().max(10), source: z.string().max(100) }).optional(),
       csf: z.object({
@@ -94,9 +94,18 @@ serve(async (req) => {
 
   try {
     const rawBody = await req.json();
-    const parsed = requirementsSchema.safeParse(rawBody);
+    let parsed = requirementsSchema.safeParse(rawBody);
+    if (!parsed.success && rawBody?.requirements?.companyData) {
+      // Never block a generation because the collected company facts are oversized:
+      // retry without them, the report then prints "À confirmer".
+      const { companyData: _dropped, ...rest } = rawBody.requirements;
+      parsed = requirementsSchema.safeParse({ ...rawBody, requirements: rest });
+    }
     if (!parsed.success) {
-      return new Response(JSON.stringify({ error: 'Invalid input', details: parsed.error.flatten() }), {
+      const flat = parsed.error.flatten();
+      const readable = parsed.error.issues.slice(0, 4)
+        .map((issue) => `${issue.path.join('.') || 'body'}: ${issue.message}`).join(' | ');
+      return new Response(JSON.stringify({ error: `Invalid input — ${readable}`, details: flat }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
