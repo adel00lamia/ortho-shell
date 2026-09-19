@@ -1424,8 +1424,44 @@ export default function AIPlanBuilder() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {(() => {
+                const aligned = suggestedSkillsFromObjectives(requirements.objectives, requirements.targetSkills);
+                if (aligned.length === 0) return null;
+                return (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-sm font-medium">
+                        {language === 'fr' ? 'Recommandé par vos objectifs' : 'Recommended by your objectives'}
+                      </p>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setRequirements(prev => ({
+                        ...prev,
+                        targetSkills: [...new Set([...prev.targetSkills, ...aligned])],
+                      }))}>
+                        {language === 'fr' ? 'Tout ajouter' : 'Add all'}
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {aligned.map(skill => (
+                        <Badge
+                          key={skill}
+                          variant="outline"
+                          className="cursor-pointer py-1.5 px-3"
+                          onClick={() => setRequirements(prev => ({
+                            ...prev,
+                            targetSkills: [...new Set([...prev.targetSkills, skill])],
+                          }))}
+                        >
+                          + {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div>
                 <label className="text-sm font-medium">Target Skills</label>
+
                 <div className="space-y-2 mt-2">
                   <div>
                     <Select onValueChange={(value) => {
