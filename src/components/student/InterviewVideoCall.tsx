@@ -21,6 +21,7 @@ interface Props {
   onStart: () => void;
   onUserAnswer: (text: string) => void;
   onAskHelp?: () => void;
+  onAskTips?: () => void;
 }
 
 // Static answer scaffolding shown in the "souffleur" panel.
@@ -152,7 +153,7 @@ function keepShortSentences(input: string, maxWords = 15): string {
 
 type SR = any;
 
-export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer, onAskHelp }: Props) {
+export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer, onAskHelp, onAskTips }: Props) {
   const fr = language === 'fr';
   const ar = language === 'ar';
   const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
@@ -631,6 +632,17 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                       onClick={onAskHelp}
                     >
                       {fr ? 'Donne-moi un exemple de réponse' : ar ? 'أعطني مثال جواب' : 'Give me a sample answer'}
+                    </Button>
+                  )}
+                  {onAskTips && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-3 text-xs bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-50"
+                      disabled={chatLoading || streamingAssistant || !hasStarted}
+                      onClick={onAskTips}
+                    >
+                      {fr ? 'Recommandations' : ar ? 'توصيات' : 'Recommendations'}
                     </Button>
                   )}
                 </div>

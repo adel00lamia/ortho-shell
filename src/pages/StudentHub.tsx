@@ -949,6 +949,13 @@ const StudentHub = () => {
               : "Help me: I don't know what to answer. Give me the expected structure in 3 points, a short sample answer (max 5 sentences) I can adapt, then ask me the same question again.",
           )
         }
+        onAskTips={() =>
+          sendInterviewAnswer(
+            fr
+              ? "Donne-moi tes recommandations pour la question que tu viens de poser : 3 conseils concrets, les 2 points clés que le recruteur attend, 1 piège à éviter, et 2 phrases d'accroche que je peux utiliser. Ne repose pas la question, attends ma réponse."
+              : "Give me your recommendations for the question you just asked: 3 concrete tips, the 2 key points the recruiter expects, 1 trap to avoid, and 2 opening sentences I can use. Do not repeat the question, wait for my answer.",
+          )
+        }
       />
     </div>
   );
