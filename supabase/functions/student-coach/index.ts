@@ -39,7 +39,14 @@ interface SoftSkillBody {
   language?: 'en' | 'fr';
 }
 
-type Body = InterviewBody | CvBody | FeedbackBody | SoftSkillBody;
+interface ResumePrepBody {
+  mode: 'resumeprep';
+  resumeText: string;
+  jobTarget?: string;
+  language?: 'en' | 'fr';
+}
+
+type Body = InterviewBody | CvBody | FeedbackBody | SoftSkillBody | ResumePrepBody;
 
 async function callGemini(messages: Array<{ role: string; content: string }>, expectJson = false) {
   const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
