@@ -21,6 +21,7 @@ interface Props {
   onStart: () => void;
   onUserAnswer: (text: string) => void;
   onAskHelp?: () => void;
+  onAskTips?: () => void;
 }
 
 // Static answer scaffolding shown in the "souffleur" panel.
