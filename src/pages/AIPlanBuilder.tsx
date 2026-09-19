@@ -633,12 +633,27 @@ export default function AIPlanBuilder() {
     setProgress(10);
 
     try {
+      // Keep the payload inside the service limits: a large company must never
+      // block the generation.
+      const trimmedFactbase = factbase
+        ? {
+            ...factbase,
+            departments: (factbase.departments ?? []).slice(0, 60),
+            positions: (factbase.positions ?? []).slice(0, 60),
+            skills: (factbase.skills ?? []).slice(0, 60),
+          }
+        : undefined;
+
       const safeRequirements = {
         ...requirements,
         duration: Math.min(60, Math.max(1, Number(requirements.duration) || 12)),
         budget: Math.max(0, Number(requirements.budget) || 0),
+        objectives: requirements.objectives.slice(0, 40),
+        targetSkills: requirements.targetSkills.slice(0, 80),
+        constraints: requirements.constraints.slice(0, 40),
+        context: (requirements.context || '').slice(0, 15000),
         // Real company data (headcount, positions, assessed skills, budget, CSF rates).
-        companyData: factbase ?? undefined,
+        companyData: trimmedFactbase,
       };
 
       const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
