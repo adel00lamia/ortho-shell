@@ -61,6 +61,9 @@ const ParticipantPortal = lazy(() => import("./pages/ParticipantPortal"));
 const EvidencePulsePublic = lazy(() => import("./pages/EvidencePulsePublic"));
 const QimatakExample = lazy(() => import("./pages/QimatakExample"));
 
+// Standalone interview-coach app (no account, no company data)
+const CoachApp = lazy(() => import("./standalone/coach/CoachApp"));
+
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
