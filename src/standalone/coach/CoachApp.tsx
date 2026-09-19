@@ -21,6 +21,7 @@ import {
 import jsPDF from 'jspdf';
 import { InterviewCall } from './InterviewCall';
 import { interviewMethods, type InterviewMethod } from './methods';
+import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
 import {
   streamInterviewTurn, prepareFromResume, generateCv, requestFeedback,
   type CoachMsg, type ResumePrep, type GeneratedCv, type InterviewFeedback,
