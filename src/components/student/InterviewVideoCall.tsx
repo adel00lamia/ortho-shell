@@ -631,7 +631,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                       disabled={chatLoading || streamingAssistant || !hasStarted}
                       onClick={onAskHelp}
                     >
-                      {fr ? 'Donne-moi un exemple de réponse' : ar ? 'أعطني مثال جواب' : 'Give me a sample answer'}
+                      {fr ? 'Réponse modèle structurée' : ar ? 'جواب نموذجي منظم' : 'Structured model answer'}
                     </Button>
                   )}
                   {onAskTips && (
