@@ -20,7 +20,57 @@ interface Props {
   position: string;
   onStart: () => void;
   onUserAnswer: (text: string) => void;
+  onAskHelp?: () => void;
 }
+
+// Static answer scaffolding shown in the "souffleur" panel.
+const ANSWER_GUIDE: Record<'fr' | 'en' | 'ar', { title: string; steps: string[]; phrases: string[] }> = {
+  fr: {
+    title: 'Comment structurer ta réponse (méthode STAR)',
+    steps: [
+      'Situation : où, quand, quel contexte (1 phrase).',
+      'Tâche : ce qu\'on attendait de toi (1 phrase).',
+      'Action : ce que TU as fait concrètement (2 à 3 phrases).',
+      'Résultat : le résultat, si possible chiffré, + ce que tu en as appris.',
+    ],
+    phrases: [
+      '« Pour vous donner un exemple concret… »',
+      '« Mon rôle était de… »',
+      '« Concrètement, j\'ai commencé par… puis… »',
+      '« Résultat : … et j\'en ai retenu que… »',
+    ],
+  },
+  en: {
+    title: 'How to structure your answer (STAR method)',
+    steps: [
+      'Situation: where, when, what context (1 sentence).',
+      'Task: what was expected from you (1 sentence).',
+      'Action: what YOU actually did (2–3 sentences).',
+      'Result: the outcome, with numbers if possible, + what you learned.',
+    ],
+    phrases: [
+      '"Let me give you a concrete example…"',
+      '"My role was to…"',
+      '"Concretely, I started by… then…"',
+      '"As a result… and what I learned was…"',
+    ],
+  },
+  ar: {
+    title: 'كيف تبني جوابك (طريقة STAR)',
+    steps: [
+      'الوضع: أين ومتى وما السياق (جملة واحدة).',
+      'المهمة: ما كان مطلوبًا منك (جملة واحدة).',
+      'الإجراء: ما فعلته أنت بشكل ملموس (٢-٣ جمل).',
+      'النتيجة: النتيجة بالأرقام إن أمكن + ما تعلمته.',
+    ],
+    phrases: [
+      '«لأعطيك مثالاً ملموسًا…»',
+      '«كان دوري هو…»',
+      '«بشكل ملموس، بدأت بـ… ثم…»',
+      '«النتيجة: … وتعلمت أن…»',
+    ],
+  },
+};
 
 const LOCALE_OPTIONS = [
   { value: 'fr-FR', label: '🇫🇷 Français (France)' },
