@@ -598,8 +598,9 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     });
   } catch (error) {
     console.error('Error in ai-advanced-planner function:', error);
-    return new Response(JSON.stringify({ error: 'Failed to generate advanced training plan' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const message = error instanceof Error ? error.message : 'Failed to generate advanced training plan';
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500, headers: jsonHeaders,
     });
   }
 });

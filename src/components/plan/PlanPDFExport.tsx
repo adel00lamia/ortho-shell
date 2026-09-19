@@ -312,15 +312,14 @@ export const createPlanPDF = (
       autoTable(doc, {
         ...tableBase,
         startY: y,
-        head: [['Compétence', 'Niveau actuel', 'Niveau cible', 'Écart', 'Salariés évalués']],
+        head: [['Compétence', 'Niveau actuel', 'Niveau cible', 'Écart']],
         body: facts.skills.map(skill => [
           skill.name,
           skill.currentLevel !== undefined ? `${skill.currentLevel}${skill.maxLevel ? ` / ${skill.maxLevel}` : ''}` : 'À confirmer',
           skill.targetLevel !== undefined ? `${skill.targetLevel}${skill.maxLevel ? ` / ${skill.maxLevel}` : ''}` : 'À confirmer',
           skill.gap !== undefined ? String(skill.gap) : 'À confirmer',
-          String(skill.assessedEmployees ?? 0),
         ]),
-        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
       });
       advance();
       const gapped = facts.skills.filter(skill => (skill.gap ?? 0) > 0).slice(0, 8);

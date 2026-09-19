@@ -169,6 +169,7 @@ export default function AIPlanBuilder() {
   const [activeSnapshot, setActiveSnapshot] = useState<GeneratedPlanSnapshot | null>(null);
   const [generatedPlans, setGeneratedPlans] = useState<GeneratedPlanSnapshot[]>([]);
   const [researchData, setResearchData] = useState<CompanyResearchData | null>(null);
+  const [budgetEdited, setBudgetEdited] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [planVersions, setPlanVersions] = useState<any[]>([]);
   const [planComments, setPlanComments] = useState<any[]>([]);
@@ -567,7 +568,7 @@ export default function AIPlanBuilder() {
         targetSkills: Array.isArray(config.targetSkills) ? config.targetSkills : prev.targetSkills,
         constraints: Array.isArray(config.constraints) ? config.constraints : prev.constraints,
         duration: typeof config.duration === 'number' ? config.duration : prev.duration,
-        budget: typeof config.budget === 'number' ? config.budget : prev.budget,
+        budget: !budgetEdited && typeof config.budget === 'number' ? config.budget : prev.budget,
         context: typeof config.context === 'string' ? config.context : prev.context,
         template: typeof config.template === 'string' ? config.template : prev.template,
         pack: typeof config.pack === 'string' ? config.pack : prev.pack,
@@ -586,7 +587,7 @@ export default function AIPlanBuilder() {
         objectives: [...template.objectives],
         targetSkills: [...template.targetSkills],
         duration: parseInt(template.duration.split('-')[0]) || 6,
-        budget: parseInt(template.budget.split('-')[0].replace(/,/g, '')) || 50000
+        budget: budgetEdited ? prev.budget : parseInt(template.budget.split('-')[0].replace(/,/g, '')) || 50000
       }));
       setSelectedTemplate(templateId);
       setStep(1);
@@ -611,7 +612,7 @@ export default function AIPlanBuilder() {
         objectives: combinedObjectives,
         targetSkills: combinedSkills,
         duration: parseInt(pack.totalDuration.split('-')[0]) || 12,
-        budget: parseInt(pack.totalBudget.split('-')[0].replace(/,/g, '')) || 100000
+        budget: budgetEdited ? prev.budget : parseInt(pack.totalBudget.split('-')[0].replace(/,/g, '')) || 100000
       }));
       setSelectedPack(packId);
       setStep(1);
@@ -1531,6 +1532,7 @@ export default function AIPlanBuilder() {
                     value={requirements.budget}
                     onChange={(e) => {
                       const n = parseInt(e.target.value);
+                      setBudgetEdited(true);
                       setRequirements({ ...requirements, budget: Number.isFinite(n) ? Math.max(0, n) : 0 });
                     }}
                     min="1000"
