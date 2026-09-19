@@ -146,6 +146,10 @@ const App = () => (
               <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
 
               {/* Qimatak Pulse — public AI × HR participant + projected screens */}
+              {/* Standalone interview-coach app — public, no account */}
+              <Route path="/coach" element={<Suspense fallback={<PageLoader />}><CoachApp /></Suspense>} />
+              <Route path="/entretien" element={<Navigate to="/coach" replace />} />
+
               <Route path="/pulse" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
               <Route path="/pulse/live/:code" element={<Suspense fallback={<PageLoader />}><AiHrLiveScreen /></Suspense>} />
               <Route path="/pulse/report/:code" element={<Suspense fallback={<PageLoader />}><AiHrSessionReport /></Suspense>} />
