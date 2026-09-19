@@ -124,7 +124,7 @@ const requirementsSchema = z.object({
     pack: z.string().max(200).optional().default(''),
     aiModel: z.string().max(100).optional().default('openai/gpt-6-astra'),
     customizations: z.object({
-      deliveryMethods: z.array(z.string().max(50)).max(10).optional().default([]),
+      deliveryMethods: z.array(z.string().max(200)).max(10).optional().default([]),
       certification: z.boolean().optional().default(false),
       mentorship: z.boolean().optional().default(false),
       gamification: z.boolean().optional().default(false),

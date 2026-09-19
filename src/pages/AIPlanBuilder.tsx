@@ -648,6 +648,13 @@ export default function AIPlanBuilder() {
         targetSkills: requirements.targetSkills.slice(0, 80),
         constraints: requirements.constraints.slice(0, 40),
         context: (requirements.context || '').slice(0, 15000),
+        customizations: {
+          ...requirements.customizations,
+          // The server rejects delivery method labels longer than 50 chars.
+          deliveryMethods: (requirements.customizations?.deliveryMethods || [])
+            .slice(0, 10)
+            .map((m) => String(m).slice(0, 50)),
+        },
         // Relevant company facts only; staffing and department totals are excluded.
         companyData: trimmedFactbase,
       };
