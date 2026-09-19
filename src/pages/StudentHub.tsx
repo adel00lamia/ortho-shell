@@ -27,6 +27,7 @@ import {
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { InterviewVideoCall } from '@/components/student/InterviewVideoCall';
+import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
 
 type StudentProfile = {
   id?: string;
