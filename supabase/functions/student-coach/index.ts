@@ -388,9 +388,16 @@ Respond in pure JSON:
  "askThem": string[] (3 relevant questions to ask the company),
  "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (9 questions: 2 intro, 3 behavioral, 2 sector-specific technical/role, 1 on company/sector knowledge, 1 motivation)}`;
 
+      const style = (body.speakingStyle ?? '').trim().slice(0, 4500);
+      const styleSystem = style
+        ? `${system}${style}\n${fr
+          ? 'IMPORTANT : chaque "modelAnswer" doit être écrite dans MON style oral décrit ci-dessus (mon vocabulaire, ma longueur de phrase), prête à être dite à voix haute, sans changer les faits du CV.'
+          : 'IMPORTANT: every "modelAnswer" must be written in MY spoken style described above (my vocabulary, my sentence length), ready to say out loud, without changing the resume facts.'}`
+        : system;
+
       const reply = await callGemini(
         [
-          { role: 'system', content: system },
+          { role: 'system', content: styleSystem },
           {
             role: 'user',
             content: JSON.stringify({
