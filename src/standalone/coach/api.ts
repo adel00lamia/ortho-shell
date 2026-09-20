@@ -56,6 +56,7 @@ export async function streamInterviewTurn(args: {
       resumeText: args.resumeText || undefined,
       companyName: args.companyName || undefined,
       sector: args.sector || undefined,
+      speakingStyle: args.speakingStyle || undefined,
       language: args.language,
       stream: true,
     }),
