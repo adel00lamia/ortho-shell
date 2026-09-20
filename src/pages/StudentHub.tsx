@@ -438,6 +438,14 @@ const StudentHub = () => {
   const [prepLoading, setPrepLoading] = useState(false);
   const [prep, setPrep] = useState<any>(null);
   const [openPrep, setOpenPrep] = useState<number | null>(null);
+  const TARGET_KEY = 'student-target-v1';
+  const [target, setTarget] = useState<{ role: string; company: string; sector: string }>(() => {
+    try { return { role: '', company: '', sector: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
+    catch { return { role: '', company: '', sector: '' }; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(TARGET_KEY, JSON.stringify(target)); } catch { /* ignore */ }
+  }, [target]);
 
   const handleResumeFile = async (file: File | null) => {
     if (!file) return;
@@ -464,7 +472,14 @@ const StudentHub = () => {
     setPrepLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: { mode: 'resumeprep', resumeText: resumeText.trim(), jobTarget: position || cvTarget, language: fr ? 'fr' : 'en' },
+        body: {
+          mode: 'resumeprep',
+          resumeText: resumeText.trim(),
+          jobTarget: target.role || position || cvTarget,
+          companyName: target.company || undefined,
+          sector: target.sector || undefined,
+          language: fr ? 'fr' : 'en',
+        },
       });
       if (error) throw error;
       const result = (data as { prep: any }).prep;
@@ -918,6 +933,32 @@ const StudentHub = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">{fr ? 'Poste visé' : 'Target role'}</Label>
+                  <Input
+                    value={target.role}
+                    onChange={(e) => setTarget({ ...target, role: e.target.value })}
+                    placeholder={fr ? 'Ex. Chargé(e) de recrutement' : 'e.g. Recruitment officer'}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{fr ? 'Entreprise' : 'Company'}</Label>
+                  <Input
+                    value={target.company}
+                    onChange={(e) => setTarget({ ...target, company: e.target.value })}
+                    placeholder={fr ? 'Ex. OCP, Capgemini…' : 'e.g. OCP, Capgemini…'}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{fr ? 'Secteur / industrie' : 'Sector / industry'}</Label>
+                  <Input
+                    value={target.sector}
+                    onChange={(e) => setTarget({ ...target, sector: e.target.value })}
+                    placeholder={fr ? 'Ex. offshoring, industrie, banque' : 'e.g. offshoring, industry, banking'}
+                  />
+                </div>
+              </div>
               <Textarea
                 rows={6}
                 placeholder={fr ? 'Colle ici le contenu de ton CV : formation, expériences, projets, compétences...' : 'Paste your resume here: education, experience, projects, skills...'}
@@ -968,6 +1009,27 @@ const StudentHub = () => {
                       </div>
                     )}
                   </div>
+
+                  {(prep.sectorFocus?.length > 0 || prep.askThem?.length > 0) && (
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {prep.sectorFocus?.length > 0 && (
+                        <div className="rounded-lg border p-3">
+                          <div className="text-xs font-semibold text-indigo-600 mb-1">🏢 {fr ? 'À connaître sur le secteur / le poste' : 'Know this about the sector / role'}</div>
+                          <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
+                            {prep.sectorFocus.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {prep.askThem?.length > 0 && (
+                        <div className="rounded-lg border p-3">
+                          <div className="text-xs font-semibold text-sky-600 mb-1">💬 {fr ? 'Questions à leur poser' : 'Questions to ask them'}</div>
+                          <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
+                            {prep.askThem.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     {prep.questions?.map((q: any, i: number) => (

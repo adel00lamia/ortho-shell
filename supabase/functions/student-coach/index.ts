@@ -45,6 +45,8 @@ interface ResumePrepBody {
   mode: 'resumeprep';
   resumeText: string;
   jobTarget?: string;
+  companyName?: string;
+  sector?: string;
   language?: 'en' | 'fr';
 }
 
@@ -357,23 +359,35 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
         });
       }
       const system = fr
-        ? `Tu es Sarah, RH senior. À partir du CV fourni (et du poste ciblé si présent), prépare l'étudiant à son entretien. N'invente AUCUNE expérience : appuie-toi uniquement sur le CV ; si une information manque, écris "À compléter".
+        ? `Tu es Sarah, RH senior. À partir du CV fourni, du poste ciblé, de l'entreprise et du secteur (si présents), prépare l'étudiant à son entretien. N'invente AUCUNE expérience du candidat : appuie-toi uniquement sur le CV ; si une information manque, écris "À compléter". Pour l'entreprise et le secteur, reste sur des enjeux généraux et vérifiables du secteur ; n'invente aucun chiffre, client, projet ou actualité de l'entreprise, et formule les questions comme des questions probables d'un recruteur de ce secteur.
 Réponds en JSON pur :
-{"summary": string (2 phrases sur le profil tel qu'un recruteur le lit),
- "strengths": string[] (3 atouts issus du CV),
+{"summary": string (2 phrases sur le profil tel qu'un recruteur de ce secteur le lit),
+ "strengths": string[] (3 atouts issus du CV, reliés au poste/secteur si pertinent),
  "risks": string[] (3 points que le recruteur va creuser : trous, changements, manques),
- "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (8 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier, 1 sur les motivations)}`
-        : `You are Sarah, senior HR. From the provided resume (and target role if present), prepare the student for the interview. Invent NO experience: rely only on the resume; if information is missing write "To complete".
+ "sectorFocus": string[] (3 enjeux du secteur/poste à connaître avant l'entretien),
+ "askThem": string[] (3 questions pertinentes à poser à l'entreprise),
+ "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (9 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier propres au secteur, 1 sur la connaissance de l'entreprise/secteur, 1 sur les motivations)}`
+        : `You are Sarah, senior HR. From the resume, the target role, the company and the sector (when provided), prepare the student for the interview. Invent NO candidate experience: rely only on the resume; if information is missing write "To complete". For company and sector, stay on general verifiable sector stakes; invent no figures, clients, projects or company news, and phrase questions as likely questions from a recruiter in that sector.
 Respond in pure JSON:
-{"summary": string (2 sentences on how a recruiter reads this profile),
- "strengths": string[] (3 assets from the resume),
+{"summary": string (2 sentences on how a recruiter in this sector reads this profile),
+ "strengths": string[] (3 assets from the resume, tied to role/sector when relevant),
  "risks": string[] (3 things the recruiter will dig into: gaps, switches, missing items),
- "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (8 questions: 2 intro, 3 behavioral, 2 technical/role, 1 motivation)}`;
+ "sectorFocus": string[] (3 sector/role stakes to know before the interview),
+ "askThem": string[] (3 relevant questions to ask the company),
+ "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (9 questions: 2 intro, 3 behavioral, 2 sector-specific technical/role, 1 on company/sector knowledge, 1 motivation)}`;
 
       const reply = await callGemini(
         [
           { role: 'system', content: system },
-          { role: 'user', content: JSON.stringify({ jobTarget: body.jobTarget ?? '', resumeText: resume }) },
+          {
+            role: 'user',
+            content: JSON.stringify({
+              jobTarget: body.jobTarget ?? '',
+              companyName: (body.companyName ?? '').slice(0, 120),
+              sector: (body.sector ?? '').slice(0, 120),
+              resumeText: resume,
+            }),
+          },
         ],
         true,
       );
