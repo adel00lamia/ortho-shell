@@ -336,6 +336,7 @@ const StudentHub = () => {
           resumeText: resumeText.trim() || undefined,
           companyName: target.company.trim() || undefined,
           sector: target.sector.trim() || undefined,
+          speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
       });
