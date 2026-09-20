@@ -543,6 +543,8 @@ const CoachApp = () => {
               </CardContent>
             </Card>
 
+            <SpeakingStyleCard fr={fr} value={speaking} onChange={setSpeaking} />
+
             {prep && (
               <Card>
                 <CardHeader>
