@@ -336,6 +336,7 @@ const StudentHub = () => {
           resumeText: resumeText.trim() || undefined,
           companyName: target.company.trim() || undefined,
           sector: target.sector.trim() || undefined,
+          interviewerRole: target.interviewer.trim() || undefined,
           speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
@@ -454,9 +455,9 @@ const StudentHub = () => {
   const styleBrief = buildStyleBrief(speaking, fr);
 
   const TARGET_KEY = 'student-target-v1';
-  const [target, setTarget] = useState<{ role: string; company: string; sector: string }>(() => {
-    try { return { role: '', company: '', sector: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
-    catch { return { role: '', company: '', sector: '' }; }
+  const [target, setTarget] = useState<{ role: string; company: string; sector: string; interviewer: string }>(() => {
+    try { return { role: '', company: '', sector: '', interviewer: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
+    catch { return { role: '', company: '', sector: '', interviewer: '' }; }
   });
   useEffect(() => {
     try { localStorage.setItem(TARGET_KEY, JSON.stringify(target)); } catch { /* ignore */ }
@@ -493,6 +494,7 @@ const StudentHub = () => {
           jobTarget: target.role || position || cvTarget,
           companyName: target.company || undefined,
           sector: target.sector || undefined,
+          interviewerRole: target.interviewer || undefined,
           speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en',
         },
@@ -949,7 +951,7 @@ const StudentHub = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-1">
                   <Label className="text-xs">{fr ? 'Poste visé' : 'Target role'}</Label>
                   <Input
@@ -974,6 +976,28 @@ const StudentHub = () => {
                     placeholder={fr ? 'Ex. offshoring, industrie, banque' : 'e.g. offshoring, industry, banking'}
                   />
                 </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{fr ? 'Poste du recruteur' : 'Interviewer role'}</Label>
+                  <Input
+                    value={target.interviewer}
+                    onChange={(e) => setTarget({ ...target, interviewer: e.target.value })}
+                    placeholder={fr ? 'Ex. Manager opérationnel' : 'e.g. Hiring manager'}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {interviewerRolePresets(fr).map((r) => (
+                  <Button
+                    key={r}
+                    type="button"
+                    size="sm"
+                    variant={target.interviewer === r ? 'default' : 'outline'}
+                    className="h-7 text-xs"
+                    onClick={() => setTarget({ ...target, interviewer: target.interviewer === r ? '' : r })}
+                  >
+                    {r}
+                  </Button>
+                ))}
               </div>
               <Textarea
                 rows={6}

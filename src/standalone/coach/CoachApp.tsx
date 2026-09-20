@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { InterviewCall } from './InterviewCall';
+import { interviewerRolePresets } from './interviewerRoles';
 import { interviewMethods, type InterviewMethod } from './methods';
 import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
 import {
@@ -120,6 +121,7 @@ const CoachApp = () => {
         resumeText: resumeText.trim() || undefined,
         companyName: target.company.trim() || undefined,
         sector: target.sector.trim() || undefined,
+        interviewerRole: target.interviewer.trim() || undefined,
         speakingStyle: styleBrief || undefined,
         language: apiLang,
         onText: (acc) => setChat([...history, { role: 'assistant', content: acc }]),
@@ -207,7 +209,7 @@ const CoachApp = () => {
   const [prep, setPrep] = useState<ResumePrep | null>(null);
   const [prepLoading, setPrepLoading] = useState(false);
   const [openPrep, setOpenPrep] = useState<number | null>(null);
-  const [target, setTarget] = useState(() => readJson(KEYS.target, { role: '', company: '', sector: '' }));
+  const [target, setTarget] = useState(() => ({ role: '', company: '', sector: '', interviewer: '', ...readJson(KEYS.target, {}) }));
   useEffect(() => { write(KEYS.target, target); }, [target]);
 
   const analyzeResume = async () => {
@@ -221,7 +223,7 @@ const CoachApp = () => {
         resumeText.trim(),
         target.role || setup.position || cvTarget,
         apiLang,
-        { companyName: target.company, sector: target.sector, speakingStyle: styleBrief },
+        { companyName: target.company, sector: target.sector, interviewerRole: target.interviewer, speakingStyle: styleBrief },
       ));
       toast.success(fr ? 'Questions préparées' : 'Questions ready');
     } catch (e) {
@@ -485,7 +487,7 @@ const CoachApp = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1">
                     <Label className="text-xs">{fr ? 'Poste visé' : 'Target role'}</Label>
                     <Input
@@ -510,6 +512,28 @@ const CoachApp = () => {
                       placeholder={fr ? 'Ex. offshoring, industrie, banque' : 'e.g. offshoring, industry, banking'}
                     />
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{fr ? 'Poste du recruteur' : 'Interviewer role'}</Label>
+                    <Input
+                      value={target.interviewer}
+                      onChange={(e) => setTarget({ ...target, interviewer: e.target.value })}
+                      placeholder={fr ? 'Ex. Manager opérationnel' : 'e.g. Hiring manager'}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {interviewerRolePresets(fr).map((r) => (
+                    <Button
+                      key={r}
+                      type="button"
+                      size="sm"
+                      variant={target.interviewer === r ? 'default' : 'outline'}
+                      className="h-7 text-xs"
+                      onClick={() => setTarget({ ...target, interviewer: target.interviewer === r ? '' : r })}
+                    >
+                      {r}
+                    </Button>
+                  ))}
                 </div>
                 <Textarea
                   rows={8}
