@@ -1010,6 +1010,27 @@ const StudentHub = () => {
                     )}
                   </div>
 
+                  {(prep.sectorFocus?.length > 0 || prep.askThem?.length > 0) && (
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {prep.sectorFocus?.length > 0 && (
+                        <div className="rounded-lg border p-3">
+                          <div className="text-xs font-semibold text-indigo-600 mb-1">🏢 {fr ? 'À connaître sur le secteur / le poste' : 'Know this about the sector / role'}</div>
+                          <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
+                            {prep.sectorFocus.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {prep.askThem?.length > 0 && (
+                        <div className="rounded-lg border p-3">
+                          <div className="text-xs font-semibold text-sky-600 mb-1">💬 {fr ? 'Questions à leur poser' : 'Questions to ask them'}</div>
+                          <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
+                            {prep.askThem.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     {prep.questions?.map((q: any, i: number) => (
                       <div key={i} className="rounded-lg border">
