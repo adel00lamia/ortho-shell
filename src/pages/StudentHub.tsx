@@ -438,6 +438,14 @@ const StudentHub = () => {
   const [prepLoading, setPrepLoading] = useState(false);
   const [prep, setPrep] = useState<any>(null);
   const [openPrep, setOpenPrep] = useState<number | null>(null);
+  const TARGET_KEY = 'student-target-v1';
+  const [target, setTarget] = useState<{ role: string; company: string; sector: string }>(() => {
+    try { return { role: '', company: '', sector: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
+    catch { return { role: '', company: '', sector: '' }; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(TARGET_KEY, JSON.stringify(target)); } catch { /* ignore */ }
+  }, [target]);
 
   const handleResumeFile = async (file: File | null) => {
     if (!file) return;
