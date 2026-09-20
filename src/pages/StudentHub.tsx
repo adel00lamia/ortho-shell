@@ -1361,7 +1361,7 @@ const StudentHub = () => {
         language={fr ? 'fr' : 'en'}
         position={position}
         coachingMethod={interviewMethod}
-        onStart={() => sendInterviewTurn(true)}
+        onStart={() => { if (chat.length === 0) void sendInterviewTurn(true); }}
         onUserAnswer={(text) => sendInterviewAnswer(text)}
         onAskHelp={() =>
           sendInterviewAnswer(
