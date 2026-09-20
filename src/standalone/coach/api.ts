@@ -40,6 +40,7 @@ export async function streamInterviewTurn(args: {
   resumeText?: string;
   companyName?: string;
   sector?: string;
+  speakingStyle?: string;
   language: 'fr' | 'en';
   onText: (accumulated: string) => void;
 }) {
