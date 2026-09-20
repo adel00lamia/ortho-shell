@@ -196,6 +196,8 @@ const CoachApp = () => {
   const [prep, setPrep] = useState<ResumePrep | null>(null);
   const [prepLoading, setPrepLoading] = useState(false);
   const [openPrep, setOpenPrep] = useState<number | null>(null);
+  const [target, setTarget] = useState(() => readJson(KEYS.target, { role: '', company: '', sector: '' }));
+  useEffect(() => { write(KEYS.target, target); }, [target]);
 
   const analyzeResume = async () => {
     if (resumeText.trim().length < 80) {
@@ -204,7 +206,12 @@ const CoachApp = () => {
     }
     setPrepLoading(true);
     try {
-      setPrep(await prepareFromResume(resumeText.trim(), setup.position || cvTarget, apiLang));
+      setPrep(await prepareFromResume(
+        resumeText.trim(),
+        target.role || setup.position || cvTarget,
+        apiLang,
+        { companyName: target.company, sector: target.sector },
+      ));
       toast.success(fr ? 'Questions préparées' : 'Questions ready');
     } catch (e) {
       toast.error((e as Error).message);
