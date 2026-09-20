@@ -97,9 +97,19 @@ export type ResumePrep = {
   }>;
 };
 
-export async function prepareFromResume(resumeText: string, jobTarget: string, language: 'fr' | 'en') {
+export async function prepareFromResume(
+  resumeText: string,
+  jobTarget: string,
+  language: 'fr' | 'en',
+  context?: { companyName?: string; sector?: string },
+) {
   const data = await post<{ prep: ResumePrep & { error?: string } }>({
-    mode: 'resumeprep', resumeText, jobTarget: jobTarget || undefined, language,
+    mode: 'resumeprep',
+    resumeText,
+    jobTarget: jobTarget || undefined,
+    companyName: context?.companyName || undefined,
+    sector: context?.sector || undefined,
+    language,
   });
   if (data.prep?.error) throw new Error(data.prep.error);
   return data.prep;
