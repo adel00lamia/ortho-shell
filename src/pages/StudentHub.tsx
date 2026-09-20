@@ -442,6 +442,16 @@ const StudentHub = () => {
   const [prepLoading, setPrepLoading] = useState(false);
   const [prep, setPrep] = useState<any>(null);
   const [openPrep, setOpenPrep] = useState<number | null>(null);
+  const STYLE_KEY = 'student-style-v1';
+  const [speaking, setSpeaking] = useState<SpeakingStyle>(() => {
+    try { return { ...EMPTY_SPEAKING_STYLE, ...JSON.parse(localStorage.getItem(STYLE_KEY) || '{}') }; }
+    catch { return EMPTY_SPEAKING_STYLE; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(STYLE_KEY, JSON.stringify(speaking)); } catch { /* ignore */ }
+  }, [speaking]);
+  const styleBrief = buildStyleBrief(speaking, fr);
+
   const TARGET_KEY = 'student-target-v1';
   const [target, setTarget] = useState<{ role: string; company: string; sector: string }>(() => {
     try { return { role: '', company: '', sector: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
