@@ -28,6 +28,7 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { InterviewVideoCall } from '@/components/student/InterviewVideoCall';
 import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
+import { interviewerRolePresets } from '@/standalone/coach/interviewerRoles';
 import { SpeakingStyleCard } from '@/standalone/coach/SpeakingStyleCard';
 import { buildStyleBrief, EMPTY_SPEAKING_STYLE, type SpeakingStyle } from '@/standalone/coach/speakingStyle';
 
