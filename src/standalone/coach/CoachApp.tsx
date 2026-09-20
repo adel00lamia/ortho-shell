@@ -474,6 +474,32 @@ const CoachApp = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">{fr ? 'Poste visé' : 'Target role'}</Label>
+                    <Input
+                      value={target.role}
+                      onChange={(e) => setTarget({ ...target, role: e.target.value })}
+                      placeholder={fr ? 'Ex. Chargé(e) de recrutement' : 'e.g. Recruitment officer'}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{fr ? 'Entreprise' : 'Company'}</Label>
+                    <Input
+                      value={target.company}
+                      onChange={(e) => setTarget({ ...target, company: e.target.value })}
+                      placeholder={fr ? 'Ex. OCP, Capgemini…' : 'e.g. OCP, Capgemini…'}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{fr ? 'Secteur / industrie' : 'Sector / industry'}</Label>
+                    <Input
+                      value={target.sector}
+                      onChange={(e) => setTarget({ ...target, sector: e.target.value })}
+                      placeholder={fr ? 'Ex. offshoring, industrie, banque' : 'e.g. offshoring, industry, banking'}
+                    />
+                  </div>
+                </div>
                 <Textarea
                   rows={8}
                   value={resumeText}
