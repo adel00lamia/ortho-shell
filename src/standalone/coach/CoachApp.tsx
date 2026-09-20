@@ -221,7 +221,7 @@ const CoachApp = () => {
         resumeText.trim(),
         target.role || setup.position || cvTarget,
         apiLang,
-        { companyName: target.company, sector: target.sector },
+        { companyName: target.company, sector: target.sector, speakingStyle: styleBrief },
       ));
       toast.success(fr ? 'Questions préparées' : 'Questions ready');
     } catch (e) {
