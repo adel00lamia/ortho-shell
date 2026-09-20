@@ -81,10 +81,16 @@ async function callGemini(messages: Array<{ role: string; content: string }>, ex
   return data.choices?.[0]?.message?.content ?? '';
 }
 
+function unwrap(value: unknown) {
+  // The model sometimes wraps the object in a single-element array.
+  if (Array.isArray(value) && value.length === 1 && value[0] && typeof value[0] === 'object') return value[0];
+  return value;
+}
+
 function safeParseJson(raw: string) {
-  try { return JSON.parse(raw); } catch { /* fallthrough */ }
+  try { return unwrap(JSON.parse(raw)); } catch { /* fallthrough */ }
   const match = raw.match(/\{[\s\S]*\}/);
-  if (match) { try { return JSON.parse(match[0]); } catch { /* ignore */ } }
+  if (match) { try { return unwrap(JSON.parse(match[0])); } catch { /* ignore */ } }
   return { error: 'Could not parse AI response', raw };
 }
 
