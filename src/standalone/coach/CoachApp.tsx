@@ -32,6 +32,7 @@ const KEYS = {
   identity: 'coach-identity-v1',
   setup: 'coach-setup-v1',
   lang: 'coach-lang-v1',
+  target: 'coach-target-v1',
 };
 
 type Difficulty = 'warmup' | 'junior' | 'mid' | 'senior';
