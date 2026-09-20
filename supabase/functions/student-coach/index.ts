@@ -12,6 +12,8 @@ interface InterviewBody {
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
   resumeText?: string;
+  companyName?: string;
+  sector?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
@@ -262,7 +264,14 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nCV DE L'ÉTUDIANT (seule source de vérité, ne rien inventer) :\n<<<${resume}>>>\n- Base tes questions sur CE CV : expériences, projets, compétences, trous ou changements de parcours.\n- Cite parfois un élément précis du CV ("Sur ton stage chez X…").\n- Ne mentionne JAMAIS une expérience absente du CV.`
           : `\n\nSTUDENT RESUME (sole source of truth, invent nothing):\n<<<${resume}>>>\n- Base your questions on THIS resume: experiences, projects, skills, gaps or career switches.\n- Sometimes quote a precise resume item ("About your internship at X…").\n- NEVER mention an experience that is not in the resume.`)
         : '';
-      const finalSystem = system + warmupOverride + resumeBlock + toneBlock;
+      const company = (body.companyName ?? '').trim().slice(0, 120);
+      const sector = (body.sector ?? '').trim().slice(0, 120);
+      const targetBlock = (company || sector)
+        ? (fr
+          ? `\n\nCONTEXTE DE CANDIDATURE :${company ? `\n- Entreprise visée : ${company}` : ''}${sector ? `\n- Secteur : ${sector}` : ''}\n- Pose des questions telles qu'un recruteur de ce secteur les poserait (enjeux métier généraux du secteur).\n- N'invente AUCUN chiffre, client, projet ou actualité de cette entreprise. Si tu n'as pas l'information, reste sur des enjeux généraux du secteur.`
+          : `\n\nAPPLICATION CONTEXT:${company ? `\n- Target company: ${company}` : ''}${sector ? `\n- Sector: ${sector}` : ''}\n- Ask questions the way a recruiter in this sector would (general sector stakes).\n- Invent NO figures, clients, projects or news about this company. When unknown, stay on general sector stakes.`)
+        : '';
+      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },

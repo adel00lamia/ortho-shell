@@ -332,6 +332,8 @@ const StudentHub = () => {
           mode: 'interview', position, difficulty, style,
           studentProfile: profile ?? draft, history,
           resumeText: resumeText.trim() || undefined,
+          companyName: target.company.trim() || undefined,
+          sector: target.sector.trim() || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
       });

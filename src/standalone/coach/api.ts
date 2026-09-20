@@ -38,6 +38,8 @@ export async function streamInterviewTurn(args: {
   style: 'behavioral' | 'technical' | 'mixed';
   history: CoachMsg[];
   resumeText?: string;
+  companyName?: string;
+  sector?: string;
   language: 'fr' | 'en';
   onText: (accumulated: string) => void;
 }) {
@@ -51,6 +53,8 @@ export async function streamInterviewTurn(args: {
       style: args.style,
       history: args.history,
       resumeText: args.resumeText || undefined,
+      companyName: args.companyName || undefined,
+      sector: args.sector || undefined,
       language: args.language,
       stream: true,
     }),
