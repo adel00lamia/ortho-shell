@@ -14,6 +14,7 @@ interface InterviewBody {
   resumeText?: string;
   companyName?: string;
   sector?: string;
+  speakingStyle?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
