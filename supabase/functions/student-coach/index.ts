@@ -45,6 +45,8 @@ interface ResumePrepBody {
   mode: 'resumeprep';
   resumeText: string;
   jobTarget?: string;
+  companyName?: string;
+  sector?: string;
   language?: 'en' | 'fr';
 }
 
