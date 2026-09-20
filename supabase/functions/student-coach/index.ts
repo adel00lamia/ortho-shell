@@ -14,6 +14,7 @@ interface InterviewBody {
   resumeText?: string;
   companyName?: string;
   sector?: string;
+  interviewerRole?: string;
   speakingStyle?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
@@ -50,6 +51,7 @@ interface ResumePrepBody {
   jobTarget?: string;
   companyName?: string;
   sector?: string;
+  interviewerRole?: string;
   speakingStyle?: string;
   language?: 'en' | 'fr';
 }
@@ -279,8 +281,14 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nCONTEXTE DE CANDIDATURE :${company ? `\n- Entreprise visée : ${company}` : ''}${sector ? `\n- Secteur : ${sector}` : ''}\n- Pose des questions telles qu'un recruteur de ce secteur les poserait (enjeux métier généraux du secteur).\n- N'invente AUCUN chiffre, client, projet ou actualité de cette entreprise. Si tu n'as pas l'information, reste sur des enjeux généraux du secteur.`
           : `\n\nAPPLICATION CONTEXT:${company ? `\n- Target company: ${company}` : ''}${sector ? `\n- Sector: ${sector}` : ''}\n- Ask questions the way a recruiter in this sector would (general sector stakes).\n- Invent NO figures, clients, projects or news about this company. When unknown, stay on general sector stakes.`)
         : '';
+      const interviewer = (body.interviewerRole ?? '').trim().slice(0, 120);
+      const interviewerBlock = interviewer
+        ? (fr
+          ? `\n\nQUI TU INCARNES : ${interviewer}.\n- Garde le prénom Sarah, mais joue précisément ce rôle et dis-le en 1 phrase à l'accueil.\n- Pose les questions typiques de CE rôle : un RH creuse le parcours, la motivation et le comportement ; un manager opérationnel creuse le quotidien du poste, les priorités et l'autonomie ; un expert technique creuse la méthode et les outils ; un dirigeant creuse la vision, l'impact business et la prise de décision ; un cabinet externe creuse la cohérence du parcours, les prétentions et la disponibilité.\n- Reste dans le périmètre de ce rôle : ne pose pas de questions qui ne relèvent pas de lui.`
+          : `\n\nWHO YOU PLAY: ${interviewer}.\n- Keep the name Sarah but play this role precisely and state it in 1 sentence when welcoming.\n- Ask the questions typical of THIS role: HR digs into background, motivation and behaviour; a hiring manager digs into day-to-day work, priorities and autonomy; a technical expert digs into method and tools; an executive digs into vision, business impact and decision-making; an external agency digs into career coherence, salary expectations and availability.\n- Stay within this role's scope: do not ask questions that belong to another interviewer.`)
+        : '';
       const styleBlock = (body.speakingStyle ?? '').trim().slice(0, 4500);
-      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + styleBlock + toneBlock;
+      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + interviewerBlock + styleBlock + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
@@ -384,7 +392,8 @@ Réponds en JSON pur :
  "risks": string[] (3 points que le recruteur va creuser : trous, changements, manques),
  "sectorFocus": string[] (3 enjeux du secteur/poste à connaître avant l'entretien),
  "askThem": string[] (3 questions pertinentes à poser à l'entreprise),
- "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (9 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier propres au secteur, 1 sur la connaissance de l'entreprise/secteur, 1 sur les motivations)}`
+ "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (9 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier propres au secteur, 1 sur la connaissance de l'entreprise/secteur, 1 sur les motivations)}
+Si un "interviewerRole" est fourni (le poste de la personne qui fait passer l'entretien), adapte TOUTES les questions à ce rôle : un RH creuse parcours/motivation/comportement, un manager opérationnel le quotidien du poste et les priorités, un expert technique la méthode et les outils, un dirigeant la vision et l'impact business, un cabinet externe la cohérence du parcours, les prétentions et la disponibilité. Indique aussi dans "sectorFocus" ce que ce type d'interlocuteur attend en priorité.`
         : `You are Sarah, senior HR. From the resume, the target role, the company and the sector (when provided), prepare the student for the interview. Invent NO candidate experience: rely only on the resume; if information is missing write "To complete". For company and sector, stay on general verifiable sector stakes; invent no figures, clients, projects or company news, and phrase questions as likely questions from a recruiter in that sector.
 Respond in pure JSON:
 {"summary": string (2 sentences on how a recruiter in this sector reads this profile),
@@ -392,7 +401,8 @@ Respond in pure JSON:
  "risks": string[] (3 things the recruiter will dig into: gaps, switches, missing items),
  "sectorFocus": string[] (3 sector/role stakes to know before the interview),
  "askThem": string[] (3 relevant questions to ask the company),
- "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (9 questions: 2 intro, 3 behavioral, 2 sector-specific technical/role, 1 on company/sector knowledge, 1 motivation)}`;
+ "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (9 questions: 2 intro, 3 behavioral, 2 sector-specific technical/role, 1 on company/sector knowledge, 1 motivation)}
+When an "interviewerRole" is provided (the job of the person running the interview), adapt ALL questions to that role: HR digs into background/motivation/behaviour, a hiring manager into day-to-day work and priorities, a technical expert into method and tools, an executive into vision and business impact, an external agency into career coherence, salary expectations and availability. Also state in "sectorFocus" what this kind of interviewer expects first.`;
 
       const style = (body.speakingStyle ?? '').trim().slice(0, 4500);
       const styleSystem = style
@@ -410,6 +420,7 @@ Respond in pure JSON:
               jobTarget: body.jobTarget ?? '',
               companyName: (body.companyName ?? '').slice(0, 120),
               sector: (body.sector ?? '').slice(0, 120),
+              interviewerRole: (body.interviewerRole ?? '').slice(0, 120),
               resumeText: resume,
             }),
           },
