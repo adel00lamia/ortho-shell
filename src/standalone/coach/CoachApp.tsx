@@ -560,6 +560,27 @@ const CoachApp = () => {
                     </div>
                   )}
 
+                  {(!!prep.sectorFocus?.length || !!prep.askThem?.length) && (
+                    <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                      {!!prep.sectorFocus?.length && (
+                        <div className="rounded-lg border p-3">
+                          <p className="font-semibold mb-1">{fr ? 'À connaître sur le secteur / le poste' : 'Know this about the sector / role'}</p>
+                          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                            {prep.sectorFocus.map((s, i) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {!!prep.askThem?.length && (
+                        <div className="rounded-lg border p-3">
+                          <p className="font-semibold mb-1">{fr ? 'Questions à leur poser' : 'Questions to ask them'}</p>
+                          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                            {prep.askThem.map((s, i) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     {(prep.questions ?? []).map((q, i) => {
                       const open = openPrep === i;
