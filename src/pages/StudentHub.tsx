@@ -493,6 +493,7 @@ const StudentHub = () => {
           jobTarget: target.role || position || cvTarget,
           companyName: target.company || undefined,
           sector: target.sector || undefined,
+          speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en',
         },
       });
