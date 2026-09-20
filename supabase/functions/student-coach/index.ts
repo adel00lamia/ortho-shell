@@ -12,6 +12,8 @@ interface InterviewBody {
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
   resumeText?: string;
+  companyName?: string;
+  sector?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
