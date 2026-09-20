@@ -50,6 +50,7 @@ interface ResumePrepBody {
   jobTarget?: string;
   companyName?: string;
   sector?: string;
+  speakingStyle?: string;
   language?: 'en' | 'fr';
 }
 
