@@ -28,6 +28,8 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { InterviewVideoCall } from '@/components/student/InterviewVideoCall';
 import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
+import { SpeakingStyleCard } from '@/standalone/coach/SpeakingStyleCard';
+import { buildStyleBrief, EMPTY_SPEAKING_STYLE, type SpeakingStyle } from '@/standalone/coach/speakingStyle';
 
 type StudentProfile = {
   id?: string;
@@ -334,6 +336,7 @@ const StudentHub = () => {
           resumeText: resumeText.trim() || undefined,
           companyName: target.company.trim() || undefined,
           sector: target.sector.trim() || undefined,
+          speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
       });
@@ -440,6 +443,16 @@ const StudentHub = () => {
   const [prepLoading, setPrepLoading] = useState(false);
   const [prep, setPrep] = useState<any>(null);
   const [openPrep, setOpenPrep] = useState<number | null>(null);
+  const STYLE_KEY = 'student-style-v1';
+  const [speaking, setSpeaking] = useState<SpeakingStyle>(() => {
+    try { return { ...EMPTY_SPEAKING_STYLE, ...JSON.parse(localStorage.getItem(STYLE_KEY) || '{}') }; }
+    catch { return EMPTY_SPEAKING_STYLE; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(STYLE_KEY, JSON.stringify(speaking)); } catch { /* ignore */ }
+  }, [speaking]);
+  const styleBrief = buildStyleBrief(speaking, fr);
+
   const TARGET_KEY = 'student-target-v1';
   const [target, setTarget] = useState<{ role: string; company: string; sector: string }>(() => {
     try { return { role: '', company: '', sector: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
@@ -480,6 +493,7 @@ const StudentHub = () => {
           jobTarget: target.role || position || cvTarget,
           companyName: target.company || undefined,
           sector: target.sector || undefined,
+          speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en',
         },
       });
@@ -989,6 +1003,8 @@ const StudentHub = () => {
                   ? 'PDF et Word (.docx) sont lus directement dans ton navigateur : rien n\'est envoyé ni stocké sur un serveur. Si ton CV est un scan, copie-colle le texte.'
                   : 'PDF and Word (.docx) are read directly in your browser: nothing is uploaded or stored. If your CV is a scan, paste the text.'}
               </p>
+
+              <SpeakingStyleCard fr={fr} value={speaking} onChange={setSpeaking} />
 
               {prep && (
                 <div className="space-y-3 pt-2">

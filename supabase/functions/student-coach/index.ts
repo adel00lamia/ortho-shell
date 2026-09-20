@@ -14,6 +14,7 @@ interface InterviewBody {
   resumeText?: string;
   companyName?: string;
   sector?: string;
+  speakingStyle?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
@@ -49,6 +50,7 @@ interface ResumePrepBody {
   jobTarget?: string;
   companyName?: string;
   sector?: string;
+  speakingStyle?: string;
   language?: 'en' | 'fr';
 }
 
@@ -79,10 +81,16 @@ async function callGemini(messages: Array<{ role: string; content: string }>, ex
   return data.choices?.[0]?.message?.content ?? '';
 }
 
+function unwrap(value: unknown) {
+  // The model sometimes wraps the object in a single-element array.
+  if (Array.isArray(value) && value.length === 1 && value[0] && typeof value[0] === 'object') return value[0];
+  return value;
+}
+
 function safeParseJson(raw: string) {
-  try { return JSON.parse(raw); } catch { /* fallthrough */ }
+  try { return unwrap(JSON.parse(raw)); } catch { /* fallthrough */ }
   const match = raw.match(/\{[\s\S]*\}/);
-  if (match) { try { return JSON.parse(match[0]); } catch { /* ignore */ } }
+  if (match) { try { return unwrap(JSON.parse(match[0])); } catch { /* ignore */ } }
   return { error: 'Could not parse AI response', raw };
 }
 
@@ -271,7 +279,8 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nCONTEXTE DE CANDIDATURE :${company ? `\n- Entreprise visée : ${company}` : ''}${sector ? `\n- Secteur : ${sector}` : ''}\n- Pose des questions telles qu'un recruteur de ce secteur les poserait (enjeux métier généraux du secteur).\n- N'invente AUCUN chiffre, client, projet ou actualité de cette entreprise. Si tu n'as pas l'information, reste sur des enjeux généraux du secteur.`
           : `\n\nAPPLICATION CONTEXT:${company ? `\n- Target company: ${company}` : ''}${sector ? `\n- Sector: ${sector}` : ''}\n- Ask questions the way a recruiter in this sector would (general sector stakes).\n- Invent NO figures, clients, projects or news about this company. When unknown, stay on general sector stakes.`)
         : '';
-      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + toneBlock;
+      const styleBlock = (body.speakingStyle ?? '').trim().slice(0, 4500);
+      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + styleBlock + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
@@ -385,9 +394,16 @@ Respond in pure JSON:
  "askThem": string[] (3 relevant questions to ask the company),
  "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (9 questions: 2 intro, 3 behavioral, 2 sector-specific technical/role, 1 on company/sector knowledge, 1 motivation)}`;
 
+      const style = (body.speakingStyle ?? '').trim().slice(0, 4500);
+      const styleSystem = style
+        ? `${system}${style}\n${fr
+          ? 'IMPORTANT : chaque "modelAnswer" doit être écrite dans MON style oral décrit ci-dessus (mon vocabulaire, ma longueur de phrase), prête à être dite à voix haute, sans changer les faits du CV.'
+          : 'IMPORTANT: every "modelAnswer" must be written in MY spoken style described above (my vocabulary, my sentence length), ready to say out loud, without changing the resume facts.'}`
+        : system;
+
       const reply = await callGemini(
         [
-          { role: 'system', content: system },
+          { role: 'system', content: styleSystem },
           {
             role: 'user',
             content: JSON.stringify({

@@ -40,6 +40,7 @@ export async function streamInterviewTurn(args: {
   resumeText?: string;
   companyName?: string;
   sector?: string;
+  speakingStyle?: string;
   language: 'fr' | 'en';
   onText: (accumulated: string) => void;
 }) {
@@ -55,6 +56,7 @@ export async function streamInterviewTurn(args: {
       resumeText: args.resumeText || undefined,
       companyName: args.companyName || undefined,
       sector: args.sector || undefined,
+      speakingStyle: args.speakingStyle || undefined,
       language: args.language,
       stream: true,
     }),
@@ -105,7 +107,7 @@ export async function prepareFromResume(
   resumeText: string,
   jobTarget: string,
   language: 'fr' | 'en',
-  context?: { companyName?: string; sector?: string },
+  context?: { companyName?: string; sector?: string; speakingStyle?: string },
 ) {
   const data = await post<{ prep: ResumePrep & { error?: string } }>({
     mode: 'resumeprep',
@@ -113,6 +115,7 @@ export async function prepareFromResume(
     jobTarget: jobTarget || undefined,
     companyName: context?.companyName || undefined,
     sector: context?.sector || undefined,
+    speakingStyle: context?.speakingStyle || undefined,
     language,
   });
   if (data.prep?.error) throw new Error(data.prep.error);

@@ -26,6 +26,8 @@ import {
   streamInterviewTurn, prepareFromResume, generateCv, requestFeedback,
   type CoachMsg, type ResumePrep, type GeneratedCv, type InterviewFeedback,
 } from './api';
+import { SpeakingStyleCard } from './SpeakingStyleCard';
+import { buildStyleBrief, EMPTY_SPEAKING_STYLE, type SpeakingStyle } from './speakingStyle';
 
 const KEYS = {
   resume: 'coach-resume-v1',
@@ -33,6 +35,7 @@ const KEYS = {
   setup: 'coach-setup-v1',
   lang: 'coach-lang-v1',
   target: 'coach-target-v1',
+  style: 'coach-style-v1',
 };
 
 type Difficulty = 'warmup' | 'junior' | 'mid' | 'senior';
@@ -63,6 +66,11 @@ const CoachApp = () => {
   /* ------------------------------- Resume ------------------------------- */
   const [resumeText, setResumeText] = useState(() => read(KEYS.resume));
   useEffect(() => { write(KEYS.resume, resumeText); }, [resumeText]);
+
+  /* --------------------------- Speaking style --------------------------- */
+  const [speaking, setSpeaking] = useState<SpeakingStyle>(() => readJson(KEYS.style, EMPTY_SPEAKING_STYLE));
+  useEffect(() => { write(KEYS.style, speaking); }, [speaking]);
+  const styleBrief = useMemo(() => buildStyleBrief(speaking, fr), [speaking, fr]);
 
   const importResume = async (file: File | null) => {
     if (!file) return;
@@ -112,6 +120,7 @@ const CoachApp = () => {
         resumeText: resumeText.trim() || undefined,
         companyName: target.company.trim() || undefined,
         sector: target.sector.trim() || undefined,
+        speakingStyle: styleBrief || undefined,
         language: apiLang,
         onText: (acc) => setChat([...history, { role: 'assistant', content: acc }]),
       });
@@ -212,7 +221,7 @@ const CoachApp = () => {
         resumeText.trim(),
         target.role || setup.position || cvTarget,
         apiLang,
-        { companyName: target.company, sector: target.sector },
+        { companyName: target.company, sector: target.sector, speakingStyle: styleBrief },
       ));
       toast.success(fr ? 'Questions préparées' : 'Questions ready');
     } catch (e) {
@@ -533,6 +542,8 @@ const CoachApp = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <SpeakingStyleCard fr={fr} value={speaking} onChange={setSpeaking} />
 
             {prep && (
               <Card>
