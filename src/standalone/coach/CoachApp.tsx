@@ -67,6 +67,11 @@ const CoachApp = () => {
   const [resumeText, setResumeText] = useState(() => read(KEYS.resume));
   useEffect(() => { write(KEYS.resume, resumeText); }, [resumeText]);
 
+  /* --------------------------- Speaking style --------------------------- */
+  const [speaking, setSpeaking] = useState<SpeakingStyle>(() => readJson(KEYS.style, EMPTY_SPEAKING_STYLE));
+  useEffect(() => { write(KEYS.style, speaking); }, [speaking]);
+  const styleBrief = useMemo(() => buildStyleBrief(speaking, fr), [speaking, fr]);
+
   const importResume = async (file: File | null) => {
     if (!file) return;
     try {
