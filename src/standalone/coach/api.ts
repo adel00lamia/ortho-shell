@@ -105,7 +105,7 @@ export async function prepareFromResume(
   resumeText: string,
   jobTarget: string,
   language: 'fr' | 'en',
-  context?: { companyName?: string; sector?: string },
+  context?: { companyName?: string; sector?: string; speakingStyle?: string },
 ) {
   const data = await post<{ prep: ResumePrep & { error?: string } }>({
     mode: 'resumeprep',
@@ -113,6 +113,7 @@ export async function prepareFromResume(
     jobTarget: jobTarget || undefined,
     companyName: context?.companyName || undefined,
     sector: context?.sector || undefined,
+    speakingStyle: context?.speakingStyle || undefined,
     language,
   });
   if (data.prep?.error) throw new Error(data.prep.error);
