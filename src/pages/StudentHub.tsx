@@ -992,6 +992,8 @@ const StudentHub = () => {
                   : 'PDF and Word (.docx) are read directly in your browser: nothing is uploaded or stored. If your CV is a scan, paste the text.'}
               </p>
 
+              <SpeakingStyleCard fr={fr} value={speaking} onChange={setSpeaking} />
+
               {prep && (
                 <div className="space-y-3 pt-2">
                   {prep.summary && <p className="text-sm text-muted-foreground italic">{prep.summary}</p>}
