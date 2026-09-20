@@ -472,7 +472,14 @@ const StudentHub = () => {
     setPrepLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: { mode: 'resumeprep', resumeText: resumeText.trim(), jobTarget: position || cvTarget, language: fr ? 'fr' : 'en' },
+        body: {
+          mode: 'resumeprep',
+          resumeText: resumeText.trim(),
+          jobTarget: target.role || position || cvTarget,
+          companyName: target.company || undefined,
+          sector: target.sector || undefined,
+          language: fr ? 'fr' : 'en',
+        },
       });
       if (error) throw error;
       const result = (data as { prep: any }).prep;
