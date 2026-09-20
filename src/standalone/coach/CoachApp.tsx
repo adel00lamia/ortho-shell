@@ -26,6 +26,8 @@ import {
   streamInterviewTurn, prepareFromResume, generateCv, requestFeedback,
   type CoachMsg, type ResumePrep, type GeneratedCv, type InterviewFeedback,
 } from './api';
+import { SpeakingStyleCard } from './SpeakingStyleCard';
+import { buildStyleBrief, EMPTY_SPEAKING_STYLE, type SpeakingStyle } from './speakingStyle';
 
 const KEYS = {
   resume: 'coach-resume-v1',
