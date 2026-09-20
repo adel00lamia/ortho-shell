@@ -86,6 +86,8 @@ export type ResumePrep = {
   summary?: string;
   strengths?: string[];
   risks?: string[];
+  sectorFocus?: string[];
+  askThem?: string[];
   questions?: Array<{
     question: string;
     why?: string;
