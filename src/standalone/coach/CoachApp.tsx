@@ -120,6 +120,7 @@ const CoachApp = () => {
         resumeText: resumeText.trim() || undefined,
         companyName: target.company.trim() || undefined,
         sector: target.sector.trim() || undefined,
+        speakingStyle: styleBrief || undefined,
         language: apiLang,
         onText: (acc) => setChat([...history, { role: 'assistant', content: acc }]),
       });
