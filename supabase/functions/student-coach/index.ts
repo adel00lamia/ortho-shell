@@ -273,7 +273,8 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nCONTEXTE DE CANDIDATURE :${company ? `\n- Entreprise visée : ${company}` : ''}${sector ? `\n- Secteur : ${sector}` : ''}\n- Pose des questions telles qu'un recruteur de ce secteur les poserait (enjeux métier généraux du secteur).\n- N'invente AUCUN chiffre, client, projet ou actualité de cette entreprise. Si tu n'as pas l'information, reste sur des enjeux généraux du secteur.`
           : `\n\nAPPLICATION CONTEXT:${company ? `\n- Target company: ${company}` : ''}${sector ? `\n- Sector: ${sector}` : ''}\n- Ask questions the way a recruiter in this sector would (general sector stakes).\n- Invent NO figures, clients, projects or news about this company. When unknown, stay on general sector stakes.`)
         : '';
-      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + toneBlock;
+      const styleBlock = (body.speakingStyle ?? '').trim().slice(0, 4500);
+      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + styleBlock + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
