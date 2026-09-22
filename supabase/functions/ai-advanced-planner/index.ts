@@ -490,7 +490,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
         input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nReturn valid JSON only.` }] }],
         stream: true,
         store: false,
-        reasoning: { effort: 'medium', summary: 'auto' },
+        reasoning: { effort: 'low', summary: 'auto' },
         include: ['reasoning.encrypted_content'],
       }),
     });
