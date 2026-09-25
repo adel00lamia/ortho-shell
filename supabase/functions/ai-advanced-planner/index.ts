@@ -473,10 +473,11 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     console.log('Calling Lovable AI Gateway...');
 
     const selectedModel = 'openai/gpt-6-astra';
-
-
     console.log('Using AI model:', selectedModel);
 
+    // The generation is delivered through a streamed response. Keepalive bytes are sent
+    // while the model is still writing so the platform never cuts the connection.
+    const planPromise = (async () => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
@@ -500,7 +501,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       console.error('AI Gateway error:', response.status, errorText);
       let safeMessage = `AI Gateway error: ${response.status}`;
       try { safeMessage = JSON.parse(errorText)?.message || JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
-      return new Response(JSON.stringify({ error: safeMessage }), { status: response.status, headers: jsonHeaders });
+      throw new Error(safeMessage);
     }
 
     const content = await readResponsesStream(response);
@@ -593,8 +594,42 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       },
     };
 
-    return new Response(JSON.stringify({ plan: normalizedPlan }), {
-      headers: jsonHeaders,
+    return normalizedPlan;
+    })();
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        let done = false;
+        const keepalive = setInterval(() => {
+          if (!done) {
+            try { controller.enqueue(encoder.encode(': keepalive\n\n')); } catch { /* stream closed */ }
+          }
+        }, 5000);
+        controller.enqueue(encoder.encode(': start\n\n'));
+        try {
+          const plan = await planPromise;
+          done = true;
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ plan })}\n\n`));
+        } catch (streamError) {
+          done = true;
+          const message = streamError instanceof Error ? streamError.message : 'Failed to generate advanced training plan';
+          console.error('Plan generation failed:', message);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`));
+        } finally {
+          clearInterval(keepalive);
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
     });
   } catch (error) {
     console.error('Error in ai-advanced-planner function:', error);

@@ -73,6 +73,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { GeneratedPlan, GeneratedPlanSnapshot, PlanRequirements, PreviousPlanFile } from '@/types/trainingPlan';
+import { env } from '@/config/env';
 import { useCompanyFactbase } from '@/hooks/useCompanyFactbase';
 
 import { ContextualActions } from '@/components/ContextualActions';
@@ -668,30 +669,57 @@ export default function AIPlanBuilder() {
         companyData: trimmedFactbase,
       };
 
-      const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
-        body: {
+      // The generation service streams keepalive bytes while the plan is being written,
+      // so the connection is never cut on long generations.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token || env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const response = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/ai-advanced-planner`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
           requirements: {
             ...safeRequirements,
             previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles : undefined
           },
           userId: user?.id || 'anonymous',
           language: language
-        }
+        }),
       });
 
-      if (error) {
-        // Non-2xx responses hide the server message inside error.context — read it.
+      if (!response.ok || !response.body) {
         let serverMessage = '';
         try {
-          const ctx = (error as { context?: Response }).context;
-          if (ctx && typeof ctx.text === 'function') {
-            const body = await ctx.text();
-            const parsedBody = body ? JSON.parse(body) : null;
-            serverMessage = parsedBody?.error || '';
-          }
+          const body = await response.text();
+          serverMessage = body ? (JSON.parse(body)?.error || '') : '';
         } catch { /* keep generic message */ }
-        throw new Error(serverMessage || error.message);
+        throw new Error(serverMessage || `HTTP ${response.status}`);
       }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let raw = '';
+      let data: { plan?: GeneratedPlan; error?: string } | null = null;
+      while (!data) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        raw += decoder.decode(value, { stream: true });
+        const lines = raw.split('\n');
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          if (!payload) continue;
+          try { data = JSON.parse(payload); } catch { /* frame still incomplete */ }
+        }
+      }
+      // A plain JSON body (non-streamed response) stays supported.
+      if (!data && raw.trim().startsWith('{')) {
+        try { data = JSON.parse(raw); } catch { /* handled below */ }
+      }
+
       if (data?.error) throw new Error(data.error);
       if (!data?.plan) throw new Error(language === 'fr' ? 'Réponse incomplète du service de génération.' : 'Incomplete response from the generation service.');
 
