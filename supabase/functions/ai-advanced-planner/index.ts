@@ -473,10 +473,11 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     console.log('Calling Lovable AI Gateway...');
 
     const selectedModel = 'openai/gpt-6-astra';
-
-
     console.log('Using AI model:', selectedModel);
 
+    // The generation is delivered through a streamed response. Keepalive bytes are sent
+    // while the model is still writing so the platform never cuts the connection.
+    const planPromise = (async () => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
