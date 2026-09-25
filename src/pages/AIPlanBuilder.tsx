@@ -73,6 +73,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { GeneratedPlan, GeneratedPlanSnapshot, PlanRequirements, PreviousPlanFile } from '@/types/trainingPlan';
+import { env } from '@/config/env';
 import { useCompanyFactbase } from '@/hooks/useCompanyFactbase';
 
 import { ContextualActions } from '@/components/ContextualActions';
