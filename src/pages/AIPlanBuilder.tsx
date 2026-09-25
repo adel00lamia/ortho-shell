@@ -701,7 +701,7 @@ export default function AIPlanBuilder() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let data: { plan?: unknown; error?: string } | null = null;
+      let data: { plan?: GeneratedPlan; error?: string } | null = null;
       while (!data) {
         const { done, value } = await reader.read();
         if (done) break;
