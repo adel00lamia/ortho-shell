@@ -501,7 +501,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       console.error('AI Gateway error:', response.status, errorText);
       let safeMessage = `AI Gateway error: ${response.status}`;
       try { safeMessage = JSON.parse(errorText)?.message || JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
-      return new Response(JSON.stringify({ error: safeMessage }), { status: response.status, headers: jsonHeaders });
+      throw new Error(safeMessage);
     }
 
     const content = await readResponsesStream(response);
