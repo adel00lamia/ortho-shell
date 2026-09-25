@@ -701,20 +701,23 @@ export default function AIPlanBuilder() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let buffer = '';
+      let raw = '';
       let data: { plan?: GeneratedPlan; error?: string } | null = null;
       while (!data) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        raw += decoder.decode(value, { stream: true });
+        const lines = raw.split('\n');
         for (const line of lines) {
           if (!line.startsWith('data:')) continue;
           const payload = line.slice(5).trim();
           if (!payload) continue;
-          try { data = JSON.parse(payload); } catch { /* ignore partial frames */ }
+          try { data = JSON.parse(payload); } catch { /* frame still incomplete */ }
         }
+      }
+      // A plain JSON body (non-streamed response) stays supported.
+      if (!data && raw.trim().startsWith('{')) {
+        try { data = JSON.parse(raw); } catch { /* handled below */ }
       }
 
       if (data?.error) throw new Error(data.error);
