@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { ScenarioPlanner } from '@/components/transformation/ScenarioPlanner';
+import { useCompanyId } from '@/hooks/useCompanyId';
 import { Target, Layers, GitBranch, Bot, Trash2, Plus, ArrowRight } from 'lucide-react';
 
 type Obj = { id: string; title: string; category: string; priority: number; target_kpi: string | null };
@@ -28,6 +30,8 @@ export default function TransformationCockpit() {
   const links = useTransformationTable<Link>('objective_capabilities');
   const procs = useTransformationTable<Proc>('business_processes');
   const tasks = useTransformationTable<Task>('process_tasks');
+  const companyIdQ = useCompanyId() as unknown;
+  const companyId = (typeof companyIdQ === 'object' && companyIdQ && 'data' in companyIdQ ? (companyIdQ as { data?: string | null }).data : companyIdQ) as string | null | undefined;
 
   const analysed = useMemo(() => tasks.rows.map((t) => ({ t, a: analyseTask(t.criteria, Number(t.hours_per_week)) })), [tasks.rows]);
   const capGaps = caps.rows.filter((c) => c.target_maturity - c.current_maturity >= 2).length;
@@ -68,6 +72,7 @@ export default function TransformationCockpit() {
           <TabsTrigger value="capabilities">{L('Capacités', 'Capabilities')}</TabsTrigger>
           <TabsTrigger value="work">{L('Processus & tâches', 'Processes & tasks')}</TabsTrigger>
           <TabsTrigger value="ai">{L('Humain + IA', 'Human + AI')}</TabsTrigger>
+          <TabsTrigger value="scenarios">{L('Scénarios & risques', 'Scenarios & risk')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cockpit" className="space-y-6">
@@ -182,6 +187,7 @@ export default function TransformationCockpit() {
           })}
           {analysed.length === 0 && <Card><CardContent className="p-6 text-muted-foreground">{L('Ajoutez des tâches dans « Processus & tâches » pour lancer l’analyse.', 'Add tasks in “Processes & tasks” to start the analysis.')}</CardContent></Card>}
         </TabsContent>
+        <TabsContent value="scenarios"><ScenarioPlanner tasks={tasks.rows} companyId={companyId} lang={language} /></TabsContent>
       </Tabs>
     </div>
   );
