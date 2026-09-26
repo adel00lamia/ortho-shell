@@ -10,6 +10,79 @@ const SHARE: Record<OperatingMode, number> = { human_only: 0, human_ai: 0.2, ai_
 const MODES = Object.keys(SHARE) as OperatingMode[];
 const WEEKS = 46; // working weeks per year (assumption)
 const sel = 'h-8 rounded-md border border-input bg-background px-2 text-xs';
+const FTE_H = WEEKS * 40; // hours per full-time equivalent per year (assumption)
+
+// Fictional loaded hourly costs for the Atlas Industries demo (MAD/h). Illustrative only.
+const ATLAS_RATES: Record<string, number> = {
+  'Commercial export': 180, 'Responsable export': 320, 'Planificateur': 170, 'Technicien qualité': 110,
+  'Ingénieur qualité': 220, 'Comptable': 140, 'Contrôleur de gestion': 230, 'Chargé RH': 130,
+};
+
+type Assumptions = { severanceMonths: number; hiddenPct: number; reusePct: number; trainingPerPerson: number };
+const DEFAULT_A: Assumptions = { severanceMonths: 6, hiddenPct: 27, reusePct: 80, trainingPerPerson: 15000 };
+
+function NetComparison({ freedH, freedCost, hasRate, a, setA, L, fmt }: {
+  freedH: number; freedCost: number; hasRate: boolean; a: Assumptions; setA: (v: Assumptions) => void;
+  L: (fr: string, en: string) => string; fmt: (v: number) => string;
+}) {
+  const fte = freedH / FTE_H;
+  const people = Math.ceil(fte);
+  const avgRate = freedH ? freedCost / freedH : 0;
+  const monthly = (avgRate * FTE_H) / 12;
+  // A — Supprimer : gross saving minus severance and hidden costs (attrition, disruption) in year 1
+  const severance = fte * a.severanceMonths * monthly;
+  const hidden = freedCost * (a.hiddenPct / 100);
+  const aY1 = freedCost - severance - hidden;
+  const a3 = aY1 + 2 * freedCost;
+  // B — Redéployer : freed capacity reallocated to priority work, minus reskilling cost
+  const value = freedCost * (a.reusePct / 100);
+  const training = people * a.trainingPerPerson;
+  const bY1 = value - training;
+  const b3 = bY1 + 2 * value;
+  const money = (v: number) => (hasRate ? `${fmt(v)} MAD` : L('À chiffrer', 'To be costed'));
+  const field = (k: keyof Assumptions, label: string) => (
+    <label className="text-xs flex items-center justify-between gap-2"><span className="text-muted-foreground">{label}</span>
+      <Input className="w-24 h-8" type="number" min={0} value={a[k]} onChange={(e) => setA({ ...a, [k]: Math.max(0, +e.target.value) })} /></label>
+  );
+  const col = (title: string, lines: [string, string][], y1: number, y3: number, note: string) => (
+    <div className="rounded-lg border border-border p-4 space-y-2">
+      <p className="font-semibold">{title}</p>
+      {lines.map(([l, v]) => <div key={l} className="flex justify-between text-sm"><span className="text-muted-foreground">{l}</span><span>{v}</span></div>)}
+      <div className="flex justify-between text-sm font-semibold border-t border-border pt-2"><span>{L('Économie nette an 1', 'Net saving year 1')}</span><span>{money(y1)}</span></div>
+      <div className="flex justify-between text-sm font-semibold"><span>{L('Cumul 3 ans', '3-year total')}</span><span>{money(y3)}</span></div>
+      <p className="text-xs text-muted-foreground">{note}</p>
+    </div>
+  );
+  const best = hasRate ? (b3 >= a3 ? 'B' : 'A') : null;
+  return (
+    <Card><CardHeader><CardTitle className="text-base">{L('Économie nette : supprimer ou redéployer ?', 'Net saving: remove or redeploy?')}</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">{L(`Capacité libérée : ${fmt(freedH)} h/an ≈ ${fte.toFixed(1)} ETP (${people} personne(s) concernée(s)).`, `Freed capacity: ${fmt(freedH)} h/yr ≈ ${fte.toFixed(1)} FTE (${people} person(s) affected).`)}</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {field('severanceMonths', L('Indemnités (mois de salaire)', 'Severance (months of pay)'))}
+          {field('hiddenPct', L('Coûts cachés (% du gain)', 'Hidden costs (% of gain)'))}
+          {field('reusePct', L('Capacité réutilisée (%)', 'Capacity reused (%)'))}
+          {field('trainingPerPerson', L('Reskilling / personne (MAD)', 'Reskilling / person (MAD)'))}
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {col(L('A — Supprimer les postes', 'A — Remove positions'), [
+            [L('Gain brut', 'Gross saving'), money(freedCost)],
+            [L('Indemnités de départ', 'Severance'), money(-severance)],
+            [L('Coûts cachés (départs, désorganisation)', 'Hidden costs (attrition, disruption)'), money(-hidden)],
+          ], aY1, a3, L('Risque : perte de compétences et de savoir-faire, climat social.', 'Risk: loss of skills and know-how, morale.'))}
+          {col(L('B — Redéployer + former', 'B — Redeploy + reskill'), [
+            [L('Capacité réallouée aux priorités', 'Capacity reallocated to priorities'), money(value)],
+            [L('Coût de reskilling', 'Reskilling cost'), money(-training)],
+            [L('Indemnités', 'Severance'), money(0)],
+          ], bY1, b3, L('Financement CSF/OFPPT possible en aval (à vérifier) — non déduit ici.', 'CSF/OFPPT funding possibly downstream (to verify) — not deducted here.'))}
+        </div>
+        {best && <p className="text-sm"><Badge variant="secondary" className="mr-2">{L('Sur 3 ans', 'Over 3 years')}</Badge>
+          {best === 'B' ? L(`Le redéploiement rapporte ${fmt(b3 - a3)} MAD de plus que la suppression, sans perte de compétences.`, `Redeployment yields ${fmt(b3 - a3)} MAD more than removal, without losing skills.`)
+            : L(`La suppression rapporte ${fmt(a3 - b3)} MAD de plus, au prix d’une perte de compétences.`, `Removal yields ${fmt(a3 - b3)} MAD more, at the cost of lost skills.`)}</p>}
+        <p className="text-xs text-muted-foreground">{L('Hypothèses modifiables, à valider avec vos équipes RH et Finance. Les coûts cachés par défaut (27 %) reprennent un ordre de grandeur publié par Orgvue, non vérifié pour le Maroc.', 'Editable assumptions to validate with HR and Finance. The default 27% hidden cost is an order of magnitude published by Orgvue, not verified for Morocco.')}</p>
+      </CardContent></Card>
+  );
+}
 
 export function ScenarioPlanner({ tasks, companyId, lang }: { tasks: Task[]; companyId?: string | null; lang: string }) {
   const L = (fr: string, en: string) => (lang === 'fr' ? fr : en);
@@ -20,6 +93,7 @@ export function ScenarioPlanner({ tasks, companyId, lang }: { tasks: Task[]; com
     try { const s = JSON.parse(localStorage.getItem(key) || '{}'); setCost(s.cost || {}); setOverrides(s.overrides || {}); } catch { /* ignore */ }
   }, [key]);
   useEffect(() => { localStorage.setItem(key, JSON.stringify({ cost, overrides })); }, [key, cost, overrides]);
+  const [a, setA] = useState<Assumptions>(DEFAULT_A);
 
   const roles = useMemo(() => [...new Set(tasks.map((t) => t.role_name || L('Non affecté', 'Unassigned')))], [tasks, lang]);
   const rows = useMemo(() => tasks.map((t) => {
@@ -67,6 +141,11 @@ export function ScenarioPlanner({ tasks, companyId, lang }: { tasks: Task[]; com
           <label key={r} className="text-sm flex items-center justify-between gap-2"><span className="truncate">{r}</span>
             <Input className="w-28 h-8" type="number" min={0} placeholder={L('À saisir', 'Enter')} value={cost[r] || ''} onChange={(e) => setCost({ ...cost, [r]: Math.max(0, +e.target.value) })} /></label>))}
         </CardContent></Card>
+
+      <Button variant="outline" size="sm" onClick={() => setCost({ ...cost, ...Object.fromEntries(roles.filter((r) => ATLAS_RATES[r]).map((r) => [r, ATLAS_RATES[r]])) })}>
+        {L('Appliquer les coûts horaires fictifs Atlas', 'Apply fictional Atlas hourly costs')}</Button>
+
+      <NetComparison freedH={tot.fh} freedCost={tot.fc} hasRate={anyRate} a={a} setA={setA} L={L} fmt={fmt} />
 
       <Card><CardHeader className="flex-row items-center justify-between"><CardTitle className="text-base">{L('Scénario what-if : actuel → futur', 'What-if scenario: current → future')}</CardTitle>
         <Button variant="outline" size="sm" onClick={() => setOverrides({})}>{L('Revenir aux recommandations', 'Reset to recommendations')}</Button></CardHeader>
