@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -130,6 +128,27 @@ All colors MUST be HSL.
     --diag-progress-glow: 0 0 12px hsl(187 85% 53% / 0.4);
     --diag-select-glow: 0 0 20px hsl(239 84% 67% / 0.15);
   }
+
+  .landing-shell {
+    --background: 48 33% 97%;
+    --foreground: 166 41% 12%;
+    --card: 48 38% 99%;
+    --card-foreground: 166 41% 12%;
+    --popover: 48 38% 99%;
+    --popover-foreground: 166 41% 12%;
+    --primary: 160 55% 26%;
+    --primary-foreground: 48 33% 97%;
+    --secondary: 145 17% 91%;
+    --secondary-foreground: 166 41% 12%;
+    --muted: 145 13% 92%;
+    --muted-foreground: 164 12% 38%;
+    --accent: 43 78% 56%;
+    --accent-foreground: 166 41% 12%;
+    --border: 153 13% 80%;
+    --input: 153 13% 80%;
+    --ring: 160 55% 26%;
+    --radius: 0.25rem;
+  }
 }
 
 
@@ -145,5 +164,35 @@ All colors MUST be HSL.
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .landing-shell {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .landing-shell .section-label {
+    @apply flex items-center gap-3 text-xs font-bold uppercase text-primary;
+    letter-spacing: 0.16em;
+  }
+
+  .landing-shell .section-label::before {
+    content: '';
+    @apply h-px w-9 bg-primary;
+  }
+
+  .landing-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.34) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.26) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(to bottom, black, transparent 92%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-shell * {
+      scroll-behavior: auto !important;
+    }
   }
 }
