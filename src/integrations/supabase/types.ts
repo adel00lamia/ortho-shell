@@ -61,6 +61,98 @@ export type Database = {
           },
         ]
       }
+      business_capabilities: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_maturity: number
+          description: string | null
+          domain: string | null
+          id: string
+          name: string
+          target_maturity: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_maturity?: number
+          description?: string | null
+          domain?: string | null
+          id?: string
+          name: string
+          target_maturity?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_maturity?: number
+          description?: string | null
+          domain?: string | null
+          id?: string
+          name?: string
+          target_maturity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_capabilities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_processes: {
+        Row: {
+          capability_id: string | null
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_role: string | null
+          updated_at: string
+        }
+        Insert: {
+          capability_id?: string | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capability_id?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_processes_capability_id_fkey"
+            columns: ["capability_id"]
+            isOneToOne: false
+            referencedRelation: "business_capabilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_processes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -1312,6 +1404,55 @@ export type Database = {
           },
         ]
       }
+      objective_capabilities: {
+        Row: {
+          capability_id: string
+          company_id: string
+          created_at: string
+          criticality: number
+          id: string
+          objective_id: string
+        }
+        Insert: {
+          capability_id: string
+          company_id: string
+          created_at?: string
+          criticality?: number
+          id?: string
+          objective_id: string
+        }
+        Update: {
+          capability_id?: string
+          company_id?: string
+          created_at?: string
+          criticality?: number
+          id?: string
+          objective_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objective_capabilities_capability_id_fkey"
+            columns: ["capability_id"]
+            isOneToOne: false
+            referencedRelation: "business_capabilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objective_capabilities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objective_capabilities_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ofppt_dossier_documents: {
         Row: {
           document_type: Database["public"]["Enums"]["ofppt_document_type"]
@@ -1807,6 +1948,60 @@ export type Database = {
           },
         ]
       }
+      process_tasks: {
+        Row: {
+          company_id: string
+          created_at: string
+          criteria: Json
+          hours_per_week: number
+          id: string
+          name: string
+          operating_mode: string | null
+          process_id: string
+          role_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          criteria?: Json
+          hours_per_week?: number
+          id?: string
+          name: string
+          operating_mode?: string | null
+          process_id: string
+          role_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          criteria?: Json
+          hours_per_week?: number
+          id?: string
+          name?: string
+          operating_mode?: string | null
+          process_id?: string
+          role_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_tasks_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "business_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2176,6 +2371,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "skills_catalog_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_objectives: {
+        Row: {
+          category: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          horizon: string | null
+          id: string
+          priority: number
+          target_kpi: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          horizon?: string | null
+          id?: string
+          priority?: number
+          target_kpi?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          horizon?: string | null
+          id?: string
+          priority?: number
+          target_kpi?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_objectives_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
