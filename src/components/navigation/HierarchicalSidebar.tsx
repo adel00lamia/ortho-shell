@@ -208,6 +208,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       career: (t.nav as any).career || (language === 'fr' ? 'Carrière' : 'Career'),
       knowledge: language === 'fr' ? 'Connaissances' : 'Knowledge',
       diagnostics: language === 'fr' ? 'Diagnostics' : 'Diagnostics',
+      transformation: 'Transformation',
       evidence: language === 'fr' ? 'Preuves' : 'Evidence',
       actionPlans: language === 'fr' ? 'Plans d’action' : 'Action plans',
       capabilities: language === 'fr' ? 'Compétences' : 'Capabilities',
