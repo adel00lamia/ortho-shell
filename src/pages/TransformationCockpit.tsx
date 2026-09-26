@@ -11,6 +11,9 @@ import { Slider } from '@/components/ui/slider';
 import { ScenarioPlanner } from '@/components/transformation/ScenarioPlanner';
 import { useCompanyId } from '@/hooks/useCompanyId';
 import { Target, Layers, GitBranch, Bot, Trash2, Plus, ArrowRight } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { seedAtlasDemo, clearAtlasDemo } from '@/lib/atlasDemo';
 
 type Obj = { id: string; title: string; category: string; priority: number; target_kpi: string | null };
 type Cap = { id: string; name: string; domain: string | null; current_maturity: number; target_maturity: number };
@@ -45,6 +48,8 @@ export default function TransformationCockpit() {
   const [proc, setProc] = useState({ name: '', capability_id: '', owner_role: '' });
   const [task, setTask] = useState({ name: '', process_id: '', role_name: '', hours_per_week: 4 });
   const [editing, setEditing] = useState<string | null>(null);
+  const [demoBusy, setDemoBusy] = useState(false);
+  const qc = useQueryClient();
 
   if (!objectives.companyId && !objectives.isLoading) {
     return <div className="p-8 text-muted-foreground">{L('Associez d’abord votre compte à une entreprise (Profil entreprise).', 'Link your account to a company first (Company profile).')}</div>;
@@ -60,9 +65,28 @@ export default function TransformationCockpit() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">{L('De la stratégie à l’exécution Humain + IA', 'From strategy to Human + AI execution')}</p>
-        <h1 className="text-3xl font-extrabold text-foreground">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">{L('De la stratégie à l’exécution Humain + IA', 'From strategy to Human + AI execution')}</p>
+          <h1 className="text-3xl font-extrabold text-foreground">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" disabled={demoBusy} onClick={async () => {
+            if (!objectives.companyId) return;
+            setDemoBusy(true);
+            try {
+              const r = await seedAtlasDemo(objectives.companyId);
+              await qc.invalidateQueries({ queryKey: ['transformation'] });
+              toast.success(L(`Démo Atlas Industries chargée : ${r.objectives} objectifs, ${r.capabilities} capacités, ${r.processes} processus, ${r.tasks} tâches analysées.`, `Atlas Industries demo loaded.`));
+            } catch (e: any) { toast.error(e?.message ?? 'Erreur'); } finally { setDemoBusy(false); }
+          }}>{L('Charger la démo Atlas Industries', 'Load Atlas Industries demo')}</Button>
+          <Button variant="ghost" size="sm" disabled={demoBusy} onClick={async () => {
+            if (!objectives.companyId) return;
+            setDemoBusy(true);
+            try { await clearAtlasDemo(objectives.companyId); await qc.invalidateQueries({ queryKey: ['transformation'] }); toast.success(L('Démo supprimée', 'Demo removed')); }
+            catch (e: any) { toast.error(e?.message ?? 'Erreur'); } finally { setDemoBusy(false); }
+          }}>{L('Retirer la démo', 'Remove demo')}</Button>
+        </div>
       </div>
 
       <Tabs defaultValue="cockpit">
