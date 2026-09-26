@@ -115,6 +115,12 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
     // Training-delivery and talent features stay routable but are hidden from the primary nav.
     return [
       {
+        titleKey: 'transformation',
+        items: [
+          { path: '/transformation', labelKey: 'transformationCockpit', icon: Workflow, badge: 'NEW' },
+        ],
+      },
+      {
         titleKey: 'diagnostics',
         items: [
           { path: '/workflow/assess/root-cause', labelKey: 'rootCauseDiagnostic', icon: Stethoscope, badge: 'AI' },
