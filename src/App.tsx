@@ -28,6 +28,7 @@ const Billing = lazy(() => import("./pages/Billing"));
 const Settings = lazy(() => import("./pages/Settings"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
 const WorkforceOrg = lazy(() => import("./pages/WorkforceOrg"));
+const OrgIntelligence = lazy(() => import("./pages/OrgIntelligence"));
 const SkillsGaps = lazy(() => import("./pages/SkillsGaps"));
 const AssessmentReportPage = lazy(() => import("./pages/AssessmentReportPage"));
 const TrainingPlan = lazy(() => import("./pages/TrainingPlan"));
@@ -190,6 +191,7 @@ const App = () => (
               <Route path="/workflow/assess/report" element={<ProtectedLayout featureName="360° Report"><AssessmentReportPage /></ProtectedLayout>} />
 
               {/* Value chain spine: gap → lever → plan → internal training → updated level */}
+              <Route path="/organisation" element={<ProtectedLayout featureName="Organisation"><OrgIntelligence /></ProtectedLayout>} />
               <Route path="/transformation" element={<ProtectedLayout featureName="Transformation"><TransformationCockpit /></ProtectedLayout>} />
               <Route path="/workflow/chain" element={<ProtectedLayout featureName="Value Chain"><ValueChain /></ProtectedLayout>} />
               {/* Legacy assess routes */}

@@ -49,6 +49,7 @@ export const fr: Translations = {
     performanceReview: 'Évaluation de performance',
     skillsGaps: 'Compétences & Écarts',
     transformation: 'Transformation',
+    orgIntelligence: 'Postes · Tâches · KPI',
     transformationCockpit: 'Cockpit de transformation',
     valueChain: 'Chaîne de valeur',
     assessmentReport: 'Rapport 360°',
