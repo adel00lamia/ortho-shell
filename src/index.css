@@ -199,14 +199,14 @@ All colors MUST be HSL.
   }
 
   .transformation-shell {
-    font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   }
 
   .transformation-shell .font-serif,
   .transformation-shell h1,
   .transformation-shell h2,
   .transformation-shell h3 {
-    font-family: 'Instrument Serif', ui-serif, Georgia, serif;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   }
 
   .transformation-panel {
