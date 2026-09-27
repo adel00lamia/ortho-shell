@@ -52,6 +52,7 @@ const readResponsesStream = async (response: Response) => {
   const decoder = new TextDecoder();
   let buffer = '';
   let output = '';
+  let terminalError = '';
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -65,10 +66,20 @@ const readResponsesStream = async (response: Response) => {
       try {
         const event = JSON.parse(payload);
         if (event.type === 'response.output_text.delta' && typeof event.delta === 'string') output += event.delta;
+        if (event.type === 'response.output_text.done' && !output && typeof event.text === 'string') output = event.text;
         if (event.type === 'response.completed' && !output && typeof event.response?.output_text === 'string') output = event.response.output_text;
+        if (event.type === 'response.failed') {
+          terminalError = event.response?.error?.message || event.error?.message || 'AI generation failed';
+        }
+        if (event.type === 'response.incomplete') {
+          terminalError = event.response?.incomplete_details?.reason
+            ? `AI response incomplete: ${event.response.incomplete_details.reason}`
+            : 'AI response incomplete';
+        }
       } catch { /* ignore non-JSON SSE metadata */ }
     }
   }
+  if (!output && terminalError) throw new Error(terminalError);
   return output;
 };
 
@@ -196,7 +207,10 @@ serve(async (req) => {
     const canonicalCompany = requirements.company.trim() || (language === 'fr' ? 'Entreprise à confirmer' : 'Company to confirm');
 
     // Only facts relevant to this report are forwarded; staffing totals are omitted.
-    const cd = requirements.companyData;
+    const normalizeCompanyName = (value?: string) => (value || '').toLocaleLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const companyDataMatches = !requirements.companyData?.companyName
+      || normalizeCompanyName(requirements.companyData.companyName) === normalizeCompanyName(canonicalCompany);
+    const cd = companyDataMatches ? requirements.companyData : undefined;
     const pct = (rate?: number) => (typeof rate === 'number' ? `${Math.round(rate * 1000) / 10}%` : 'À confirmer');
     const companyFacts = cd ? [
       'VERIFIED COMPANY DATA (from the client database — the ONLY allowed factual source):',
@@ -210,7 +224,7 @@ serve(async (req) => {
       'RULE: use these figures verbatim for positions, current/target skill levels, payroll and rates. Never mention employee or department counts. The authoritative plan budget is the current user input above, never a historical or suggested amount.',
     ].filter(Boolean).join('\n') : '';
 
-    const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined training plan comparable in structure and clarity to a leading consulting firm's deliverable.${languageInstruction}
+    const systemPrompt = `You are a senior human-capital and learning strategist writing for an executive committee. Produce a concise, evidence-disciplined and immediately usable training plan.${languageInstruction}
 
 DATA INTEGRITY RULES:
 - A "VERIFIED COMPANY DATA" block may be supplied below. It is the only factual source for positions, current/target skill levels, payroll and CSF rates. Never mention headcount or department counts in this report.
@@ -222,14 +236,16 @@ DATA INTEGRITY RULES:
 - The current user-entered budget is the sole allocation authority. Ignore budget figures in previous plans, research suggestions and company records.
 - CSF, GIAC and OFPPT are reference frameworks to verify. Never promise eligibility or reimbursement.
 - Distinguish supplied facts, arithmetic calculations, and assumptions requiring validation.
-- Build a traceable engineering chain: observed difficulty -> target competency -> operational objective -> training action -> support measure -> workplace evidence.
+- Build a traceable engineering chain: company objective -> observed difficulty -> target competency -> operational objective -> training action -> workplace evidence.
 - Group actions into company-specific training axes. Do not default to generic axes when the supplied context indicates better ones.
-- For every module, provide concrete learning objectives, a content outline, assessment methods, support measures and workplace-transfer activities.
+- Produce at most 3 training axes, 6 modules, 5 KPIs, 5 recommendations, 5 evidence items, 3 risks and 3 implementation phases.
+- Keep every text field concise: one sentence, except executive_summary which may contain two short paragraphs.
+- For every module, provide at most 3 learning objectives, 4 content items, 2 assessment methods, 2 support measures and 2 workplace-transfer activities.
 - Never invent provider names, exact delivery dates, group counts or participant counts. Use "À sélectionner", "À planifier" or omit numeric fields when absent.
-- Analyze current industry shifts without inventing statistics. Every trend must state its business importance, affected competencies, urgency, recommended training response and evidence status. Use "Analyse à valider par une source datée" when no dated source was supplied.
+- Include at most 3 material industry trends without inventing statistics. Use "Analyse à valider par une source datée" when no dated source was supplied.
 - Rank training actions by evidence, strategic objective and competency gap. Recommendations must say what to launch now, prepare next, or withhold pending validation.
 
-IMPORTANT: You must respond with valid JSON in exactly this format:
+SPEED AND COMPLETION RULE: the core plan is more important than breadth. Do not produce SWOT, PESTEL, innovation or sustainability sections in this call. Finish the JSON early rather than expanding prose. You must respond with valid compact JSON in exactly this format:
 {
   "plan": {
     "title": "Comprehensive Training Plan Title",
@@ -242,14 +258,14 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "plan_end_date": "ISO date",
       "data_status": "provided_and_ai_synthesized"
     },
-    "executive_summary": "A 2-3 paragraph executive summary covering the strategic rationale, key objectives, expected outcomes, and ROI justification for this training investment.",
-    "description": "Detailed plan description with innovative approach",
-    "timeline": "Detailed timeline breakdown with phases and milestones",
+    "executive_summary": "Two short paragraphs grounded in supplied objectives and evidence; no invented ROI.",
+    "description": "One-sentence plan purpose",
+    "timeline": "Concise phasing over the supplied duration",
     "market_research": {
-      "market_overview": "Comprehensive overview of the training market in this industry and country",
-      "market_size": "À confirmer unless explicitly supplied with a dated source",
-      "growth_rate": "À confirmer unless explicitly supplied with a dated source",
-      "key_trends": ["Trend 1 with detailed explanation", "Trend 2"],
+      "market_overview": "One short sector context paragraph",
+      "market_size": "À confirmer",
+      "growth_rate": "À confirmer",
+      "key_trends": ["Trend 1", "Trend 2"],
       "trend_signals": [{
         "trend": "Material industry shift",
         "why_it_matters": "Business implication for this company",
@@ -258,26 +274,10 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "training_response": "Specific training response",
         "evidence_status": "Analyse à valider par une source datée"
       }],
-      "competitive_landscape": "Analysis of training providers, competitors, and market positioning",
-      "target_audience_analysis": "Detailed profile of the target learners, their needs, learning styles, and motivations",
-      "demand_drivers": ["Driver 1", "Driver 2"],
-      "market_challenges": ["Challenge 1", "Challenge 2"]
-    },
-    "swot_analysis": {
-      "strengths": ["Internal strength 1 related to the company's training capabilities", "Strength 2"],
-      "weaknesses": ["Internal weakness 1 that could hinder training effectiveness", "Weakness 2"],
-      "opportunities": ["External opportunity 1 for training and development", "Opportunity 2"],
-      "threats": ["External threat 1 to training success", "Threat 2"],
-      "strategic_implications": "Summary of how the SWOT analysis informs the training strategy"
-    },
-    "pestel_analysis": {
-      "political": ["Political factor affecting training in this country/industry"],
-      "economic": ["Economic factor such as labor costs, funding availability"],
-      "social": ["Social/cultural factor affecting learning and development"],
-      "technological": ["Technology trend impacting training delivery"],
-      "environmental": ["Environmental/sustainability consideration for training"],
-      "legal": ["Legal/regulatory requirement for training compliance"],
-      "key_implications": "Summary of how PESTEL factors shape the training plan"
+      "competitive_landscape": "À confirmer",
+      "target_audience_analysis": "Needs inferred only from supplied roles and skills",
+      "demand_drivers": ["Driver 1"],
+      "market_challenges": ["Challenge 1"]
     },
     "training_axes": [
       {
@@ -300,8 +300,8 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "delivery_method": "online/onsite/hybrid/mentorship/workshop/microlearning",
         "resources_needed": ["resource1", "resource2"],
         "estimated_cost": 5000,
-        "engagement_features": ["gamification", "social_learning", "ai_assistance"],
-        "assessment_methods": ["practical", "theoretical", "peer_review"],
+        "engagement_features": ["feature if requested"],
+        "assessment_methods": ["practical", "manager validation"],
         "certification_level": "basic/intermediate/advanced/expert",
         "priority": "critique/haute/moyenne/à arbitrer",
         "priority_rationale": "Reason grounded in supplied objective, measured gap or critical role",
@@ -318,16 +318,7 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         "participant_count": null
       }
     ],
-    "budget_breakdown": {
-      "internal_training": 20000,
-      "external_courses": 15000,
-      "materials_resources": 5000,
-      "technology_platform": 3000,
-      "assessment_certification": 2000,
-      "mentorship_coaching": 4000,
-      "gamification_tools": 2000,
-      "contingency": 4000
-    },
+    "budget_breakdown": { "training_actions": 1 },
     "kpis": [
       {
         "name": "KPI Name",
@@ -361,7 +352,7 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
       "mitigation_strategies": ["Strategy 1"],
       "contingency_plans": ["Backup plan 1"]
     },
-    "success_metrics": ["Metric 1"],
+    "success_metrics": ["Metric 1", "Metric 2"],
     "implementation_roadmap": {
       "phases": [
         {
@@ -373,29 +364,14 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         }
       ]
     },
-    "innovation_features": {
-      "ai_integration": "How AI will enhance the learning experience",
-      "personalization": "Adaptive learning paths",
-      "social_learning": "Peer collaboration",
-      "microlearning": "Bite-sized content",
-      "gamification": "Points, badges, leaderboards",
-      "virtual_reality": "Immersive learning if applicable",
-      "mobile_learning": "On-the-go accessibility"
-    },
-    "sustainability_plan": {
-      "long_term_vision": "3-5 year roadmap",
-      "continuous_improvement": "Feedback loops",
-      "knowledge_retention": "Retention strategies",
-      "culture_transformation": "Building a learning organization"
-    },
     "regulatory_framework": {
       "country": "Country name",
-      "governing_bodies": ["List of relevant training/labor regulatory bodies"],
-      "key_regulations": ["Specific training regulations and labor laws applicable"],
-      "funding_programs": ["Available government funding, tax incentives, or reimbursement programs"],
-      "mandatory_training": ["Any legally required training topics"],
-      "certification_standards": ["Recognized certifications and standards"],
-      "compliance_checklist": ["Steps to ensure compliance"]
+      "governing_bodies": ["Relevant body, to verify"],
+      "key_regulations": ["Applicable rule, to verify"],
+      "funding_programs": ["Reference framework, eligibility to verify"],
+      "mandatory_training": ["À confirmer"],
+      "certification_standards": ["À confirmer"],
+      "compliance_checklist": ["Verify eligibility", "Validate documents"]
     }
   }
 }`;
@@ -407,7 +383,7 @@ IMPORTANT: You must respond with valid JSON in exactly this format:
         .replace(/\b\d[\d\s,.]*(?:MAD|DH|EUR|USD)\b/gi, '[historical amount removed]'),
     }));
 
-    const userPrompt = `Create an innovative and comprehensive training plan for:
+    const userPrompt = `Create a concise, decision-ready training plan for:
 
 Company: ${canonicalCompany}
 Country/Market: ${requirements.country || 'Not specified'}
@@ -418,17 +394,9 @@ Duration: ${requirements.duration} months
 Report issue date: ${generatedAt.toISOString().slice(0, 10)}
 Plan period: ${generatedAt.toISOString().slice(0, 10)} to ${planEnd.toISOString().slice(0, 10)}
 
-IMPORTANT: Tailor this plan to the ${requirements.country || 'global'} market context. Consider local labor regulations, training standards, available certifications, local training providers, language considerations, and regional industry benchmarks for ${requirements.country || 'the target market'}.
+Tailor the plan to the ${requirements.country || 'global'} context, but mark all unsourced regulatory or funding information as requiring verification.
 
-REGULATORY FRAMEWORK REQUIREMENTS:
-You MUST include a detailed "regulatory_framework" section specific to ${requirements.country || 'the target market'}. For example:
-- Morocco: OFPPT (Office de la Formation Professionnelle), GIAC (Groupements Interprofessionnels d'Aide au Conseil), CSF contributions, TFP tax
-- France: OPCO (Opérateurs de Compétences), CPF (Compte Personnel de Formation), Qualiopi certification, Plan de développement des compétences
-- United States: EEOC compliance, OSHA training requirements, Section 127 tax exclusion, state-specific regulations
-- Germany: Betriebsverfassungsgesetz (Works Constitution Act), IHK certifications, Bildungsurlaub
-- UAE: MOHRE regulations, Emiratisation training requirements, KHDA standards
-- United Kingdom: Apprenticeship Levy, CIPD standards, Health & Safety at Work Act training
-Include ALL relevant governing bodies, funding programs, mandatory training, and compliance steps for the selected country.
+For Morocco, mention OFPPT/GIAC/CSF only as reference frameworks whose current eligibility, rates and documents must be verified.
 
 Training Objectives:
 ${requirements.objectives.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}
