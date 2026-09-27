@@ -22,6 +22,7 @@ import { PROFILE_FIELDS } from '@/data/diagnosticConstants';
 import { motion } from 'framer-motion';
 import { FeatureErrorBoundary } from '@/components/error-boundaries/FeatureErrorBoundary';
 import { QimatakExecutiveOverview } from '@/components/dashboard/QimatakExecutiveOverview';
+import { OrgRoleDashboard } from '@/components/dashboard/OrgRoleDashboard';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -261,6 +262,7 @@ const Dashboard = () => {
 
       {/* Stats Grid — enhanced with gradient backgrounds */}
       {isExecutive && isVisible('stats') && <QimatakExecutiveOverview fr={fr} />}
+      {isExecutive && <OrgRoleDashboard fr={fr} />}
 
       {!isExecutive && isVisible('stats') && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {config.stats.map((stat, i) => {
