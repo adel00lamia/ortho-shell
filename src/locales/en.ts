@@ -49,6 +49,7 @@ export const en = {
     performanceReview: 'Performance Review',
     skillsGaps: 'Skills & Gaps',
     transformation: 'Transformation',
+    orgIntelligence: 'Roles · Tasks · KPIs',
     transformationCockpit: 'Transformation cockpit',
     valueChain: 'Value chain',
     assessmentReport: '360° Report',

@@ -70,3 +70,6 @@ verify_jwt = false
 
 [functions.transformation-analyst]
 verify_jwt = false
+
+[functions.role-kpi-suggest]
+verify_jwt = false

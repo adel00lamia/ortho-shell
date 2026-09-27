@@ -112,7 +112,7 @@ export function OrgRoleDashboard({ fr }: { fr: boolean }) {
               </div>
             ))}
           </div>
-          <Button asChild size="sm" variant="outline"><Link to="/transformation">{fr ? 'Compléter dans le cockpit Transformation' : 'Complete in Transformation cockpit'}</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/organisation">{fr ? 'Ouvrir le tableau Postes · Tâches · KPI' : 'Open Roles · Tasks · KPIs dashboard'}</Link></Button>
         </>)}
       </CardContent>
     </Card>
