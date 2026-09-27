@@ -293,6 +293,8 @@ DATA INTEGRITY RULES:
 - For every module, provide 3 learning objectives, 4-6 content items, 2 assessment methods, 2 support measures and 2 workplace-transfer activities.
 - Never invent provider names, exact delivery dates, group counts or participant counts. Use "À sélectionner", "À planifier" or omit numeric fields when absent.
 - Include 3 material industry trends for this sector with the concrete skill consequence; do not invent statistics.
+- OFPPT F2 CLASSIFICATION: every module must be classified with ofppt_domain_code, ofppt_domain and ofppt_theme copied EXACTLY from this official list (no other domain or theme allowed):
+${ofpptDomainsPrompt}
 - Rank training actions by evidence, strategic objective and competency gap. Recommendations must say what to launch now, prepare next, or withhold pending validation.
 
 OUTPUT RULE: return ONE single JSON object and nothing else — no markdown, no text before or after, no second object. Do not produce SWOT, PESTEL, innovation or sustainability sections in this call. Use exactly this format:
