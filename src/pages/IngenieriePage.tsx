@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useIngenierieDossier, useIngenierieActions } from '@/hooks/useIngenierie';
 import { useIngenierieExport } from '@/hooks/useIngenierieExport';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,6 +24,8 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function IngenieriePage() {
   const { language } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const linkedPlanId = searchParams.get('plan');
 
   const { dossier, isLoading, createDossier, updateDossier, advanceStep } = useIngenierieDossier(CURRENT_YEAR);
   const { actions, addAction, updateAction, deleteAction } = useIngenierieActions(dossier?.id ?? null);
@@ -42,9 +45,15 @@ export default function IngenieriePage() {
 
   useEffect(() => {
     if (!isLoading && !dossier) {
-      createDossier.mutate({});
+      createDossier.mutate(linkedPlanId ? { linked_training_plan_id: linkedPlanId, current_step: 3 } : {});
     }
-  }, [isLoading, dossier]);
+  }, [isLoading, dossier, linkedPlanId]);
+
+  useEffect(() => {
+    if (!dossier || !linkedPlanId || dossier.linked_training_plan_id === linkedPlanId) return;
+    updateDossier.mutate({ id: dossier.id, linked_training_plan_id: linkedPlanId });
+    setCurrentStep(3);
+  }, [dossier?.id, dossier?.linked_training_plan_id, linkedPlanId]);
 
   const handleSave = async (data: Partial<IngenierieDossier>) => {
     if (!dossier) return;
@@ -97,6 +106,7 @@ export default function IngenieriePage() {
         {currentStep === 4 && (
           <FichesTechniquesStep
             dossierId={dossier.id}
+            linkedPlanId={dossier.linked_training_plan_id}
             actions={actions}
             onAddAction={async (a) => { await addAction.mutateAsync(a); }}
             onUpdateAction={async (a) => { await updateAction.mutateAsync(a); }}

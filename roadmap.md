@@ -18,6 +18,7 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Rapport du plan de formation niveau comité de direction : identité et période figées, synthèse, portefeuille, calendrier, budget contrôlé, KPI, gouvernance, risques et cadre CSF/OFPPT
 - [x] Enrichissement visuel du rapport : indicateurs de synthèse, chronologie, graphe budgétaire, matrice SWOT et tableau/empreinte PESTEL
 - [x] Ingénierie détaillée du rapport : axes, chaîne constat-compétence-objectif, fiches-actions, programmation et registre de preuves inspirés du rapport de référence
+- [x] Plan Builder fiabilisé avec génération compacte, traçabilité objectif → action et transfert du plan sauvegardé vers l’ingénierie OFPPT
 
 ## Next
 - [x] Transformer le cockpit `/transformation` en workflow piloté par un WorkGraph central et un agent de connaissance en lecture seule

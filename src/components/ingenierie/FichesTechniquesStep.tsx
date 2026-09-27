@@ -16,6 +16,7 @@ import type { IngenierieAction } from '@/hooks/useIngenierie';
 
 interface Props {
   dossierId: string;
+  linkedPlanId?: string | null;
   actions: IngenierieAction[];
   onAddAction: (a: Partial<IngenierieAction> & { title: string }) => Promise<void>;
   onUpdateAction: (a: Partial<IngenierieAction> & { id: string }) => Promise<void>;
@@ -173,10 +174,10 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
   );
 }
 
-export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onDeleteAction, onNext, onPrev }: Props) {
+export function FichesTechniquesStep({ linkedPlanId, actions, onAddAction, onUpdateAction, onDeleteAction, onNext, onPrev }: Props) {
   const { language } = useLanguage();
   const fr = language === 'fr';
-  const { data: planSuggestions, isLoading: plansLoading } = useActionsFromTrainingPlans();
+  const { data: planSuggestions, isLoading: plansLoading } = useActionsFromTrainingPlans(linkedPlanId);
 
   const handleAdd = async () => {
     await onAddAction({ title: fr ? 'Nouvelle action de formation' : 'New training action' });
@@ -184,7 +185,9 @@ export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onD
 
   const handleImportFromPlans = async () => {
     if (!planSuggestions?.length) return;
+    const existingTitles = new Set(actions.map(action => action.title.trim().toLocaleLowerCase()));
     for (const suggestion of planSuggestions) {
+      if (existingTitles.has(suggestion.title.trim().toLocaleLowerCase())) continue;
       await onAddAction({ ...suggestion, title: suggestion.title });
     }
   };
@@ -205,7 +208,9 @@ export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onD
           {planSuggestions && planSuggestions.length > 0 && (
             <Button onClick={handleImportFromPlans} size="sm" variant="outline" disabled={plansLoading} className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              {fr ? `Importer ${planSuggestions.length} plan(s)` : `Import ${planSuggestions.length} plan(s)`}
+              {linkedPlanId
+                ? (fr ? `Importer ${planSuggestions.length} action(s) du plan` : `Import ${planSuggestions.length} plan action(s)`)
+                : (fr ? `Importer ${planSuggestions.length} plan(s)` : `Import ${planSuggestions.length} plan(s)`)}
             </Button>
           )}
           <Button onClick={handleAdd} size="sm">

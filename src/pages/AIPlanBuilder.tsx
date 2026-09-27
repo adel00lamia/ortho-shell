@@ -66,7 +66,8 @@ import {
   Calculator,
   History,
   Save,
-  Share2
+  Share2,
+  Landmark
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,7 +92,7 @@ import {
 } from '@/components/plan';
 import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
 import { ObjectiveAlignmentCard } from '@/components/plan/ObjectiveAlignmentCard';
-import { suggestedSkillsFromObjectives } from '@/lib/objectiveAlignment';
+import { linkObjectives, suggestedSkillsFromObjectives } from '@/lib/objectiveAlignment';
 
 import {
   PREDEFINED_OBJECTIVES,
@@ -182,6 +183,7 @@ export default function AIPlanBuilder() {
   const [newConstraint, setNewConstraint] = useState('');
   const [previousPlanFiles, setPreviousPlanFiles] = useState<PreviousPlanFile[]>([]);
   const [uploadingPlan, setUploadingPlan] = useState(false);
+  const [savedPlanId, setSavedPlanId] = useState<string | null>(null);
 
   const predefinedObjectives = PREDEFINED_OBJECTIVES as readonly string[];
   const skillCategories = SKILL_CATEGORIES_DETAILED as readonly { name: string; skills: readonly string[] }[];
@@ -740,6 +742,7 @@ export default function AIPlanBuilder() {
       
       // Store previous plan for comparison
       setGeneratedPlan(data.plan);
+      setSavedPlanId(null);
       setActiveSnapshot(snapshot);
       setGeneratedPlans(prev => [...prev, snapshot]);
       setStep(5);
@@ -837,7 +840,7 @@ export default function AIPlanBuilder() {
         description: "Your training plan has been saved successfully.",
       });
 
-      navigate(`/workflow/plan/plans/${data.id}`);
+      setSavedPlanId(data.id);
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -1858,6 +1861,12 @@ export default function AIPlanBuilder() {
               <>
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2 justify-end">
+                  {savedPlanId && (
+                    <Button onClick={() => navigate(`/workflow/plan/ingenierie?plan=${savedPlanId}`)}>
+                      <Landmark className="h-4 w-4 mr-2" />
+                      {language === 'fr' ? 'Préparer le dossier OFPPT' : 'Prepare OFPPT file'}
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     onClick={() => {
@@ -1871,7 +1880,7 @@ export default function AIPlanBuilder() {
                   </Button>
                   <Button variant="outline" onClick={savePlan}>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Plan
+                    {savedPlanId ? (language === 'fr' ? 'Plan enregistré' : 'Plan saved') : (language === 'fr' ? 'Enregistrer le plan' : 'Save plan')}
                   </Button>
                   <Button 
                     variant="outline"
@@ -1938,6 +1947,44 @@ export default function AIPlanBuilder() {
                             <div className="text-sm text-muted-foreground">KPIs Defined</div>
                           </div>
                         </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="h-5 w-5" />
+                          {language === 'fr' ? 'Traçabilité objectifs → actions' : 'Objectives → actions traceability'}
+                        </CardTitle>
+                        <CardDescription>
+                          {language === 'fr'
+                            ? 'Chaque action est reliée à un objectif d’entreprise, une compétence et un indicateur.'
+                            : 'Each action is linked to a company objective, a skill and an indicator.'}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {linkObjectives(requirements.objectives, language === 'fr' ? 'fr' : 'en').map((link, index) => {
+                          const module = generatedPlan.modules?.find(item =>
+                            item.skills_covered?.some(skill => link.skills.some(linked => linked.toLocaleLowerCase() === skill.toLocaleLowerCase()))
+                          );
+                          const kpi = generatedPlan.kpis?.[index % Math.max(generatedPlan.kpis.length, 1)];
+                          return (
+                            <div key={`${link.objective}-${index}`} className="grid gap-2 border-b pb-3 last:border-0 last:pb-0 md:grid-cols-[1.2fr_1fr_1fr]">
+                              <div>
+                                <p className="text-xs text-muted-foreground">{language === 'fr' ? 'Objectif' : 'Objective'}</p>
+                                <p className="text-sm font-medium">{link.objective}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">{language === 'fr' ? 'Compétence · action' : 'Skill · action'}</p>
+                                <p className="text-sm">{module ? `${module.skills_covered?.[0] || link.skills[0] || 'À confirmer'} · ${module.title}` : (language === 'fr' ? 'Action à confirmer' : 'Action to confirm')}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">{language === 'fr' ? 'Indicateur' : 'Indicator'}</p>
+                                <p className="text-sm">{kpi?.name || link.measure}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </CardContent>
                     </Card>
 
