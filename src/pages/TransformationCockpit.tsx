@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTransformationTable } from '@/hooks/useTransformation';
 import { analyseTask, CRITERIA_KEYS, CRITERIA_LABELS, DEFAULT_CRITERIA, MODE_LABELS, normalizeCriteria, type OperatingMode } from '@/lib/humanAiScoring';
@@ -9,8 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { ScenarioPlanner } from '@/components/transformation/ScenarioPlanner';
+import { TransformationWorkflow } from '@/components/transformation/TransformationWorkflow';
+import { WorkGraph } from '@/components/transformation/WorkGraph';
+import { TransformationVisuals } from '@/components/transformation/TransformationVisuals';
+import { TransformationAgent } from '@/components/transformation/TransformationAgent';
+import { useTransformationContext } from '@/hooks/useTransformationContext';
+import type { TransformationSnapshot } from '@/lib/transformationAnalysis';
 import { useCompanyId } from '@/hooks/useCompanyId';
-import { Target, Layers, GitBranch, Bot, Trash2, Plus, ArrowRight } from 'lucide-react';
+import { Target, Layers, GitBranch, Bot, Trash2, Plus, Network, Database, ShieldCheck } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { seedAtlasDemo, clearAtlasDemo } from '@/lib/atlasDemo';
@@ -33,13 +40,18 @@ export default function TransformationCockpit() {
   const links = useTransformationTable<Link>('objective_capabilities');
   const procs = useTransformationTable<Proc>('business_processes');
   const tasks = useTransformationTable<Task>('process_tasks');
-  const companyIdQ = useCompanyId() as unknown;
-  const companyId = (typeof companyIdQ === 'object' && companyIdQ && 'data' in companyIdQ ? (companyIdQ as { data?: string | null }).data : companyIdQ) as string | null | undefined;
+  const { companyId } = useCompanyId();
+  const context = useTransformationContext();
+  const [params, setParams] = useSearchParams();
+  const validViews = ['cockpit', 'objectives', 'capabilities', 'work', 'ai', 'scenarios'];
+  const requestedView = params.get('view') ?? 'cockpit';
+  const activeView = validViews.includes(requestedView) ? requestedView : 'cockpit';
 
   const analysed = useMemo(() => tasks.rows.map((t) => ({ t, a: analyseTask(t.criteria, Number(t.hours_per_week)) })), [tasks.rows]);
   const capGaps = caps.rows.filter((c) => c.target_maturity - c.current_maturity >= 2).length;
   const totalGain = analysed.reduce((s, x) => s + x.a.capacityGain, 0);
   const orphanObjectives = objectives.rows.filter((o) => !links.rows.some((l) => l.objective_id === o.id)).length;
+  const snapshot: TransformationSnapshot = { objectives: objectives.rows, capabilities: caps.rows, links: links.rows, processes: procs.rows, tasks: tasks.rows };
 
   // local form state
   const [obj, setObj] = useState({ title: '', category: 'growth', target_kpi: '' });
@@ -55,20 +67,26 @@ export default function TransformationCockpit() {
     return <div className="p-8 text-muted-foreground">{L('Associez d’abord votre compte à une entreprise (Profil entreprise).', 'Link your account to a company first (Company profile).')}</div>;
   }
 
-  const chain = [
-    { k: L('Objectifs', 'Objectives'), v: objectives.rows.length },
-    { k: L('Capacités', 'Capabilities'), v: caps.rows.length },
-    { k: L('Processus', 'Processes'), v: procs.rows.length },
-    { k: L('Tâches', 'Tasks'), v: tasks.rows.length },
-    { k: L('Tâches IA-éligibles', 'AI-eligible tasks'), v: analysed.filter((x) => x.a.mode !== 'human_only').length },
+  const workflow = [
+    { id: 'objectives', label: L('Objectifs stratégiques', 'Strategic objectives'), count: objectives.rows.length, complete: objectives.rows.length > 0 },
+    { id: 'capabilities', label: L('Capacités critiques', 'Critical capabilities'), count: caps.rows.length, complete: caps.rows.length > 0, warning: capGaps > 0 },
+    { id: 'work', label: L('Processus', 'Processes'), count: procs.rows.length, complete: procs.rows.length > 0 },
+    { id: 'work', label: L('Tâches', 'Tasks'), count: tasks.rows.length, complete: tasks.rows.length > 0 },
+    { id: 'ai', label: L('Rôles & compétences', 'Roles & skills'), count: (context.data?.positions.length ?? 0) + (context.data?.skillNames.length ?? 0), complete: Boolean(context.data?.positions.length && context.data?.skillNames.length) },
+    { id: 'ai', label: L('Humain + IA', 'Human + AI'), count: analysed.length, complete: analysed.length > 0 },
+    { id: 'scenarios', label: L('Interventions', 'Interventions'), count: analysed.filter((item) => item.a.mode !== 'human_only').length, complete: analysed.length > 0 },
+    { id: 'scenarios', label: L('Impact', 'Impact'), count: 0, complete: false },
   ];
+  const setView = (view: string) => { const next = new URLSearchParams(params); next.set('view', view); setParams(next, { replace: true }); };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="transformation-shell min-h-screen bg-background p-3 text-foreground md:p-6">
+      <div className="mx-auto max-w-[1800px] space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">{L('De la stratégie à l’exécution Humain + IA', 'From strategy to Human + AI execution')}</p>
-          <h1 className="text-3xl font-extrabold text-foreground">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
+          <p className="text-xs font-semibold uppercase text-primary">{L('De la stratégie à l’exécution Humain + IA', 'From strategy to Human + AI execution')}</p>
+          <h1 className="font-serif text-4xl font-normal text-foreground md:text-5xl">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
+          <div className="mt-2 flex flex-wrap gap-2"><Badge variant="outline" className="gap-1"><Database className="h-3 w-3" />{objectives.rows.length + caps.rows.length + procs.rows.length + tasks.rows.length} {L('objets reliés', 'connected objects')}</Badge><Badge variant="outline" className="gap-1"><ShieldCheck className="h-3 w-3" />{L('Données de votre entreprise uniquement', 'Your company data only')}</Badge></div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled={demoBusy} onClick={async () => {
@@ -89,8 +107,8 @@ export default function TransformationCockpit() {
         </div>
       </div>
 
-      <Tabs defaultValue="cockpit">
-        <TabsList className="flex-wrap h-auto">
+      <Tabs value={activeView} onValueChange={setView}>
+        <TabsList className="h-auto w-full flex-wrap justify-start border border-border bg-card p-1">
           <TabsTrigger value="cockpit">Cockpit</TabsTrigger>
           <TabsTrigger value="objectives">{L('Objectifs', 'Objectives')}</TabsTrigger>
           <TabsTrigger value="capabilities">{L('Capacités', 'Capabilities')}</TabsTrigger>
@@ -100,21 +118,13 @@ export default function TransformationCockpit() {
         </TabsList>
 
         <TabsContent value="cockpit" className="space-y-6">
-          <div className="flex flex-wrap items-stretch gap-2">
-            {chain.map((c, i) => (
-              <div key={c.k} className="flex items-center gap-2">
-                <Card className="min-w-[140px]"><CardContent className="p-4"><div className="text-2xl font-bold text-foreground">{c.v}</div><div className="text-xs text-muted-foreground">{c.k}</div></CardContent></Card>
-                {i < chain.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
-              </div>
-            ))}
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card><CardHeader><CardTitle className="text-sm">{L('Capacités à fort écart', 'High-gap capabilities')}</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{capGaps}</CardContent></Card>
-            <Card><CardHeader><CardTitle className="text-sm">{L('Objectifs sans capacité liée', 'Objectives without capability')}</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{orphanObjectives}</CardContent></Card>
-            <Card><CardHeader><CardTitle className="text-sm">{L('Capacité libérable estimée', 'Estimated capacity released')}</CardTitle></CardHeader><CardContent><span className="text-3xl font-bold">{totalGain.toFixed(1)}</span> <span className="text-muted-foreground text-sm">{L('h / semaine (estimation)', 'h / week (estimate)')}</span></CardContent></Card>
+          <div className="grid items-start gap-4 lg:grid-cols-[210px_minmax(0,1fr)_340px]">
+            <TransformationWorkflow steps={workflow} active={activeView} onChange={setView} fr={fr} />
+            <div className="min-w-0 space-y-4"><WorkGraph snapshot={snapshot} fr={fr} positions={context.data?.positions ?? []} skillNames={context.data?.skillNames ?? []} /><TransformationVisuals snapshot={snapshot} fr={fr} /></div>
+            <TransformationAgent snapshot={snapshot} fr={fr} />
           </div>
           {objectives.rows.length === 0 && (
-            <Card><CardContent className="p-6 text-muted-foreground">{L('Commencez par saisir vos objectifs stratégiques, puis les capacités nécessaires pour les atteindre.', 'Start by entering your strategic objectives, then the capabilities required to reach them.')}</CardContent></Card>
+            <div className="transformation-panel flex flex-col items-start gap-3 p-6 text-muted-foreground"><Network className="h-6 w-6 text-primary"/><p>{L('Commencez par saisir vos objectifs stratégiques, puis les capacités nécessaires pour les atteindre.', 'Start by entering your strategic objectives, then the capabilities required to reach them.')}</p><Button onClick={() => setView('objectives')}>{L('Créer le premier objectif', 'Create first objective')}</Button></div>
           )}
         </TabsContent>
 
@@ -213,6 +223,7 @@ export default function TransformationCockpit() {
         </TabsContent>
         <TabsContent value="scenarios"><ScenarioPlanner tasks={tasks.rows} companyId={companyId} lang={language} /></TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
