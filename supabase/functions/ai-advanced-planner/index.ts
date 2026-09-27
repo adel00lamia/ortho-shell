@@ -471,6 +471,8 @@ ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
 
 ${companyFacts}
+${orgGaps.length ? `MEASURED ORGANISATIONAL GAPS (computed from the org chart: skills required by a position but missing from its current skills, plus aggregated performance-review mentions). These are the PRIMARY needs: every module must cover at least one of them by putting the exact skill name in skills_covered, prioritising gaps on critical positions:
+${orgGaps.map(g => `- ${g.skill}: missing in ${g.positions.length ? g.positions.join(', ') : 'no position (review signal)'}${g.critical_positions ? ` [${g.critical_positions} critical]` : ''}${g.review_mentions ? `; cited in ${g.review_mentions} reviews` : ''}`).join('\n')}` : 'MEASURED ORGANISATIONAL GAPS: none available from the org chart — state in the summary that the need is declarative and must be confirmed.'}
 
 Additional Context:
 ${requirements.context || 'No additional context provided'}
@@ -559,11 +561,9 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       if (!p || !Array.isArray(p.modules) || p.modules.length === 0) throw new Error('Plan without modules');
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      return new Response(JSON.stringify({
-        error: language === 'fr'
-          ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
-          : 'The AI response was incomplete. No generic plan was shown: please regenerate.',
-      }), { status: 502, headers: jsonHeaders });
+      throw new Error(language === 'fr'
+        ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
+        : 'The AI response was incomplete. No generic plan was shown: please regenerate.');
     }
     if (false) {
       planData = {
@@ -643,6 +643,16 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
         plan_end_date: planEnd.toISOString(),
         data_status: 'provided_and_ai_synthesized',
       },
+      organizational_gaps: orgGaps.map(g => {
+        const k = g.skill.toLocaleLowerCase();
+        const addressed_by = (normalizedBudget.modules as Array<Record<string, unknown>>)
+          .filter(m => Array.isArray(m.skills_covered) && (m.skills_covered as unknown[]).some(s => {
+            const v = String(s).toLocaleLowerCase();
+            return v.includes(k) || k.includes(v);
+          }))
+          .map(m => String(m.title || ''));
+        return { ...g, addressed_by };
+      }),
     };
 
     return normalizedPlan;
