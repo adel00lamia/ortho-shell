@@ -238,14 +238,17 @@ DATA INTEGRITY RULES:
 - Distinguish supplied facts, arithmetic calculations, and assumptions requiring validation.
 - Build a traceable engineering chain: company objective -> observed difficulty -> target competency -> operational objective -> training action -> workplace evidence.
 - Group actions into company-specific training axes. Do not default to generic axes when the supplied context indicates better ones.
-- Produce at most 3 training axes, 6 modules, 5 KPIs, 5 recommendations, 5 evidence items, 3 risks and 3 implementation phases.
-- Keep every text field concise: one sentence, except executive_summary which may contain two short paragraphs.
-- For every module, provide at most 3 learning objectives, 4 content items, 2 assessment methods, 2 support measures and 2 workplace-transfer activities.
+- Produce 3 training axes, 4 to 6 modules, 4-5 KPIs, 5 recommendations, 4-5 evidence items, 3 risks and 3 implementation phases.
+- SUBSTANCE RULE (critical): every field must be specific to THIS company, sector, objectives and skills. Banned: generic filler ("améliorer les compétences", "renforcer l'efficacité", "addressing gaps", "à confirmer" used as a lazy default when the context gives enough to decide). Name concrete work situations, tools, processes, deliverables and decisions of the sector.
+- Each module must state: the concrete business problem it solves, what participants will be able to DO afterwards (observable), a sequenced content outline with real topics of the trade, a realistic duration, and a cost justification.
+- BUDGET RULE: when a budget is supplied, set estimated_cost for every module so the sum equals the budget, weighted by priority and duration; spend most of the budget on the top-priority actions and explain the split in budget_breakdown keys (e.g. formation, ingénierie_pédagogique, évaluation_transfert). Never write that the budget is unknown.
+- Executive summary: 2 paragraphs saying what to fund first, why, with how much of the budget, and what result is expected to be observed at 90 days.
+- For every module, provide 3 learning objectives, 4-6 content items, 2 assessment methods, 2 support measures and 2 workplace-transfer activities.
 - Never invent provider names, exact delivery dates, group counts or participant counts. Use "À sélectionner", "À planifier" or omit numeric fields when absent.
-- Include at most 3 material industry trends without inventing statistics. Use "Analyse à valider par une source datée" when no dated source was supplied.
+- Include 3 material industry trends for this sector with the concrete skill consequence; do not invent statistics.
 - Rank training actions by evidence, strategic objective and competency gap. Recommendations must say what to launch now, prepare next, or withhold pending validation.
 
-SPEED AND COMPLETION RULE: the core plan is more important than breadth. Do not produce SWOT, PESTEL, innovation or sustainability sections in this call. Finish the JSON early rather than expanding prose. You must respond with valid compact JSON in exactly this format:
+OUTPUT RULE: return ONE single JSON object and nothing else — no markdown, no text before or after, no second object. Do not produce SWOT, PESTEL, innovation or sustainability sections in this call. Use exactly this format:
 {
   "plan": {
     "title": "Comprehensive Training Plan Title",
