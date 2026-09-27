@@ -1,11 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @import '@fontsource/instrument-serif/400.css';
 @import '@fontsource/work-sans/400.css';
 @import '@fontsource/work-sans/500.css';
 @import '@fontsource/work-sans/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
