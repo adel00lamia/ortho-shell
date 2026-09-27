@@ -111,7 +111,7 @@ export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], depar
       </ScrollArea>
       <Sheet open={Boolean(selected)} onOpenChange={(open) => { if (!open) closeNode(); }}>
         <SheetContent className="overflow-y-auto sm:max-w-md">
-          <SheetHeader><SheetTitle className="font-serif text-2xl">{selected?.label}</SheetTitle><SheetDescription>{selected?.meta}</SheetDescription></SheetHeader>
+          <SheetHeader><SheetTitle className="text-2xl font-bold">{selected?.label}</SheetTitle><SheetDescription>{selected?.meta}</SheetDescription></SheetHeader>
           {selected && <div className="mt-6 space-y-4"><Badge variant="outline">{labels[['objective', 'capability', 'process', 'task', 'role', 'org', 'skill'].indexOf(selected.kind)]}</Badge><div className="border-y border-border py-4 text-sm"><p className="text-muted-foreground">{fr ? 'Relations directes' : 'Direct relationships'}</p><p className="mt-1 font-semibold">{selected.parentIds.length}</p></div>{selected.mode && <p className="text-sm"><span className="text-muted-foreground">{fr ? 'Mode recommandé' : 'Recommended mode'} · </span>{MODE_LABELS[selected.mode as keyof typeof MODE_LABELS][fr ? 'fr' : 'en']}</p>}{selected.hours !== undefined && <p className="text-sm"><span className="text-muted-foreground">{fr ? 'Capacité estimée' : 'Estimated capacity'} · </span>{selected.hours} h/sem</p>}<p className="text-xs text-muted-foreground">{fr ? 'Les estimations proviennent du moteur déterministe Humain + IA et doivent être validées avant décision.' : 'Estimates come from the deterministic Human + AI engine and must be validated before decisions.'}</p></div>}
         </SheetContent>
       </Sheet>

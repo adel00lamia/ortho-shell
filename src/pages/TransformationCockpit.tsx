@@ -14,10 +14,11 @@ import { TransformationWorkflow } from '@/components/transformation/Transformati
 import { WorkGraph } from '@/components/transformation/WorkGraph';
 import { TransformationVisuals } from '@/components/transformation/TransformationVisuals';
 import { TransformationAgent } from '@/components/transformation/TransformationAgent';
+import { TransformationDemoGuide } from '@/components/transformation/TransformationDemoGuide';
 import { useTransformationContext } from '@/hooks/useTransformationContext';
 import type { TransformationSnapshot } from '@/lib/transformationAnalysis';
 import { useCompanyId } from '@/hooks/useCompanyId';
-import { Target, Layers, GitBranch, Bot, Trash2, Plus, Network, Database, ShieldCheck } from 'lucide-react';
+import { Target, Layers, GitBranch, Bot, Trash2, Plus, Network, Database, ShieldCheck, Presentation } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { seedAtlasDemo, clearAtlasDemo } from '@/lib/atlasDemo';
@@ -61,6 +62,8 @@ export default function TransformationCockpit() {
   const [task, setTask] = useState({ name: '', process_id: '', role_name: '', hours_per_week: 4 });
   const [editing, setEditing] = useState<string | null>(null);
   const [demoBusy, setDemoBusy] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(params.get('demo') === 'atlas');
+  const [demoStep, setDemoStep] = useState(0);
   const qc = useQueryClient();
 
   if (!objectives.companyId && !objectives.isLoading) {
@@ -78,6 +81,23 @@ export default function TransformationCockpit() {
     { id: 'scenarios', label: L('Impact', 'Impact'), count: 0, complete: false },
   ];
   const setView = (view: string) => { const next = new URLSearchParams(params); next.set('view', view); setParams(next, { replace: true }); };
+  const loadAtlasDemo = async () => {
+    if (!objectives.companyId) return;
+    setDemoBusy(true);
+    try {
+      const r = await seedAtlasDemo(objectives.companyId);
+      await qc.invalidateQueries({ queryKey: ['transformation'] });
+      await qc.invalidateQueries({ queryKey: ['transformation-context'] });
+      setDemoOpen(true);
+      setDemoStep(0);
+      toast.success(L(`Démo Atlas Industries chargée : ${r.objectives} objectifs, ${r.capabilities} capacités, ${r.processes} processus, ${r.tasks} tâches analysées.`, 'Atlas Industries demo loaded.'));
+    } catch (e: any) { toast.error(e?.message ?? 'Erreur'); } finally { setDemoBusy(false); }
+  };
+  const openDemoStep = (step: number, view: string) => {
+    setDemoStep(step);
+    setDemoOpen(true);
+    setView(view);
+  };
 
   return (
     <div className="transformation-shell min-h-screen bg-background p-3 text-foreground md:p-6">
@@ -85,19 +105,12 @@ export default function TransformationCockpit() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase text-primary">{L('De la stratégie à l’exécution Humain + IA', 'From strategy to Human + AI execution')}</p>
-          <h1 className="font-serif text-4xl font-normal text-foreground md:text-5xl">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
+          <h1 className="text-4xl font-bold text-foreground md:text-5xl">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
           <div className="mt-2 flex flex-wrap gap-2"><Badge variant="outline" className="gap-1"><Database className="h-3 w-3" />{objectives.rows.length + caps.rows.length + procs.rows.length + tasks.rows.length} {L('objets reliés', 'connected objects')}</Badge><Badge variant="outline" className="gap-1"><ShieldCheck className="h-3 w-3" />{L('Données de votre entreprise uniquement', 'Your company data only')}</Badge></div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={demoBusy} onClick={async () => {
-            if (!objectives.companyId) return;
-            setDemoBusy(true);
-            try {
-              const r = await seedAtlasDemo(objectives.companyId);
-              await qc.invalidateQueries({ queryKey: ['transformation'] }); await qc.invalidateQueries({ queryKey: ['transformation-context'] });
-              toast.success(L(`Démo Atlas Industries chargée : ${r.objectives} objectifs, ${r.capabilities} capacités, ${r.processes} processus, ${r.tasks} tâches analysées.`, `Atlas Industries demo loaded.`));
-            } catch (e: any) { toast.error(e?.message ?? 'Erreur'); } finally { setDemoBusy(false); }
-          }}>{L('Charger la démo Atlas Industries', 'Load Atlas Industries demo')}</Button>
+          <Button variant="outline" size="sm" onClick={() => setDemoOpen((value) => !value)}><Presentation className="mr-2 h-4 w-4" />{demoOpen ? L('Masquer le guide', 'Hide guide') : L('Voir la démo guidée', 'View guided demo')}</Button>
+          <Button variant="outline" size="sm" disabled={demoBusy} onClick={loadAtlasDemo}>{L('Charger Atlas Industries', 'Load Atlas Industries')}</Button>
           <Button variant="ghost" size="sm" disabled={demoBusy} onClick={async () => {
             if (!objectives.companyId) return;
             setDemoBusy(true);
@@ -106,6 +119,8 @@ export default function TransformationCockpit() {
           }}>{L('Retirer la démo', 'Remove demo')}</Button>
         </div>
       </div>
+
+      {demoOpen && <TransformationDemoGuide fr={fr} currentStep={demoStep} onStepChange={openDemoStep} onLoadDemo={loadAtlasDemo} loading={demoBusy} hasDemoData={objectives.rows.some((item) => item.title.includes('[Démo Atlas]'))} />}
 
       <Tabs value={activeView} onValueChange={setView}>
         <TabsList className="h-auto w-full flex-wrap justify-start border border-border bg-card p-1">
