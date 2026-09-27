@@ -135,23 +135,23 @@ All colors MUST be HSL.
   }
 
   .landing-shell {
-    --background: 48 33% 97%;
-    --foreground: 166 41% 12%;
-    --card: 48 38% 99%;
-    --card-foreground: 166 41% 12%;
-    --popover: 48 38% 99%;
-    --popover-foreground: 166 41% 12%;
-    --primary: 160 55% 26%;
-    --primary-foreground: 48 33% 97%;
-    --secondary: 145 17% 91%;
-    --secondary-foreground: 166 41% 12%;
-    --muted: 145 13% 92%;
-    --muted-foreground: 164 12% 38%;
-    --accent: 43 78% 56%;
-    --accent-foreground: 166 41% 12%;
-    --border: 153 13% 80%;
-    --input: 153 13% 80%;
-    --ring: 160 55% 26%;
+    --background: 214 35% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 16%;
+    --muted: 214 28% 94%;
+    --muted-foreground: 215 16% 43%;
+    --accent: 35 92% 55%;
+    --accent-foreground: 222 47% 11%;
+    --border: 214 25% 84%;
+    --input: 214 25% 84%;
+    --ring: 221 83% 48%;
     --radius: 0.25rem;
   }
 
