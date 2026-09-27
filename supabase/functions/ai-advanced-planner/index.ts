@@ -152,6 +152,8 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
   let userId = 'anonymous';
+  type OrgGap = { skill: string; positions: string[]; critical_positions: number; review_mentions: number; source: string; addressed_by?: string[] };
+  let orgGaps: OrgGap[] = [];
 
   if (authHeader?.startsWith('Bearer ')) {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -168,6 +170,50 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       userId = user.id;
+      // Real gaps from the org chart (required vs current skills per position) and
+      // performance reviews (aggregated counts only, never names). Company-scoped.
+      try {
+        const { data: prof } = await supabase.from('profiles').select('company_id').eq('id', user.id).maybeSingle();
+        const companyId = prof?.company_id;
+        if (companyId) {
+          const [{ data: positions }, { data: evals }] = await Promise.all([
+            supabase.from('positions').select('title, is_critical, skills_required, skills_current').eq('company_id', companyId).limit(500),
+            supabase.from('performance_evaluations').select('areas_for_improvement').eq('company_id', companyId).limit(1000),
+          ]);
+          const toNames = (v: unknown): string[] => Array.isArray(v)
+            ? v.map((s) => typeof s === 'string' ? s : (s && typeof s === 'object' ? String((s as Record<string, unknown>).name ?? (s as Record<string, unknown>).skill ?? '') : '')).filter(Boolean)
+            : [];
+          const key = (s: string) => s.toLocaleLowerCase().trim();
+          const map = new Map<string, OrgGap>();
+          for (const p of positions ?? []) {
+            const current = new Set(toNames(p.skills_current).map(key));
+            for (const skill of toNames(p.skills_required)) {
+              if (current.has(key(skill))) continue;
+              const g = map.get(key(skill)) ?? { skill, positions: [], critical_positions: 0, review_mentions: 0, source: 'organigramme' };
+              if (!g.positions.includes(p.title)) g.positions.push(p.title);
+              if (p.is_critical) g.critical_positions++;
+              map.set(key(skill), g);
+            }
+          }
+          for (const ev of evals ?? []) {
+            for (const area of (ev.areas_for_improvement ?? []) as string[]) {
+              if (!area) continue;
+              const existing = map.get(key(area));
+              if (existing) {
+                existing.review_mentions++;
+                existing.source = 'organigramme+evaluations';
+              } else {
+                map.set(key(area), { skill: area, positions: [], critical_positions: 0, review_mentions: 1, source: 'evaluations' });
+              }
+            }
+          }
+          orgGaps = [...map.values()]
+            .sort((a, b) => (b.critical_positions * 3 + b.positions.length * 2 + b.review_mentions) - (a.critical_positions * 3 + a.positions.length * 2 + a.review_mentions))
+            .slice(0, 15);
+        }
+      } catch (e) {
+        console.error('Gap computation failed:', e instanceof Error ? e.message : e);
+      }
     }
   }
 
@@ -425,6 +471,8 @@ ${requirements.template ? `Using template: ${requirements.template}` : ''}
 ${requirements.pack ? `Using training pack: ${requirements.pack}` : ''}
 
 ${companyFacts}
+${orgGaps.length ? `MEASURED ORGANISATIONAL GAPS (computed from the org chart: skills required by a position but missing from its current skills, plus aggregated performance-review mentions). These are the PRIMARY needs: every module must cover at least one of them by putting the exact skill name in skills_covered, prioritising gaps on critical positions:
+${orgGaps.map(g => `- ${g.skill}: missing in ${g.positions.length ? g.positions.join(', ') : 'no position (review signal)'}${g.critical_positions ? ` [${g.critical_positions} critical]` : ''}${g.review_mentions ? `; cited in ${g.review_mentions} reviews` : ''}`).join('\n')}` : 'MEASURED ORGANISATIONAL GAPS: none available from the org chart — state in the summary that the need is declarative and must be confirmed.'}
 
 Additional Context:
 ${requirements.context || 'No additional context provided'}
@@ -513,11 +561,9 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       if (!p || !Array.isArray(p.modules) || p.modules.length === 0) throw new Error('Plan without modules');
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      return new Response(JSON.stringify({
-        error: language === 'fr'
-          ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
-          : 'The AI response was incomplete. No generic plan was shown: please regenerate.',
-      }), { status: 502, headers: jsonHeaders });
+      throw new Error(language === 'fr'
+        ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
+        : 'The AI response was incomplete. No generic plan was shown: please regenerate.');
     }
     if (false) {
       planData = {
@@ -597,6 +643,16 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
         plan_end_date: planEnd.toISOString(),
         data_status: 'provided_and_ai_synthesized',
       },
+      organizational_gaps: orgGaps.map(g => {
+        const k = g.skill.toLocaleLowerCase();
+        const addressed_by = (normalizedBudget.modules as Array<Record<string, unknown>>)
+          .filter(m => Array.isArray(m.skills_covered) && (m.skills_covered as unknown[]).some(s => {
+            const v = String(s).toLocaleLowerCase();
+            return v.includes(k) || k.includes(v);
+          }))
+          .map(m => String(m.title || ''));
+        return { ...g, addressed_by };
+      }),
     };
 
     return normalizedPlan;
