@@ -133,12 +133,22 @@ export interface IndustryTrendSignal {
   evidence_status?: string;
 }
 
+export interface OrganizationalGap {
+  skill: string;
+  positions: string[];
+  critical_positions: number;
+  review_mentions: number;
+  source: 'organigramme' | 'evaluations' | 'organigramme+evaluations';
+  addressed_by?: string[];
+}
+
 export interface GeneratedPlan {
   title: string;
   description: string;
   modules: TrainingModule[];
   timeline: string;
   budget_breakdown: Record<string, number | string>;
+  organizational_gaps?: OrganizationalGap[];
   kpis: Array<{
     name?: string;
     description?: string;

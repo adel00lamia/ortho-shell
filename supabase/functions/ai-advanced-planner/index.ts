@@ -152,6 +152,8 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
   let userId = 'anonymous';
+  type OrgGap = { skill: string; positions: string[]; critical_positions: number; review_mentions: number; source: string; addressed_by?: string[] };
+  let orgGaps: OrgGap[] = [];
 
   if (authHeader?.startsWith('Bearer ')) {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -168,6 +170,50 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       userId = user.id;
+      // Real gaps from the org chart (required vs current skills per position) and
+      // performance reviews (aggregated counts only, never names). Company-scoped.
+      try {
+        const { data: prof } = await supabase.from('profiles').select('company_id').eq('id', user.id).maybeSingle();
+        const companyId = prof?.company_id;
+        if (companyId) {
+          const [{ data: positions }, { data: evals }] = await Promise.all([
+            supabase.from('positions').select('title, is_critical, skills_required, skills_current').eq('company_id', companyId).limit(500),
+            supabase.from('performance_evaluations').select('areas_for_improvement').eq('company_id', companyId).limit(1000),
+          ]);
+          const toNames = (v: unknown): string[] => Array.isArray(v)
+            ? v.map((s) => typeof s === 'string' ? s : (s && typeof s === 'object' ? String((s as Record<string, unknown>).name ?? (s as Record<string, unknown>).skill ?? '') : '')).filter(Boolean)
+            : [];
+          const key = (s: string) => s.toLocaleLowerCase().trim();
+          const map = new Map<string, OrgGap>();
+          for (const p of positions ?? []) {
+            const current = new Set(toNames(p.skills_current).map(key));
+            for (const skill of toNames(p.skills_required)) {
+              if (current.has(key(skill))) continue;
+              const g = map.get(key(skill)) ?? { skill, positions: [], critical_positions: 0, review_mentions: 0, source: 'organigramme' };
+              if (!g.positions.includes(p.title)) g.positions.push(p.title);
+              if (p.is_critical) g.critical_positions++;
+              map.set(key(skill), g);
+            }
+          }
+          for (const ev of evals ?? []) {
+            for (const area of (ev.areas_for_improvement ?? []) as string[]) {
+              if (!area) continue;
+              const existing = map.get(key(area));
+              if (existing) {
+                existing.review_mentions++;
+                existing.source = 'organigramme+evaluations';
+              } else {
+                map.set(key(area), { skill: area, positions: [], critical_positions: 0, review_mentions: 1, source: 'evaluations' });
+              }
+            }
+          }
+          orgGaps = [...map.values()]
+            .sort((a, b) => (b.critical_positions * 3 + b.positions.length * 2 + b.review_mentions) - (a.critical_positions * 3 + a.positions.length * 2 + a.review_mentions))
+            .slice(0, 15);
+        }
+      } catch (e) {
+        console.error('Gap computation failed:', e instanceof Error ? e.message : e);
+      }
     }
   }
 
