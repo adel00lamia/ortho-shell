@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/work-sans/400.css';
+@import '@fontsource/work-sans/500.css';
+@import '@fontsource/work-sans/600.css';
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -149,6 +154,27 @@ All colors MUST be HSL.
     --ring: 160 55% 26%;
     --radius: 0.25rem;
   }
+
+  .transformation-shell {
+    --background: 214 35% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 16%;
+    --muted: 214 28% 94%;
+    --muted-foreground: 215 16% 43%;
+    --accent: 35 92% 55%;
+    --accent-foreground: 222 47% 11%;
+    --border: 214 25% 84%;
+    --input: 214 25% 84%;
+    --ring: 221 83% 48%;
+    --radius: 0.375rem;
+  }
 }
 
 
@@ -170,6 +196,29 @@ All colors MUST be HSL.
 @layer components {
   .landing-shell {
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .transformation-shell {
+    font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .transformation-shell .font-serif,
+  .transformation-shell h1,
+  .transformation-shell h2,
+  .transformation-shell h3 {
+    font-family: 'Instrument Serif', ui-serif, Georgia, serif;
+  }
+
+  .transformation-panel {
+    @apply border border-border bg-card;
+    box-shadow: 0 12px 30px -28px hsl(var(--foreground) / 0.6);
+  }
+
+  .transformation-canvas {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.36) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
 
   .landing-shell .section-label {

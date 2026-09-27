@@ -67,3 +67,6 @@ verify_jwt = false
 
 [functions.ai-hr-copilot-coach]
 verify_jwt = false
+
+[functions.transformation-analyst]
+verify_jwt = false
