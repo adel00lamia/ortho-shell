@@ -48,7 +48,6 @@ const Career = lazy(() => import("./pages/Career"));
 const JobBoard = lazy(() => import("./pages/JobBoard"));
 const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
-const StudentHub = lazy(() => import("./pages/StudentHub"));
 const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
 const EvidenceHub = lazy(() => import("./pages/EvidenceHub"));
 const ValueChain = lazy(() => import("./pages/ValueChain"));
