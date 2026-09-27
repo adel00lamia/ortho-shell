@@ -2310,6 +2310,14 @@ export default function AIPlanBuilder() {
                               <div>
                                 <CardTitle className="text-lg">{module.title || `Module ${index + 1}`}</CardTitle>
                                 <CardDescription>{module.description}</CardDescription>
+                                {module.ofppt_domain && (
+                                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                                    <Badge variant="outline" className="text-[10px]">
+                                      OFPPT F2 · {module.ofppt_domain_code ? `${module.ofppt_domain_code}. ` : ''}{module.ofppt_domain}
+                                    </Badge>
+                                    <span className="text-muted-foreground">{module.ofppt_theme}</span>
+                                  </div>
+                                )}
                               </div>
                               <Badge variant="outline">{module.certification_level || 'Standard'}</Badge>
                             </div>

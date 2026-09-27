@@ -94,6 +94,10 @@ export interface TrainingModule {
   target_audience?: string;
   priority?: 'critique' | 'haute' | 'moyenne' | 'à arbitrer' | string;
   priority_rationale?: string;
+  ofppt_domain_code?: number | null;
+  ofppt_domain?: string;
+  ofppt_theme?: string;
+  ofppt_verified?: boolean;
   rationale?: string;
   training_axis?: string;
   observed_difficulty?: string;
