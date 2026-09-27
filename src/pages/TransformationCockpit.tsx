@@ -94,14 +94,14 @@ export default function TransformationCockpit() {
             setDemoBusy(true);
             try {
               const r = await seedAtlasDemo(objectives.companyId);
-              await qc.invalidateQueries({ queryKey: ['transformation'] });
+              await qc.invalidateQueries({ queryKey: ['transformation'] }); await qc.invalidateQueries({ queryKey: ['transformation-context'] });
               toast.success(L(`Démo Atlas Industries chargée : ${r.objectives} objectifs, ${r.capabilities} capacités, ${r.processes} processus, ${r.tasks} tâches analysées.`, `Atlas Industries demo loaded.`));
             } catch (e: any) { toast.error(e?.message ?? 'Erreur'); } finally { setDemoBusy(false); }
           }}>{L('Charger la démo Atlas Industries', 'Load Atlas Industries demo')}</Button>
           <Button variant="ghost" size="sm" disabled={demoBusy} onClick={async () => {
             if (!objectives.companyId) return;
             setDemoBusy(true);
-            try { await clearAtlasDemo(objectives.companyId); await qc.invalidateQueries({ queryKey: ['transformation'] }); toast.success(L('Démo supprimée', 'Demo removed')); }
+            try { await clearAtlasDemo(objectives.companyId); await qc.invalidateQueries({ queryKey: ['transformation'] }); await qc.invalidateQueries({ queryKey: ['transformation-context'] }); toast.success(L('Démo supprimée', 'Demo removed')); }
             catch (e: any) { toast.error(e?.message ?? 'Erreur'); } finally { setDemoBusy(false); }
           }}>{L('Retirer la démo', 'Remove demo')}</Button>
         </div>
