@@ -14,7 +14,7 @@ type GraphNode = { id: string; kind: NodeKind; label: string; meta: string; pare
 
 const ICONS = { objective: Target, capability: Layers3, process: GitBranch, task: Wrench, role: BriefcaseBusiness };
 
-export function WorkGraph({ snapshot, fr }: { snapshot: TransformationSnapshot; fr: boolean }) {
+export function WorkGraph({ snapshot, fr, positionTitles = [] }: { snapshot: TransformationSnapshot; fr: boolean; positionTitles?: string[] }) {
   const [level, setLevel] = useState<Level>('operational');
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [modeFilter, setModeFilter] = useState('all');
@@ -25,13 +25,13 @@ export function WorkGraph({ snapshot, fr }: { snapshot: TransformationSnapshot; 
     const capabilityNodes: GraphNode[] = snapshot.capabilities.map((item) => ({ id: item.id, kind: 'capability', label: item.name, meta: `${fr ? 'Maturité' : 'Maturity'} ${item.current_maturity} → ${item.target_maturity}`, risk: item.target_maturity - item.current_maturity, parentIds: snapshot.links.filter((link) => link.capability_id === item.id).map((link) => link.objective_id) }));
     const processNodes: GraphNode[] = snapshot.processes.map((item) => ({ id: item.id, kind: 'process', label: item.name, meta: item.owner_role || (fr ? 'Rôle à définir' : 'Role to define'), parentIds: item.capability_id ? [item.capability_id] : [] }));
     const taskNodes: GraphNode[] = snapshot.tasks.map((item) => { const analysis = analyseTask(item.criteria, Number(item.hours_per_week)); return { id: item.id, kind: 'task', label: item.name, meta: `${analysis.aiSuitability}% IA · ${item.hours_per_week} h/sem`, parentIds: [item.process_id], mode: analysis.mode, hours: analysis.capacityGain, risk: analysis.priority }; });
-    const roles = [...new Set([...snapshot.processes.map((item) => item.owner_role), ...snapshot.tasks.map((item) => item.role_name)].filter(Boolean) as string[])];
-    const roleNodes: GraphNode[] = roles.map((role) => ({ id: `role:${role}`, kind: 'role', label: role, meta: `${snapshot.tasks.filter((task) => task.role_name === role).length} ${fr ? 'tâche(s)' : 'task(s)'}`, parentIds: snapshot.tasks.filter((task) => task.role_name === role).map((task) => task.id) }));
+    const roles = [...new Set([...positionTitles, ...snapshot.processes.map((item) => item.owner_role), ...snapshot.tasks.map((item) => item.role_name)].filter(Boolean) as string[])];
+    const roleNodes: GraphNode[] = roles.map((role) => { const taskIds = snapshot.tasks.filter((task) => task.role_name?.toLocaleLowerCase() === role.toLocaleLowerCase()).map((task) => task.id); return { id: `role:${role}`, kind: 'role', label: role, meta: taskIds.length ? `${taskIds.length} ${fr ? 'tâche(s) reliée(s)' : 'linked task(s)'}` : (fr ? 'Poste existant · lien à confirmer' : 'Existing position · link to confirm'), parentIds: taskIds }; });
     const filteredTasks = taskNodes.filter((node) => (modeFilter === 'all' || node.mode === modeFilter) && (!riskOnly || Number(node.risk) >= 60));
     if (level === 'executive') return [objectiveNodes, capabilityNodes];
     if (level === 'operational') return [objectiveNodes, capabilityNodes, processNodes, filteredTasks];
     return [objectiveNodes, capabilityNodes, processNodes, filteredTasks, roleNodes.filter((role) => filteredTasks.some((task) => role.parentIds.includes(task.id)))];
-  }, [snapshot, fr, level, modeFilter, riskOnly]);
+  }, [snapshot, fr, level, modeFilter, riskOnly, positionTitles]);
 
   const labels = fr ? ['Stratégie', 'Capacités', 'Processus', 'Tâches', 'Rôles'] : ['Strategy', 'Capabilities', 'Processes', 'Tasks', 'Roles'];
   return (
