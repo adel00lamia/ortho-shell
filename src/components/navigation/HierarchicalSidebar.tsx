@@ -195,8 +195,15 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
     ];
   };
 
-  const navSections = getNavSections();
-  const managementItems = getManagementItems();
+  // Frozen modules (CTO review 2026-09-27): hidden from menu, code kept.
+  const FROZEN = new Set([
+    '/workflow/execute/modules', '/workflow/execute/marketplace', '/workflow/track/certificates',
+    '/career/jobs', '/student', '/billing', '/workflow/assess/performance',
+  ]);
+  const navSections = getNavSections()
+    .map((s) => ({ ...s, items: s.items.filter((i) => !FROZEN.has(i.path)) }))
+    .filter((s) => s.items.length > 0);
+  const managementItems = getManagementItems().filter((i) => !FROZEN.has(i.path));
 
   const getSectionTitle = (key: string) => {
     const map: Record<string, string> = {
