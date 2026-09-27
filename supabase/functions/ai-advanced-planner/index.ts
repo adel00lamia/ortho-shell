@@ -475,14 +475,48 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     const content = await readResponsesStream(response);
     if (!content) throw new Error('No content in AI response');
 
+    const extractFirstJsonObject = (text: string): string | null => {
+      const start = text.indexOf('{');
+      if (start < 0) return null;
+      let depth = 0, inStr = false, esc = false;
+      for (let i = start; i < text.length; i++) {
+        const c = text[i];
+        if (inStr) {
+          if (esc) esc = false;
+          else if (c === '\\') esc = true;
+          else if (c === '"') inStr = false;
+          continue;
+        }
+        if (c === '"') inStr = true;
+        else if (c === '{') depth++;
+        else if (c === '}') { depth--; if (depth === 0) return text.slice(start, i + 1); }
+      }
+      return null;
+    };
+
     let planData;
     try {
       let jsonContent = content;
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) jsonContent = jsonMatch[1].trim();
-      planData = JSON.parse(jsonContent);
+      try {
+        planData = JSON.parse(jsonContent);
+      } catch {
+        const first = extractFirstJsonObject(jsonContent);
+        if (!first) throw new Error('No JSON object found');
+        planData = JSON.parse(first);
+      }
+      const p = planData?.plan;
+      if (!p || !Array.isArray(p.modules) || p.modules.length === 0) throw new Error('Plan without modules');
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
+      return new Response(JSON.stringify({
+        error: language === 'fr'
+          ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
+          : 'The AI response was incomplete. No generic plan was shown: please regenerate.',
+      }), { status: 502, headers: jsonHeaders });
+    }
+    if (false) {
       planData = {
         plan: {
           title: language === 'fr' ? `Plan de développement des compétences — ${canonicalCompany}` : `Skills Development Plan — ${canonicalCompany}`,
