@@ -1954,6 +1954,63 @@ export default function AIPlanBuilder() {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Target className="h-5 w-5" />
+                          {language === 'fr' ? 'Écarts réels mesurés dans l’organigramme' : 'Real gaps measured in the org chart'}
+                        </CardTitle>
+                        <CardDescription>
+                          {language === 'fr'
+                            ? 'Compétences exigées par un poste mais absentes du profil actuel, complétées par les évaluations (totaux uniquement).'
+                            : 'Skills required by a position but missing from its current profile, plus reviews (totals only).'}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {generatedPlan.organizational_gaps?.length ? (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b text-left text-muted-foreground">
+                                  <th className="py-2 pr-3 font-medium">{language === 'fr' ? 'Compétence manquante' : 'Missing skill'}</th>
+                                  <th className="py-2 pr-3 font-medium">{language === 'fr' ? 'Postes concernés' : 'Positions'}</th>
+                                  <th className="py-2 pr-3 font-medium">{language === 'fr' ? 'Évaluations' : 'Reviews'}</th>
+                                  <th className="py-2 font-medium">{language === 'fr' ? 'Action du plan' : 'Plan action'}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {generatedPlan.organizational_gaps.map((g) => (
+                                  <tr key={g.skill} className="border-b last:border-0 align-top">
+                                    <td className="py-2 pr-3 font-medium text-foreground">
+                                      {g.skill}
+                                      {g.critical_positions > 0 && (
+                                        <Badge variant="destructive" className="ml-2 text-[10px]">
+                                          {g.critical_positions} {language === 'fr' ? 'critique(s)' : 'critical'}
+                                        </Badge>
+                                      )}
+                                    </td>
+                                    <td className="py-2 pr-3 text-muted-foreground">{g.positions.length ? g.positions.join(', ') : '—'}</td>
+                                    <td className="py-2 pr-3 tabular-nums">{g.review_mentions || '—'}</td>
+                                    <td className="py-2">
+                                      {g.addressed_by?.length
+                                        ? g.addressed_by.join(', ')
+                                        : <span className="text-destructive">{language === 'fr' ? 'Non couvert' : 'Not covered'}</span>}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            {language === 'fr'
+                              ? 'Aucun écart mesurable : renseignez les compétences requises et actuelles des postes dans l’organigramme.'
+                              : 'No measurable gap: fill required and current skills for positions in the org chart.'}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="h-5 w-5" />
                           {language === 'fr' ? 'Traçabilité objectifs → actions' : 'Objectives → actions traceability'}
                         </CardTitle>
                         <CardDescription>
