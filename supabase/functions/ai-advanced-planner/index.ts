@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -364,7 +365,10 @@ OUTPUT RULE: return ONE single JSON object and nothing else — no markdown, no 
         "provider": "À sélectionner unless explicitly supplied",
         "planned_period": "Broad plan window or À planifier; never invent exact dates",
         "group_count": null,
-        "participant_count": null
+        "participant_count": null,
+        "ofppt_domain_code": 10,
+        "ofppt_domain": "Exact domain name from the OFPPT F2 list",
+        "ofppt_theme": "Exact theme name from that domain"
       }
     ],
     "budget_breakdown": { "training_actions": 1 },
@@ -633,7 +637,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
         ? `Plan de développement des compétences — ${canonicalCompany}`
         : `Skills Development Plan — ${canonicalCompany}`,
       budget_breakdown: normalizedBudget.budgetBreakdown,
-      modules: normalizedBudget.modules,
+      modules: (normalizedBudget.modules as Array<Record<string, unknown>>).map(m => ({ ...m, ...validateOfpptLink(m) })),
       report_meta: {
         company: canonicalCompany,
         country: requirements.country || (language === 'fr' ? 'À confirmer' : 'To confirm'),
