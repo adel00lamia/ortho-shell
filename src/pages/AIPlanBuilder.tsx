@@ -1878,7 +1878,7 @@ export default function AIPlanBuilder() {
                     <FileDown className="h-4 w-4 mr-2" />
                     Export PDF
                   </Button>
-                  <Button variant="outline" onClick={savePlan}>
+                  <Button variant="outline" onClick={savePlan} disabled={Boolean(savedPlanId)}>
                     <Save className="h-4 w-4 mr-2" />
                     {savedPlanId ? (language === 'fr' ? 'Plan enregistré' : 'Plan saved') : (language === 'fr' ? 'Enregistrer le plan' : 'Save plan')}
                   </Button>

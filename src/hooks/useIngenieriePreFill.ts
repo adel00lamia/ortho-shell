@@ -220,7 +220,7 @@ export function useActionsFromTrainingPlans(planId?: string | null) {
   const { companyId } = useCompanyId();
 
   return useQuery({
-    queryKey: ['actions-from-plans', companyId],
+    queryKey: ['actions-from-plans', companyId, planId],
     queryFn: async () => {
       let query = supabase
         .from('training_plans')
