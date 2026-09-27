@@ -78,9 +78,7 @@ const POSITIONS: { title: string; dept: string; reports: string | null; critical
 
 async function clearAtlasOrg(companyId: string) {
   await db.from('positions').delete().eq('company_id', companyId).like('notes', `${DEMO}%`);
-  await db.from('departments').delete().eq('company_id', companyId).like('name', `${DEMO}%`).not('parent_department_id', 'is', null).gt('level', 1);
-  await db.from('departments').delete().eq('company_id', companyId).like('name', `${DEMO}%`).gt('level', 0);
-  await db.from('departments').delete().eq('company_id', companyId).like('name', `${DEMO}%`);
+  for (const level of [2, 1, 0]) await db.from('departments').delete().eq('company_id', companyId).like('name', `${DEMO}%`).eq('level', level);
 }
 
 async function seedAtlasOrg(companyId: string) {

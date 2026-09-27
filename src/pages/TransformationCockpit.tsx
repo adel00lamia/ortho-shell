@@ -120,7 +120,7 @@ export default function TransformationCockpit() {
         <TabsContent value="cockpit" className="space-y-6">
           <div className="grid items-start gap-4 lg:grid-cols-[210px_minmax(0,1fr)_340px]">
             <TransformationWorkflow steps={workflow} active={activeView} onChange={setView} fr={fr} />
-            <div className="min-w-0 space-y-4"><WorkGraph snapshot={snapshot} fr={fr} positions={context.data?.positions ?? []} skillNames={context.data?.skillNames ?? []} /><TransformationVisuals snapshot={snapshot} fr={fr} /></div>
+            <div className="min-w-0 space-y-4"><WorkGraph snapshot={snapshot} fr={fr} positions={context.data?.positions ?? []} skillNames={context.data?.skillNames ?? []} departments={context.data?.departments ?? []} /><TransformationVisuals snapshot={snapshot} fr={fr} /></div>
             <TransformationAgent snapshot={snapshot} fr={fr} />
           </div>
           {objectives.rows.length === 0 && (
