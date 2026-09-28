@@ -68,7 +68,7 @@ export function useDiscussions(moduleId?: string, planId?: string) {
       }
 
       const userIds = [...new Set([...(data || []).map((d: any) => d.user_id), ...replies.map((r: any) => r.user_id)])];
-      let profiles: Record<string, string> = {};
+      const profiles: Record<string, string> = {};
       if (userIds.length > 0) {
         const { data: profileData } = await supabase
           .from('profiles')

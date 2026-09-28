@@ -798,7 +798,7 @@ export default function AIPlanBuilder() {
     }
 
     try {
-      let { data: profile } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', user.id)

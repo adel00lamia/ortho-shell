@@ -18,7 +18,7 @@ function loadWidgets(key: string): DashboardWidget[] {
   try {
     const saved = localStorage.getItem(key);
     if (saved) return JSON.parse(saved);
-  } catch {}
+  } catch { /* ignore */ }
   return DEFAULT_WIDGETS;
 }
 
