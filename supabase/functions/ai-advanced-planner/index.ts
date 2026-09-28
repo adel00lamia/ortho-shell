@@ -132,6 +132,17 @@ const requirementsSchema = z.object({
         source: z.string().max(200).optional(),
       }).optional(),
     }).optional(),
+    // Company research (web + AI) done at the start of the builder.
+    companyResearch: z.object({
+      description: z.string().max(2000).optional(),
+      subIndustry: z.string().max(200).optional(),
+      industryOverview: z.string().max(2000).optional(),
+      topTrends: z.array(z.string().max(300)).max(10).optional().default([]),
+      keySkills: z.array(z.string().max(200)).max(15).optional().default([]),
+      challenges: z.array(z.string().max(300)).max(10).optional().default([]),
+      topTrainingAreas: z.array(z.string().max(200)).max(10).optional().default([]),
+      competitorTrainingFocus: z.array(z.string().max(200)).max(10).optional().default([]),
+    }).optional(),
     template: z.string().max(200).optional().default(''),
     pack: z.string().max(200).optional().default(''),
     aiModel: z.string().max(100).optional().default('openai/gpt-6-astra'),
@@ -453,6 +464,17 @@ Tailor the plan to the ${requirements.country || 'global'} context, but mark all
 
 For Morocco, mention OFPPT/GIAC/CSF only as reference frameworks whose current eligibility, rates and documents must be verified.
 
+${requirements.companyResearch ? `Company & industry research (starting base — use it to justify each objective, axis and module; treat figures as unverified):
+${requirements.companyResearch.description ? `- Company: ${requirements.companyResearch.description}` : ''}
+${requirements.companyResearch.subIndustry ? `- Sub-sector: ${requirements.companyResearch.subIndustry}` : ''}
+${requirements.companyResearch.industryOverview ? `- Industry: ${requirements.companyResearch.industryOverview}` : ''}
+- Industry trends: ${requirements.companyResearch.topTrends.join('; ') || 'n/a'}
+- Sector challenges: ${requirements.companyResearch.challenges.join('; ') || 'n/a'}
+- Key sector skills: ${requirements.companyResearch.keySkills.join('; ') || 'n/a'}
+- Top training areas in the sector: ${requirements.companyResearch.topTrainingAreas.join('; ') || 'n/a'}
+- Competitor training focus: ${requirements.companyResearch.competitorTrainingFocus.join('; ') || 'n/a'}
+For every training objective, state which trend or challenge above it answers. In market_research, reuse these trends and challenges rather than generic ones.
+` : ''}
 Training Objectives:
 ${requirements.objectives.map((obj: string) => `- ${obj}`).join('\n') || '- Improve employee skills'}
 
