@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 // The evidence_pulses tables are newer than the generated Supabase types,
 // so queries are cast until types.ts is regenerated.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -57,15 +57,15 @@ const SCENARIOS: Scenario[] = [
 ];
 
 const FORBIDDEN_OPENERS = [
-  /^très bien[\.,!\s]/i,
-  /^excellent[\.,!\s]/i,
-  /^super[\.,!\s]/i,
-  /^génial[\.,!\s]/i,
-  /^bravo[\.,!\s]/i,
-  /^great[\.,!\s]/i,
-  /^awesome[\.,!\s]/i,
-  /^amazing[\.,!\s]/i,
-  /^well done[\.,!\s]/i,
+  /^très bien[.,!\s]/i,
+  /^excellent[.,!\s]/i,
+  /^super[.,!\s]/i,
+  /^génial[.,!\s]/i,
+  /^bravo[.,!\s]/i,
+  /^great[.,!\s]/i,
+  /^awesome[.,!\s]/i,
+  /^amazing[.,!\s]/i,
+  /^well done[.,!\s]/i,
 ];
 
 function firstWords(text: string, n = 4): string {
