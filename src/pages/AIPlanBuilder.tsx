@@ -669,6 +669,16 @@ export default function AIPlanBuilder() {
         },
         // Relevant company facts only; staffing and department totals are excluded.
         companyData: trimmedFactbase,
+        companyResearch: researchData ? {
+          description: (researchData.company?.description || '').slice(0, 2000),
+          subIndustry: (researchData.company?.subIndustry || '').slice(0, 200),
+          industryOverview: (researchData.industryAnalysis?.overview || '').slice(0, 2000),
+          topTrends: (researchData.industryAnalysis?.topTrends || []).slice(0, 10).map(x => String(x).slice(0, 300)),
+          keySkills: (researchData.industryAnalysis?.keySkills || []).slice(0, 15).map(x => String(x).slice(0, 200)),
+          challenges: (researchData.industryAnalysis?.challenges || []).slice(0, 10).map(x => String(x).slice(0, 300)),
+          topTrainingAreas: (researchData.benchmark?.topTrainingAreas || []).slice(0, 10).map(x => String(x).slice(0, 200)),
+          competitorTrainingFocus: (researchData.benchmark?.competitorTrainingFocus || []).slice(0, 10).map(x => String(x).slice(0, 200)),
+        } : undefined,
       };
 
       // The generation service streams keepalive bytes while the plan is being written,
@@ -1229,6 +1239,20 @@ export default function AIPlanBuilder() {
 
                <div>
                  <label className="text-sm font-medium">Training Objectives</label>
+                 {researchData ? (
+                   <ResearchObjectiveSuggestions
+                     research={researchData}
+                     selected={requirements.objectives}
+                     fr={language === 'fr'}
+                     onAdd={(obj) => setRequirements(prev => prev.objectives.includes(obj) ? prev : ({ ...prev, objectives: [...prev.objectives, obj] }))}
+                   />
+                 ) : (
+                   <p className="text-xs text-muted-foreground mt-1">
+                     {language === 'fr'
+                       ? "Lancez d'abord la recherche entreprise ci-dessus : les objectifs seront proposés à partir de l'entreprise, des tendances et des défis du secteur."
+                       : 'Run the company research above first: objectives will be suggested from the company, industry trends and sector challenges.'}
+                   </p>
+                 )}
                 <div className="space-y-3 mt-2">
                   <div className="flex gap-2 w-full">
                     <Select onValueChange={(value) => {
@@ -2753,6 +2777,41 @@ export default function AIPlanBuilder() {
   );
 }
 // Industry Benchmark Insights Component
+const ResearchObjectiveSuggestions = ({ research, selected, onAdd, fr }: { research: CompanyResearchData; selected: string[]; onAdd: (o: string) => void; fr: boolean }) => {
+  const groups: { title: string; items: string[]; toObjective: (s: string) => string }[] = [
+    { title: fr ? "Objectifs recommandés pour l'entreprise" : 'Recommended for the company', items: research.recommendations?.suggestedObjectives ?? [], toObjective: (s) => s },
+    { title: fr ? 'Répondre aux défis du secteur' : 'Address sector challenges', items: research.industryAnalysis?.challenges ?? [], toObjective: (s) => (fr ? `Répondre au défi : ${s}` : `Address challenge: ${s}`) },
+    { title: fr ? 'Se préparer aux tendances' : 'Prepare for industry trends', items: research.industryAnalysis?.topTrends ?? [], toObjective: (s) => (fr ? `Préparer les équipes à : ${s}` : `Prepare teams for: ${s}`) },
+    { title: fr ? 'Axes de formation prioritaires du secteur' : 'Top sector training areas', items: research.benchmark?.topTrainingAreas ?? [], toObjective: (s) => (fr ? `Renforcer : ${s}` : `Strengthen: ${s}`) },
+  ].filter((g) => g.items.length > 0);
+  return (
+    <Card className="mt-2 border-primary/30 bg-primary/5">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">{fr ? `Issus de la recherche sur ${research.company?.name || "l'entreprise"}` : `From the research on ${research.company?.name || 'the company'}`}</CardTitle>
+        <CardDescription className="text-xs">{fr ? 'Cliquez pour ajouter un objectif. La recherche est aussi transmise au générateur pour justifier chaque module.' : 'Click to add an objective. The research is also sent to the generator to justify each module.'}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {groups.map((g) => (
+          <div key={g.title}>
+            <p className="text-xs font-medium text-muted-foreground mb-1">{g.title}</p>
+            <div className="flex flex-wrap gap-2">
+              {g.items.slice(0, 6).map((item) => {
+                const obj = g.toObjective(item);
+                const on = selected.includes(obj);
+                return (
+                  <Badge key={item} variant={on ? 'default' : 'outline'} className="cursor-pointer py-1.5 px-2.5 text-left whitespace-normal" onClick={() => !on && onAdd(obj)}>
+                    {on ? '✓ ' : '+ '}{item}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
+
 const IndustryBenchmarkInsights = ({ industry, researchData }: { industry: string; researchData?: CompanyResearchData | null }) => {
   // If research data is available, use it; otherwise fall back to static defaults
   if (researchData) {
