@@ -2031,6 +2031,9 @@ export default function AIPlanBuilder() {
                       </CardContent>
                     </Card>
 
+                    <OfpptRoleModules modules={generatedPlan.modules || []} gaps={generatedPlan.organizational_gaps} language={language} />
+
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
