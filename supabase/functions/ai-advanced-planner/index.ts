@@ -524,7 +524,10 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
 
     // The generation is delivered through a streamed response. Keepalive bytes are sent
     // while the model is still writing so the platform never cuts the connection.
-    const planPromise = (async () => {
+    const PART_A_KEYS = 'title, description, executive_summary, timeline, training_axes, modules, budget_breakdown, kpis, recommendations';
+    const PART_B_KEYS = 'market_research, swot_analysis, pestel_analysis, risk_assessment, success_metrics, implementation_roadmap, regulatory_framework, evidence_register';
+
+    const callGateway = async (scope: string) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
@@ -535,7 +538,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       body: JSON.stringify({
         model: selectedModel,
         instructions: systemPrompt,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nReturn valid JSON only.` }] }],
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nOUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${scope}. Omit every other key. Be concise. Return valid JSON only.` }] }],
         stream: true,
         store: false,
         reasoning: { effort: 'low', summary: 'auto' },
@@ -550,8 +553,14 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       try { safeMessage = JSON.parse(errorText)?.message || JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
       throw new Error(safeMessage);
     }
+    return await readResponsesStream(response);
+    };
 
-    const content = await readResponsesStream(response);
+    const planPromise = (async () => {
+    const [content, analysisContent] = await Promise.all([
+      callGateway(PART_A_KEYS),
+      callGateway(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
+    ]);
     if (!content) throw new Error('No content in AI response');
 
     const extractFirstJsonObject = (text: string): string | null => {
@@ -653,7 +662,16 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       };
     }
 
-    const rawPlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    let analysis: Record<string, unknown> = {};
+    if (analysisContent) {
+      try {
+        let t = analysisContent; const m = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) t = m[1].trim();
+        let parsed; try { parsed = JSON.parse(t); } catch { const f = extractFirstJsonObject(t); parsed = f ? JSON.parse(f) : {}; }
+        analysis = parsed?.plan && typeof parsed.plan === 'object' ? parsed.plan : (parsed || {});
+      } catch (e) { console.error('Analysis parse failed:', e); }
+    }
+    const corePlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    const rawPlan = { ...analysis, ...corePlan };
     const normalizedBudget = normalizeBudget(rawPlan, Math.round(requirements.budget));
     const normalizedPlan = {
       ...rawPlan,
