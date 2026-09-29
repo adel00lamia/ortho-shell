@@ -662,7 +662,16 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       };
     }
 
-    const rawPlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    let analysis: Record<string, unknown> = {};
+    if (analysisContent) {
+      try {
+        let t = analysisContent; const m = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) t = m[1].trim();
+        let parsed; try { parsed = JSON.parse(t); } catch { const f = extractFirstJsonObject(t); parsed = f ? JSON.parse(f) : {}; }
+        analysis = parsed?.plan && typeof parsed.plan === 'object' ? parsed.plan : (parsed || {});
+      } catch (e) { console.error('Analysis parse failed:', e); }
+    }
+    const corePlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    const rawPlan = { ...analysis, ...corePlan };
     const normalizedBudget = normalizeBudget(rawPlan, Math.round(requirements.budget));
     const normalizedPlan = {
       ...rawPlan,
