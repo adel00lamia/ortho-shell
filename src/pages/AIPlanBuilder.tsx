@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { OfpptRoleModules } from '@/components/plan/OfpptRoleModules';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
