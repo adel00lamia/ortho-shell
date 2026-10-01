@@ -30,6 +30,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import { cn } from '@/lib/utils';
 
 type Mode = 'humain' | 'assisté' | 'automatisable';
@@ -78,11 +79,43 @@ const TEAM_DETAILS: Record<string, { mission: string; input: string; output: str
 };
 
 const KEY = 'qimatak-hr-transformation-v1';
+const CTX_KEY = 'qimatak-hr-transformation-context-v1';
 const WEEKS = 45;
 const mode = (ai: number): Mode => (ai >= 65 ? 'automatisable' : ai >= 35 ? 'assisté' : 'humain');
 const freedShare = (ai: number) => (ai >= 65 ? 0.6 : ai >= 35 ? 0.3 : 0.05);
 const mad = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} MAD`;
 const modeLabels: Record<Mode, string> = { humain: 'Humain', assisté: 'IA assistée', automatisable: 'Automatisé sous contrôle' };
+
+// ── Références sectorielles (à valider avec les données réelles de l'entreprise) ──
+// hrPer = salariés par RH (ratio de dimensionnement) · rateFactor = ajustement du coût horaire
+interface SectorBenchmark { name: string; hrPer: number; rateFactor: number; focus: string }
+const SECTOR_BENCHMARKS: SectorBenchmark[] = [
+  { name: 'Industrie & manufacturing', hrPer: 100, rateFactor: 0.9, focus: 'Paie horaire, pointage, turnover des lignes de production' },
+  { name: 'BTP & construction', hrPer: 110, rateFactor: 0.85, focus: 'Chantiers mobiles, CNSS intermittente, sécurité' },
+  { name: 'Distribution & retail', hrPer: 90, rateFactor: 0.85, focus: 'Planification des équipes, saisonnalité, fidélisation' },
+  { name: 'Transport & logistique', hrPer: 95, rateFactor: 0.9, focus: 'Temps de conduite, plannings, conformité transport' },
+  { name: 'Santé & social', hrPer: 80, rateFactor: 0.95, focus: 'Gardes, habilitations, formation continue obligatoire' },
+  { name: 'Finance & assurance', hrPer: 65, rateFactor: 1.15, focus: 'Conformité, qualité des données, gestion des talents' },
+  { name: 'Services B2B & conseil', hrPer: 70, rateFactor: 1.1, focus: 'Recrutement rapide, facturabilité, développement des compétences' },
+  { name: 'Tech & digital', hrPer: 60, rateFactor: 1.25, focus: 'Guerre des talents, montée en compétences IA, rétention' },
+  { name: 'Autres / à préciser', hrPer: 85, rateFactor: 1, focus: 'Modèle générique à affiner avec vos données' },
+];
+const benchmarkFor = (sector: string) => SECTOR_BENCHMARKS.find((item) => item.name === sector) ?? SECTOR_BENCHMARKS[SECTOR_BENCHMARKS.length - 1];
+
+const guessSector = (industry: string | null | undefined): string => {
+  const value = (industry || '').toLocaleLowerCase();
+  if (/tech|software|digital|it|internet|data|ai|fintech|edtech|gaming/.test(value)) return 'Tech & digital';
+  if (/bank|insur|finance|invest|credit|wealth|accounting/.test(value)) return 'Finance & assurance';
+  if (/manufact|industr|automotive|aero|machin|electron|chemical|food|textil|energy|oil|mining|pharma|medical device/.test(value)) return 'Industrie & manufacturing';
+  if (/construction|material/.test(value)) return 'BTP & construction';
+  if (/retail|fashion|grocery|e-?commerce|supermarket|store|beauty|furniture/.test(value)) return 'Distribution & retail';
+  if (/transport|logistic|shipping|airline|truck|delivery/.test(value)) return 'Transport & logistique';
+  if (/health|hospital|care|dental|veterinary/.test(value)) return 'Santé & social';
+  if (/consult|agency|service|legal|marketing|architecture|engineering|research/.test(value)) return 'Services B2B & conseil';
+  return 'Autres / à préciser';
+};
+
+interface CompanyContextConfig { headcount: number; sector: string }
 const modeStyle: Record<Mode, string> = {
   humain: 'border-border bg-muted text-muted-foreground',
   assisté: 'border-primary/25 bg-primary/10 text-primary',
