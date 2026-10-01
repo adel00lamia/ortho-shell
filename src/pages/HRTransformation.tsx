@@ -164,10 +164,6 @@ export default function HRTransformation() {
   useEffect(() => { if (companyCtx) localStorage.setItem(CTX_KEY, JSON.stringify(companyCtx)); }, [companyCtx]);
 
   const bench = benchmarkFor(companyCtx?.sector ?? 'Autres / à préciser');
-  const modeledRatio = companyCtx && stats.people > 0 ? Math.round(companyCtx.headcount / stats.people) : 0;
-  const ratioGap = companyCtx ? modeledRatio - bench.hrPer : 0;
-  const sizing = ratioGap > 10 ? 'Sous-dimensionné vs référence secteur' : ratioGap < -10 ? 'Sur-dimensionné vs référence secteur' : 'Aligné sur la référence secteur';
-
   const applyBenchmark = () => {
     if (!companyCtx) return;
     const templateTotal = TEMPLATE.reduce((sum, team) => sum + team.roles.reduce((acc, role) => acc + role.count, 0), 0);
