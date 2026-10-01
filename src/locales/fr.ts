@@ -50,6 +50,7 @@ export const fr: Translations = {
     skillsGaps: 'Compétences & Écarts',
     transformation: 'Transformation',
     orgIntelligence: 'Postes · Tâches · KPI',
+    hrTransformation: 'Transformation RH',
     transformationCockpit: 'Cockpit de transformation',
     valueChain: 'Chaîne de valeur',
     assessmentReport: 'Rapport 360°',
