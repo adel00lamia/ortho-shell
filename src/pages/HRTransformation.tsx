@@ -13,7 +13,7 @@ import {
   Database,
   FileCheck2,
   Gauge,
-  Human,
+  UserRound,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -240,7 +240,7 @@ export default function HRTransformation() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {tasks.filter((task) => task.team === selectedTeam).map((task) => (
                     <Button key={task.key} variant={selectedTaskKey === task.key ? 'secondary' : 'outline'} onClick={() => setSelectedTaskKey(task.key)} className="h-auto min-h-24 justify-start whitespace-normal p-3 text-left">
-                      {mode(task.ai) === 'humain' ? <Human className="h-4 w-4 shrink-0" /> : <Bot className="h-4 w-4 shrink-0 text-primary" />}
+                      {mode(task.ai) === 'humain' ? <UserRound className="h-4 w-4 shrink-0" /> : <Bot className="h-4 w-4 shrink-0 text-primary" />}
                       <span className="min-w-0"><span className="block font-medium">{task.name}</span><span className="mt-1 block text-xs font-normal text-muted-foreground">{modeLabels[mode(task.ai)]} · {task.ai}% potentiel · {task.hours} h/sem</span></span>
                     </Button>
                   ))}
@@ -332,7 +332,7 @@ function TaskDecisionPanel({ task, detail }: { task: TaskContext; detail: typeof
   const taskMode = mode(task.ai);
   return (
     <aside className="border border-border bg-card p-5">
-      <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Activité sélectionnée</p><h2 className="mt-1 text-lg font-semibold text-foreground">{task.name}</h2></div>{taskMode === 'humain' ? <Human className="h-5 w-5 text-muted-foreground" /> : <Bot className="h-5 w-5 text-primary" />}</div>
+      <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Activité sélectionnée</p><h2 className="mt-1 text-lg font-semibold text-foreground">{task.name}</h2></div>{taskMode === 'humain' ? <UserRound className="h-5 w-5 text-muted-foreground" /> : <Bot className="h-5 w-5 text-primary" />}</div>
       <Badge variant="outline" className={cn('mt-3', modeStyle[taskMode])}>{modeLabels[taskMode]}</Badge>
       <div className="mt-5 space-y-4 text-sm">
         <Info label="Responsable" value={task.role} />
