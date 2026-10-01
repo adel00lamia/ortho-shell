@@ -13,6 +13,7 @@ import {
   Database,
   FileCheck2,
   Gauge,
+  Play,
   UserRound,
   RotateCcw,
   Search,
@@ -349,19 +350,42 @@ function TaskDecisionPanel({ task, detail }: { task: TaskContext; detail: typeof
 
 function WorkflowMap({ task, detail }: { task: TaskContext; detail: typeof TEAM_DETAILS[string] }) {
   const taskMode = mode(task.ai);
+  const [activeStage, setActiveStage] = useState(0);
+  const [completedStages, setCompletedStages] = useState<number[]>([]);
+  const [decision, setDecision] = useState<'pending' | 'approved' | 'revision'>('pending');
   const stages = [
-    { icon: Database, eyebrow: '1 · Entrée', title: 'Données et demande', actor: task.role, text: detail.input, status: 'À qualifier' },
-    { icon: Bot, eyebrow: '2 · Travail IA', title: taskMode === 'humain' ? 'Appui documentaire' : task.tool, actor: 'Moteur IA Qimatak', text: taskMode === 'humain' ? 'Prépare des éléments sans prendre en charge le raisonnement métier.' : 'Classe, rapproche, détecte les écarts et produit une proposition traçable.', status: `${task.ai}% potentiel` },
-    { icon: ClipboardCheck, eyebrow: '3 · Human in the loop', title: 'Contrôle métier', actor: task.role, text: 'Contrôle les sources, corrige le contexte, traite les exceptions et documente les ajustements.', status: 'Obligatoire' },
-    { icon: ShieldCheck, eyebrow: '4 · Approbation', title: 'Go / corriger / rejeter', actor: detail.approver, text: `Décide en tenant compte du risque : ${detail.risk.toLocaleLowerCase()}.`, status: 'Signature humaine' },
-    { icon: CheckCircle2, eyebrow: '5 · Exécution', title: detail.output, actor: task.role, text: 'Exécute la décision approuvée et notifie les parties concernées.', status: 'Après accord' },
-    { icon: Gauge, eyebrow: '6 · Mesure', title: 'Preuve et amélioration', actor: 'DRH + propriétaire KPI', text: detail.kpi, status: 'Boucle de suivi' },
+    { icon: Database, eyebrow: 'Entrée', title: 'Données et demande', actor: task.role, text: detail.input, status: 'À qualifier', output: 'Brief qualifié et sources autorisées', control: 'Complétude, finalité et droit d’accès' },
+    { icon: Bot, eyebrow: 'Travail IA', title: taskMode === 'humain' ? 'Appui documentaire' : task.tool, actor: 'Moteur IA Qimatak', text: taskMode === 'humain' ? 'Prépare des éléments sans prendre en charge le raisonnement métier.' : 'Classe, rapproche, détecte les écarts et produit une proposition traçable.', status: `${task.ai}% potentiel`, output: 'Proposition sourcée et niveau de confiance', control: 'Sources citées, aucune décision automatique' },
+    { icon: ClipboardCheck, eyebrow: 'Human in the loop', title: 'Contrôle métier', actor: task.role, text: 'Contrôle les sources, corrige le contexte, traite les exceptions et documente les ajustements.', status: 'Obligatoire', output: 'Version corrigée et commentaires métier', control: 'Exactitude, biais, exceptions et règles internes' },
+    { icon: ShieldCheck, eyebrow: 'Approbation', title: 'Go / corriger / rejeter', actor: detail.approver, text: `Décide en tenant compte du risque : ${detail.risk.toLocaleLowerCase()}.`, status: 'Signature humaine', output: 'Décision horodatée avec motif', control: 'Responsabilité humaine non délégable' },
+    { icon: CheckCircle2, eyebrow: 'Exécution', title: detail.output, actor: task.role, text: 'Exécute la décision approuvée et notifie les parties concernées.', status: 'Après accord', output: detail.output, control: 'Exécution conforme à la version approuvée' },
+    { icon: Gauge, eyebrow: 'Mesure', title: 'Preuve et amélioration', actor: 'DRH + propriétaire KPI', text: detail.kpi, status: 'Boucle de suivi', output: 'Mesure, écart et action corrective', control: 'Baseline, cible, résultat et preuve' },
   ];
+
+  useEffect(() => {
+    setActiveStage(0);
+    setCompletedStages([]);
+    setDecision('pending');
+  }, [task.key]);
+
+  const current = stages[activeStage];
+  const CurrentIcon = current.icon;
+  const canAdvance = activeStage !== 3 || decision === 'approved';
+  const advance = () => {
+    if (!canAdvance) return;
+    setCompletedStages((items) => items.includes(activeStage) ? items : [...items, activeStage]);
+    setActiveStage((value) => Math.min(stages.length - 1, value + 1));
+  };
+  const resetSimulation = () => {
+    setActiveStage(0);
+    setCompletedStages([]);
+    setDecision('pending');
+  };
 
   return (
     <Card className="overflow-hidden">
       <CardHeader className="border-b border-border">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><Badge variant="outline">{task.team}</Badge><CardTitle className="mt-2 text-xl">{task.name}</CardTitle><CardDescription className="mt-1">{detail.mission}</CardDescription></div><Badge variant="outline" className={modeStyle[taskMode]}>{modeLabels[taskMode]}</Badge></div>
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex flex-wrap gap-2"><Badge variant="outline">{task.team}</Badge><Badge variant="outline" className={modeStyle[taskMode]}>{modeLabels[taskMode]}</Badge></div><CardTitle className="mt-2 text-xl">{task.name}</CardTitle><CardDescription className="mt-1">{detail.mission}</CardDescription></div><Button size="sm" variant="outline" onClick={resetSimulation}><RotateCcw className="mr-2 h-4 w-4" />Rejouer</Button></div>
       </CardHeader>
       <CardContent className="p-4 md:p-6">
         <div className="mb-5 grid gap-3 sm:grid-cols-4">
@@ -371,25 +395,63 @@ function WorkflowMap({ task, detail }: { task: TaskContext; detail: typeof TEAM_
           <MiniMetric label="Approbateur" value={detail.approver} />
         </div>
 
-        <div className="grid gap-2 xl:grid-cols-[repeat(6,minmax(0,1fr))]">
+        <div className="mb-5 flex items-center gap-3 border-y border-border py-3">
+          <div className="min-w-0 flex-1"><div className="mb-1.5 flex justify-between text-[11px] font-medium text-muted-foreground"><span>Simulation du processus</span><span>{completedStages.length}/{stages.length} étapes</span></div><Progress value={(completedStages.length / stages.length) * 100} className="h-2" /></div>
+          <Button size="sm" onClick={advance} disabled={!canAdvance || completedStages.length === stages.length}><Play className="mr-2 h-4 w-4" />{activeStage === stages.length - 1 ? 'Terminer' : 'Étape suivante'}</Button>
+        </div>
+
+        <div className="relative grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="absolute left-[8%] right-[8%] top-7 hidden h-px bg-border xl:block" />
           {stages.map((stage, index) => {
             const Icon = stage.icon;
             const isAi = index === 1;
             const isHumanGate = index === 2 || index === 3;
+            const isActive = activeStage === index;
+            const isComplete = completedStages.includes(index);
             return (
-              <div key={stage.eyebrow} className="contents">
-                <div className={cn('relative min-h-52 border p-4', isAi && 'border-primary/30 bg-primary/5', isHumanGate && 'border-accent/60 bg-accent/10')}>
-                  <div className={cn('mb-4 flex h-9 w-9 items-center justify-center border', isAi ? 'border-primary/30 bg-primary/10 text-primary' : isHumanGate ? 'border-accent/60 bg-accent/20 text-accent-foreground' : 'border-border bg-muted text-foreground')}><Icon className="h-4 w-4" /></div>
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground">{stage.eyebrow}</p>
-                  <h3 className="mt-1 text-sm font-semibold leading-snug text-foreground">{stage.title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{stage.text}</p>
-                  <div className="mt-4 border-t border-border pt-3"><p className="text-[10px] uppercase text-muted-foreground">Responsable</p><p className="text-xs font-semibold text-foreground">{stage.actor}</p><Badge variant="outline" className="mt-2 text-[10px]">{stage.status}</Badge></div>
-                  {index < stages.length - 1 && <ArrowRight className="absolute -right-4 top-1/2 z-10 hidden h-5 w-5 -translate-y-1/2 bg-card text-muted-foreground xl:block" />}
-                  {index < stages.length - 1 && <ArrowDown className="absolute -bottom-4 left-1/2 z-10 h-5 w-5 -translate-x-1/2 bg-card text-muted-foreground xl:hidden" />}
+              <button type="button" key={stage.eyebrow} onClick={() => setActiveStage(index)} className={cn('relative z-10 min-h-40 border bg-card p-3 text-left transition-all duration-200', isAi && 'border-primary/30', isHumanGate && 'border-accent/60', isActive && 'border-primary bg-primary/5 shadow-md', isComplete && !isActive && 'bg-muted/50 hover:bg-muted')}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className={cn('flex h-10 w-10 items-center justify-center rounded-full border bg-card', isAi ? 'border-primary/40 text-primary' : isHumanGate ? 'border-accent text-accent-foreground' : 'border-border text-foreground', isComplete && 'border-primary bg-primary text-primary-foreground')}>
+                    {isComplete ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground">0{index + 1}</span>
                 </div>
-              </div>
+                <p className={cn('mt-3 text-[10px] font-bold uppercase', isActive ? 'text-primary' : 'text-muted-foreground')}>{stage.eyebrow}</p>
+                <h3 className="mt-1 text-sm font-semibold leading-snug text-foreground">{stage.title}</h3>
+                <p className="mt-2 text-[11px] text-muted-foreground">{stage.actor}</p>
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-2"><Badge variant="outline" className="text-[9px]">{isComplete ? 'Validée' : isActive ? 'En cours' : 'À venir'}</Badge>{isActive && <ArrowDown className="h-3.5 w-3.5 text-primary" />}</div>
+              </button>
             );
           })}
+        </div>
+
+        <div key={`${task.key}-${activeStage}`} className="mt-4 animate-fade-in border border-primary/25 bg-primary/5 p-4 md:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center bg-primary text-primary-foreground"><CurrentIcon className="h-5 w-5" /></div><div><p className="text-[10px] font-bold uppercase text-primary">Étape {activeStage + 1} · {current.eyebrow}</p><h3 className="text-base font-semibold text-foreground">{current.title}</h3><p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{current.text}</p></div></div>
+            <Badge variant="outline">{current.status}</Badge>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <MiniMetric label="Qui agit" value={current.actor} />
+            <MiniMetric label="Sortie attendue" value={current.output} />
+            <MiniMetric label="Contrôle requis" value={current.control} />
+          </div>
+
+          {activeStage === 3 && (
+            <div className="mt-4 border-t border-primary/20 pt-4">
+              <p className="mb-2 text-xs font-semibold text-foreground">Décision de simulation</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant={decision === 'approved' ? 'default' : 'outline'} onClick={() => setDecision('approved')}><CheckCircle2 className="mr-2 h-4 w-4" />Approuver</Button>
+                <Button size="sm" variant={decision === 'revision' ? 'secondary' : 'outline'} onClick={() => setDecision('revision')}><RotateCcw className="mr-2 h-4 w-4" />Demander une correction</Button>
+              </div>
+              {decision === 'revision' && <p className="mt-2 text-xs text-accent-foreground">Le flux reste bloqué ici et retourne au contrôle métier.</p>}
+              {decision === 'pending' && <p className="mt-2 text-xs text-muted-foreground">Une validation humaine est nécessaire pour poursuivre vers l’exécution.</p>}
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between border-t border-primary/20 pt-4">
+            <Button size="sm" variant="ghost" disabled={activeStage === 0} onClick={() => setActiveStage((value) => Math.max(0, value - 1))}>Étape précédente</Button>
+            <Button size="sm" onClick={advance} disabled={!canAdvance || completedStages.length === stages.length}>{activeStage === stages.length - 1 ? 'Clôturer la simulation' : 'Valider et continuer'}<ChevronRight className="ml-2 h-4 w-4" /></Button>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
