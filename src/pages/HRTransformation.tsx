@@ -581,8 +581,8 @@ function Info({ label, value }: { label: string; value: string }) {
   return <div className="border-b border-border pb-3 last:border-0"><p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-1 leading-relaxed text-foreground">{value}</p></div>;
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return <div className="border border-border bg-muted/30 p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold text-foreground">{value}</p></div>;
+function MiniMetric({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return <div className="border border-border bg-muted/30 p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold text-foreground">{value}</p>{sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}</div>;
 }
 
 function Kpi({ icon: Icon, label, value, sub }: { icon: typeof Users; label: string; value: string; sub?: string }) {
