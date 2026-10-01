@@ -144,6 +144,43 @@ export default function HRTransformation() {
   const [teamFilter, setTeamFilter] = useState('all');
   const [modeFilter, setModeFilter] = useState('all');
   const [query, setQuery] = useState('');
+  const [companyCtx, setCompanyCtx] = useState<CompanyContextConfig | null>(() => {
+    try { const saved = localStorage.getItem(CTX_KEY); if (saved) return JSON.parse(saved) as CompanyContextConfig; } catch { /* init from profile */ }
+    return null;
+  });
+
+  const { context } = useCompanyProfile();
+  const realHeadcount = context?.stats.totalEmployees && context.stats.totalEmployees > 0
+    ? context.stats.totalEmployees
+    : context?.company?.employeeCount ?? null;
+  const realSector = guessSector(context?.company?.industry);
+
+  useEffect(() => {
+    if (companyCtx) return;
+    if (!context) return;
+    setCompanyCtx({ headcount: realHeadcount || 250, sector: realSector });
+  }, [context, companyCtx, realHeadcount, realSector]);
+
+  useEffect(() => { if (companyCtx) localStorage.setItem(CTX_KEY, JSON.stringify(companyCtx)); }, [companyCtx]);
+
+  const bench = benchmarkFor(companyCtx?.sector ?? 'Autres / à préciser');
+  const modeledRatio = companyCtx && stats.people > 0 ? Math.round(companyCtx.headcount / stats.people) : 0;
+  const ratioGap = companyCtx ? modeledRatio - bench.hrPer : 0;
+  const sizing = ratioGap > 10 ? 'Sous-dimensionné vs référence secteur' : ratioGap < -10 ? 'Sur-dimensionné vs référence secteur' : 'Aligné sur la référence secteur';
+
+  const applyBenchmark = () => {
+    if (!companyCtx) return;
+    const templateTotal = TEMPLATE.reduce((sum, team) => sum + team.roles.reduce((acc, role) => acc + role.count, 0), 0);
+    const targetTotal = Math.max(3, Math.round(companyCtx.headcount / bench.hrPer));
+    setTeams(TEMPLATE.map((team) => ({
+      ...team,
+      roles: team.roles.map((role) => ({
+        ...role,
+        count: Math.max(1, Math.round((role.count * targetTotal) / templateTotal)),
+        hourly: Math.round(role.hourly * bench.rateFactor),
+      })),
+    })));
+  };
 
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(teams)); }, [teams]);
 
