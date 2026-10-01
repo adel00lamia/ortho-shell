@@ -30,6 +30,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import { cn } from '@/lib/utils';
 
 type Mode = 'humain' | 'assisté' | 'automatisable';
@@ -78,11 +79,43 @@ const TEAM_DETAILS: Record<string, { mission: string; input: string; output: str
 };
 
 const KEY = 'qimatak-hr-transformation-v1';
+const CTX_KEY = 'qimatak-hr-transformation-context-v1';
 const WEEKS = 45;
 const mode = (ai: number): Mode => (ai >= 65 ? 'automatisable' : ai >= 35 ? 'assisté' : 'humain');
 const freedShare = (ai: number) => (ai >= 65 ? 0.6 : ai >= 35 ? 0.3 : 0.05);
 const mad = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} MAD`;
 const modeLabels: Record<Mode, string> = { humain: 'Humain', assisté: 'IA assistée', automatisable: 'Automatisé sous contrôle' };
+
+// ── Références sectorielles (à valider avec les données réelles de l'entreprise) ──
+// hrPer = salariés par RH (ratio de dimensionnement) · rateFactor = ajustement du coût horaire
+interface SectorBenchmark { name: string; hrPer: number; rateFactor: number; focus: string }
+const SECTOR_BENCHMARKS: SectorBenchmark[] = [
+  { name: 'Industrie & manufacturing', hrPer: 100, rateFactor: 0.9, focus: 'Paie horaire, pointage, turnover des lignes de production' },
+  { name: 'BTP & construction', hrPer: 110, rateFactor: 0.85, focus: 'Chantiers mobiles, CNSS intermittente, sécurité' },
+  { name: 'Distribution & retail', hrPer: 90, rateFactor: 0.85, focus: 'Planification des équipes, saisonnalité, fidélisation' },
+  { name: 'Transport & logistique', hrPer: 95, rateFactor: 0.9, focus: 'Temps de conduite, plannings, conformité transport' },
+  { name: 'Santé & social', hrPer: 80, rateFactor: 0.95, focus: 'Gardes, habilitations, formation continue obligatoire' },
+  { name: 'Finance & assurance', hrPer: 65, rateFactor: 1.15, focus: 'Conformité, qualité des données, gestion des talents' },
+  { name: 'Services B2B & conseil', hrPer: 70, rateFactor: 1.1, focus: 'Recrutement rapide, facturabilité, développement des compétences' },
+  { name: 'Tech & digital', hrPer: 60, rateFactor: 1.25, focus: 'Guerre des talents, montée en compétences IA, rétention' },
+  { name: 'Autres / à préciser', hrPer: 85, rateFactor: 1, focus: 'Modèle générique à affiner avec vos données' },
+];
+const benchmarkFor = (sector: string) => SECTOR_BENCHMARKS.find((item) => item.name === sector) ?? SECTOR_BENCHMARKS[SECTOR_BENCHMARKS.length - 1];
+
+const guessSector = (industry: string | null | undefined): string => {
+  const value = (industry || '').toLocaleLowerCase();
+  if (/tech|software|digital|it|internet|data|ai|fintech|edtech|gaming/.test(value)) return 'Tech & digital';
+  if (/bank|insur|finance|invest|credit|wealth|accounting/.test(value)) return 'Finance & assurance';
+  if (/manufact|industr|automotive|aero|machin|electron|chemical|food|textil|energy|oil|mining|pharma|medical device/.test(value)) return 'Industrie & manufacturing';
+  if (/construction|material/.test(value)) return 'BTP & construction';
+  if (/retail|fashion|grocery|e-?commerce|supermarket|store|beauty|furniture/.test(value)) return 'Distribution & retail';
+  if (/transport|logistic|shipping|airline|truck|delivery/.test(value)) return 'Transport & logistique';
+  if (/health|hospital|care|dental|veterinary/.test(value)) return 'Santé & social';
+  if (/consult|agency|service|legal|marketing|architecture|engineering|research/.test(value)) return 'Services B2B & conseil';
+  return 'Autres / à préciser';
+};
+
+interface CompanyContextConfig { headcount: number; sector: string }
 const modeStyle: Record<Mode, string> = {
   humain: 'border-border bg-muted text-muted-foreground',
   assisté: 'border-primary/25 bg-primary/10 text-primary',
@@ -111,6 +144,39 @@ export default function HRTransformation() {
   const [teamFilter, setTeamFilter] = useState('all');
   const [modeFilter, setModeFilter] = useState('all');
   const [query, setQuery] = useState('');
+  const [companyCtx, setCompanyCtx] = useState<CompanyContextConfig | null>(() => {
+    try { const saved = localStorage.getItem(CTX_KEY); if (saved) return JSON.parse(saved) as CompanyContextConfig; } catch { /* init from profile */ }
+    return null;
+  });
+
+  const { context } = useCompanyProfile();
+  const realHeadcount = context?.stats.totalEmployees && context.stats.totalEmployees > 0
+    ? context.stats.totalEmployees
+    : context?.company?.employeeCount ?? null;
+  const realSector = guessSector(context?.company?.industry);
+
+  useEffect(() => {
+    if (companyCtx) return;
+    if (!context) return;
+    setCompanyCtx({ headcount: realHeadcount || 250, sector: realSector });
+  }, [context, companyCtx, realHeadcount, realSector]);
+
+  useEffect(() => { if (companyCtx) localStorage.setItem(CTX_KEY, JSON.stringify(companyCtx)); }, [companyCtx]);
+
+  const bench = benchmarkFor(companyCtx?.sector ?? 'Autres / à préciser');
+  const applyBenchmark = () => {
+    if (!companyCtx) return;
+    const templateTotal = TEMPLATE.reduce((sum, team) => sum + team.roles.reduce((acc, role) => acc + role.count, 0), 0);
+    const targetTotal = Math.max(3, Math.round(companyCtx.headcount / bench.hrPer));
+    setTeams(TEMPLATE.map((team) => ({
+      ...team,
+      roles: team.roles.map((role) => ({
+        ...role,
+        count: Math.max(1, Math.round((role.count * targetTotal) / templateTotal)),
+        hourly: Math.round(role.hourly * bench.rateFactor),
+      })),
+    })));
+  };
 
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(teams)); }, [teams]);
 
@@ -147,6 +213,10 @@ export default function HRTransformation() {
     return { hours, freed, value, people, byTeam, net: value - toolCost, fte: freed / (40 * WEEKS) };
   }, [teams, toolCost]);
 
+  const modeledRatio = companyCtx && stats.people > 0 ? Math.round(companyCtx.headcount / stats.people) : 0;
+  const ratioGap = companyCtx ? modeledRatio - bench.hrPer : 0;
+  const sizing = ratioGap > 10 ? 'Sous-dimensionné vs référence secteur' : ratioGap < -10 ? 'Sur-dimensionné vs référence secteur' : 'Aligné sur la référence secteur';
+
   const top = useMemo(() => tasks.map((task) => ({
     ...task,
     value: task.hours * task.count * WEEKS * freedShare(task.ai) * task.hourly,
@@ -180,6 +250,37 @@ export default function HRTransformation() {
           <Kpi icon={Coins} label="Valeur du temps libéré" value={mad(stats.value)} sub="Hypothèse annuelle modifiable" />
           <Kpi icon={ShieldCheck} label="Décision sensible" value="100 % humaine" sub="IA = analyse et proposition" />
         </div>
+        {companyCtx && (
+          <section className="mt-5 border border-primary/25 bg-primary/5 p-4">
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><Building2 className="h-4 w-4 text-primary" />Contexte entreprise</p>
+                <p className="mt-1 text-xs text-muted-foreground">Chargez l’effectif réel et le secteur pour dimensionner le modèle RH. Prérempli depuis le profil de l’entreprise.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">Effectif
+                    <Input type="number" min={1} className="h-9 w-24" value={companyCtx.headcount}
+                      onChange={(event) => setCompanyCtx({ ...companyCtx, headcount: Math.max(1, +event.target.value || 0) })} />
+                  </label>
+                  <Select value={companyCtx.sector} onValueChange={(value) => setCompanyCtx({ ...companyCtx, sector: value })}>
+                    <SelectTrigger className="h-9 w-56"><SelectValue placeholder="Secteur d’activité" /></SelectTrigger>
+                    <SelectContent>{SECTOR_BENCHMARKS.map((item) => <SelectItem key={item.name} value={item.name}>{item.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={applyBenchmark}><Sparkles className="mr-2 h-4 w-4" />Ajuster le modèle</Button>
+                </div>
+                {realHeadcount ? (
+                  <p className="mt-2 text-[11px] text-muted-foreground">Données réelles chargées : {realHeadcount} salariés · {context?.company?.industry || 'secteur non renseigné'}</p>
+                ) : (
+                  <p className="mt-2 text-[11px] text-accent-foreground">Aucun effectif réel dans le profil — renseignez-le pour un dimensionnement fiable.</p>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <MiniMetric label="Ratio modélisé" value={modeledRatio ? `1 RH / ${modeledRatio} salariés` : '—'} sub={`${stats.people} RH pour ${companyCtx.headcount} salariés`} />
+                <MiniMetric label={`Référence · ${bench.name}`} value={`1 RH / ${bench.hrPer} salariés`} sub={sizing} />
+                <MiniMetric label="Coût horaire secteur" value={`× ${bench.rateFactor.toFixed(2)}`} sub={bench.focus} />
+              </div>
+            </div>
+          </section>
+        )}
       </header>
 
       <Tabs defaultValue="map" className="space-y-5">
@@ -480,8 +581,8 @@ function Info({ label, value }: { label: string; value: string }) {
   return <div className="border-b border-border pb-3 last:border-0"><p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-1 leading-relaxed text-foreground">{value}</p></div>;
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return <div className="border border-border bg-muted/30 p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold text-foreground">{value}</p></div>;
+function MiniMetric({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return <div className="border border-border bg-muted/30 p-3"><p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold text-foreground">{value}</p>{sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}</div>;
 }
 
 function Kpi({ icon: Icon, label, value, sub }: { icon: typeof Users; label: string; value: string; sub?: string }) {
