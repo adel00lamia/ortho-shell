@@ -213,6 +213,10 @@ export default function HRTransformation() {
     return { hours, freed, value, people, byTeam, net: value - toolCost, fte: freed / (40 * WEEKS) };
   }, [teams, toolCost]);
 
+  const modeledRatio = companyCtx && stats.people > 0 ? Math.round(companyCtx.headcount / stats.people) : 0;
+  const ratioGap = companyCtx ? modeledRatio - bench.hrPer : 0;
+  const sizing = ratioGap > 10 ? 'Sous-dimensionné vs référence secteur' : ratioGap < -10 ? 'Sur-dimensionné vs référence secteur' : 'Aligné sur la référence secteur';
+
   const top = useMemo(() => tasks.map((task) => ({
     ...task,
     value: task.hours * task.count * WEEKS * freedShare(task.ai) * task.hourly,
@@ -246,6 +250,37 @@ export default function HRTransformation() {
           <Kpi icon={Coins} label="Valeur du temps libéré" value={mad(stats.value)} sub="Hypothèse annuelle modifiable" />
           <Kpi icon={ShieldCheck} label="Décision sensible" value="100 % humaine" sub="IA = analyse et proposition" />
         </div>
+        {companyCtx && (
+          <section className="mt-5 border border-primary/25 bg-primary/5 p-4">
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><Building2 className="h-4 w-4 text-primary" />Contexte entreprise</p>
+                <p className="mt-1 text-xs text-muted-foreground">Chargez l’effectif réel et le secteur pour dimensionner le modèle RH. Prérempli depuis le profil de l’entreprise.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">Effectif
+                    <Input type="number" min={1} className="h-9 w-24" value={companyCtx.headcount}
+                      onChange={(event) => setCompanyCtx({ ...companyCtx, headcount: Math.max(1, +event.target.value || 0) })} />
+                  </label>
+                  <Select value={companyCtx.sector} onValueChange={(value) => setCompanyCtx({ ...companyCtx, sector: value })}>
+                    <SelectTrigger className="h-9 w-56"><SelectValue placeholder="Secteur d’activité" /></SelectTrigger>
+                    <SelectContent>{SECTOR_BENCHMARKS.map((item) => <SelectItem key={item.name} value={item.name}>{item.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={applyBenchmark}><Sparkles className="mr-2 h-4 w-4" />Ajuster le modèle</Button>
+                </div>
+                {realHeadcount ? (
+                  <p className="mt-2 text-[11px] text-muted-foreground">Données réelles chargées : {realHeadcount} salariés · {context?.company?.industry || 'secteur non renseigné'}</p>
+                ) : (
+                  <p className="mt-2 text-[11px] text-accent-foreground">Aucun effectif réel dans le profil — renseignez-le pour un dimensionnement fiable.</p>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <MiniMetric label="Ratio modélisé" value={modeledRatio ? `1 RH / ${modeledRatio} salariés` : '—'} sub={`${stats.people} RH pour ${companyCtx.headcount} salariés`} />
+                <MiniMetric label={`Référence · ${bench.name}`} value={`1 RH / ${bench.hrPer} salariés`} sub={sizing} />
+                <MiniMetric label="Coût horaire secteur" value={`× ${bench.rateFactor.toFixed(2)}`} sub={bench.focus} />
+              </div>
+            </div>
+          </section>
+        )}
       </header>
 
       <Tabs defaultValue="map" className="space-y-5">
