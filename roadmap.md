@@ -4,6 +4,7 @@
 SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin → assessment → plan de formation IA → exécution (formation interne d'abord) → carrière / upskilling-reskilling → mesure d'impact. Le diagnostic est le portillon de la chaîne, pas le produit entier.
 
 ## Done
+- [x] Carte complète de Transformation RH : organigramme, activités Humain + IA, workflow, contrôles, approbations, preuves et business case
 - [x] Démonstration guidée Atlas Industries en 6 étapes dans le cockpit Transformation, avec données, analyse et livrable attendus
 - [x] Refonte premium de la page d’accueil autour du cockpit Transformation, du WorkGraph et des livrables décisionnels
 - [x] Parcours d'entretien guidé : Pitch en 3 étapes, STAR, Passé/Présent/Futur et Pitch impactant, avec entraînement Sarah
