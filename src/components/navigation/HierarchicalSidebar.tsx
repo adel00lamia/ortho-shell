@@ -118,6 +118,7 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
         titleKey: 'transformation',
         items: [
           { path: '/organisation', labelKey: 'orgIntelligence', icon: Workflow, badge: 'NEW' },
+          { path: '/rh-transformation', labelKey: 'hrTransformation', icon: UserCog, badge: 'NEW' },
           { path: '/transformation', labelKey: 'transformationCockpit', icon: Workflow },
         ],
       },
