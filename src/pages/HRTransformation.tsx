@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   ArrowDown,
-  ArrowRight,
   Bot,
   Building2,
   CheckCircle2,
