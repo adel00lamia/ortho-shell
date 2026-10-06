@@ -5,6 +5,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
 const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -77,6 +78,36 @@ const readResponsesStream = async (response: Response) => {
             ? `AI response incomplete: ${event.response.incomplete_details.reason}`
             : 'AI response incomplete';
         }
+      } catch { /* ignore non-JSON SSE metadata */ }
+    }
+  }
+  if (!output && terminalError) throw new Error(terminalError);
+  return output;
+};
+
+// Anthropic Messages API (user's own Claude key) — streamed SSE, text deltas only.
+const readAnthropicStream = async (response: Response) => {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let output = '';
+  let terminalError = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload) continue;
+      try {
+        const event = JSON.parse(payload);
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta' && typeof event.delta.text === 'string') output += event.delta.text;
+        if (event.type === 'error') terminalError = event.error?.message || 'Claude generation failed';
+        if (event.type === 'message_delta' && event.delta?.stop_reason === 'max_tokens') terminalError = 'Claude response truncated (max_tokens)';
       } catch { /* ignore non-JSON SSE metadata */ }
     }
   }
@@ -251,8 +282,8 @@ serve(async (req) => {
 
     console.log('Advanced plan generation for user:', userId);
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!LOVABLE_API_KEY && !ANTHROPIC_API_KEY) {
+      throw new Error('No AI provider key configured (LOVABLE_API_KEY or ANTHROPIC_API_KEY)');
     }
 
     const languageInstruction = language === 'fr'
@@ -527,6 +558,35 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     const PART_A_KEYS = 'title, description, executive_summary, timeline, training_axes, modules, budget_breakdown, kpis, recommendations';
     const PART_B_KEYS = 'market_research, swot_analysis, pestel_analysis, risk_assessment, success_metrics, implementation_roadmap, regulatory_framework, evidence_register';
 
+    const scopeInstruction = `OUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${'{SCOPE}'}. Omit every other key. Be concise. Return valid JSON only.`;
+
+    // Provider selection: the user's own Claude key takes priority; otherwise Lovable AI.
+    const callAnthropic = async (scope: string) => {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY!,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 8192,
+          stream: true,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }],
+        }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Anthropic API error:', response.status, errorText);
+        let safeMessage = `Anthropic API error: ${response.status}`;
+        try { safeMessage = JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
+        throw new Error(safeMessage);
+      }
+      return await readAnthropicStream(response);
+    };
+
     const callGateway = async (scope: string) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
@@ -538,7 +598,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       body: JSON.stringify({
         model: selectedModel,
         instructions: systemPrompt,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nOUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${scope}. Omit every other key. Be concise. Return valid JSON only.` }] }],
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }] }],
         stream: true,
         store: false,
         reasoning: { effort: 'low', summary: 'auto' },
@@ -556,10 +616,13 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     return await readResponsesStream(response);
     };
 
+    const callAi = ANTHROPIC_API_KEY ? callAnthropic : callGateway;
+    console.log('AI provider:', ANTHROPIC_API_KEY ? 'anthropic (user key)' : 'lovable-gateway');
+
     const planPromise = (async () => {
     const [content, analysisContent] = await Promise.all([
-      callGateway(PART_A_KEYS),
-      callGateway(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
+      callAi(PART_A_KEYS),
+      callAi(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
     ]);
     if (!content) throw new Error('No content in AI response');
 
