@@ -558,6 +558,35 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     const PART_A_KEYS = 'title, description, executive_summary, timeline, training_axes, modules, budget_breakdown, kpis, recommendations';
     const PART_B_KEYS = 'market_research, swot_analysis, pestel_analysis, risk_assessment, success_metrics, implementation_roadmap, regulatory_framework, evidence_register';
 
+    const scopeInstruction = `OUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${'{SCOPE}'}. Omit every other key. Be concise. Return valid JSON only.`;
+
+    // Provider selection: the user's own Claude key takes priority; otherwise Lovable AI.
+    const callAnthropic = async (scope: string) => {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY!,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 8192,
+          stream: true,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }],
+        }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Anthropic API error:', response.status, errorText);
+        let safeMessage = `Anthropic API error: ${response.status}`;
+        try { safeMessage = JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
+        throw new Error(safeMessage);
+      }
+      return await readAnthropicStream(response);
+    };
+
     const callGateway = async (scope: string) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
@@ -569,7 +598,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       body: JSON.stringify({
         model: selectedModel,
         instructions: systemPrompt,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nOUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${scope}. Omit every other key. Be concise. Return valid JSON only.` }] }],
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }] }],
         stream: true,
         store: false,
         reasoning: { effort: 'low', summary: 'auto' },
@@ -586,6 +615,9 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     }
     return await readResponsesStream(response);
     };
+
+    const callAi = ANTHROPIC_API_KEY ? callAnthropic : callGateway;
+    console.log('AI provider:', ANTHROPIC_API_KEY ? 'anthropic (user key)' : 'lovable-gateway');
 
     const planPromise = (async () => {
     const [content, analysisContent] = await Promise.all([
