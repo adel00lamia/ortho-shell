@@ -85,6 +85,36 @@ const readResponsesStream = async (response: Response) => {
   return output;
 };
 
+// Anthropic Messages API (user's own Claude key) — streamed SSE, text deltas only.
+const readAnthropicStream = async (response: Response) => {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let output = '';
+  let terminalError = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload) continue;
+      try {
+        const event = JSON.parse(payload);
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta' && typeof event.delta.text === 'string') output += event.delta.text;
+        if (event.type === 'error') terminalError = event.error?.message || 'Claude generation failed';
+        if (event.type === 'message_delta' && event.delta?.stop_reason === 'max_tokens') terminalError = 'Claude response truncated (max_tokens)';
+      } catch { /* ignore non-JSON SSE metadata */ }
+    }
+  }
+  if (!output && terminalError) throw new Error(terminalError);
+  return output;
+};
+
 const requirementsSchema = z.object({
   requirements: z.object({
     company: z.string().max(200).optional().default(''),
