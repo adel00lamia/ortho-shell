@@ -282,8 +282,8 @@ serve(async (req) => {
 
     console.log('Advanced plan generation for user:', userId);
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!LOVABLE_API_KEY && !ANTHROPIC_API_KEY) {
+      throw new Error('No AI provider key configured (LOVABLE_API_KEY or ANTHROPIC_API_KEY)');
     }
 
     const languageInstruction = language === 'fr'
