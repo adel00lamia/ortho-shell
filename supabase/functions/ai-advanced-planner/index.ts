@@ -621,8 +621,8 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
 
     const planPromise = (async () => {
     const [content, analysisContent] = await Promise.all([
-      callGateway(PART_A_KEYS),
-      callGateway(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
+      callAi(PART_A_KEYS),
+      callAi(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
     ]);
     if (!content) throw new Error('No content in AI response');
 
