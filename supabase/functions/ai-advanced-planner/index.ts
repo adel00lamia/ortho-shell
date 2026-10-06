@@ -5,6 +5,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
 const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
