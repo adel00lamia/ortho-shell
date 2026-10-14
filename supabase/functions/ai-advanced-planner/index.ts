@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
+import { ANTHROPIC_MAX_OUTPUT_TOKENS, readAnthropicStream } from './anthropicStream.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
@@ -78,36 +79,6 @@ const readResponsesStream = async (response: Response) => {
             ? `AI response incomplete: ${event.response.incomplete_details.reason}`
             : 'AI response incomplete';
         }
-      } catch { /* ignore non-JSON SSE metadata */ }
-    }
-  }
-  if (!output && terminalError) throw new Error(terminalError);
-  return output;
-};
-
-// Anthropic Messages API (user's own Claude key) — streamed SSE, text deltas only.
-const readAnthropicStream = async (response: Response) => {
-  if (!response.body) return '';
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let output = '';
-  let terminalError = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
-    for (const line of lines) {
-      if (!line.startsWith('data:')) continue;
-      const payload = line.slice(5).trim();
-      if (!payload) continue;
-      try {
-        const event = JSON.parse(payload);
-        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta' && typeof event.delta.text === 'string') output += event.delta.text;
-        if (event.type === 'error') terminalError = event.error?.message || 'Claude generation failed';
-        if (event.type === 'message_delta' && event.delta?.stop_reason === 'max_tokens') terminalError = 'Claude response truncated (max_tokens)';
       } catch { /* ignore non-JSON SSE metadata */ }
     }
   }
@@ -571,7 +542,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-5',
-          max_tokens: 8192,
+          max_tokens: ANTHROPIC_MAX_OUTPUT_TOKENS,
           stream: true,
           system: systemPrompt,
           messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }],
