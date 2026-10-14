@@ -262,7 +262,8 @@ export function sortedRoadmap(all: RoadmapAction[]) {
 export function topPriorities(m: WorkspaceModel) {
   const order: OpportunityCategory[] = ['data_quality', 'standardisation', 'simplification', 'supervised_automation', 'ai_assistance', 'training'];
   return buildOpportunities(m).filter((o) => o.evidenced)
-    .sort((a, b) => b.releasedHours - a.releasedHours || order.indexOf(a.category) - order.indexOf(b.category)).slice(0, 3);
+    .sort((a, b) => b.releasedHours - a.releasedHours || order.indexOf(a.category) - order.indexOf(b.category))
+    .filter((o, i, arr) => arr.findIndex((x) => x.processId === o.processId) === i).slice(0, 3);
 }
 
 export function nextAction(m: WorkspaceModel): { label: string; view: string } {

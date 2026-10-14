@@ -253,3 +253,10 @@ All colors MUST be HSL.
     }
   }
 }
+
+@media print {
+  .hrw-noprint, aside, nav { display: none !important; }
+  .hrw-report { border: 0 !important; padding: 0 !important; font-size: 11px; }
+  .hrw-report table { page-break-inside: auto; }
+  .hrw-report tr { page-break-inside: avoid; }
+}

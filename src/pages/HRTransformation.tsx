@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
@@ -228,9 +229,13 @@ export default function HRTransformation() {
               l’approbation finale et la preuve qui permet de mesurer le résultat.
             </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm"><Link to="/transformation-rh">Ouvrir l’espace Transformation RH</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link to="/transformation-rh/demo">Voir la démo</Link></Button>
           <Button variant="outline" size="sm" onClick={() => setTeams(TEMPLATE)}>
             <RotateCcw className="mr-2 h-4 w-4" />Réinitialiser les hypothèses
           </Button>
+          </div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Kpi icon={Users} label="Équipe RH modélisée" value={`${stats.people} personnes`} sub={`${teams.length} pôles · ${tasks.length} activités`} />

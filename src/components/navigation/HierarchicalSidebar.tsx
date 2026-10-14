@@ -117,8 +117,9 @@ const SidebarContent = ({ collapsed, setCollapsed, onNavClick }: { collapsed: bo
       {
         titleKey: 'transformation',
         items: [
+          { path: '/transformation-rh', labelKey: 'hrWorkspace', icon: UserCog, badge: 'NEW' },
           { path: '/organisation', labelKey: 'orgIntelligence', icon: Workflow, badge: 'NEW' },
-          { path: '/rh-transformation', labelKey: 'hrTransformation', icon: UserCog, badge: 'NEW' },
+          { path: '/rh-transformation', labelKey: 'hrTransformation', icon: UserCog },
           { path: '/transformation', labelKey: 'transformationCockpit', icon: Workflow },
         ],
       },

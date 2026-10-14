@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTransformationTable } from '@/hooks/useTransformation';
 import { analyseTask, CRITERIA_KEYS, CRITERIA_LABELS, DEFAULT_CRITERIA, MODE_LABELS, normalizeCriteria, type OperatingMode } from '@/lib/humanAiScoring';
@@ -108,7 +108,8 @@ export default function TransformationCockpit() {
           <h1 className="text-4xl font-bold text-foreground md:text-5xl">{L('Cockpit de transformation', 'Transformation cockpit')}</h1>
           <div className="mt-2 flex flex-wrap gap-2"><Badge variant="outline" className="gap-1"><Database className="h-3 w-3" />{objectives.rows.length + caps.rows.length + procs.rows.length + tasks.rows.length} {L('objets reliés', 'connected objects')}</Badge><Badge variant="outline" className="gap-1"><ShieldCheck className="h-3 w-3" />{L('Données de votre entreprise uniquement', 'Your company data only')}</Badge></div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm"><Link to="/transformation-rh">{L('Espace Transformation RH', 'HR Transformation workspace')}</Link></Button>
           <Button variant="outline" size="sm" onClick={() => setDemoOpen((value) => !value)}><Presentation className="mr-2 h-4 w-4" />{demoOpen ? L('Masquer le guide', 'Hide guide') : L('Voir la démo guidée', 'View guided demo')}</Button>
           <Button variant="outline" size="sm" disabled={demoBusy} onClick={loadAtlasDemo}>{L('Charger Atlas Industries', 'Load Atlas Industries')}</Button>
           <Button variant="ghost" size="sm" disabled={demoBusy} onClick={async () => {
