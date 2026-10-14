@@ -23,6 +23,7 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Plan Builder fiabilisé avec génération compacte, traçabilité objectif → action et transfert du plan sauvegardé vers l’ingénierie OFPPT
 
 ## Next
+- [ ] Vérifier et corriger les trois signalements : troncature Claude, secteur RH et chargement des polices
 - [x] Transformer le cockpit `/transformation` en workflow piloté par un WorkGraph central et un agent de connaissance en lecture seule
 - [ ] Relier le WorkGraph aux rôles, compétences, personnes, interventions et mesures d’impact existants sans dupliquer les référentiels
 - [ ] Alimenter la chaîne depuis le diagnostic de cause racine (créer les lignes de développement à partir des actions formation)

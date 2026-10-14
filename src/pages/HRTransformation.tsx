@@ -32,6 +32,7 @@ import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import { cn } from '@/lib/utils';
+import { guessSector } from '@/lib/hrSector';
 
 type Mode = 'humain' | 'assisté' | 'automatisable';
 type Approval = 'DRH' | 'Manager RH' | 'Expert métier';
@@ -101,19 +102,6 @@ const SECTOR_BENCHMARKS: SectorBenchmark[] = [
   { name: 'Autres / à préciser', hrPer: 85, rateFactor: 1, focus: 'Modèle générique à affiner avec vos données' },
 ];
 const benchmarkFor = (sector: string) => SECTOR_BENCHMARKS.find((item) => item.name === sector) ?? SECTOR_BENCHMARKS[SECTOR_BENCHMARKS.length - 1];
-
-const guessSector = (industry: string | null | undefined): string => {
-  const value = (industry || '').toLocaleLowerCase();
-  if (/tech|software|digital|it|internet|data|ai|fintech|edtech|gaming/.test(value)) return 'Tech & digital';
-  if (/bank|insur|finance|invest|credit|wealth|accounting/.test(value)) return 'Finance & assurance';
-  if (/manufact|industr|automotive|aero|machin|electron|chemical|food|textil|energy|oil|mining|pharma|medical device/.test(value)) return 'Industrie & manufacturing';
-  if (/construction|material/.test(value)) return 'BTP & construction';
-  if (/retail|fashion|grocery|e-?commerce|supermarket|store|beauty|furniture/.test(value)) return 'Distribution & retail';
-  if (/transport|logistic|shipping|airline|truck|delivery/.test(value)) return 'Transport & logistique';
-  if (/health|hospital|care|dental|veterinary/.test(value)) return 'Santé & social';
-  if (/consult|agency|service|legal|marketing|architecture|engineering|research/.test(value)) return 'Services B2B & conseil';
-  return 'Autres / à préciser';
-};
 
 interface CompanyContextConfig { headcount: number; sector: string }
 const modeStyle: Record<Mode, string> = {
