@@ -35,7 +35,7 @@ export function ProcessView({ m, set }: ViewProps) {
     <div className="grid gap-4 lg:grid-cols-5">
       <Panel title="Inventaire" subtitle="Saisie manuelle, enregistrée localement." className="lg:col-span-2"
         actions={<Button size="sm" onClick={add}><Plus className="mr-1 h-4 w-4" />Ajouter</Button>}>
-        <SelectField label="Filtrer par domaine" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'Tous les domaines' }, ...HR_DOMAINS.map((d) => ({ value: d.id, label: d.fr }))]} />
+        <SelectField label="Filtrer par domaine" value={filter} onChange={(v) => setFilter(v as DomainId | "all")} options={[{ value: 'all', label: 'Tous les domaines' }, ...HR_DOMAINS.map((d) => ({ value: d.id, label: d.fr }))]} />
         <ul className="mt-3 max-h-[60vh] space-y-1 overflow-y-auto">
           {rows.map((r) => (
             <li key={r.id}>
@@ -175,7 +175,7 @@ export function DiagnosticView({ m, set }: ViewProps) {
       </div>
 
       <Panel title={`Opportunités (${opps.length})`} subtitle="Règles déterministes appliquées à vos saisies. Ce sont des propositions modifiables, pas des changements exécutés."
-        actions={<SelectField label="Catégorie" value={cat} onChange={setCat} options={[{ value: 'all', label: 'Toutes' }, ...Object.entries(OPPORTUNITY_LABELS).map(([value, label]) => ({ value: value as keyof typeof OPPORTUNITY_LABELS, label }))]} className="w-56" />}>
+        actions={<SelectField label="Catégorie" value={cat} onChange={(v) => setCat(v as typeof cat)} options={[{ value: 'all', label: 'Toutes' }, ...Object.entries(OPPORTUNITY_LABELS).map(([value, label]) => ({ value: value as keyof typeof OPPORTUNITY_LABELS, label }))]} className="w-56" />}>
         <div className="grid gap-3 md:grid-cols-2">
           {shown.map((o) => {
             const p = m.processes.find((x) => x.id === o.processId);
