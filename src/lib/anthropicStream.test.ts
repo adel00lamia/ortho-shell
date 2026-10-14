@@ -1,5 +1,4 @@
 // Test the provider adapter directly without contacting Anthropic or using credentials.
-// @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { ANTHROPIC_MAX_OUTPUT_TOKENS, readAnthropicStream } from '../../supabase/functions/ai-advanced-planner/anthropicStream';
 
