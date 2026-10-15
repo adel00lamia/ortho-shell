@@ -8,14 +8,16 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { analyseTask, MODE_LABELS } from '@/lib/humanAiScoring';
 import type { TransformationSnapshot } from '@/lib/transformationAnalysis';
 import { cn } from '@/lib/utils';
+import { personNodes, interventionNodes, impactNodes, type DevItem, type ImpactRow } from '@/lib/workGraphLinks';
+import { Activity, Users, Zap } from 'lucide-react';
 
 type Level = 'executive' | 'operational' | 'detail';
-type NodeKind = 'objective' | 'capability' | 'process' | 'task' | 'role' | 'skill' | 'org';
+type NodeKind = 'objective' | 'capability' | 'process' | 'task' | 'role' | 'skill' | 'org' | 'person' | 'intervention' | 'impact';
 type GraphNode = { id: string; kind: NodeKind; label: string; meta: string; parentIds: string[]; risk?: number; mode?: string; hours?: number };
 
-const ICONS = { objective: Target, capability: Layers3, process: GitBranch, task: Wrench, role: BriefcaseBusiness, skill: BookOpen, org: Building2 };
+const ICONS = { objective: Target, capability: Layers3, process: GitBranch, task: Wrench, role: BriefcaseBusiness, skill: BookOpen, org: Building2, person: Users, intervention: Zap, impact: Activity };
 
-export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], departments = [] }: { snapshot: TransformationSnapshot; fr: boolean; positions?: { id?: string; title: string; skills_required: unknown; department_id?: string | null; reports_to_position_id?: string | null }[]; skillNames?: string[]; departments?: { id: string; name: string; parent_department_id: string | null; level: number }[] }) {
+export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], departments = [], devItems = [], impacts = [] }: { devItems?: DevItem[]; impacts?: ImpactRow[]; snapshot: TransformationSnapshot; fr: boolean; positions?: { id?: string; title: string; current_holder_name?: string | null; skills_required: unknown; department_id?: string | null; reports_to_position_id?: string | null }[]; skillNames?: string[]; departments?: { id: string; name: string; parent_department_id: string | null; level: number }[] }) {
   const [level, setLevel] = useState<Level>('operational');
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [params, setParams] = useSearchParams();
@@ -47,8 +49,12 @@ export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], depar
     const filteredTasks = taskNodes.filter((node) => (modeFilter === 'all' || node.mode === modeFilter) && (!riskOnly || Number(node.risk) >= 60));
     if (level === 'executive') return [objectiveNodes, capabilityNodes];
     if (level === 'operational') return [objectiveNodes, capabilityNodes, processNodes, filteredTasks];
-    return [objectiveNodes, capabilityNodes, processNodes, filteredTasks, roleNodes, orgNodes, skillNodes];
-  }, [snapshot, fr, level, modeFilter, riskOnly, positions, skillNames, departments]);
+    const tag = (kind: NodeKind) => (n: { id: string; label: string; meta: string; parentIds: string[]; risk?: number }): GraphNode => ({ ...n, kind });
+    const people = personNodes(positions, devItems).map(tag('person'));
+    const interventions = interventionNodes(devItems, skillNames).map(tag('intervention'));
+    const impact = impactNodes(impacts, devItems).map(tag('impact'));
+    return [objectiveNodes, capabilityNodes, processNodes, filteredTasks, roleNodes, orgNodes, skillNodes, people, interventions, impact];
+  }, [snapshot, fr, level, modeFilter, riskOnly, positions, skillNames, departments, devItems, impacts]);
 
   useEffect(() => {
     const nodeId = params.get('node');
@@ -71,7 +77,7 @@ export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], depar
     setParams(next, { replace: true });
   };
 
-  const labels = fr ? ['Stratégie', 'Capacités', 'Processus', 'Tâches', 'Rôles', 'Organigramme', 'Compétences'] : ['Strategy', 'Capabilities', 'Processes', 'Tasks', 'Roles', 'Org chart', 'Skills'];
+  const labels = fr ? ['Stratégie', 'Capacités', 'Processus', 'Tâches', 'Rôles', 'Organigramme', 'Compétences', 'Personnes', 'Interventions', 'Impact'] : ['Strategy', 'Capabilities', 'Processes', 'Tasks', 'Roles', 'Org chart', 'Skills', 'People', 'Interventions', 'Impact'];
   return (
     <section className="transformation-canvas min-w-0 overflow-hidden border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-3">
@@ -97,7 +103,7 @@ export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], depar
                 {nodes.map((node) => { const Icon = ICONS[node.kind]; return (
                   <div key={node.id} className="relative">
                     {columnIndex > 0 && <ChevronRight className="absolute -left-5 top-7 h-4 w-4 text-muted-foreground/60" />}
-                    <Button variant="outline" onClick={() => selectNode(node)} className={cn('h-auto min-h-[76px] w-full justify-start whitespace-normal border-l-4 bg-background p-3 text-left', node.kind === 'objective' && 'border-l-primary', node.kind === 'capability' && 'border-l-accent', node.kind === 'process' && 'border-l-muted-foreground', node.kind === 'task' && Number(node.risk) >= 60 && 'border-l-destructive', node.kind === 'role' && 'border-l-secondary-foreground', node.kind === 'skill' && 'border-l-primary/60', node.kind === 'org' && 'border-l-accent')}>
+                    <Button variant="outline" onClick={() => selectNode(node)} className={cn('h-auto min-h-[76px] w-full justify-start whitespace-normal border-l-4 bg-background p-3 text-left', node.kind === 'objective' && 'border-l-primary', node.kind === 'capability' && 'border-l-accent', node.kind === 'process' && 'border-l-muted-foreground', node.kind === 'task' && Number(node.risk) >= 60 && 'border-l-destructive', node.kind === 'role' && 'border-l-secondary-foreground', node.kind === 'skill' && 'border-l-primary/60', node.kind === 'org' && 'border-l-accent', (node.kind === 'person' || node.kind === 'intervention' || node.kind === 'impact') && (Number(node.risk) ? 'border-l-muted-foreground/40 border-dashed' : 'border-l-primary'))}>
                       <Icon className="mt-0.5 h-4 w-4 shrink-0" /><span className="min-w-0"><span className="block text-sm font-semibold leading-snug">{node.label}</span><span className="mt-1 block text-[11px] font-normal text-muted-foreground">{node.meta}</span></span>
                     </Button>
                   </div>
@@ -112,7 +118,7 @@ export function WorkGraph({ snapshot, fr, positions = [], skillNames = [], depar
       <Sheet open={Boolean(selected)} onOpenChange={(open) => { if (!open) closeNode(); }}>
         <SheetContent className="overflow-y-auto sm:max-w-md">
           <SheetHeader><SheetTitle className="text-2xl font-bold">{selected?.label}</SheetTitle><SheetDescription>{selected?.meta}</SheetDescription></SheetHeader>
-          {selected && <div className="mt-6 space-y-4"><Badge variant="outline">{labels[['objective', 'capability', 'process', 'task', 'role', 'org', 'skill'].indexOf(selected.kind)]}</Badge><div className="border-y border-border py-4 text-sm"><p className="text-muted-foreground">{fr ? 'Relations directes' : 'Direct relationships'}</p><p className="mt-1 font-semibold">{selected.parentIds.length}</p></div>{selected.mode && <p className="text-sm"><span className="text-muted-foreground">{fr ? 'Mode recommandé' : 'Recommended mode'} · </span>{MODE_LABELS[selected.mode as keyof typeof MODE_LABELS][fr ? 'fr' : 'en']}</p>}{selected.hours !== undefined && <p className="text-sm"><span className="text-muted-foreground">{fr ? 'Capacité estimée' : 'Estimated capacity'} · </span>{selected.hours} h/sem</p>}<p className="text-xs text-muted-foreground">{fr ? 'Les estimations proviennent du moteur déterministe Humain + IA et doivent être validées avant décision.' : 'Estimates come from the deterministic Human + AI engine and must be validated before decisions.'}</p></div>}
+          {selected && <div className="mt-6 space-y-4"><Badge variant="outline">{labels[['objective', 'capability', 'process', 'task', 'role', 'org', 'skill', 'person', 'intervention', 'impact'].indexOf(selected.kind)]}</Badge><div className="border-y border-border py-4 text-sm"><p className="text-muted-foreground">{fr ? 'Relations directes' : 'Direct relationships'}</p><p className="mt-1 font-semibold">{selected.parentIds.length}</p></div>{selected.mode && <p className="text-sm"><span className="text-muted-foreground">{fr ? 'Mode recommandé' : 'Recommended mode'} · </span>{MODE_LABELS[selected.mode as keyof typeof MODE_LABELS][fr ? 'fr' : 'en']}</p>}{selected.hours !== undefined && <p className="text-sm"><span className="text-muted-foreground">{fr ? 'Capacité estimée' : 'Estimated capacity'} · </span>{selected.hours} h/sem</p>}{selected.parentIds.length > 0 && <ul className="space-y-1 text-xs">{selected.parentIds.map((pid) => { const n = columns.flat().find((x) => x.id === pid); return <li key={pid}><button type="button" className="underline-offset-2 hover:underline" onClick={() => n && selectNode(n)}>{n?.label ?? pid.split(':').slice(1).join(':')}</button></li>; })}</ul>}<p className="text-xs text-muted-foreground">{fr ? 'Les estimations proviennent du moteur déterministe Humain + IA et doivent être validées avant décision.' : 'Estimates come from the deterministic Human + AI engine and must be validated before decisions.'}</p></div>}
         </SheetContent>
       </Sheet>
     </section>
