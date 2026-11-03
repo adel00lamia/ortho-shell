@@ -11,11 +11,6 @@ interface InterviewBody {
   difficulty?: 'warmup' | 'junior' | 'mid' | 'senior';
   style?: 'behavioral' | 'technical' | 'mixed';
   studentProfile?: Record<string, unknown>;
-  resumeText?: string;
-  companyName?: string;
-  sector?: string;
-  interviewerRole?: string;
-  speakingStyle?: string;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   language?: 'en' | 'fr';
   stream?: boolean;
@@ -24,7 +19,6 @@ interface InterviewBody {
 interface CvBody {
   mode: 'cv';
   studentProfile: Record<string, unknown>;
-  resumeText?: string;
   jobTarget?: string;
   language?: 'en' | 'fr';
 }
@@ -45,18 +39,7 @@ interface SoftSkillBody {
   language?: 'en' | 'fr';
 }
 
-interface ResumePrepBody {
-  mode: 'resumeprep';
-  resumeText: string;
-  jobTarget?: string;
-  companyName?: string;
-  sector?: string;
-  interviewerRole?: string;
-  speakingStyle?: string;
-  language?: 'en' | 'fr';
-}
-
-type Body = InterviewBody | CvBody | FeedbackBody | SoftSkillBody | ResumePrepBody;
+type Body = InterviewBody | CvBody | FeedbackBody | SoftSkillBody;
 
 async function callGemini(messages: Array<{ role: string; content: string }>, expectJson = false) {
   const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -83,16 +66,10 @@ async function callGemini(messages: Array<{ role: string; content: string }>, ex
   return data.choices?.[0]?.message?.content ?? '';
 }
 
-function unwrap(value: unknown) {
-  // The model sometimes wraps the object in a single-element array.
-  if (Array.isArray(value) && value.length === 1 && value[0] && typeof value[0] === 'object') return value[0];
-  return value;
-}
-
 function safeParseJson(raw: string) {
-  try { return unwrap(JSON.parse(raw)); } catch { /* fallthrough */ }
+  try { return JSON.parse(raw); } catch { /* fallthrough */ }
   const match = raw.match(/\{[\s\S]*\}/);
-  if (match) { try { return unwrap(JSON.parse(match[0])); } catch { /* ignore */ } }
+  if (match) { try { return JSON.parse(match[0]); } catch { /* ignore */ } }
   return { error: 'Could not parse AI response', raw };
 }
 
@@ -268,27 +245,7 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
           ? `\n\nMODE ÉCHAUFFEMENT ACTIVÉ: Reste UNIQUEMENT sur des questions très simples d'introduction (présentation, motivation, qualités, centres d'intérêt, projet d'études). N'augmente JAMAIS la difficulté. Le but est de mettre l'étudiant en confiance. Après 4-5 questions, propose gentiment de passer à un niveau supérieur.`
           : `\n\nWARM-UP MODE ACTIVE: Stay ONLY on very simple introduction questions (self-intro, motivation, strengths, interests, studies). NEVER increase difficulty. The goal is to build the student's confidence. After 4-5 questions, gently suggest moving to a higher level.`)
         : '';
-      const resume = (body.resumeText ?? '').trim().slice(0, 12000);
-      const resumeBlock = resume
-        ? (fr
-          ? `\n\nCV DE L'ÉTUDIANT (seule source de vérité, ne rien inventer) :\n<<<${resume}>>>\n- Base tes questions sur CE CV : expériences, projets, compétences, trous ou changements de parcours.\n- Cite parfois un élément précis du CV ("Sur ton stage chez X…").\n- Ne mentionne JAMAIS une expérience absente du CV.`
-          : `\n\nSTUDENT RESUME (sole source of truth, invent nothing):\n<<<${resume}>>>\n- Base your questions on THIS resume: experiences, projects, skills, gaps or career switches.\n- Sometimes quote a precise resume item ("About your internship at X…").\n- NEVER mention an experience that is not in the resume.`)
-        : '';
-      const company = (body.companyName ?? '').trim().slice(0, 120);
-      const sector = (body.sector ?? '').trim().slice(0, 120);
-      const targetBlock = (company || sector)
-        ? (fr
-          ? `\n\nCONTEXTE DE CANDIDATURE :${company ? `\n- Entreprise visée : ${company}` : ''}${sector ? `\n- Secteur : ${sector}` : ''}\n- Pose des questions telles qu'un recruteur de ce secteur les poserait (enjeux métier généraux du secteur).\n- N'invente AUCUN chiffre, client, projet ou actualité de cette entreprise. Si tu n'as pas l'information, reste sur des enjeux généraux du secteur.`
-          : `\n\nAPPLICATION CONTEXT:${company ? `\n- Target company: ${company}` : ''}${sector ? `\n- Sector: ${sector}` : ''}\n- Ask questions the way a recruiter in this sector would (general sector stakes).\n- Invent NO figures, clients, projects or news about this company. When unknown, stay on general sector stakes.`)
-        : '';
-      const interviewer = (body.interviewerRole ?? '').trim().slice(0, 120);
-      const interviewerBlock = interviewer
-        ? (fr
-          ? `\n\nQUI TU INCARNES : ${interviewer}.\n- Garde le prénom Sarah, mais joue précisément ce rôle et dis-le en 1 phrase à l'accueil.\n- Pose les questions typiques de CE rôle : un RH creuse le parcours, la motivation et le comportement ; un manager opérationnel creuse le quotidien du poste, les priorités et l'autonomie ; un expert technique creuse la méthode et les outils ; un dirigeant creuse la vision, l'impact business et la prise de décision ; un cabinet externe creuse la cohérence du parcours, les prétentions et la disponibilité.\n- Reste dans le périmètre de ce rôle : ne pose pas de questions qui ne relèvent pas de lui.`
-          : `\n\nWHO YOU PLAY: ${interviewer}.\n- Keep the name Sarah but play this role precisely and state it in 1 sentence when welcoming.\n- Ask the questions typical of THIS role: HR digs into background, motivation and behaviour; a hiring manager digs into day-to-day work, priorities and autonomy; a technical expert digs into method and tools; an executive digs into vision, business impact and decision-making; an external agency digs into career coherence, salary expectations and availability.\n- Stay within this role's scope: do not ask questions that belong to another interviewer.`)
-        : '';
-      const styleBlock = (body.speakingStyle ?? '').trim().slice(0, 4500);
-      const finalSystem = system + warmupOverride + resumeBlock + targetBlock + interviewerBlock + styleBlock + toneBlock;
+      const finalSystem = system + warmupOverride + toneBlock;
 
       const messages = [
         { role: 'system', content: finalSystem },
@@ -367,67 +324,11 @@ Student profile: ${JSON.stringify(body.studentProfile ?? {})}`;
       const reply = await callGemini(
         [
           { role: 'system', content: system },
-          { role: 'user', content: JSON.stringify({ profile: body.studentProfile, resumeText: (body.resumeText ?? '').slice(0, 12000) }) },
+          { role: 'user', content: JSON.stringify(body.studentProfile) },
         ],
         true,
       );
       return new Response(JSON.stringify({ cv: safeParseJson(reply) }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (body.mode === 'resumeprep') {
-      const resume = (body.resumeText ?? '').trim().slice(0, 12000);
-      if (!resume) {
-        return new Response(JSON.stringify({ error: fr ? 'CV vide' : 'Empty resume' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      const system = fr
-        ? `Tu es Sarah, RH senior. À partir du CV fourni, du poste ciblé, de l'entreprise et du secteur (si présents), prépare l'étudiant à son entretien. N'invente AUCUNE expérience du candidat : appuie-toi uniquement sur le CV ; si une information manque, écris "À compléter". Pour l'entreprise et le secteur, reste sur des enjeux généraux et vérifiables du secteur ; n'invente aucun chiffre, client, projet ou actualité de l'entreprise, et formule les questions comme des questions probables d'un recruteur de ce secteur.
-Réponds en JSON pur :
-{"summary": string (2 phrases sur le profil tel qu'un recruteur de ce secteur le lit),
- "strengths": string[] (3 atouts issus du CV, reliés au poste/secteur si pertinent),
- "risks": string[] (3 points que le recruteur va creuser : trous, changements, manques),
- "sectorFocus": string[] (3 enjeux du secteur/poste à connaître avant l'entretien),
- "askThem": string[] (3 questions pertinentes à poser à l'entreprise),
- "questions": [{"question": string, "why": string (ce que le recruteur évalue, 1 phrase), "keyPoints": string[] (2 ou 3 points à placer), "modelAnswer": string (réponse modèle prête à dire, 1re personne, trame Situation/Tâche/Action/Résultat, 5 à 7 phrases, basée sur le CV), "personalize": string[] (2 éléments à adapter)}] (9 questions : 2 d'introduction, 3 comportementales, 2 techniques ou métier propres au secteur, 1 sur la connaissance de l'entreprise/secteur, 1 sur les motivations)}
-Si un "interviewerRole" est fourni (le poste de la personne qui fait passer l'entretien), adapte TOUTES les questions à ce rôle : un RH creuse parcours/motivation/comportement, un manager opérationnel le quotidien du poste et les priorités, un expert technique la méthode et les outils, un dirigeant la vision et l'impact business, un cabinet externe la cohérence du parcours, les prétentions et la disponibilité. Indique aussi dans "sectorFocus" ce que ce type d'interlocuteur attend en priorité.`
-        : `You are Sarah, senior HR. From the resume, the target role, the company and the sector (when provided), prepare the student for the interview. Invent NO candidate experience: rely only on the resume; if information is missing write "To complete". For company and sector, stay on general verifiable sector stakes; invent no figures, clients, projects or company news, and phrase questions as likely questions from a recruiter in that sector.
-Respond in pure JSON:
-{"summary": string (2 sentences on how a recruiter in this sector reads this profile),
- "strengths": string[] (3 assets from the resume, tied to role/sector when relevant),
- "risks": string[] (3 things the recruiter will dig into: gaps, switches, missing items),
- "sectorFocus": string[] (3 sector/role stakes to know before the interview),
- "askThem": string[] (3 relevant questions to ask the company),
- "questions": [{"question": string, "why": string (what the recruiter assesses, 1 sentence), "keyPoints": string[] (2 or 3 points to land), "modelAnswer": string (ready-to-say model answer, first person, Situation/Task/Action/Result frame, 5 to 7 sentences, based on the resume), "personalize": string[] (2 items to adapt)}] (9 questions: 2 intro, 3 behavioral, 2 sector-specific technical/role, 1 on company/sector knowledge, 1 motivation)}
-When an "interviewerRole" is provided (the job of the person running the interview), adapt ALL questions to that role: HR digs into background/motivation/behaviour, a hiring manager into day-to-day work and priorities, a technical expert into method and tools, an executive into vision and business impact, an external agency into career coherence, salary expectations and availability. Also state in "sectorFocus" what this kind of interviewer expects first.`;
-
-      const style = (body.speakingStyle ?? '').trim().slice(0, 4500);
-      const styleSystem = style
-        ? `${system}${style}\n${fr
-          ? 'IMPORTANT : chaque "modelAnswer" doit être écrite dans MON style oral décrit ci-dessus (mon vocabulaire, ma longueur de phrase), prête à être dite à voix haute, sans changer les faits du CV.'
-          : 'IMPORTANT: every "modelAnswer" must be written in MY spoken style described above (my vocabulary, my sentence length), ready to say out loud, without changing the resume facts.'}`
-        : system;
-
-      const reply = await callGemini(
-        [
-          { role: 'system', content: styleSystem },
-          {
-            role: 'user',
-            content: JSON.stringify({
-              jobTarget: body.jobTarget ?? '',
-              companyName: (body.companyName ?? '').slice(0, 120),
-              sector: (body.sector ?? '').slice(0, 120),
-              interviewerRole: (body.interviewerRole ?? '').slice(0, 120),
-              resumeText: resume,
-            }),
-          },
-        ],
-        true,
-      );
-      return new Response(JSON.stringify({ prep: safeParseJson(reply) }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

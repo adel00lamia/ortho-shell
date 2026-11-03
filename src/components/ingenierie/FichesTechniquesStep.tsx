@@ -16,7 +16,6 @@ import type { IngenierieAction } from '@/hooks/useIngenierie';
 
 interface Props {
   dossierId: string;
-  linkedPlanId?: string | null;
   actions: IngenierieAction[];
   onAddAction: (a: Partial<IngenierieAction> & { title: string }) => Promise<void>;
   onUpdateAction: (a: Partial<IngenierieAction> & { id: string }) => Promise<void>;
@@ -133,7 +132,7 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
             <Switch checked={action.is_planned} onCheckedChange={(v) => update('is_planned', v)} id={`planned-${action.id}`} />
             <Label htmlFor={`planned-${action.id}`} className="cursor-pointer text-sm">
               {action.is_planned
-                ? (fr ? 'Formation planifiée (70% remboursé — taux de référence)' : 'Planned training (70% reimbursed — reference rate)')
+                ? (fr ? 'Formation planifiée (70% remboursé)' : 'Planned training (70% reimbursed)')
                 : (fr ? 'Formation non planifiée (40% remboursé)' : 'Unplanned training (40% reimbursed)')}
             </Label>
           </div>
@@ -163,8 +162,8 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
               <AlertTriangle className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-xs text-orange-700">
                 {fr
-                  ? `Hypothèse de référence (non vérifiée) : le coût dépasse le plafond horaire paramétré, le remboursement serait plafonné à ${formatDH(reimbInfo.ofpptHourlyCapAmount ?? 0)}. L'éligibilité et les plafonds dépendent du cadre officiel applicable à la date du dossier.`
-                  : `Reference assumption (unverified): cost exceeds the configured hourly ceiling, so reimbursement would be capped at ${formatDH(reimbInfo.ofpptHourlyCapAmount ?? 0)}. Eligibility and ceilings depend on the official framework applicable at the dossier date.`}
+                  ? `Le coût dépasse le plafond OFPPT de 40 DH/h/pers. Le remboursement sera plafonné à ${formatDH(reimbInfo.ofpptHourlyCapAmount)}.`
+                  : `Cost exceeds OFPPT cap of 40 DH/h/person. Reimbursement capped at ${formatDH(reimbInfo.ofpptHourlyCapAmount)}.`}
               </AlertDescription>
             </Alert>
           )}
@@ -174,10 +173,10 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
   );
 }
 
-export function FichesTechniquesStep({ linkedPlanId, actions, onAddAction, onUpdateAction, onDeleteAction, onNext, onPrev }: Props) {
+export function FichesTechniquesStep({ actions, onAddAction, onUpdateAction, onDeleteAction, onNext, onPrev }: Props) {
   const { language } = useLanguage();
   const fr = language === 'fr';
-  const { data: planSuggestions, isLoading: plansLoading } = useActionsFromTrainingPlans(linkedPlanId);
+  const { data: planSuggestions, isLoading: plansLoading } = useActionsFromTrainingPlans();
 
   const handleAdd = async () => {
     await onAddAction({ title: fr ? 'Nouvelle action de formation' : 'New training action' });
@@ -185,9 +184,7 @@ export function FichesTechniquesStep({ linkedPlanId, actions, onAddAction, onUpd
 
   const handleImportFromPlans = async () => {
     if (!planSuggestions?.length) return;
-    const existingTitles = new Set(actions.map(action => action.title.trim().toLocaleLowerCase()));
     for (const suggestion of planSuggestions) {
-      if (existingTitles.has(suggestion.title.trim().toLocaleLowerCase())) continue;
       await onAddAction({ ...suggestion, title: suggestion.title });
     }
   };
@@ -208,9 +205,7 @@ export function FichesTechniquesStep({ linkedPlanId, actions, onAddAction, onUpd
           {planSuggestions && planSuggestions.length > 0 && (
             <Button onClick={handleImportFromPlans} size="sm" variant="outline" disabled={plansLoading} className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              {linkedPlanId
-                ? (fr ? `Importer ${planSuggestions.length} action(s) du plan` : `Import ${planSuggestions.length} plan action(s)`)
-                : (fr ? `Importer ${planSuggestions.length} plan(s)` : `Import ${planSuggestions.length} plan(s)`)}
+              {fr ? `Importer ${planSuggestions.length} plan(s)` : `Import ${planSuggestions.length} plan(s)`}
             </Button>
           )}
           <Button onClick={handleAdd} size="sm">

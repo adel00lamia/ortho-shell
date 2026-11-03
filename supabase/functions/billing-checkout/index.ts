@@ -89,7 +89,7 @@ serve(async (req) => {
           price_data: {
             currency: 'mad',
             product_data: {
-              name: `Qimatak - ${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan`,
+              name: `TrainPro Academy - ${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan`,
               description: `${interval === 'annual' ? 'Annual' : 'Monthly'} subscription`
             },
             unit_amount: price * 100, // Stripe expects amount in cents

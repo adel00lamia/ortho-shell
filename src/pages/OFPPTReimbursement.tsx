@@ -96,10 +96,8 @@ export default function OFPPTReimbursement() {
   const [newNotes, setNewNotes] = useState('');
 
   // CSF calculation constants
-  // Reference values only. Actual eligibility, rate and cap depend on the
-  // official OFPPT / CSF rules in force at the time of the dossier.
-  const CSF_RATE = 0.7;
-  const CSF_CAP_PER_HOUR_PERSON = 40;
+  const CSF_RATE = 0.7; // 70% reimbursement
+  const CSF_CAP_PER_HOUR_PERSON = 40; // 40 DH/hour/person cap
 
   const calculateReimbursement = (hours: number, participants: number, costPerHourPerson: number) => {
     const cappedCost = Math.min(costPerHourPerson, CSF_CAP_PER_HOUR_PERSON);
@@ -293,11 +291,7 @@ export default function OFPPTReimbursement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-muted-foreground">
-        {r.referenceWarning}
-      </div>
       {/* Header */}
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{r.title}</h1>
@@ -355,7 +349,7 @@ export default function OFPPTReimbursement() {
                       <span className="font-medium">{newCalc.totalEligible.toLocaleString()} MAD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">{r.reimbursementRate} (70% — {r.referenceOnly}):</span>
+                      <span className="text-muted-foreground">{r.reimbursementRate} (70%):</span>
                       <span className="font-bold text-primary">{newCalc.reimbursement.toLocaleString()} MAD</span>
                     </div>
                   </div>
@@ -546,7 +540,7 @@ export default function OFPPTReimbursement() {
                       <p className="text-lg font-semibold">{(selectedDossier.total_amount || 0).toLocaleString()} MAD</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">{r.reimbursementAmount} (70% — référence)</p>
+                      <p className="text-sm text-muted-foreground">{r.reimbursementAmount} (70%)</p>
                       <p className="text-lg font-bold text-primary">{(selectedDossier.reimbursement_amount || 0).toLocaleString()} MAD</p>
                     </div>
                     <div>

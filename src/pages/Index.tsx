@@ -1,317 +1,536 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
-import {
-  ArrowDownRight,
-  ArrowRight,
-  BarChart3,
-  Bot,
-  BriefcaseBusiness,
-  Check,
-  ChevronRight,
-  CircleDollarSign,
-  GitBranch,
-  Menu,
-  Network,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Users,
-  X,
-} from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Seo } from '@/components/seo/Seo';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Brain, Target, BarChart3, Zap, CheckCircle, ArrowRight,
+  Award, TrendingUp, Globe, BookOpen, Shield,
+  ChevronRight, Sparkles, Play, Menu, X
+} from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 
-const reveal = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 const Index = () => {
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
-  const { language, setLanguage } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
-  const fr = language === 'fr';
-  const L = (french: string, english: string) => (fr ? french : english);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeNode, setActiveNode] = useState(0);
-  const start = () => navigate(user ? '/transformation' : '/auth');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const graphNodes = [
-    { label: L('Objectif stratégique', 'Strategic objective'), value: L('Accélérer l’expansion régionale', 'Accelerate regional expansion'), icon: Target },
-    { label: L('Capacité critique', 'Critical capability'), value: L('Développement de marché', 'Market development'), icon: Network },
-    { label: L('Travail à transformer', 'Work to transform'), value: L('Veille, qualification, proposition', 'Research, qualification, proposal'), icon: BriefcaseBusiness },
-    { label: L('Modèle opératoire', 'Operating model'), value: L('Humain + agent IA', 'Human + AI agent'), icon: Bot },
-    { label: L('Décision', 'Decision'), value: 'Build · Redeploy · Bot', icon: GitBranch },
+  const features = [
+    {
+      icon: <Brain className="h-6 w-6" />,
+      title: language === 'fr' ? 'Planification IA' : 'AI Planning',
+      description: language === 'fr'
+        ? 'Générez des plans de formation personnalisés en quelques minutes grâce à notre moteur d\'IA avancé.'
+        : 'Generate personalized training plans in minutes with our advanced AI engine.',
+      color: 'from-primary to-purple-500',
+    },
+    {
+      icon: <Target className="h-6 w-6" />,
+      title: language === 'fr' ? 'Diagnostic des compétences' : 'Skills Diagnostic',
+      description: language === 'fr'
+        ? 'Identifiez les écarts de compétences et priorisez les besoins de formation de votre équipe.'
+        : 'Identify skill gaps and prioritize training needs across your team.',
+      color: 'from-accent to-teal-400',
+    },
+    {
+      icon: <BookOpen className="h-6 w-6" />,
+      title: language === 'fr' ? 'Studio de modules' : 'Module Studio',
+      description: language === 'fr'
+        ? 'Créez du contenu interactif avec des quiz, des diapositives et des certificats intégrés.'
+        : 'Create interactive content with quizzes, slides, and built-in certificates.',
+      color: 'from-orange-500 to-amber-400',
+    },
+    {
+      icon: <Globe className="h-6 w-6" />,
+      title: 'Marketplace',
+      description: language === 'fr'
+        ? 'Accédez à un catalogue de formations dispensées par des experts certifiés.'
+        : 'Access a catalog of training courses from certified experts.',
+      color: 'from-blue-500 to-cyan-400',
+    },
+    {
+      icon: <Award className="h-6 w-6" />,
+      title: language === 'fr' ? 'Certificats numériques' : 'Digital Certificates',
+      description: language === 'fr'
+        ? 'Émettez des certificats vérifiables et des badges conformes Open Badges 3.0.'
+        : 'Issue verifiable certificates and Open Badges 3.0 compliant digital badges.',
+      color: 'from-yellow-500 to-orange-400',
+    },
+    {
+      icon: <BarChart3 className="h-6 w-6" />,
+      title: language === 'fr' ? 'Analytique & ROI' : 'Analytics & ROI',
+      description: language === 'fr'
+        ? 'Mesurez l\'impact réel de vos formations avec des tableaux de bord en temps réel.'
+        : 'Measure the real impact of your training with real-time dashboards.',
+      color: 'from-pink-500 to-rose-400',
+    },
   ];
 
-  const stages = [
-    [L('Orienter', 'Orient'), L('Stratégie et priorités', 'Strategy and priorities'), Target],
-    [L('Comprendre', 'Understand'), L('Capacités, processus, tâches', 'Capabilities, processes, tasks'), Network],
-    [L('Concevoir', 'Design'), L('Travail Humain + IA', 'Human + AI work'), Bot],
-    [L('Décider', 'Decide'), L('Scénarios et interventions', 'Scenarios and interventions'), GitBranch],
-    [L('Prouver', 'Prove'), L('Financement et impact', 'Funding and impact'), BarChart3],
-  ] as const;
-
-  const deliverables = [
-    { number: '01', title: L('Diagnostic de transformation', 'Transformation diagnostic'), text: L('Une lecture structurée des priorités, écarts et causes racines.', 'A structured view of priorities, gaps and root causes.'), icon: Target },
-    { number: '02', title: 'Qimatak WorkGraph', text: L('La carte qui relie stratégie, travail, rôles, compétences et personnes.', 'The map connecting strategy, work, roles, skills and people.'), icon: Network },
-    { number: '03', title: L('Scénarios Humain + IA', 'Human + AI scenarios'), text: L('Des options comparables pour automatiser, redéployer ou renforcer.', 'Comparable options to automate, redeploy or build capability.'), icon: Bot },
-    { number: '04', title: L('Portefeuille d’interventions', 'Intervention portfolio'), text: L('Build, Buy, Borrow, Redeploy, Bot ou Redesign selon la cause.', 'Build, Buy, Borrow, Redeploy, Bot or Redesign based on the cause.'), icon: GitBranch },
-    { number: '05', title: L('Dossier de décision', 'Decision pack'), text: L('Plan, budget, risques et programmes de financement potentiels.', 'Plan, budget, risks and potential funding programmes.'), icon: CircleDollarSign },
-    { number: '06', title: L('Suivi de l’impact', 'Impact tracking'), text: L('Des indicateurs 30/90 jours pour relier action et résultat business.', '30/90-day indicators connecting action to business outcomes.'), icon: BarChart3 },
+  const stats = [
+    { value: '95%', label: language === 'fr' ? 'Taux d\'achèvement' : 'Completion Rate' },
+    { value: '300%', label: language === 'fr' ? 'ROI moyen' : 'Average ROI' },
+    { value: '40h', label: language === 'fr' ? 'Économisées/mois' : 'Saved/month' },
   ];
 
-  const actions = [
-    ['BUILD', L('Développer', 'Build')],
-    ['BUY', L('Recruter', 'Recruit')],
-    ['BORROW', L('Mobiliser', 'Bring expertise')],
-    ['REDEPLOY', L('Redéployer', 'Redeploy')],
-    ['BOT', L('Automatiser', 'Automate')],
-    ['REDESIGN', L('Reconcevoir', 'Redesign')],
+
+  const plans = [
+    {
+      name: 'Starter',
+      price: '2 500',
+      period: language === 'fr' ? '/mois' : '/mo',
+      description: language === 'fr' ? 'Pour les petites équipes' : 'For small teams',
+      features: language === 'fr'
+        ? ['5 membres', 'Modules de base', 'Support email', 'Analytique basique']
+        : ['5 members', 'Basic modules', 'Email support', 'Basic analytics'],
+      popular: false,
+    },
+    {
+      name: 'Professional',
+      price: '7 500',
+      period: language === 'fr' ? '/mois' : '/mo',
+      description: language === 'fr' ? 'Pour les entreprises en croissance' : 'For growing companies',
+      features: language === 'fr'
+        ? ['50 membres', 'Modules avancés + IA', 'Support prioritaire', 'Analytique avancée', 'Conformité GIAC', 'API access']
+        : ['50 members', 'Advanced modules + AI', 'Priority support', 'Advanced analytics', 'GIAC compliance', 'API access'],
+      popular: true,
+    },
+    {
+      name: 'Enterprise',
+      price: '15 000',
+      period: language === 'fr' ? '/mois' : '/mo',
+      description: language === 'fr' ? 'Solution complète' : 'Complete solution',
+      features: language === 'fr'
+        ? ['Membres illimités', 'White-label', 'Support dédié 24/7', 'OFPPT & GIAC', 'Intégrations custom', 'On-premise possible']
+        : ['Unlimited members', 'White-label', 'Dedicated 24/7 support', 'OFPPT & GIAC', 'Custom integrations', 'On-premise option'],
+      popular: false,
+    },
   ];
 
   return (
-    <div className="landing-shell min-h-screen bg-background text-foreground">
-      <Seo
-        path="/"
-        title={L('Qimatak | De la stratégie à l’exécution Humain + IA', 'Qimatak | From strategy to Human + AI execution')}
-        description={L('Qimatak relie stratégie, capacités, processus, compétences et IA pour construire des décisions de transformation mesurables.', 'Qimatak connects strategy, capabilities, processes, skills and AI to build measurable transformation decisions.')}
-      />
-
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-          <button className="flex items-center gap-3" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={L('Retour en haut', 'Back to top')}>
-            <span className="flex h-8 w-8 items-center justify-center bg-foreground text-sm font-extrabold text-background">Q</span>
-            <span className="text-lg font-extrabold">Qimatak</span>
-          </button>
-          <nav className="hidden items-center gap-7 text-sm lg:flex" aria-label={L('Navigation principale', 'Main navigation')}>
-            <a href="#platform" className="text-muted-foreground transition-colors hover:text-foreground">{L('Plateforme', 'Platform')}</a>
-            <a href="#method" className="text-muted-foreground transition-colors hover:text-foreground">{L('Méthode', 'Method')}</a>
-            <a href="#deliverables" className="text-muted-foreground transition-colors hover:text-foreground">{L('Livrables', 'Deliverables')}</a>
-            <a href="#human-ai" className="text-muted-foreground transition-colors hover:text-foreground">{L('Humain + IA', 'Human + AI')}</a>
-          </nav>
-          <div className="hidden items-center gap-2 md:flex">
-            <div className="flex border border-border p-0.5" aria-label={L('Langue', 'Language')}>
-              {(['fr', 'en'] as const).map((item) => (
-                <Button key={item} type="button" size="sm" variant={language === item ? 'secondary' : 'ghost'} className="h-7 rounded-none px-2 text-[11px]" onClick={() => setLanguage(item)}>
-                  {item.toUpperCase()}
-                </Button>
-              ))}
-            </div>
-            {!user && <Button variant="ghost" onClick={() => navigate('/auth')}>{L('Connexion', 'Sign in')}</Button>}
-            <Button onClick={start}>{user ? L('Ouvrir le cockpit', 'Open cockpit') : L('Commencer', 'Get started')}<ArrowRight className="ml-2 h-4 w-4" /></Button>
-          </div>
-          <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setMenuOpen((open) => !open)} aria-label={L('Ouvrir le menu', 'Open menu')}>
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
-        {menuOpen && (
-          <div className="border-t border-border bg-background px-5 py-5 md:hidden">
-            <div className="flex flex-col gap-1">
-              {[[L('Plateforme', 'Platform'), '#platform'], [L('Méthode', 'Method'), '#method'], [L('Livrables', 'Deliverables'), '#deliverables']].map(([label, href]) => (
-                <Button key={href} asChild variant="ghost" className="justify-start rounded-none px-0" onClick={() => setMenuOpen(false)}><a href={href}>{label}</a></Button>
-              ))}
-              <div className="my-3 h-px bg-border" />
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setLanguage(fr ? 'en' : 'fr')}>{fr ? 'English' : 'Français'}</Button>
-                <Button className="flex-1" onClick={start}>{L('Commencer', 'Get started')}</Button>
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
+              <span className="text-xl font-extrabold tracking-tight text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+                TrainPro Academy
+              </span>
             </div>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                {language === 'fr' ? 'Fonctionnalités' : 'Features'}
+              </a>
+              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                {language === 'fr' ? 'Tarifs' : 'Pricing'}
+              </a>
+              <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+                <button onClick={() => setLanguage('fr')} className={`text-xs px-2 py-1 rounded-md transition-all ${language === 'fr' ? 'bg-primary text-primary-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>FR</button>
+                <button onClick={() => setLanguage('en')} className={`text-xs px-2 py-1 rounded-md transition-all ${language === 'en' ? 'bg-primary text-primary-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>EN</button>
+              </div>
+            </nav>
+
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
+                <Button onClick={() => navigate('/dashboard')} className="bg-primary hover:bg-primary/90">
+                  {language === 'fr' ? 'Tableau de bord' : 'Dashboard'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" onClick={() => navigate('/auth')} className="text-muted-foreground hover:text-foreground">
+                    {language === 'fr' ? 'Connexion' : 'Sign In'}
+                  </Button>
+                  <Button onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90">
+                    {language === 'fr' ? 'Essai gratuit' : 'Free Trial'}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl px-4 py-4 space-y-3">
+            <a href="#features" className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileMenuOpen(false)}>
+              {language === 'fr' ? 'Fonctionnalités' : 'Features'}
+            </a>
+            <a href="#pricing" className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileMenuOpen(false)}>
+              {language === 'fr' ? 'Tarifs' : 'Pricing'}
+            </a>
+            <Button onClick={() => navigate(user ? '/dashboard' : '/auth')} className="w-full bg-primary">
+              {user ? (language === 'fr' ? 'Tableau de bord' : 'Dashboard') : (language === 'fr' ? 'Commencer' : 'Get Started')}
+            </Button>
           </div>
         )}
       </header>
 
-      <main>
-        <section className="relative overflow-hidden border-b border-border pb-16 pt-28 md:pb-24 md:pt-36">
-          <div className="landing-grid absolute inset-0 opacity-60" aria-hidden="true" />
-          <div className="relative mx-auto grid max-w-7xl gap-14 px-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(480px,.95fr)] lg:items-center lg:px-8">
-            <motion.div initial={reduceMotion ? false : 'hidden'} animate="visible" variants={reveal} transition={{ duration: 0.55 }}>
-              <div className="mb-8 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                <span className="h-px w-9 bg-primary" />
-                {L('Business Transformation Intelligence', 'Business Transformation Intelligence')}
-              </div>
-              <h1 className="max-w-4xl text-5xl font-extrabold leading-[0.98] sm:text-6xl lg:text-7xl">
-                {L('Votre stratégie exige une autre organisation.', 'Your strategy demands a different organisation.')}
-              </h1>
-              <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-                {L('Qimatak montre quelles capacités construire, quel travail transformer et comment combiner talents et IA pour passer de l’ambition à l’exécution.', 'Qimatak shows which capabilities to build, which work to transform and how to combine talent and AI to move from ambition to execution.')}
-              </p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" onClick={start}>{L('Lancer le diagnostic', 'Start the diagnostic')}<ArrowRight className="ml-2 h-4 w-4" /></Button>
-                <Button size="lg" variant="outline" onClick={() => document.getElementById('platform')?.scrollIntoView({ behavior: 'smooth' })}>{L('Voir ce que Qimatak produit', 'See what Qimatak delivers')}<ArrowDownRight className="ml-2 h-4 w-4" /></Button>
-              </div>
-              <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-border pt-5 text-xs font-semibold text-muted-foreground">
-                {[L('Entreprise 50–500 collaborateurs', 'Companies with 50–500 employees'), L('Décision Humain + IA', 'Human + AI decisions'), L('Prototype fonctionnel · pilote', 'Working prototype · pilot')].map((item) => (
-                  <span key={item} className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" />{item}</span>
-                ))}
-              </div>
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden" style={{ background: 'var(--hero-gradient)' }}>
+        {/* Decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent/10 blur-[100px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/[0.03]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full border border-white/[0.02]" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center max-w-4xl mx-auto"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <motion.div variants={fadeInUp} custom={0}>
+              <Badge className="mb-6 bg-primary/20 text-primary-foreground border-primary/30 hover:bg-primary/30 px-4 py-1.5 text-sm font-medium">
+                <Sparkles className="h-3.5 w-3.5 mr-2" />
+                {language === 'fr' ? 'Plateforme propulsée par l\'IA' : 'AI-Powered Platform'}
+              </Badge>
             </motion.div>
 
-            <motion.div initial={reduceMotion ? false : { opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.65, delay: 0.1 }} className="relative">
-              <div className="border border-border bg-card shadow-[0_24px_70px_-42px_hsl(var(--foreground)/0.45)]">
-                <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Qimatak WorkGraph</p>
-                    <p className="mt-1 text-sm font-semibold">{L('Expansion Afrique de l’Ouest', 'West Africa expansion')}</p>
-                  </div>
-                  <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className="h-2 w-2 rounded-full bg-accent" />{L('Scénario actif', 'Active scenario')}</span>
-                </div>
-                <div className="grid md:grid-cols-[1fr_150px]">
-                  <div className="p-4 sm:p-5">
-                    {graphNodes.map((item, index) => {
-                      const Icon = item.icon;
-                      const active = activeNode === index;
-                      return (
-                        <div key={item.label}>
-                          <button type="button" onMouseEnter={() => setActiveNode(index)} onFocus={() => setActiveNode(index)} onClick={() => setActiveNode(index)} className={cn('group flex w-full items-center gap-3 border px-3 py-3 text-left transition-colors', active ? 'border-primary bg-primary/5' : 'border-border bg-background/60 hover:border-primary/40')}>
-                            <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center', active ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground')}><Icon className="h-4 w-4" /></span>
-                            <span className="min-w-0 flex-1"><span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.label}</span><span className="mt-0.5 block truncate text-sm font-bold">{item.value}</span></span>
-                            <ChevronRight className={cn('h-4 w-4 transition-transform', active ? 'translate-x-0 text-primary' : '-translate-x-1 text-muted-foreground')} />
-                          </button>
-                          {index < graphNodes.length - 1 && <div className="ml-7 h-3 w-px bg-border" />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="border-t border-border bg-secondary/60 p-4 md:border-l md:border-t-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{L('Lecture', 'Insight')}</p>
-                    <p className="mt-4 text-3xl font-extrabold text-primary">72%</p>
-                    <p className="mt-1 text-xs font-semibold">{L('de tâches augmentables', 'of tasks augmentable')}</p>
-                    <div className="my-5 h-px bg-border" />
-                    <p className="text-xs leading-relaxed text-muted-foreground">{L('Priorité : redéployer le temps libéré vers la qualification commerciale.', 'Priority: redeploy saved time to commercial qualification.')}</p>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-3 text-right text-[10px] text-muted-foreground">{L('Exemple illustratif · données à confirmer avec l’entreprise', 'Illustrative example · data to confirm with the company')}</p>
+            <motion.h1 variants={fadeInUp} custom={1} className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white leading-[1.1] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+              {language === 'fr' ? (
+                <>
+                  Transformez la formation <br className="hidden sm:block" />
+                  <span className="bg-gradient-to-r from-[hsl(243,75%,70%)] via-[hsl(280,70%,65%)] to-[hsl(172,66%,55%)] bg-clip-text text-transparent">
+                    en avantage compétitif
+                  </span>
+                </>
+              ) : (
+                <>
+                  Transform Training <br className="hidden sm:block" />
+                  <span className="bg-gradient-to-r from-[hsl(243,75%,70%)] via-[hsl(280,70%,65%)] to-[hsl(172,66%,55%)] bg-clip-text text-transparent">
+                    Into Competitive Edge
+                  </span>
+                </>
+              )}
+            </motion.h1>
+
+            <motion.p variants={fadeInUp} custom={2} className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+              {language === 'fr'
+                ? 'Diagnostic IA, plans personnalisés, conformité OFPPT/GIAC et certificats numériques. Tout-en-un pour piloter la montée en compétences.'
+                : 'AI diagnostics, personalized plans, OFPPT/GIAC compliance, and digital certificates. All-in-one platform to drive upskilling.'}
+            </motion.p>
+
+            <motion.div variants={fadeInUp} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+              <Button
+                size="lg"
+                onClick={() => navigate(user ? '/dashboard' : '/auth')}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-[var(--brand-glow)]"
+              >
+                {language === 'fr' ? 'Commencer gratuitement' : 'Start for Free'}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  const el = document.getElementById('features');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="border-white/20 text-white hover:bg-white/10 px-8 py-6 text-base font-semibold rounded-xl bg-white/5"
+              >
+                <Play className="mr-2 h-5 w-5" />
+                {language === 'fr' ? 'Voir la démo' : 'Watch Demo'}
+              </Button>
             </motion.div>
+
+            {/* Stats bar */}
+            <motion.div variants={fadeInUp} custom={4} className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
+              {stats.map((stat, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-3xl md:text-4xl font-extrabold text-white" style={{ fontFamily: 'Plus Jakarta Sans' }}>{stat.value}</div>
+                  <div className="text-sm text-white/50 mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+
+      {/* Features Section */}
+      <section id="features" className="py-20 md:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <Badge variant="secondary" className="mb-4">
+              <Zap className="h-3.5 w-3.5 mr-1" />
+              {language === 'fr' ? 'Fonctionnalités' : 'Features'}
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+              {language === 'fr' ? 'Tout pour la formation moderne' : 'Everything for Modern Training'}
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              {language === 'fr'
+                ? 'De la planification IA à la conformité réglementaire, une plateforme complète.'
+                : 'From AI planning to regulatory compliance, one complete platform.'}
+            </p>
           </div>
-        </section>
 
-        <section className="border-b border-border bg-foreground text-background">
-          <div className="mx-auto grid max-w-7xl divide-y divide-background/15 px-5 md:grid-cols-5 md:divide-x md:divide-y-0 lg:px-8">
-            {stages.map(([title, detail, Icon], index) => (
-              <div key={title} className="flex items-center gap-4 py-5 md:px-5 md:first:pl-0 md:last:pr-0">
-                <span className="text-xs opacity-50">0{index + 1}</span><Icon className="h-4 w-4 text-accent" /><div><p className="text-xs font-bold uppercase tracking-[0.1em]">{title}</p><p className="mt-1 text-[11px] opacity-60">{detail}</p></div>
-              </div>
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
+            {features.map((feature, i) => (
+              <motion.div key={i} variants={fadeInUp} custom={i}>
+                <Card className="group relative overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 bg-card h-full">
+                  <CardContent className="p-6">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 text-white shadow-lg`}>
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                    <div className="mt-4 flex items-center text-primary text-sm font-semibold group-hover:translate-x-1 transition-transform">
+                      {language === 'fr' ? 'En savoir plus' : 'Learn more'}
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </div>
+      </section>
 
-        <section id="platform" className="border-b border-border py-20 md:py-28">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8">
-            <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr]">
-              <div className="lg:sticky lg:top-28 lg:self-start">
-                <p className="section-label">{L('Le problème', 'The problem')}</p>
-                <h2 className="mt-5 text-4xl font-extrabold leading-tight md:text-5xl">{L('Les données existent. Les décisions restent fragmentées.', 'The data exists. Decisions remain fragmented.')}</h2>
-                <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{L('La stratégie, les effectifs, les compétences, l’IA et la formation sont pilotés dans des systèmes séparés. Qimatak les réunit autour du travail réel.', 'Strategy, workforce, skills, AI and learning are managed in separate systems. Qimatak connects them around real work.')}</p>
-              </div>
-              <div className="border-t border-foreground">
+      {/* Compliance Section */}
+      <section className="py-20 bg-muted/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={staggerContainer}
+            >
+              <motion.div variants={fadeInUp} custom={0}>
+                <Badge variant="secondary" className="mb-4">
+                  <Shield className="h-3.5 w-3.5 mr-1" />
+                  {language === 'fr' ? 'Conformité' : 'Compliance'}
+                </Badge>
+              </motion.div>
+              <motion.h2 variants={fadeInUp} custom={1} className="text-3xl md:text-4xl font-extrabold text-foreground mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+                {language === 'fr' ? 'OFPPT & GIAC en toute sérénité' : 'OFPPT & GIAC Made Simple'}
+              </motion.h2>
+              <motion.p variants={fadeInUp} custom={2} className="text-lg text-muted-foreground mb-8">
+                {language === 'fr'
+                  ? 'Automatisez la gestion de vos dossiers CSF, suivez vos remboursements et restez conforme aux exigences réglementaires marocaines.'
+                  : 'Automate CSF dossier management, track reimbursements, and stay compliant with Moroccan regulatory requirements.'}
+              </motion.p>
+              <motion.div variants={fadeInUp} custom={3} className="space-y-4">
                 {[
-                  [L('La direction fixe les ambitions', 'Leadership sets the ambition'), L('mais ne voit pas toujours les capacités opérationnelles nécessaires.', 'but cannot always see the operating capabilities required.')],
-                  [L('Les RH mesurent les postes', 'HR measures jobs'), L('mais rarement les tâches qui créent la valeur ou peuvent être augmentées par l’IA.', 'but rarely the tasks creating value or suitable for AI augmentation.')],
-                  [L('Les plans empilent les actions', 'Plans stack up actions'), L('sans distinguer formation, recrutement, redéploiement, automatisation ou refonte.', 'without separating learning, hiring, redeployment, automation or redesign.')],
-                ].map(([title, text], index) => (
-                  <motion.div key={title} initial={reduceMotion ? false : 'hidden'} whileInView="visible" viewport={{ once: true, amount: 0.4 }} variants={reveal} transition={{ duration: 0.4, delay: index * 0.08 }} className="grid gap-3 border-b border-border py-8 sm:grid-cols-[64px_1fr_1fr] sm:items-start">
-                    <span className="text-xs font-bold text-primary">0{index + 1}</span><h3 className="text-xl font-bold">{title}</h3><p className="leading-relaxed text-muted-foreground">{text}</p>
-                  </motion.div>
+                  language === 'fr' ? 'Génération automatique des 10 modèles OFPPT' : 'Auto-generate all 10 OFPPT document templates',
+                  language === 'fr' ? 'Suivi des remboursements en temps réel' : 'Real-time reimbursement tracking',
+                  language === 'fr' ? 'Calcul automatique des montants éligibles' : 'Automatic eligible amount calculation',
+                  language === 'fr' ? 'Conformité GIAC intégrée' : 'Built-in GIAC compliance',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
+                    <span className="text-foreground">{item}</span>
+                  </div>
                 ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="method" className="border-b border-border bg-secondary/55 py-20 md:py-28">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8">
-            <div className="max-w-3xl">
-              <p className="section-label">{L('Un système de décision', 'A decision system')}</p>
-              <h2 className="mt-5 text-4xl font-extrabold leading-tight md:text-5xl">{L('De la stratégie à une action défendable.', 'From strategy to a defensible action.')}</h2>
-            </div>
-            <div className="mt-14 grid gap-px overflow-hidden border border-border bg-border lg:grid-cols-4">
-              {[
-                [L('01 · Cadrer', '01 · Frame'), L('Objectifs business', 'Business objectives'), L('Croissance, coûts, qualité, digitalisation et ambitions IA.', 'Growth, cost, quality, digitalisation and AI ambitions.'), Target],
-                [L('02 · Cartographier', '02 · Map'), L('Organisation du travail', 'Organisation of work'), L('Capacités, processus, tâches, rôles, compétences et personnes.', 'Capabilities, processes, tasks, roles, skills and people.'), Network],
-                [L('03 · Simuler', '03 · Simulate'), L('Futur Humain + IA', 'Human + AI future'), L('Scénarios de charge, coût, risque, automatisation et redéploiement.', 'Workload, cost, risk, automation and redeployment scenarios.'), Bot],
-                [L('04 · Exécuter', '04 · Execute'), L('Interventions et impact', 'Interventions and impact'), L('Plan priorisé, financement potentiel et mesure à 30/90 jours.', 'Prioritised plan, potential funding and 30/90-day measurement.'), BarChart3],
-              ].map(([step, title, text, Icon]) => (
-                <div key={String(step)} className="bg-background p-6 md:p-8"><Icon className="h-6 w-6 text-primary" /><p className="mt-10 text-xs font-bold uppercase tracking-[0.14em] text-primary">{step as string}</p><h3 className="mt-3 text-xl font-bold">{title as string}</h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text as string}</p></div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="human-ai" className="overflow-hidden border-b border-border py-20 md:py-28">
-          <div className="mx-auto grid max-w-7xl gap-14 px-5 lg:grid-cols-2 lg:items-center lg:px-8">
-            <div>
-              <p className="section-label">{L('Conception du travail', 'Work design')}</p>
-              <h2 className="mt-5 text-4xl font-extrabold leading-tight md:text-5xl">{L('L’IA n’est pas une stratégie. Le travail redessiné l’est.', 'AI is not a strategy. Redesigned work is.')}</h2>
-              <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{L('Chaque tâche est évaluée selon sa valeur, sa complexité, ses données, son risque et le jugement humain requis. La recommandation devient explicable.', 'Each task is assessed by value, complexity, data, risk and required human judgment. The recommendation becomes explainable.')}</p>
-              <div className="mt-8 grid grid-cols-2 gap-x-6 border-t border-border sm:grid-cols-3">
-                {actions.map(([code, label]) => <div key={code} className="border-b border-border py-4"><p className="text-[10px] font-bold tracking-[0.14em] text-primary">{code}</p><p className="mt-1 text-sm font-semibold">{label}</p></div>)}
-              </div>
-            </div>
-            <div className="bg-foreground p-6 text-background md:p-9">
-              <div className="flex items-start justify-between border-b border-background/15 pb-6">
-                <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{L('Analyse de tâche', 'Task analysis')}</p><h3 className="mt-2 text-2xl font-bold">{L('Veille concurrentielle', 'Competitive intelligence')}</h3></div><Sparkles className="h-6 w-6 text-accent" />
-              </div>
-              <div className="grid grid-cols-2 gap-px bg-background/15">
-                {[[L('Adéquation IA', 'AI suitability'), '87%'], [L('Jugement humain', 'Human judgment'), L('Moyen', 'Medium')], [L('Risque conformité', 'Compliance risk'), L('Faible', 'Low')], [L('Valeur stratégique', 'Strategic value'), L('Élevée', 'High')]].map(([label, value]) => <div key={label} className="bg-foreground py-6 pr-4"><p className="text-xs opacity-55">{label}</p><p className="mt-2 text-xl font-bold">{value}</p></div>)}
-              </div>
-              <div className="mt-6 border-l-2 border-accent pl-4"><p className="text-xs uppercase tracking-[0.12em] opacity-55">{L('Décision recommandée', 'Recommended decision')}</p><p className="mt-2 font-bold">{L('Agent IA + validation humaine + redéploiement du temps', 'AI agent + human validation + time redeployment')}</p></div>
-              <p className="mt-7 text-[10px] opacity-50">{L('Exemple illustratif — aucune économie n’est garantie sans validation des données.', 'Illustrative example — no savings are guaranteed without validated data.')}</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="deliverables" className="border-b border-border py-20 md:py-28">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8">
-            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-              <div className="max-w-3xl"><p className="section-label">{L('Ce que vous obtenez', 'What you get')}</p><h2 className="mt-5 text-4xl font-extrabold leading-tight md:text-5xl">{L('Des livrables pour décider, pas seulement des tableaux de bord.', 'Deliverables for decisions, not just dashboards.')}</h2></div>
-              <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{L('Chaque analyse aboutit à un artefact utilisable par la Direction, les RH, la Finance et les responsables opérationnels.', 'Each analysis produces an artefact usable by leadership, HR, Finance and operational leaders.')}</p>
-            </div>
-            <div className="mt-14 grid border-l border-t border-border md:grid-cols-2 lg:grid-cols-3">
-              {deliverables.map(({ number, title, text, icon: Icon }) => (
-                <div key={number} className="group min-h-64 border-b border-r border-border p-6 transition-colors hover:bg-secondary/60 md:p-8">
-                  <div className="flex items-center justify-between"><span className="text-xs font-bold text-primary">{number}</span><Icon className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" /></div>
-                  <h3 className="mt-16 text-xl font-bold">{title}</h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+            >
+              <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 border border-border">
+                <div className="space-y-4">
+                  {[
+                    { label: language === 'fr' ? 'Dossiers soumis' : 'Dossiers submitted', value: '47', change: '+12%' },
+                    { label: language === 'fr' ? 'Taux d\'approbation' : 'Approval rate', value: '94%', change: '+5%' },
+                    { label: language === 'fr' ? 'Remboursements récupérés' : 'Reimbursements recovered', value: '1.2M MAD', change: '+23%' },
+                  ].map((metric, i) => (
+                    <div key={i} className="bg-card rounded-xl p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">{metric.label}</p>
+                        <p className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{metric.value}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-accent font-semibold">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        {metric.change}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Pricing */}
+      <section id="pricing" className="py-20 md:py-28 bg-muted/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <Badge variant="secondary" className="mb-4">
+              {language === 'fr' ? 'Tarifs' : 'Pricing'}
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+              {language === 'fr' ? 'Des tarifs adaptés à votre taille' : 'Pricing That Scales With You'}
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              {language === 'fr' ? 'Essai gratuit de 14 jours. Sans carte bancaire.' : '14-day free trial. No credit card required.'}
+            </p>
+          </div>
+
+          <motion.div
+            className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
+            {plans.map((plan, i) => (
+              <motion.div key={i} variants={fadeInUp} custom={i}>
+                <Card className={`relative bg-card border-border/50 ${plan.popular ? 'border-primary shadow-xl shadow-primary/10 scale-[1.02]' : ''} transition-all hover:shadow-lg h-full`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground px-4 py-1 font-semibold">
+                        {language === 'fr' ? 'Populaire' : 'Most Popular'}
+                      </Badge>
+                    </div>
+                  )}
+                  <CardContent className="p-6 pt-8">
+                    <h3 className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: 'Plus Jakarta Sans' }}>{plan.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                    <div className="mb-6">
+                      <span className="text-4xl font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>{plan.price}</span>
+                      <span className="text-muted-foreground ml-1">MAD{plan.period}</span>
+                    </div>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((f, j) => (
+                        <li key={j} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                          <span className="text-foreground">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      onClick={() => navigate(user ? '/billing' : '/auth')}
+                      className={`w-full rounded-xl ${plan.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
+                      variant={plan.popular ? 'default' : 'outline'}
+                    >
+                      {language === 'fr' ? 'Commencer l\'essai' : 'Start Trial'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative py-20 md:py-28 overflow-hidden" style={{ background: 'var(--hero-gradient)' }}>
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[120px]" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6" style={{ fontFamily: 'Plus Jakarta Sans' }}>
+            {language === 'fr' ? 'Prêt à transformer vos formations ?' : 'Ready to Transform Your Training?'}
+          </h2>
+          <p className="text-lg text-white/60 mb-10 max-w-2xl mx-auto">
+            {language === 'fr'
+              ? 'Rejoignez plus de 500 entreprises qui utilisent TrainPro Academy pour développer les compétences de leurs équipes.'
+              : 'Join 500+ companies using TrainPro Academy to develop their team\'s skills.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => navigate(user ? '/dashboard' : '/auth')}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 text-base font-semibold rounded-xl shadow-[var(--brand-glow)]"
+            >
+              {language === 'fr' ? 'Démarrer maintenant' : 'Get Started Now'}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-card border-t border-border py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <span className="text-lg font-extrabold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>TrainPro Academy</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {language === 'fr'
+                  ? 'La plateforme de formation intelligente pour les entreprises marocaines.'
+                  : 'The intelligent training platform for Moroccan businesses.'}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3 text-sm">{language === 'fr' ? 'Produit' : 'Product'}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground transition-colors">{language === 'fr' ? 'Fonctionnalités' : 'Features'}</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">{language === 'fr' ? 'Tarifs' : 'Pricing'}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3 text-sm">{language === 'fr' ? 'Conformité' : 'Compliance'}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>OFPPT / CSF</li>
+                <li>GIAC</li>
+                <li>Open Badges 3.0</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3 text-sm">Contact</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>contact@trainproacademy.ma</li>
+                <li>+212 5 22 00 00 00</li>
+                <li>Casablanca, Maroc</li>
+              </ul>
             </div>
           </div>
-        </section>
-
-        <section className="bg-secondary/55 py-20 md:py-28">
-          <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[1.05fr_.95fr] lg:items-start lg:px-8">
-            <div><p className="section-label">{L('Ancrage marocain', 'Built for Morocco')}</p><h2 className="mt-5 text-4xl font-extrabold leading-tight md:text-5xl">{L('Du besoin de transformation au projet finançable.', 'From transformation need to a fundable project.')}</h2><p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">{L('Qimatak rapproche les interventions des programmes potentiels OFPPT / CSF et GIAC, puis structure les éléments à vérifier avec vos conseils et organismes compétents.', 'Qimatak matches interventions with potential OFPPT / CSF and GIAC programmes, then structures what must be verified with your advisers and competent bodies.')}</p></div>
-            <div className="border-t border-foreground">
-              {[[L('Besoin prouvé', 'Evidence-based need'), ShieldCheck], [L('Intervention structurée', 'Structured intervention'), GitBranch], [L('Programme potentiel', 'Potential programme'), CircleDollarSign], [L('Impact mesurable', 'Measurable impact'), BarChart3]].map(([label, Icon], index) => <div key={label as string} className="flex items-center gap-5 border-b border-border py-5"><span className="text-xs text-muted-foreground">0{index + 1}</span><Icon className="h-5 w-5 text-primary" /><span className="font-bold">{label as string}</span></div>)}
-              <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{L('Les règles et taux sont présentés comme références à vérifier, jamais comme un droit acquis ou un remboursement garanti.', 'Rules and rates are references to verify, never a guaranteed entitlement or reimbursement.')}</p>
-            </div>
+          <div className="border-t border-border pt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} TrainPro Academy. {language === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}
+            </p>
           </div>
-        </section>
-
-        <section className="bg-primary py-20 text-primary-foreground md:py-28">
-          <div className="mx-auto max-w-5xl px-5 text-center lg:px-8">
-            <Users className="mx-auto h-7 w-7 opacity-70" />
-            <h2 className="mt-7 text-4xl font-extrabold leading-tight md:text-6xl">{L('Quelle organisation votre stratégie exige-t-elle ?', 'What organisation does your strategy require?')}</h2>
-            <p className="mx-auto mt-6 max-w-2xl text-lg opacity-75">{L('Commencez par un diagnostic de transformation. Qimatak reliera vos priorités au travail, aux talents et à l’IA.', 'Start with a transformation diagnostic. Qimatak will connect your priorities to work, talent and AI.')}</p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button size="lg" variant="secondary" onClick={start}>{L('Démarrer le diagnostic', 'Start the diagnostic')}<ArrowRight className="ml-2 h-4 w-4" /></Button>
-              {!user && <Button size="lg" variant="outline" className="border-primary-foreground/35 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={() => navigate('/auth')}>{L('Se connecter', 'Sign in')}</Button>}
-            </div>
-            <p className="mt-7 text-xs opacity-60">{L('Prototype fonctionnel · En phase pilote au Maroc', 'Working prototype · Pilot phase in Morocco')}</p>
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-border bg-foreground py-10 text-background">
-        <div className="mx-auto flex max-w-7xl flex-col gap-7 px-5 md:flex-row md:items-end md:justify-between lg:px-8">
-          <div><p className="text-2xl font-extrabold">Qimatak</p><p className="mt-2 max-w-md text-sm opacity-60">{L('De la stratégie à l’exécution Humain + IA.', 'From business strategy to Human + AI execution.')}</p></div>
-          <div className="text-xs opacity-50"><p>© {new Date().getFullYear()} Qimatak · Casablanca</p><p className="mt-1">{L('Prototype fonctionnel · En phase pilote', 'Working prototype · Pilot phase')}</p></div>
         </div>
       </footer>
     </div>

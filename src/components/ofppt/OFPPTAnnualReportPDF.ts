@@ -151,7 +151,7 @@ export function generateOFPPTAnnualReport(data: AnnualReportData) {
   // Footer on cover
   doc.setFontSize(8);
   doc.setTextColor(200, 200, 255);
-  doc.text('Qimatak — Powered by AI', pageWidth / 2, pageHeight - 15, { align: 'center' });
+  doc.text('TrainPro Academy — Powered by AI', pageWidth / 2, pageHeight - 15, { align: 'center' });
 
   // ─── PAGE 2: EXECUTIVE SUMMARY ────────────────────────────
   doc.addPage();

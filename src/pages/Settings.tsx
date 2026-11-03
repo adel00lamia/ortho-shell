@@ -552,8 +552,8 @@ const Settings = () => {
                 </CardTitle>
                 <CardDescription>
                   {isFr
-                    ? 'Téléchargez un PDF complet décrivant toutes les fonctionnalités de la plateforme Qimatak.'
-                    : 'Download a comprehensive PDF describing all Qimatak platform features.'}
+                    ? 'Téléchargez un PDF complet décrivant toutes les fonctionnalités de la plateforme TrainPro Academy.'
+                    : 'Download a comprehensive PDF describing all TrainPro Academy platform features.'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

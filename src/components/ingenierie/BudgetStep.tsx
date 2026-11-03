@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, AlertTriangle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { computeGiacReimbursement, formatDH } from '@/lib/ofpptFinancials';
-import { FundingRulesDisclaimer } from '@/components/funding/FundingRulesDisclaimer';
 import { useBudgetCalculations } from '@/hooks/useIngenierie';
 import type { IngenierieDossier, IngenierieAction } from '@/hooks/useIngenierie';
 
@@ -33,9 +32,9 @@ export function BudgetStep({ dossier, actions, onSave, onNext, onPrev }: Props) 
   );
 
   const capTierLabel = () => {
-    if (budget.tfp < 20_000) return fr ? 'Palier (hypothèse) : TFP < 20 000 → plafond = TFP × 10' : 'Tier (assumption): TFP < 20,000 → cap = TFP × 10';
-    if (budget.tfp <= 200_000) return fr ? 'Palier (hypothèse) : 20 000 ≤ TFP ≤ 200 000 → plafond = 200 000 DH' : 'Tier (assumption): 20,000 ≤ TFP ≤ 200,000 → cap = 200,000 DH';
-    return fr ? 'Palier (hypothèse) : TFP > 200 000 → plafond = TFP' : 'Tier (assumption): TFP > 200,000 → cap = TFP';
+    if (budget.tfp < 20_000) return fr ? 'TFP < 20 000 → plafond = TFP × 10' : 'TFP < 20,000 → cap = TFP × 10';
+    if (budget.tfp <= 200_000) return fr ? '20 000 ≤ TFP ≤ 200 000 → plafond = 200 000 DH' : '20,000 ≤ TFP ≤ 200,000 → cap = 200,000 DH';
+    return fr ? 'TFP > 200 000 → plafond = TFP' : 'TFP > 200,000 → cap = TFP';
   };
 
   const isValid = actions.length > 0 && (dossier.gross_annual_payroll ?? 0) > 0;
@@ -47,7 +46,6 @@ export function BudgetStep({ dossier, actions, onSave, onNext, onPrev }: Props) 
 
   return (
     <div className="space-y-6">
-      <FundingRulesDisclaimer fr={fr} />
       {/* TFP Summary */}
       <Card className="border-blue-200 bg-blue-50">
         <CardHeader className="pb-2">
@@ -60,7 +58,7 @@ export function BudgetStep({ dossier, actions, onSave, onNext, onPrev }: Props) 
               <p className="font-bold text-blue-900">{formatDH(dossier.gross_annual_payroll ?? 0)}</p>
             </div>
             <div>
-              <p className="text-xs text-blue-600">{fr ? 'TFP (taux paramétrable)' : 'TFP (configurable rate)'}</p>
+              <p className="text-xs text-blue-600">TFP (1,6%)</p>
               <p className="font-bold text-blue-900">{formatDH(budget.tfp)}</p>
             </div>
             <div>
@@ -136,8 +134,8 @@ export function BudgetStep({ dossier, actions, onSave, onNext, onPrev }: Props) 
               <Input type="number" min={0} value={giacCost || ''} onChange={(e) => setGiacCost(Number(e.target.value))}
                 placeholder="0" className="mt-1" />
               <p className="text-xs text-muted-foreground mt-1">
-                {fr ? 'Taux et plafond issus des paramètres de référence (non vérifiés) — à confirmer selon le cadre officiel applicable.'
-                  : 'Rate and ceiling come from unverified reference parameters — confirm against the applicable official framework.'}
+                {fr ? `Taux : ${dossier.followed_strategic_diagnostic ? '80%' : '70%'} — plafond 100 000 DH`
+                  : `Rate: ${dossier.followed_strategic_diagnostic ? '80%' : '70%'} — cap 100,000 DH`}
               </p>
             </div>
             <div className="bg-green-50 rounded-lg p-3 flex flex-col justify-center">

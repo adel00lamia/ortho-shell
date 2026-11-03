@@ -18,61 +18,9 @@ interface Props {
   streamingAssistant?: boolean;
   language: 'fr' | 'en' | 'ar';
   position: string;
-  coachingMethod?: string;
   onStart: () => void;
   onUserAnswer: (text: string) => void;
-  onAskHelp?: () => void;
-  onAskTips?: () => void;
 }
-
-// Static answer scaffolding shown in the "souffleur" panel.
-const ANSWER_GUIDE: Record<'fr' | 'en' | 'ar', { title: string; steps: string[]; phrases: string[] }> = {
-  fr: {
-    title: 'Comment structurer ta réponse (méthode STAR)',
-    steps: [
-      'Situation : où, quand, quel contexte (1 phrase).',
-      'Tâche : ce qu\'on attendait de toi (1 phrase).',
-      'Action : ce que TU as fait concrètement (2 à 3 phrases).',
-      'Résultat : le résultat, si possible chiffré, + ce que tu en as appris.',
-    ],
-    phrases: [
-      '« Pour vous donner un exemple concret… »',
-      '« Mon rôle était de… »',
-      '« Concrètement, j\'ai commencé par… puis… »',
-      '« Résultat : … et j\'en ai retenu que… »',
-    ],
-  },
-  en: {
-    title: 'How to structure your answer (STAR method)',
-    steps: [
-      'Situation: where, when, what context (1 sentence).',
-      'Task: what was expected from you (1 sentence).',
-      'Action: what YOU actually did (2–3 sentences).',
-      'Result: the outcome, with numbers if possible, + what you learned.',
-    ],
-    phrases: [
-      '"Let me give you a concrete example…"',
-      '"My role was to…"',
-      '"Concretely, I started by… then…"',
-      '"As a result… and what I learned was…"',
-    ],
-  },
-  ar: {
-    title: 'كيف تبني جوابك (طريقة STAR)',
-    steps: [
-      'الوضع: أين ومتى وما السياق (جملة واحدة).',
-      'المهمة: ما كان مطلوبًا منك (جملة واحدة).',
-      'الإجراء: ما فعلته أنت بشكل ملموس (٢-٣ جمل).',
-      'النتيجة: النتيجة بالأرقام إن أمكن + ما تعلمته.',
-    ],
-    phrases: [
-      '«لأعطيك مثالاً ملموسًا…»',
-      '«كان دوري هو…»',
-      '«بشكل ملموس، بدأت بـ… ثم…»',
-      '«النتيجة: … وتعلمت أن…»',
-    ],
-  },
-};
 
 const LOCALE_OPTIONS = [
   { value: 'fr-FR', label: '🇫🇷 Français (France)' },
@@ -154,7 +102,7 @@ function keepShortSentences(input: string, maxWords = 15): string {
 
 type SR = any;
 
-export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, coachingMethod, onStart, onUserAnswer, onAskHelp, onAskTips }: Props) {
+export function InterviewVideoCall({ open, onClose, chat, chatLoading, streamingAssistant, language, position, onStart, onUserAnswer }: Props) {
   const fr = language === 'fr';
   const ar = language === 'ar';
   const defaultLocale = ar ? 'ar-MA' : fr ? 'fr-FR' : 'en-US';
@@ -168,7 +116,6 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
   const [hasStarted, setHasStarted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [conciseTTS, setConciseTTS] = useState(true);
-  const [showGuide, setShowGuide] = useState(true);
   const [liveCaption, setLiveCaption] = useState('');
   const [spokenFull, setSpokenFull] = useState('');
   const [debugOpen, setDebugOpen] = useState(false);
@@ -414,10 +361,10 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleHangup()}>
-      <DialogContent className="max-w-3xl w-[96vw] p-0 overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white">
+      <DialogContent className="max-w-3xl p-0 overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white">
         <DialogTitle className="sr-only">{fr ? 'Entretien vidéo IA' : 'AI Video Interview'}</DialogTitle>
 
-        <div className="relative h-[88vh] sm:h-[620px] flex flex-col">
+        <div className="relative h-[600px] flex flex-col">
           {/* Aurora background */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
@@ -509,7 +456,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
           </div>
 
           {/* Agent stage */}
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-start gap-4 sm:gap-6 px-4 sm:px-6 pt-14 pb-2">
+          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6">
             {/* Animated voice orb */}
             <div className="relative">
               <AnimatePresence>
@@ -535,7 +482,7 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                     : '0 0 40px rgba(99,102,241,0.35), 0 0 0 3px rgba(255,255,255,0.1)',
                 }}
                 transition={{ duration: 0.8, repeat: isSpeaking ? Infinity : 0 }}
-                className="relative h-24 w-24 sm:h-40 sm:w-40 rounded-full overflow-hidden ring-2 ring-white/20"
+                className="relative h-48 w-48 rounded-full overflow-hidden ring-2 ring-white/20"
               >
                 <img
                   src={coachAvatar}
@@ -589,87 +536,35 @@ export function InterviewVideoCall({ open, onClose, chat, chatLoading, streaming
                   : isListening ? (fr ? 'Écoute' : ar ? 'تستمع' : 'Listening')
                   : (fr ? 'En attente' : ar ? 'جاهزة' : 'Ready')}
               </div>
-              {coachingMethod && (
-                <div className="mb-2 inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-100">
-                  {fr ? 'Méthode active' : ar ? 'الطريقة النشطة' : 'Active method'} · {coachingMethod}
-                </div>
-              )}
-              <div className="max-h-[38vh] sm:max-h-[220px] overflow-y-auto rounded-xl bg-slate-900/70 border border-white/20 px-4 py-3">
-                <p className="text-base sm:text-lg text-white leading-relaxed whitespace-pre-wrap text-left">
-                  {lastAssistant
-                    ? lastAssistant
-                    : chatLoading || streamingAssistant
-                      ? '…'
-                      : (fr ? "Cliquez sur « Démarrer l'entretien » pour commencer." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.')}
-                  {(streamingAssistant || isSpeaking) && (
-                    <span className="inline-block w-[2px] h-4 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
-                  )}
+              <ScrollArea className="max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3">
+                <p className="text-sm text-white/95 leading-relaxed whitespace-pre-wrap text-left">
+                  {streamingAssistant ? (
+                    <>
+                      <span>{lastAssistant || '…'}</span>
+                      <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                    </>
+                  ) : chatLoading && !lastAssistant ? '...' : spokenFull ? (
+                    <>
+                      <span>{liveCaption}</span>
+                      <span className="text-white/30">{spokenFull.slice(liveCaption.length)}</span>
+                      {isSpeaking && (
+                        <span className="inline-block w-[2px] h-3 ml-0.5 bg-indigo-300 animate-pulse align-middle" />
+                      )}
+                    </>
+                  ) : (lastAssistant || (fr ? "Cliquez sur Démarrer pour commencer l'entretien." : ar ? 'اضغط ابدأ لبدء المقابلة.' : 'Click Start to begin the interview.'))}
                 </p>
                 {lastAssistantTips.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {lastAssistantTips.map((t, i) => (
-                      <div key={i} className="flex items-start gap-2 rounded-lg bg-amber-500/15 border border-amber-400/40 px-3 py-2 text-left">
-                        <Lightbulb className="h-4 w-4 text-amber-300 mt-0.5 shrink-0" />
-                        <p className="text-sm text-amber-50 leading-relaxed">{t}</p>
+                      <div key={i} className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-400/30 px-3 py-2 text-left">
+                        <Lightbulb className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-100 leading-relaxed">{t}</p>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Souffleur : que dire ? */}
-              <div className="mt-3 text-left">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 px-3 text-xs bg-white/10 hover:bg-white/20 text-white"
-                    onClick={() => setShowGuide((s) => !s)}
-                  >
-                    <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-amber-300" />
-                    {fr ? (showGuide ? 'Masquer l\'aide' : 'Que dois-je dire ?') : ar ? (showGuide ? 'إخفاء المساعدة' : 'ماذا أقول؟') : showGuide ? 'Hide help' : 'What should I say?'}
-                  </Button>
-                  {onAskHelp && (
-                    <Button
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                      className="h-10 px-4 text-xs bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-50 disabled:opacity-60"
-                      disabled={chatLoading || streamingAssistant}
-                      onClick={() => { try { window.speechSynthesis.cancel(); } catch { /* noop */ } onAskHelp(); }}
-                    >
-                      {fr ? 'Réponse modèle structurée' : ar ? 'جواب نموذجي منظم' : 'Structured model answer'}
-                    </Button>
-                  )}
-                  {onAskTips && (
-                    <Button
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                      className="h-10 px-4 text-xs bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-50 disabled:opacity-60"
-                      disabled={chatLoading || streamingAssistant}
-                      onClick={() => { try { window.speechSynthesis.cancel(); } catch { /* noop */ } onAskTips(); }}
-                    >
-                      {fr ? 'Recommandations' : ar ? 'توصيات' : 'Recommendations'}
-                    </Button>
-                  )}
-                </div>
-                {showGuide && (
-                  <div className="mt-2 rounded-xl bg-white/5 border border-white/15 px-4 py-3">
-                    <div className="text-xs font-semibold text-indigo-200 mb-1.5">{ANSWER_GUIDE[language].title}</div>
-                    <ol className="list-decimal pl-4 space-y-1 text-sm text-white/90">
-                      {ANSWER_GUIDE[language].steps.map((s, i) => <li key={i}>{s}</li>)}
-                    </ol>
-                    <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
-                      {ANSWER_GUIDE[language].phrases.map((p, i) => (
-                        <p key={i} className="text-xs text-white/70">{p}</p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              </ScrollArea>
             </div>
-
 
             {/* User transcript bubble */}
             {(isListening || transcript) && (

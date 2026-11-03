@@ -199,71 +199,28 @@ export type ActionSuggestion = {
   source_need_type: 'individual' | 'collective' | 'strategic';
 };
 
-function parseTrainingDuration(value: unknown): { duration_days: number | null; duration_hours: number | null } {
-  if (typeof value !== 'string') return { duration_days: null, duration_hours: null };
-  const amount = Number.parseFloat(value.replace(',', '.'));
-  if (!Number.isFinite(amount) || amount <= 0) return { duration_days: null, duration_hours: null };
-  const normalized = value.toLocaleLowerCase();
-  if (normalized.includes('heure') || normalized.includes('hour')) {
-    return { duration_days: Math.ceil(amount / 8), duration_hours: amount };
-  }
-  if (normalized.includes('jour') || normalized.includes('day')) {
-    return { duration_days: amount, duration_hours: amount * 8 };
-  }
-  if (normalized.includes('semaine') || normalized.includes('week')) {
-    return { duration_days: amount * 5, duration_hours: amount * 40 };
-  }
-  return { duration_days: null, duration_hours: null };
-}
-
-export function useActionsFromTrainingPlans(planId?: string | null) {
+export function useActionsFromTrainingPlans() {
   const { companyId } = useCompanyId();
 
   return useQuery({
-    queryKey: ['actions-from-plans', companyId, planId],
+    queryKey: ['actions-from-plans', companyId],
     queryFn: async () => {
-      let query = supabase
+      const { data: plans, error } = await supabase
         .from('training_plans')
-        .select('id, title, description, objectives, budget, duration_months, status, modules')
+        .select('title, description, objectives, budget, duration_months, status')
         .eq('company_id', companyId!);
-      if (planId) query = query.eq('id', planId);
-      const { data: plans, error } = await query;
       if (error) throw error;
 
-      return (plans ?? []).flatMap<ActionSuggestion>(p => {
-        const modules = Array.isArray(p.modules) ? p.modules as Array<Record<string, unknown>> : [];
-        if (modules.length === 0) {
-          return [{
-            title: p.title,
-            content_outline: [p.description, ...(p.objectives ?? [])].filter(Boolean).join('\n'),
-            duration_days: null,
-            duration_hours: null,
-            cost_ht: p.budget ?? null,
-            is_planned: p.status === 'active' || p.status === 'completed',
-            provider_type: 'mixed',
-            source_need_type: 'strategic',
-          }];
-        }
-        return modules.map(module => {
-          const duration = parseTrainingDuration(module.duration);
-          const content = Array.isArray(module.content_outline) ? module.content_outline.join('\n') : '';
-          const method = String(module.type || module.delivery_method || 'mixed').toLocaleLowerCase();
-          const providerType: ActionSuggestion['provider_type'] = method.includes('internal')
-            ? 'internal'
-            : method.includes('external')
-              ? 'external'
-              : 'mixed';
-          return {
-            title: String(module.title || module.name || p.title),
-            content_outline: content || String(module.description || p.description || ''),
-            ...duration,
-            cost_ht: typeof module.estimated_cost === 'number' ? module.estimated_cost : null,
-            is_planned: true,
-            provider_type: providerType,
-            source_need_type: 'strategic',
-          };
-        });
-      });
+      return (plans ?? []).map<ActionSuggestion>(p => ({
+        title: p.title,
+        content_outline: [p.description, ...(p.objectives ?? [])].filter(Boolean).join('\n'),
+        duration_days: p.duration_months ? p.duration_months * 20 : null,
+        duration_hours: p.duration_months ? p.duration_months * 160 : null,
+        cost_ht: p.budget ?? null,
+        is_planned: p.status === 'active' || p.status === 'completed',
+        provider_type: 'external',
+        source_need_type: 'strategic',
+      }));
     },
     enabled: !!companyId,
     staleTime: 5 * 60 * 1000,

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { OfpptRoleModules } from '@/components/plan/OfpptRoleModules';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,16 +66,12 @@ import {
   Calculator,
   History,
   Save,
-  Share2,
-  Landmark
+  Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
-import type { GeneratedPlan, GeneratedPlanSnapshot, PlanRequirements, PreviousPlanFile } from '@/types/trainingPlan';
-import { env } from '@/config/env';
-import { useCompanyFactbase } from '@/hooks/useCompanyFactbase';
 
 import { ContextualActions } from '@/components/ContextualActions';
 import { 
@@ -92,9 +87,6 @@ import {
   MarketResearchView
 } from '@/components/plan';
 import { CompanyResearch, CompanyResearchData } from '@/components/CompanyResearch';
-import { ObjectiveAlignmentCard } from '@/components/plan/ObjectiveAlignmentCard';
-import { linkObjectives, suggestedSkillsFromObjectives } from '@/lib/objectiveAlignment';
-
 import {
   PREDEFINED_OBJECTIVES,
   SKILL_CATEGORIES_DETAILED,
@@ -137,8 +129,95 @@ interface TrainingPack {
   bestFor: string[];
 }
 
+interface PreviousPlanFile {
+  name: string;
+  year: string;
+  content: string;
+}
+
+interface PlanRequirements {
+  company: string;
+  country: string;
+  industry: string;
+  companySize: string;
+  budget: number;
+  duration: number;
+  objectives: string[];
+  targetSkills: string[];
+  constraints: string[];
+  aiModel: string;
+  context: string;
+  template?: string;
+  pack?: string;
+  previousPlans?: PreviousPlanFile[];
+  customizations: {
+    deliveryMethods: string[];
+    certification: boolean;
+    mentorship: boolean;
+    gamification: boolean;
+    microlearning: boolean;
+    socialLearning: boolean;
+    videoProduction: boolean;
+    interactiveContent: boolean;
+    virtualReality: boolean;
+    mobileApp: boolean;
+  };
+}
+
+interface GeneratedPlan {
+  title: string;
+  description: string;
+  modules: any[];
+  timeline: string;
+  budget_breakdown: any;
+  kpis: any[];
+  recommendations: string[];
+  risk_assessment?: any;
+  success_metrics?: string[];
+  regulatory_framework?: {
+    country?: string;
+    governing_bodies?: string[];
+    key_regulations?: string[];
+    funding_programs?: string[];
+    mandatory_training?: string[];
+    certification_standards?: string[];
+    compliance_checklist?: string[];
+  };
+  market_research?: {
+    market_overview?: string;
+    market_size?: string;
+    growth_rate?: string;
+    key_trends?: string[];
+    competitive_landscape?: string;
+    target_audience_analysis?: string;
+    demand_drivers?: string[];
+    market_challenges?: string[];
+  };
+  swot_analysis?: {
+    strengths?: string[];
+    weaknesses?: string[];
+    opportunities?: string[];
+    threats?: string[];
+    strategic_implications?: string;
+  };
+  pestel_analysis?: {
+    political?: string[];
+    economic?: string[];
+    social?: string[];
+    technological?: string[];
+    environmental?: string[];
+    legal?: string[];
+    key_implications?: string;
+  };
+  innovation_features?: any;
+  sustainability_plan?: any;
+  executive_summary?: string;
+  implementation_roadmap?: {
+    phases?: { name: string; duration: string; activities: string[]; deliverables: string[] }[];
+  };
+}
+
 export default function AIPlanBuilder() {
-  const { factbase } = useCompanyFactbase();
   const [step, setStep] = useState(0); // Start with template selection
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -156,7 +235,7 @@ export default function AIPlanBuilder() {
     objectives: [],
     targetSkills: [],
     constraints: [],
-    aiModel: 'openai/gpt-6-astra',
+    aiModel: 'google/gemini-3-flash-preview',
     context: '',
     customizations: {
       deliveryMethods: ['online'],
@@ -172,10 +251,8 @@ export default function AIPlanBuilder() {
     }
   });
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
-  const [activeSnapshot, setActiveSnapshot] = useState<GeneratedPlanSnapshot | null>(null);
-  const [generatedPlans, setGeneratedPlans] = useState<GeneratedPlanSnapshot[]>([]);
+  const [generatedPlans, setGeneratedPlans] = useState<Array<{plan: GeneratedPlan; requirements: PlanRequirements; generatedAt: Date}>>([]);
   const [researchData, setResearchData] = useState<CompanyResearchData | null>(null);
-  const [budgetEdited, setBudgetEdited] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [planVersions, setPlanVersions] = useState<any[]>([]);
   const [planComments, setPlanComments] = useState<any[]>([]);
@@ -184,7 +261,6 @@ export default function AIPlanBuilder() {
   const [newConstraint, setNewConstraint] = useState('');
   const [previousPlanFiles, setPreviousPlanFiles] = useState<PreviousPlanFile[]>([]);
   const [uploadingPlan, setUploadingPlan] = useState(false);
-  const [savedPlanId, setSavedPlanId] = useState<string | null>(null);
 
   const predefinedObjectives = PREDEFINED_OBJECTIVES as readonly string[];
   const skillCategories = SKILL_CATEGORIES_DETAILED as readonly { name: string; skills: readonly string[] }[];
@@ -444,12 +520,6 @@ export default function AIPlanBuilder() {
     { id: 'microlearning', label: 'Micro-learning', description: 'Bite-sized learning modules', icon: <BookOpen className="h-4 w-4" /> }
   ];
 
-  const deliveryMethodLabels: Record<string, string> = deliveryMethods.reduce(
-    (acc, m) => ({ ...acc, [m.id]: m.label }),
-    {} as Record<string, string>
-  );
-
-
   // Enhanced Studio Features
   const studioFeatures = [
     { id: 'videoProduction', label: 'Video Production', description: 'Professional video creation & editing', icon: <Video className="h-4 w-4" /> },
@@ -489,8 +559,9 @@ export default function AIPlanBuilder() {
           .single();
 
         if (profile?.company_id) {
-          const [companyRes, evalsRes] = await Promise.all([
-            supabase.from('companies').select('name, industry, company_size, city').eq('id', profile.company_id).single(),
+          const [companyRes, employeesRes, evalsRes] = await Promise.all([
+            supabase.from('companies').select('name, industry, company_size, employee_count, city').eq('id', profile.company_id).single(),
+            supabase.from('company_employees').select('department, position', { count: 'exact', head: false }).eq('company_id', profile.company_id).eq('status', 'active'),
             supabase.from('performance_evaluations').select('areas_for_improvement, training_recommendations').eq('company_id', profile.company_id),
           ]);
 
@@ -506,6 +577,9 @@ export default function AIPlanBuilder() {
             const topNeeds = Object.entries(needsCounts).sort(([,a],[,b]) => b - a).slice(0, 5).map(([s]) => s);
             const topGaps = Object.entries(gapCounts).sort(([,a],[,b]) => b - a).slice(0, 3).map(([g]) => g);
 
+            // Get unique departments for context
+            const departments = [...new Set((employeesRes.data || []).map((e: any) => e.department).filter(Boolean))];
+
             setRequirements(prev => ({
               ...prev,
               company: company.name || prev.company,
@@ -518,7 +592,9 @@ export default function AIPlanBuilder() {
                 : prev.objectives,
               // Auto-populate target skills from training recommendations
               targetSkills: prev.targetSkills.length === 0 ? topNeeds : prev.targetSkills,
-              context: prev.context,
+              context: prev.context || (departments.length > 0
+                ? `Company has ${employeesRes.count || 0} employees across ${departments.length} departments: ${departments.join(', ')}.`
+                : ''),
             }));
           }
         }
@@ -577,14 +653,7 @@ export default function AIPlanBuilder() {
     if (config) {
       setRequirements(prev => ({
         ...prev,
-        objectives: Array.isArray(config.objectives) ? config.objectives : prev.objectives,
-        targetSkills: Array.isArray(config.targetSkills) ? config.targetSkills : prev.targetSkills,
-        constraints: Array.isArray(config.constraints) ? config.constraints : prev.constraints,
-        duration: typeof config.duration === 'number' ? config.duration : prev.duration,
-        budget: !budgetEdited && typeof config.budget === 'number' ? config.budget : prev.budget,
-        context: typeof config.context === 'string' ? config.context : prev.context,
-        template: typeof config.template === 'string' ? config.template : prev.template,
-        pack: typeof config.pack === 'string' ? config.pack : prev.pack,
+        ...config,
         customizations: { ...prev.customizations, ...(config.customizations || {}) }
       }));
       toast({ title: 'Template Loaded', description: `Configuration from "${template.name}" applied.` });
@@ -600,7 +669,7 @@ export default function AIPlanBuilder() {
         objectives: [...template.objectives],
         targetSkills: [...template.targetSkills],
         duration: parseInt(template.duration.split('-')[0]) || 6,
-        budget: budgetEdited ? prev.budget : parseInt(template.budget.split('-')[0].replace(/,/g, '')) || 50000
+        budget: parseInt(template.budget.split('-')[0].replace(/,/g, '')) || 50000
       }));
       setSelectedTemplate(templateId);
       setStep(1);
@@ -625,7 +694,7 @@ export default function AIPlanBuilder() {
         objectives: combinedObjectives,
         targetSkills: combinedSkills,
         duration: parseInt(pack.totalDuration.split('-')[0]) || 12,
-        budget: budgetEdited ? prev.budget : parseInt(pack.totalBudget.split('-')[0].replace(/,/g, '')) || 100000
+        budget: parseInt(pack.totalBudget.split('-')[0].replace(/,/g, '')) || 100000
       }));
       setSelectedPack(packId);
       setStep(1);
@@ -641,121 +710,29 @@ export default function AIPlanBuilder() {
     setProgress(10);
 
     try {
-      // Keep the payload inside the service limits: a large company must never
-      // block the generation.
-      const trimmedFactbase = factbase
-        ? {
-            ...factbase,
-            headcount: undefined,
-            departments: [],
-            positions: (factbase.positions ?? []).slice(0, 60).map(position => ({ ...position, headcount: 0 })),
-            skills: (factbase.skills ?? []).slice(0, 60),
-          }
-        : undefined;
-
-      const safeRequirements = {
-        ...requirements,
-        duration: Math.min(60, Math.max(1, Number(requirements.duration) || 12)),
-        budget: Math.max(0, Number(requirements.budget) || 0),
-        objectives: requirements.objectives.slice(0, 40),
-        targetSkills: requirements.targetSkills.slice(0, 80),
-        constraints: requirements.constraints.slice(0, 40),
-        context: (requirements.context || '').slice(0, 15000),
-        customizations: {
-          ...requirements.customizations,
-          // The server rejects delivery method labels longer than 50 chars.
-          deliveryMethods: (requirements.customizations?.deliveryMethods || [])
-            .slice(0, 10)
-            .map((m) => String(m).slice(0, 50)),
-        },
-        // Relevant company facts only; staffing and department totals are excluded.
-        companyData: trimmedFactbase,
-        companyResearch: researchData ? {
-          description: (researchData.company?.description || '').slice(0, 2000),
-          subIndustry: (researchData.company?.subIndustry || '').slice(0, 200),
-          industryOverview: (researchData.industryAnalysis?.overview || '').slice(0, 2000),
-          topTrends: (researchData.industryAnalysis?.topTrends || []).slice(0, 10).map(x => String(x).slice(0, 300)),
-          keySkills: (researchData.industryAnalysis?.keySkills || []).slice(0, 15).map(x => String(x).slice(0, 200)),
-          challenges: (researchData.industryAnalysis?.challenges || []).slice(0, 10).map(x => String(x).slice(0, 300)),
-          topTrainingAreas: (researchData.benchmark?.topTrainingAreas || []).slice(0, 10).map(x => String(x).slice(0, 200)),
-          competitorTrainingFocus: (researchData.benchmark?.competitorTrainingFocus || []).slice(0, 10).map(x => String(x).slice(0, 200)),
-        } : undefined,
-      };
-
-      // The generation service streams keepalive bytes while the plan is being written,
-      // so the connection is never cut on long generations.
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token || env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const response = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/ai-advanced-planner`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('ai-advanced-planner', {
+        body: {
           requirements: {
-            ...safeRequirements,
+            ...requirements,
             previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles : undefined
           },
           userId: user?.id || 'anonymous',
           language: language
-        }),
+        }
       });
 
-      if (!response.ok || !response.body) {
-        let serverMessage = '';
-        try {
-          const body = await response.text();
-          serverMessage = body ? (JSON.parse(body)?.error || '') : '';
-        } catch { /* keep generic message */ }
-        throw new Error(serverMessage || `HTTP ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let raw = '';
-      let data: { plan?: GeneratedPlan; error?: string } | null = null;
-      while (!data) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        raw += decoder.decode(value, { stream: true });
-        const lines = raw.split('\n');
-        for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
-          const payload = line.slice(5).trim();
-          if (!payload) continue;
-          try { data = JSON.parse(payload); } catch { /* frame still incomplete */ }
-        }
-      }
-      // A plain JSON body (non-streamed response) stays supported.
-      if (!data && raw.trim().startsWith('{')) {
-        try { data = JSON.parse(raw); } catch { /* handled below */ }
-      }
-
-      if (data?.error) throw new Error(data.error);
-      if (!data?.plan) throw new Error(language === 'fr' ? 'Réponse incomplète du service de génération.' : 'Incomplete response from the generation service.');
-
-
-
-      const generatedAt = new Date();
-      const snapshotRequirements: PlanRequirements = {
-        ...safeRequirements,
-        objectives: [...safeRequirements.objectives],
-        targetSkills: [...safeRequirements.targetSkills],
-        constraints: [...safeRequirements.constraints],
-        previousPlans: previousPlanFiles.length > 0 ? previousPlanFiles.map(plan => ({ ...plan })) : undefined,
-        customizations: { ...safeRequirements.customizations, deliveryMethods: [...safeRequirements.customizations.deliveryMethods] },
-      };
-      const snapshot: GeneratedPlanSnapshot = { plan: data.plan, requirements: snapshotRequirements, generatedAt };
+      if (error) throw error;
 
       setProgress(100);
       
       // Store previous plan for comparison
+      if (generatedPlan) {
+        setGeneratedPlans(prev => [...prev, { plan: generatedPlan, requirements: { ...requirements }, generatedAt: new Date() }]);
+      }
+      
       setGeneratedPlan(data.plan);
-      setSavedPlanId(null);
-      setActiveSnapshot(snapshot);
-      setGeneratedPlans(prev => [...prev, snapshot]);
+      // Also store the new plan
+      setGeneratedPlans(prev => [...prev, { plan: data.plan, requirements: { ...requirements }, generatedAt: new Date() }]);
       setStep(5);
       
       toast({
@@ -764,16 +741,11 @@ export default function AIPlanBuilder() {
       });
     } catch (error) {
       console.error('Plan generation error:', error);
-      const raw = error instanceof Error ? error.message : String(error);
-      const fallback = language === 'fr'
-        ? "Impossible de générer le plan. Vérifiez la durée, le budget et le modèle sélectionné, puis réessayez."
-        : 'Could not generate the training plan. Check duration, budget and the selected model, then try again.';
       toast({
-        title: language === 'fr' ? 'Échec de la génération' : 'Generation Failed',
-        description: raw && raw !== 'Failed to fetch' ? raw : fallback,
+        title: "Generation Failed",
+        description: "Could not generate the training plan. Please try again.",
         variant: "destructive",
       });
-
     } finally {
       setIsGenerating(false);
       setProgress(0);
@@ -840,7 +812,7 @@ export default function AIPlanBuilder() {
           ai_generated: true,
           modules: generatedPlan.modules,
           kpis: generatedPlan.kpis
-        } as any)
+        })
         .select()
         .single();
 
@@ -851,7 +823,7 @@ export default function AIPlanBuilder() {
         description: "Your training plan has been saved successfully.",
       });
 
-      setSavedPlanId(data.id);
+      navigate(`/workflow/plan/plans/${data.id}`);
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -1148,11 +1120,12 @@ export default function AIPlanBuilder() {
                   setResearchData(data);
                   setRequirements(prev => ({
                     ...prev,
-                    company: prev.company.trim() || data.company.name,
-                    industry: prev.industry || data.company.industry,
-                    companySize: prev.companySize || data.company.companySize,
+                    company: data.company.name,
+                    industry: data.company.industry,
+                    companySize: data.company.companySize,
                     objectives: [...new Set([...prev.objectives, ...data.recommendations.suggestedObjectives])],
                     targetSkills: [...new Set([...prev.targetSkills, ...data.recommendations.prioritySkills])],
+                    budget: parseInt(data.recommendations.suggestedBudget.replace(/[^\d]/g, '')) || prev.budget,
                     duration: parseInt(data.recommendations.suggestedDuration) || prev.duration,
                     context: `${data.company.description}\n\nIndustry: ${data.industryAnalysis.overview}`,
                     customizations: {
@@ -1240,20 +1213,6 @@ export default function AIPlanBuilder() {
 
                <div>
                  <label className="text-sm font-medium">Training Objectives</label>
-                 {researchData ? (
-                   <ResearchObjectiveSuggestions
-                     research={researchData}
-                     selected={requirements.objectives}
-                     fr={language === 'fr'}
-                     onAdd={(obj) => setRequirements(prev => prev.objectives.includes(obj) ? prev : ({ ...prev, objectives: [...prev.objectives, obj] }))}
-                   />
-                 ) : (
-                   <p className="text-xs text-muted-foreground mt-1">
-                     {language === 'fr'
-                       ? "Lancez d'abord la recherche entreprise ci-dessus : les objectifs seront proposés à partir de l'entreprise, des tendances et des défis du secteur."
-                       : 'Run the company research above first: objectives will be suggested from the company, industry trends and sector challenges.'}
-                   </p>
-                 )}
                 <div className="space-y-3 mt-2">
                   <div className="flex gap-2 w-full">
                     <Select onValueChange={(value) => {
@@ -1302,26 +1261,6 @@ export default function AIPlanBuilder() {
                   </p>
                 )}
               </div>
-
-              {/* Objectives → training choices alignment */}
-              <ObjectiveAlignmentCard
-                objectives={requirements.objectives}
-                targetSkills={requirements.targetSkills}
-                deliveryMethods={requirements.customizations.deliveryMethods}
-                deliveryLabels={deliveryMethodLabels}
-                onAddSkills={(skills) => setRequirements(prev => ({
-                  ...prev,
-                  targetSkills: [...new Set([...prev.targetSkills, ...skills])],
-                }))}
-                onAddDeliveryMethods={(methods) => setRequirements(prev => ({
-                  ...prev,
-                  customizations: {
-                    ...prev.customizations,
-                    deliveryMethods: [...new Set([...prev.customizations.deliveryMethods, ...methods])],
-                  },
-                }))}
-              />
-
 
               {/* Previous Training Plan Upload */}
               <Separator />
@@ -1480,44 +1419,8 @@ export default function AIPlanBuilder() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {(() => {
-                const aligned = suggestedSkillsFromObjectives(requirements.objectives, requirements.targetSkills);
-                if (aligned.length === 0) return null;
-                return (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <p className="text-sm font-medium">
-                        {language === 'fr' ? 'Recommandé par vos objectifs' : 'Recommended by your objectives'}
-                      </p>
-                      <Button type="button" size="sm" variant="outline" onClick={() => setRequirements(prev => ({
-                        ...prev,
-                        targetSkills: [...new Set([...prev.targetSkills, ...aligned])],
-                      }))}>
-                        {language === 'fr' ? 'Tout ajouter' : 'Add all'}
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {aligned.map(skill => (
-                        <Badge
-                          key={skill}
-                          variant="outline"
-                          className="cursor-pointer py-1.5 px-3"
-                          onClick={() => setRequirements(prev => ({
-                            ...prev,
-                            targetSkills: [...new Set([...prev.targetSkills, skill])],
-                          }))}
-                        >
-                          + {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
               <div>
                 <label className="text-sm font-medium">Target Skills</label>
-
                 <div className="space-y-2 mt-2">
                   <div>
                     <Select onValueChange={(value) => {
@@ -1645,10 +1548,7 @@ export default function AIPlanBuilder() {
                   <Input
                     type="number"
                     value={requirements.duration}
-                    onChange={(e) => {
-                      const n = parseInt(e.target.value);
-                      setRequirements({ ...requirements, duration: Number.isFinite(n) ? Math.min(60, Math.max(1, n)) : 1 });
-                    }}
+                    onChange={(e) => setRequirements({...requirements, duration: parseInt(e.target.value) || 0})}
                     min="1"
                     max="36"
                   />
@@ -1658,15 +1558,10 @@ export default function AIPlanBuilder() {
                   <Input
                     type="number"
                     value={requirements.budget}
-                    onChange={(e) => {
-                      const n = parseInt(e.target.value);
-                      setBudgetEdited(true);
-                      setRequirements({ ...requirements, budget: Number.isFinite(n) ? Math.max(0, n) : 0 });
-                    }}
+                    onChange={(e) => setRequirements({...requirements, budget: parseInt(e.target.value) || 0})}
                     min="1000"
                     step="1000"
                   />
-
                 </div>
               </div>
             </CardContent>
@@ -1886,26 +1781,16 @@ export default function AIPlanBuilder() {
               <>
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2 justify-end">
-                  {savedPlanId && (
-                    <Button onClick={() => navigate(`/workflow/plan/ingenierie?plan=${savedPlanId}`)}>
-                      <Landmark className="h-4 w-4 mr-2" />
-                      {language === 'fr' ? 'Préparer le dossier OFPPT' : 'Prepare OFPPT file'}
-                    </Button>
-                  )}
                   <Button 
                     variant="outline" 
-                    onClick={() => {
-                      const snapshot = activeSnapshot;
-                      if (!snapshot) return;
-                      exportPlanToPDF(snapshot.plan, snapshot.requirements, snapshot.generatedAt);
-                    }}
+                    onClick={() => exportPlanToPDF(generatedPlan, requirements)}
                   >
                     <FileDown className="h-4 w-4 mr-2" />
                     Export PDF
                   </Button>
-                  <Button variant="outline" onClick={savePlan} disabled={Boolean(savedPlanId)}>
+                  <Button variant="outline" onClick={savePlan}>
                     <Save className="h-4 w-4 mr-2" />
-                    {savedPlanId ? (language === 'fr' ? 'Plan enregistré' : 'Plan saved') : (language === 'fr' ? 'Enregistrer le plan' : 'Save plan')}
+                    Save Plan
                   </Button>
                   <Button 
                     variant="outline"
@@ -1975,104 +1860,6 @@ export default function AIPlanBuilder() {
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="h-5 w-5" />
-                          {language === 'fr' ? 'Écarts réels mesurés dans l’organigramme' : 'Real gaps measured in the org chart'}
-                        </CardTitle>
-                        <CardDescription>
-                          {language === 'fr'
-                            ? 'Compétences exigées par un poste mais absentes du profil actuel, complétées par les évaluations (totaux uniquement).'
-                            : 'Skills required by a position but missing from its current profile, plus reviews (totals only).'}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {generatedPlan.organizational_gaps?.length ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                  <th className="py-2 pr-3 font-medium">{language === 'fr' ? 'Compétence manquante' : 'Missing skill'}</th>
-                                  <th className="py-2 pr-3 font-medium">{language === 'fr' ? 'Postes concernés' : 'Positions'}</th>
-                                  <th className="py-2 pr-3 font-medium">{language === 'fr' ? 'Évaluations' : 'Reviews'}</th>
-                                  <th className="py-2 font-medium">{language === 'fr' ? 'Action du plan' : 'Plan action'}</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {generatedPlan.organizational_gaps.map((g) => (
-                                  <tr key={g.skill} className="border-b last:border-0 align-top">
-                                    <td className="py-2 pr-3 font-medium text-foreground">
-                                      {g.skill}
-                                      {g.critical_positions > 0 && (
-                                        <Badge variant="destructive" className="ml-2 text-[10px]">
-                                          {g.critical_positions} {language === 'fr' ? 'critique(s)' : 'critical'}
-                                        </Badge>
-                                      )}
-                                    </td>
-                                    <td className="py-2 pr-3 text-muted-foreground">{g.positions.length ? g.positions.join(', ') : '—'}</td>
-                                    <td className="py-2 pr-3 tabular-nums">{g.review_mentions || '—'}</td>
-                                    <td className="py-2">
-                                      {g.addressed_by?.length
-                                        ? g.addressed_by.join(', ')
-                                        : <span className="text-destructive">{language === 'fr' ? 'Non couvert' : 'Not covered'}</span>}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            {language === 'fr'
-                              ? 'Aucun écart mesurable : renseignez les compétences requises et actuelles des postes dans l’organigramme.'
-                              : 'No measurable gap: fill required and current skills for positions in the org chart.'}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <OfpptRoleModules modules={generatedPlan.modules || []} gaps={generatedPlan.organizational_gaps} language={language} />
-
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="h-5 w-5" />
-                          {language === 'fr' ? 'Traçabilité objectifs → actions' : 'Objectives → actions traceability'}
-                        </CardTitle>
-                        <CardDescription>
-                          {language === 'fr'
-                            ? 'Chaque action est reliée à un objectif d’entreprise, une compétence et un indicateur.'
-                            : 'Each action is linked to a company objective, a skill and an indicator.'}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {linkObjectives(requirements.objectives, language === 'fr' ? 'fr' : 'en').map((link, index) => {
-                          const module = generatedPlan.modules?.find(item =>
-                            item.skills_covered?.some(skill => link.skills.some(linked => linked.toLocaleLowerCase() === skill.toLocaleLowerCase()))
-                          );
-                          const kpi = generatedPlan.kpis?.[index % Math.max(generatedPlan.kpis.length, 1)];
-                          return (
-                            <div key={`${link.objective}-${index}`} className="grid gap-2 border-b pb-3 last:border-0 last:pb-0 md:grid-cols-[1.2fr_1fr_1fr]">
-                              <div>
-                                <p className="text-xs text-muted-foreground">{language === 'fr' ? 'Objectif' : 'Objective'}</p>
-                                <p className="text-sm font-medium">{link.objective}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-muted-foreground">{language === 'fr' ? 'Compétence · action' : 'Skill · action'}</p>
-                                <p className="text-sm">{module ? `${module.skills_covered?.[0] || link.skills[0] || 'À confirmer'} · ${module.title}` : (language === 'fr' ? 'Action à confirmer' : 'Action to confirm')}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-muted-foreground">{language === 'fr' ? 'Indicateur' : 'Indicator'}</p>
-                                <p className="text-sm">{kpi?.name || link.measure}</p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </CardContent>
-                    </Card>
-
                     {generatedPlan.recommendations && (
                       <Card>
                         <CardHeader>
@@ -2086,10 +1873,7 @@ export default function AIPlanBuilder() {
                             {generatedPlan.recommendations.map((rec, index) => (
                               <div key={index} className="flex items-start gap-2">
                                 <div className="w-2 h-2 bg-primary rounded-full mt-2" />
-                                <div className="text-sm">
-                                  <p className="font-medium">{typeof rec === 'string' ? rec : rec.recommendation}</p>
-                                  {typeof rec !== 'string' && <p className="text-muted-foreground">{rec.horizon} · {rec.rationale}</p>}
-                                </div>
+                                <p className="text-sm">{rec}</p>
                               </div>
                             ))}
                           </div>
@@ -2338,14 +2122,6 @@ export default function AIPlanBuilder() {
                               <div>
                                 <CardTitle className="text-lg">{module.title || `Module ${index + 1}`}</CardTitle>
                                 <CardDescription>{module.description}</CardDescription>
-                                {module.ofppt_domain && (
-                                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                                    <Badge variant="outline" className="text-[10px]">
-                                      OFPPT F2 · {module.ofppt_domain_code ? `${module.ofppt_domain_code}. ` : ''}{module.ofppt_domain}
-                                    </Badge>
-                                    <span className="text-muted-foreground">{module.ofppt_theme}</span>
-                                  </div>
-                                )}
                               </div>
                               <Badge variant="outline">{module.certification_level || 'Standard'}</Badge>
                             </div>
@@ -2538,7 +2314,7 @@ export default function AIPlanBuilder() {
                                     <h4 className="font-semibold text-sm">{item.label}</h4>
                                   </div>
                                   <p className="text-sm text-muted-foreground">
-                                    {String(generatedPlan.innovation_features?.[item.key] ?? '')}
+                                    {String(generatedPlan.innovation_features[item.key as keyof typeof generatedPlan.innovation_features])}
                                   </p>
                                 </div>
                               ))}
@@ -2572,7 +2348,7 @@ export default function AIPlanBuilder() {
                                     <h4 className="font-semibold text-sm">{item.label}</h4>
                                   </div>
                                   <p className="text-sm text-muted-foreground">
-                                    {String(generatedPlan.sustainability_plan?.[item.key] ?? '')}
+                                    {String(generatedPlan.sustainability_plan[item.key as keyof typeof generatedPlan.sustainability_plan])}
                                   </p>
                                 </div>
                               ))}
@@ -2637,14 +2413,11 @@ export default function AIPlanBuilder() {
                       <PlanComparison 
                         plans={generatedPlans}
                         onSelectPlan={(index) => {
-                          const snapshot = generatedPlans[index];
-                          if (!snapshot) return;
-                          setGeneratedPlan(snapshot.plan);
-                          setActiveSnapshot(snapshot);
-                          setRequirements(snapshot.requirements);
+                          setGeneratedPlan(generatedPlans[index].plan);
+                          setRequirements(generatedPlans[index].requirements);
                           toast({
                             title: "Plan Selected",
-                            description: `Now viewing: ${snapshot.plan.title}`,
+                            description: `Now viewing: ${generatedPlans[index].plan.title}`,
                           });
                         }}
                       />
@@ -2781,41 +2554,6 @@ export default function AIPlanBuilder() {
   );
 }
 // Industry Benchmark Insights Component
-const ResearchObjectiveSuggestions = ({ research, selected, onAdd, fr }: { research: CompanyResearchData; selected: string[]; onAdd: (o: string) => void; fr: boolean }) => {
-  const groups: { title: string; items: string[]; toObjective: (s: string) => string }[] = [
-    { title: fr ? "Objectifs recommandés pour l'entreprise" : 'Recommended for the company', items: research.recommendations?.suggestedObjectives ?? [], toObjective: (s) => s },
-    { title: fr ? 'Répondre aux défis du secteur' : 'Address sector challenges', items: research.industryAnalysis?.challenges ?? [], toObjective: (s) => (fr ? `Répondre au défi : ${s}` : `Address challenge: ${s}`) },
-    { title: fr ? 'Se préparer aux tendances' : 'Prepare for industry trends', items: research.industryAnalysis?.topTrends ?? [], toObjective: (s) => (fr ? `Préparer les équipes à : ${s}` : `Prepare teams for: ${s}`) },
-    { title: fr ? 'Axes de formation prioritaires du secteur' : 'Top sector training areas', items: research.benchmark?.topTrainingAreas ?? [], toObjective: (s) => (fr ? `Renforcer : ${s}` : `Strengthen: ${s}`) },
-  ].filter((g) => g.items.length > 0);
-  return (
-    <Card className="mt-2 border-primary/30 bg-primary/5">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">{fr ? `Issus de la recherche sur ${research.company?.name || "l'entreprise"}` : `From the research on ${research.company?.name || 'the company'}`}</CardTitle>
-        <CardDescription className="text-xs">{fr ? 'Cliquez pour ajouter un objectif. La recherche est aussi transmise au générateur pour justifier chaque module.' : 'Click to add an objective. The research is also sent to the generator to justify each module.'}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {groups.map((g) => (
-          <div key={g.title}>
-            <p className="text-xs font-medium text-muted-foreground mb-1">{g.title}</p>
-            <div className="flex flex-wrap gap-2">
-              {g.items.slice(0, 6).map((item) => {
-                const obj = g.toObjective(item);
-                const on = selected.includes(obj);
-                return (
-                  <Badge key={item} variant={on ? 'default' : 'outline'} className="cursor-pointer py-1.5 px-2.5 text-left whitespace-normal" onClick={() => !on && onAdd(obj)}>
-                    {on ? '✓ ' : '+ '}{item}
-                  </Badge>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-};
-
 const IndustryBenchmarkInsights = ({ industry, researchData }: { industry: string; researchData?: CompanyResearchData | null }) => {
   // If research data is available, use it; otherwise fall back to static defaults
   if (researchData) {

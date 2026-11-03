@@ -22,15 +22,11 @@ import { toast } from 'sonner';
 import {
   GraduationCap, Briefcase, Sparkles, FileText, Send, Loader2, ExternalLink, Plus, X,
   Bot, User as UserIcon, Download, Copy, Award, CheckCircle2, RotateCcw, Target, BookOpen,
-  Video, Newspaper, Book, Lightbulb, Mic,
+  Video, Newspaper, Book, Lightbulb,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { InterviewVideoCall } from '@/components/student/InterviewVideoCall';
-import { extractResumeText, RESUME_FILE_ACCEPT } from '@/lib/extractResumeText';
-import { interviewerRolePresets } from '@/standalone/coach/interviewerRoles';
-import { SpeakingStyleCard } from '@/standalone/coach/SpeakingStyleCard';
-import { buildStyleBrief, EMPTY_SPEAKING_STYLE, type SpeakingStyle } from '@/standalone/coach/speakingStyle';
 
 type StudentProfile = {
   id?: string;
@@ -214,100 +210,6 @@ const StudentHub = () => {
   const [position, setPosition] = useState('');
   const [difficulty, setDifficulty] = useState<'warmup' | 'junior' | 'mid' | 'senior'>('warmup');
   const [style, setStyle] = useState<'behavioral' | 'technical' | 'mixed'>('mixed');
-  const [demoKey, setDemoKey] = useState<string | null>(null);
-  const [interviewMethod, setInterviewMethod] = useState<string>('');
-
-  const DEMO_SCENARIOS = [
-    {
-      key: 'chargee-rh',
-      position: fr ? 'Chargé(e) de recrutement RH' : 'HR Recruitment Officer',
-      difficulty: 'warmup' as const,
-      style: 'behavioral' as const,
-      levelLabel: fr ? 'Échauffement · Comportemental' : 'Warm-up · Behavioral',
-      questions: fr
-        ? ['Présentez-vous en 1 minute.', 'Pourquoi les RH ?', 'Racontez une fois où vous avez géré une urgence.', 'Une qualité et un défaut au travail ?']
-        : ['Introduce yourself in 1 minute.', 'Why HR?', 'Tell me about a time you handled an urgent issue.', 'One strength and one weakness at work?'],
-    },
-    {
-      key: 'data-analyst',
-      position: fr ? 'Data Analyst junior' : 'Junior Data Analyst',
-      difficulty: 'junior' as const,
-      style: 'mixed' as const,
-      levelLabel: fr ? 'Junior · Mixte' : 'Junior · Mixed',
-      questions: fr
-        ? ['Quel projet de données êtes-vous le plus fier d\'avoir mené ?', 'Comment vérifiez-vous la fiabilité d\'un fichier ?', 'Expliquez un tableau de bord à un non-initié.', 'Un chiffre semble faux : que faites-vous ?']
-        : ['Which data project are you proudest of?', 'How do you check a dataset is reliable?', 'Explain a dashboard to a non-expert.', 'A figure looks wrong: what do you do?'],
-    },
-    {
-      key: 'chef-projet',
-      position: fr ? 'Chef de projet formation' : 'Training Project Manager',
-      difficulty: 'mid' as const,
-      style: 'technical' as const,
-      levelLabel: fr ? 'Intermédiaire · Technique' : 'Mid-level · Technical',
-      questions: fr
-        ? ['Comment identifiez-vous un besoin de formation réel ?', 'Comment construisez-vous un budget de formation ?', 'Un manager refuse de libérer son équipe : votre approche ?', 'Comment mesurez-vous l\'impact à 90 jours ?']
-        : ['How do you identify a real training need?', 'How do you build a training budget?', 'A manager refuses to release his team: your approach?', 'How do you measure impact at 90 days?'],
-    },
-  ];
-  const activeDemo = DEMO_SCENARIOS.find((s) => s.key === demoKey) ?? null;
-  const INTERVIEW_METHODS = [
-    {
-      key: 'pitch-3',
-      time: '01:47',
-      title: fr ? 'Le pitch en 3 étapes' : 'The 3-step pitch',
-      use: fr ? 'Pour répondre simplement à « Présentez-vous ».' : 'To answer “Tell me about yourself” simply.',
-      steps: fr
-        ? ['Qui es-tu ?', 'Que recherches-tu ?', 'Pourquoi ce poste ?']
-        : ['Who are you?', 'What are you looking for?', 'Why this role?'],
-      opener: fr ? '« Je suis…, avec… d’expérience. Je souhaite… Ce poste… »' : '“I am…, with… experience. I want to… This role…”',
-      example: fr
-        ? 'Je suis Thomas, avec 6 ans d’expérience en Business Intelligence. Je souhaite évoluer comme chef de projet. Ce poste correspond à mon envie de piloter des projets utiles et des équipes.'
-        : 'I am Thomas, with six years of Business Intelligence experience. I want to grow into project management. This role matches my goal of leading useful projects and teams.',
-      question: fr ? 'Présentez-vous en une minute.' : 'Tell me about yourself in one minute.',
-    },
-    {
-      key: 'star',
-      time: '02:17',
-      title: fr ? 'La méthode STAR' : 'The STAR method',
-      use: fr ? 'Pour raconter une expérience concrète sans se disperser.' : 'To explain a real experience without losing focus.',
-      steps: fr
-        ? ['Situation', 'Tâche', 'Action', 'Résultat']
-        : ['Situation', 'Task', 'Action', 'Result'],
-      opener: fr ? '« Pour vous donner un exemple concret… Mon rôle était… J’ai… Résultat… »' : '“Let me give you a concrete example… My role was… I… As a result…”',
-      example: fr
-        ? 'Lors d’un projet en retard, je devais sécuriser la livraison. J’ai repriorisé les tâches et instauré un point quotidien. Nous avons livré à la date prévue et réduit les erreurs.'
-        : 'When a project fell behind, I had to secure delivery. I reprioritized tasks and introduced a daily check-in. We delivered on time and reduced errors.',
-      question: fr ? 'Parlez-moi d’une situation difficile que vous avez bien gérée.' : 'Tell me about a difficult situation you handled well.',
-    },
-    {
-      key: 'past-present-future',
-      time: '03:25',
-      title: fr ? 'Passé / Présent / Futur' : 'Past / Present / Future',
-      use: fr ? 'Pour donner un fil logique à ton parcours et à ton projet.' : 'To connect your background, current role, and next goal.',
-      steps: fr
-        ? ['Passé : d’où tu viens', 'Présent : ce que tu fais', 'Futur : où tu veux aller']
-        : ['Past: where you come from', 'Present: what you do', 'Future: where you want to go'],
-      opener: fr ? '« J’ai commencé par… Aujourd’hui… Je souhaite maintenant… »' : '“I started with… Today… I now want to…”',
-      example: fr
-        ? 'J’ai commencé en analyse de données. Aujourd’hui, je transforme les besoins métiers en tableaux de bord. Je souhaite maintenant piloter des projets BI de bout en bout.'
-        : 'I started in data analysis. Today, I turn business needs into dashboards. I now want to lead BI projects end to end.',
-      question: fr ? 'Pouvez-vous me résumer votre parcours et votre projet professionnel ?' : 'Can you summarize your background and career goal?',
-    },
-    {
-      key: 'impact',
-      time: '04:08',
-      title: fr ? 'Le pitch impactant' : 'The impactful pitch',
-      use: fr ? 'Pour retenir l’attention avec une preuve et une valeur claire.' : 'To earn attention with proof and clear value.',
-      steps: fr
-        ? ['Une accroche claire', 'Une preuve concrète', 'La valeur pour le poste']
-        : ['A clear hook', 'Concrete proof', 'Value for the role'],
-      opener: fr ? '« Ma force, c’est… Je l’ai démontré en… Je veux l’apporter à… »' : '“My strength is… I proved it by… I want to bring it to…”',
-      example: fr
-        ? 'Ma force est de rendre les données utiles aux décisions. J’ai simplifié un reporting complexe pour accélérer les arbitrages. Je veux apporter cette clarté à vos projets.'
-        : 'My strength is making data useful for decisions. I simplified complex reporting to speed up decisions. I want to bring that clarity to your projects.',
-      question: fr ? 'En une minute, qu’est-ce qui vous distingue pour ce poste ?' : 'In one minute, what sets you apart for this role?',
-    },
-  ];
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -334,11 +236,6 @@ const StudentHub = () => {
         body: JSON.stringify({
           mode: 'interview', position, difficulty, style,
           studentProfile: profile ?? draft, history,
-          resumeText: resumeText.trim() || undefined,
-          companyName: target.company.trim() || undefined,
-          sector: target.sector.trim() || undefined,
-          interviewerRole: target.interviewer.trim() || undefined,
-          speakingStyle: styleBrief || undefined,
           language: fr ? 'fr' : 'en', stream: true,
         }),
       });
@@ -434,100 +331,6 @@ const StudentHub = () => {
 
   const [videoCallOpen, setVideoCallOpen] = useState(false);
 
-  /* ------------------------ Resume (CV) intake ------------------------ */
-  const RESUME_KEY = 'student-resume-v1';
-  const [resumeText, setResumeText] = useState<string>(() => {
-    try { return localStorage.getItem(RESUME_KEY) ?? ''; } catch { return ''; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(RESUME_KEY, resumeText); } catch { /* ignore */ }
-  }, [resumeText]);
-  const [prepLoading, setPrepLoading] = useState(false);
-  const [prep, setPrep] = useState<any>(null);
-  const [openPrep, setOpenPrep] = useState<number | null>(null);
-  const STYLE_KEY = 'student-style-v1';
-  const [speaking, setSpeaking] = useState<SpeakingStyle>(() => {
-    try { return { ...EMPTY_SPEAKING_STYLE, ...JSON.parse(localStorage.getItem(STYLE_KEY) || '{}') }; }
-    catch { return EMPTY_SPEAKING_STYLE; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(STYLE_KEY, JSON.stringify(speaking)); } catch { /* ignore */ }
-  }, [speaking]);
-  const styleBrief = buildStyleBrief(speaking, fr);
-
-  const TARGET_KEY = 'student-target-v1';
-  const [target, setTarget] = useState<{ role: string; company: string; sector: string; interviewer: string }>(() => {
-    try { return { role: '', company: '', sector: '', interviewer: '', ...JSON.parse(localStorage.getItem(TARGET_KEY) || '{}') }; }
-    catch { return { role: '', company: '', sector: '', interviewer: '' }; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(TARGET_KEY, JSON.stringify(target)); } catch { /* ignore */ }
-  }, [target]);
-
-  const handleResumeFile = async (file: File | null) => {
-    if (!file) return;
-    try {
-      const text = await extractResumeText(file);
-      setResumeText(text);
-      toast.success(fr ? 'CV importé et lu' : 'Resume imported and read');
-    } catch (e) {
-      const code = (e as Error).message;
-      const msg = code === 'DOC_LEGACY'
-        ? (fr ? 'Format .doc trop ancien : enregistre en PDF ou .docx.' : 'Legacy .doc: save as PDF or .docx.')
-        : code === 'EMPTY'
-          ? (fr ? 'Aucun texte lisible (CV scanné ?) : copie-colle le texte ci-dessous.' : 'No readable text (scanned CV?): paste the text below.')
-          : (fr ? 'Fichier non lisible : utilise un PDF, un .docx ou du texte.' : 'Unreadable file: use a PDF, .docx or text file.');
-      toast.error(msg);
-    }
-  };
-
-  const analyzeResume = async () => {
-    if (resumeText.trim().length < 80) {
-      toast.error(fr ? 'Colle au moins quelques lignes de ton CV' : 'Paste at least a few lines of your resume');
-      return;
-    }
-    setPrepLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: {
-          mode: 'resumeprep',
-          resumeText: resumeText.trim(),
-          jobTarget: target.role || position || cvTarget,
-          companyName: target.company || undefined,
-          sector: target.sector || undefined,
-          interviewerRole: target.interviewer || undefined,
-          speakingStyle: styleBrief || undefined,
-          language: fr ? 'fr' : 'en',
-        },
-      });
-      if (error) throw error;
-      const result = (data as { prep: any }).prep;
-      if (result?.error) throw new Error(result.error);
-      setPrep(result);
-      toast.success(fr ? 'Questions préparées' : 'Questions ready');
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setPrepLoading(false);
-    }
-  };
-
-  const rehearseQuestion = (question: string) => {
-    setInterviewMethod('');
-    if (!position.trim()) setPosition(cvTarget || (fr ? 'Poste ciblé' : 'Target role'));
-    setChat([{ role: 'assistant', content: question }]);
-    setFeedback(null);
-    setVideoCallOpen(true);
-  };
-
-  const rehearseMethod = (method: (typeof INTERVIEW_METHODS)[number]) => {
-    setInterviewMethod(method.title);
-    if (!position.trim()) setPosition(cvTarget || (fr ? 'Poste ciblé' : 'Target role'));
-    setChat([{ role: 'assistant', content: method.question }]);
-    setFeedback(null);
-    setVideoCallOpen(true);
-  };
-
   /* --------------------------- CV ----------------------------- */
   const [cvTarget, setCvTarget] = useState('');
   const [cvLoading, setCvLoading] = useState(false);
@@ -541,7 +344,7 @@ const StudentHub = () => {
     setCvLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('student-coach', {
-        body: { mode: 'cv', studentProfile: profile ?? draft, resumeText: resumeText.trim() || undefined, jobTarget: cvTarget, language: fr ? 'fr' : 'en' },
+        body: { mode: 'cv', studentProfile: profile ?? draft, jobTarget: cvTarget, language: fr ? 'fr' : 'en' },
       });
       if (error) throw error;
       setCvResult((data as { cv: unknown }).cv);
@@ -900,228 +703,6 @@ const StudentHub = () => {
 
         {/* CV & INTERVIEW */}
         <TabsContent value="cv" className="space-y-4">
-          {/* INTERVIEW METHODS */}
-          <Card className="border-emerald-500/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5 text-emerald-600" />{fr ? '4 techniques pour réussir ton entretien' : '4 techniques to succeed in your interview'}</CardTitle>
-              <CardDescription>
-                {fr
-                  ? 'Choisis une méthode, lis l’exemple, puis entraîne-toi immédiatement avec Sarah.'
-                  : 'Choose a method, read the example, then practice immediately with Sarah.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 lg:grid-cols-2">
-                {INTERVIEW_METHODS.map((method, index) => (
-                  <div key={method.key} className="rounded-lg border bg-card p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-semibold text-emerald-600">{method.time} · {fr ? `Astuce N°${index + 1}` : `Tip #${index + 1}`}</div>
-                        <h3 className="font-semibold mt-0.5">{method.title}</h3>
-                      </div>
-                      <Badge variant="secondary">{index + 1}/4</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{method.use}</p>
-                    <ol className="space-y-1">
-                      {method.steps.map((step, stepIndex) => (
-                        <li key={step} className="flex gap-2 text-sm">
-                          <span className="font-semibold text-emerald-600">{stepIndex + 1}.</span>
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                    <div className="rounded-md bg-emerald-500/10 p-3 text-xs font-medium">{method.opener}</div>
-                    <div className="rounded-md bg-muted/50 p-3 text-sm italic">« {method.example} »</div>
-                    <Button className="w-full" onClick={() => rehearseMethod(method)}>
-                      <Video className="h-4 w-4 mr-1" />{fr ? 'S’entraîner avec Sarah' : 'Practice with Sarah'}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* RESUME-BASED PREPARATION */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />{fr ? 'Mon CV → mes questions d\'entretien' : 'My resume → my interview questions'}</CardTitle>
-              <CardDescription>
-                {fr
-                  ? 'Importe ton CV (PDF, Word .docx ou texte) ou colle-le. Sarah en tire les questions probables, des exemples de réponses, et s\'en sert pendant la simulation.'
-                  : 'Upload your resume (PDF, Word .docx or text) or paste it. Sarah derives the likely questions, sample answers, and uses it during the simulation.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="space-y-1">
-                  <Label className="text-xs">{fr ? 'Poste visé' : 'Target role'}</Label>
-                  <Input
-                    value={target.role}
-                    onChange={(e) => setTarget({ ...target, role: e.target.value })}
-                    placeholder={fr ? 'Ex. Chargé(e) de recrutement' : 'e.g. Recruitment officer'}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">{fr ? 'Entreprise' : 'Company'}</Label>
-                  <Input
-                    value={target.company}
-                    onChange={(e) => setTarget({ ...target, company: e.target.value })}
-                    placeholder={fr ? 'Ex. OCP, Capgemini…' : 'e.g. OCP, Capgemini…'}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">{fr ? 'Secteur / industrie' : 'Sector / industry'}</Label>
-                  <Input
-                    value={target.sector}
-                    onChange={(e) => setTarget({ ...target, sector: e.target.value })}
-                    placeholder={fr ? 'Ex. offshoring, industrie, banque' : 'e.g. offshoring, industry, banking'}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">{fr ? 'Poste du recruteur' : 'Interviewer role'}</Label>
-                  <Input
-                    value={target.interviewer}
-                    onChange={(e) => setTarget({ ...target, interviewer: e.target.value })}
-                    placeholder={fr ? 'Ex. Manager opérationnel' : 'e.g. Hiring manager'}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {interviewerRolePresets(fr).map((r) => (
-                  <Button
-                    key={r}
-                    type="button"
-                    size="sm"
-                    variant={target.interviewer === r ? 'default' : 'outline'}
-                    className="h-7 text-xs"
-                    onClick={() => setTarget({ ...target, interviewer: target.interviewer === r ? '' : r })}
-                  >
-                    {r}
-                  </Button>
-                ))}
-              </div>
-              <Textarea
-                rows={6}
-                placeholder={fr ? 'Colle ici le contenu de ton CV : formation, expériences, projets, compétences...' : 'Paste your resume here: education, experience, projects, skills...'}
-                value={resumeText}
-                onChange={(e) => setResumeText(e.target.value)}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <Input
-                  type="file"
-                  accept={RESUME_FILE_ACCEPT}
-                  className="max-w-[240px]"
-                  onChange={(e) => handleResumeFile(e.target.files?.[0] ?? null)}
-                />
-                <Button onClick={analyzeResume} disabled={prepLoading}>
-                  {prepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  <span className="ml-2">{fr ? 'Préparer mes questions' : 'Prepare my questions'}</span>
-                </Button>
-                {resumeText.trim() && (
-                  <Button variant="outline" onClick={() => { setResumeText(''); setPrep(null); }}>
-                    <X className="h-4 w-4 mr-1" />{fr ? 'Effacer' : 'Clear'}
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {fr
-                  ? 'PDF et Word (.docx) sont lus directement dans ton navigateur : rien n\'est envoyé ni stocké sur un serveur. Si ton CV est un scan, copie-colle le texte.'
-                  : 'PDF and Word (.docx) are read directly in your browser: nothing is uploaded or stored. If your CV is a scan, paste the text.'}
-              </p>
-
-              <SpeakingStyleCard fr={fr} value={speaking} onChange={setSpeaking} />
-
-              {prep && (
-                <div className="space-y-3 pt-2">
-                  {prep.summary && <p className="text-sm text-muted-foreground italic">{prep.summary}</p>}
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {prep.strengths?.length > 0 && (
-                      <div className="rounded-lg border p-3">
-                        <div className="text-xs font-semibold text-emerald-600 mb-1">✓ {fr ? 'Atouts de ton CV' : 'Resume strengths'}</div>
-                        <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
-                          {prep.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                        </ul>
-                      </div>
-                    )}
-                    {prep.risks?.length > 0 && (
-                      <div className="rounded-lg border p-3">
-                        <div className="text-xs font-semibold text-amber-600 mb-1">⚡ {fr ? 'Ce que le recruteur va creuser' : 'What the recruiter will dig into'}</div>
-                        <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
-                          {prep.risks.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {(prep.sectorFocus?.length > 0 || prep.askThem?.length > 0) && (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {prep.sectorFocus?.length > 0 && (
-                        <div className="rounded-lg border p-3">
-                          <div className="text-xs font-semibold text-indigo-600 mb-1">🏢 {fr ? 'À connaître sur le secteur / le poste' : 'Know this about the sector / role'}</div>
-                          <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
-                            {prep.sectorFocus.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                          </ul>
-                        </div>
-                      )}
-                      {prep.askThem?.length > 0 && (
-                        <div className="rounded-lg border p-3">
-                          <div className="text-xs font-semibold text-sky-600 mb-1">💬 {fr ? 'Questions à leur poser' : 'Questions to ask them'}</div>
-                          <ul className="text-xs list-disc pl-4 space-y-0.5 text-muted-foreground">
-                            {prep.askThem.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    {prep.questions?.map((q: any, i: number) => (
-                      <div key={i} className="rounded-lg border">
-                        <button
-                          type="button"
-                          className="w-full text-left px-3 py-2.5 flex items-start gap-2 hover:bg-muted/50"
-                          onClick={() => setOpenPrep(openPrep === i ? null : i)}
-                        >
-                          <Badge variant="secondary" className="shrink-0">{i + 1}</Badge>
-                          <span className="text-sm font-medium">{q.question}</span>
-                        </button>
-                        {openPrep === i && (
-                          <div className="px-3 pb-3 space-y-2 text-sm">
-                            {q.why && <p className="text-xs text-muted-foreground">🎯 {q.why}</p>}
-                            {q.keyPoints?.length > 0 && (
-                              <ul className="text-xs list-disc pl-4 space-y-0.5">
-                                {q.keyPoints.map((k: string, j: number) => <li key={j}>{k}</li>)}
-                              </ul>
-                            )}
-                            {q.modelAnswer && (
-                              <div className="rounded-md bg-muted/50 p-2">
-                                <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-1">{fr ? 'Réponse modèle' : 'Model answer'}</div>
-                                <p className="whitespace-pre-wrap leading-relaxed">{q.modelAnswer}</p>
-                              </div>
-                            )}
-                            {q.personalize?.length > 0 && (
-                              <p className="text-xs text-amber-600">{fr ? 'À adapter : ' : 'Adapt: '}{q.personalize.join(' · ')}</p>
-                            )}
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              <Button size="sm" onClick={() => rehearseQuestion(q.question)}>
-                                <Video className="h-4 w-4 mr-1" />{fr ? 'Répéter avec Sarah' : 'Rehearse with Sarah'}
-                              </Button>
-                              {q.modelAnswer && (
-                                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(q.modelAnswer); toast.success(fr ? 'Copié' : 'Copied'); }}>
-                                  <Copy className="h-4 w-4 mr-1" />{fr ? 'Copier' : 'Copy'}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           <div className="grid lg:grid-cols-2 gap-4">
             {/* INTERVIEW SIM */}
             <Card>
@@ -1130,33 +711,7 @@ const StudentHub = () => {
                 <CardDescription>{fr ? 'Choisis le poste, le niveau et le style — puis pratique.' : 'Pick role, level and style — then practice.'}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
-                  <p className="text-sm font-semibold">{fr ? 'Scénarios de démonstration' : 'Demo scenarios'}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {DEMO_SCENARIOS.map((s) => (
-                      <Button
-                        key={s.key}
-                        size="sm"
-                        variant={demoKey === s.key ? 'default' : 'outline'}
-                        onClick={() => { setDemoKey(s.key); setPosition(s.position); setDifficulty(s.difficulty); setStyle(s.style); resetInterview(); }}
-                      >
-                        {s.position}
-                      </Button>
-                    ))}
-                  </div>
-                  {activeDemo && (
-                    <div className="space-y-2 pt-1">
-                      <p className="text-xs text-muted-foreground">{activeDemo.levelLabel}</p>
-                      <ul className="text-xs space-y-1 list-disc pl-4">
-                        {activeDemo.questions.map((q, i) => <li key={i}>{q}</li>)}
-                      </ul>
-                      <Button size="sm" className="w-full" onClick={() => { resetInterview(); setVideoCallOpen(true); }}>
-                        <Video className="h-4 w-4 mr-1" />{fr ? 'Lancer la démo en appel vidéo' : 'Launch demo video call'}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <Input placeholder={fr ? 'Poste ciblé (ex: Data Analyst)' : 'Target role (e.g. Data Analyst)'} value={position} onChange={(e) => { setPosition(e.target.value); setDemoKey(null); }} />
+                <Input placeholder={fr ? 'Poste ciblé (ex: Data Analyst)' : 'Target role (e.g. Data Analyst)'} value={position} onChange={(e) => setPosition(e.target.value)} />
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1385,23 +940,8 @@ const StudentHub = () => {
         streamingAssistant={streamingAssistant}
         language={fr ? 'fr' : 'en'}
         position={position}
-        coachingMethod={interviewMethod}
-        onStart={() => { if (chat.length === 0) void sendInterviewTurn(true); }}
+        onStart={() => sendInterviewTurn(true)}
         onUserAnswer={(text) => sendInterviewAnswer(text)}
-        onAskHelp={() =>
-          sendInterviewAnswer(
-            fr
-              ? `Je bloque sur ta question. Donne-moi une RÉPONSE MODÈLE complète, naturelle et prête à dire à voix haute à la première personne. ${interviewMethod ? `Utilise précisément la méthode « ${interviewMethod} ». ` : 'Choisis la méthode la plus adaptée parmi : Pitch en 3 étapes, STAR, Passé/Présent/Futur ou Pitch impactant. '}N’invente aucune expérience absente de mon CV : écris [à personnaliser] quand une information manque. 6 à 8 phrases maximum. Termine par « À adapter : » avec 2 éléments personnels à compléter, puis repose la même question.`
-              : `I'm stuck on your question. Give me a complete, natural MODEL ANSWER ready to say out loud in the first person. ${interviewMethod ? `Use the “${interviewMethod}” method precisely. ` : 'Choose the most suitable method: 3-step pitch, STAR, Past/Present/Future, or impactful pitch. '}Do not invent experience absent from my resume: write [personalize] when information is missing. Maximum 6–8 sentences. End with “Adapt:” and two personal details to complete, then repeat the same question.`,
-          )
-        }
-        onAskTips={() =>
-          sendInterviewAnswer(
-            fr
-              ? `Donne-moi tes recommandations pour la question posée. ${interviewMethod ? `Coache-moi avec la méthode « ${interviewMethod} ». ` : 'Indique d’abord laquelle de ces méthodes convient : Pitch en 3 étapes, STAR, Passé/Présent/Futur ou Pitch impactant. '}Puis donne dans cet ordre : 1) ce que le recruteur évalue vraiment 2) les étapes très courtes de la réponse 3) deux phrases d’accroche que je peux dire mot pour mot 4) une erreur à éviter. Sois concrète et directe. Ne repose pas la question ; attends ma réponse.`
-              : `Give me recommendations for the question asked. ${interviewMethod ? `Coach me with the “${interviewMethod}” method. ` : 'First identify the best method: 3-step pitch, STAR, Past/Present/Future, or impactful pitch. '}Then give: 1) what the recruiter assesses 2) the short answer steps 3) two opening lines I can say word for word 4) one mistake to avoid. Be direct. Do not repeat the question; wait for my answer.`,
-          )
-        }
       />
     </div>
   );

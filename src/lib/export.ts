@@ -58,12 +58,12 @@ export function exportPdf({ title, subtitle, headers, rows, orientation = 'portr
 <body>
   <h1>${title}</h1>
   ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
-  <p class="meta">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} — Qimatak</p>
+  <p class="meta">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} — TrainPro Academy</p>
   <table>
     <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
   </table>
-  <p class="footer">© ${new Date().getFullYear()} Qimatak — Confidential</p>
+  <p class="footer">© ${new Date().getFullYear()} TrainPro Academy — Confidential</p>
 </body>
 </html>`;
 

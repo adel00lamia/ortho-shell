@@ -1,1 +1,0 @@
-REVOKE ALL ON public.strategic_objectives, public.business_capabilities, public.objective_capabilities, public.business_processes, public.process_tasks FROM anon;

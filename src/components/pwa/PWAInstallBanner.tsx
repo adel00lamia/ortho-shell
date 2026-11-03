@@ -30,7 +30,7 @@ export function PWAInstallBanner() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">
-          {fr ? 'Installer Qimatak' : 'Install Qimatak'}
+          {fr ? 'Installer TrainPro Academy' : 'Install TrainPro Academy'}
         </p>
         <p className="text-xs text-muted-foreground">
           {fr ? 'Accédez à vos formations hors ligne' : 'Access your training offline'}

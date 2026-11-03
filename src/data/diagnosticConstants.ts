@@ -264,9 +264,11 @@ export const COMPANY_SIZES = [
 ] as const;
 
 export const AI_MODELS = [
-  { value: 'openai/gpt-6-astra', label: 'Qimatak Strategic AI', description: 'Executive analysis and structured training engineering' },
+  { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Fast)', description: 'Fast and efficient — best for most plans' },
+  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash (Balanced)', description: 'Good balance of speed and quality' },
+  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro (Advanced)', description: 'Most sophisticated reasoning' },
+  { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini (Quality)', description: 'Strong reasoning at lower cost' },
 ] as const;
-
 
 export const PROFILE_FIELDS = [
   { key: 'name', label: 'fieldName' },

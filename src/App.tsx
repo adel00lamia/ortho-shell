@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { lazy, Suspense } from "react";
 
@@ -28,8 +28,6 @@ const Billing = lazy(() => import("./pages/Billing"));
 const Settings = lazy(() => import("./pages/Settings"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
 const WorkforceOrg = lazy(() => import("./pages/WorkforceOrg"));
-const OrgIntelligence = lazy(() => import("./pages/OrgIntelligence"));
-const HRTransformation = lazy(() => import("./pages/HRTransformation"));
 const SkillsGaps = lazy(() => import("./pages/SkillsGaps"));
 const AssessmentReportPage = lazy(() => import("./pages/AssessmentReportPage"));
 const TrainingPlan = lazy(() => import("./pages/TrainingPlan"));
@@ -50,24 +48,7 @@ const Career = lazy(() => import("./pages/Career"));
 const JobBoard = lazy(() => import("./pages/JobBoard"));
 const TalentPipeline = lazy(() => import("./pages/TalentPipeline"));
 const HRKnowledgeBase = lazy(() => import("./pages/HRKnowledgeBase"));
-const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
-const EvidenceHub = lazy(() => import("./pages/EvidenceHub"));
-const ValueChain = lazy(() => import("./pages/ValueChain"));
-const TransformationCockpit = lazy(() => import("./pages/TransformationCockpit"));
-const HRWorkspacePage = lazy(() => import("./pages/HRWorkspacePage"));
-const HRWorkspaceDemo = lazy(() => import("./pages/HRWorkspaceDemo"));
-
-const AiHrDiagnostic = lazy(() => import("./pages/AiHrDiagnostic"));
-const AiHrWorkshops = lazy(() => import("./pages/AiHrWorkshops"));
-const AiHrLiveScreen = lazy(() => import("./pages/AiHrLiveScreen"));
-const AiHrSessionReport = lazy(() => import("./pages/AiHrSessionReport"));
-const ParticipantPortal = lazy(() => import("./pages/ParticipantPortal"));
-const EvidencePulsePublic = lazy(() => import("./pages/EvidencePulsePublic"));
-const QimatakExample = lazy(() => import("./pages/QimatakExample"));
-
-// Standalone interview-coach app (no account, no company data)
-const CoachApp = lazy(() => import("./standalone/coach/CoachApp"));
-
+const StudentHub = lazy(() => import("./pages/StudentHub"));
 
 // Lazy loaded components
 const SubscriptionGate = lazy(() => import("./components/SubscriptionGate"));
@@ -84,13 +65,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-/** Keeps old /diagnostic/... participant links working by forwarding them to /pulse/... */
-const LegacyDiagnosticRedirect = ({ kind }: { kind?: "live" | "report" }) => {
-  const { code } = useParams();
-  const suffix = kind ? `${kind}/${code}` : code ?? "";
-  return <Navigate to={`/pulse/${suffix}`} replace />;
-};
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
@@ -148,34 +122,6 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
-
-              {/* Qimatak Pulse — public AI × HR participant + projected screens */}
-              {/* Standalone interview-coach app — public, no account */}
-              <Route path="/coach" element={<Suspense fallback={<PageLoader />}><CoachApp /></Suspense>} />
-              <Route path="/entretien" element={<Navigate to="/coach" replace />} />
-
-              <Route path="/pulse" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
-              <Route path="/pulse/live/:code" element={<Suspense fallback={<PageLoader />}><AiHrLiveScreen /></Suspense>} />
-              <Route path="/pulse/report/:code" element={<Suspense fallback={<PageLoader />}><AiHrSessionReport /></Suspense>} />
-              <Route path="/pulse/:code" element={<Suspense fallback={<PageLoader />}><AiHrDiagnostic /></Suspense>} />
-
-              {/* Backwards-compatible redirects from the old public /diagnostic URLs */}
-              <Route path="/diagnostic" element={<Navigate to="/pulse" replace />} />
-              <Route path="/diagnostic/live/:code" element={<LegacyDiagnosticRedirect kind="live" />} />
-              <Route path="/diagnostic/report/:code" element={<LegacyDiagnosticRedirect kind="report" />} />
-              <Route path="/diagnostic/:code" element={<LegacyDiagnosticRedirect />} />
-
-              {/* Enterprise root-cause product */}
-              <Route path="/diagnose" element={<Navigate to="/workflow/assess/root-cause" replace />} />
-
-              {/* Participant portal — code-based access */}
-              <Route path="/portail" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
-              <Route path="/portail/:code" element={<Suspense fallback={<PageLoader />}><ParticipantPortal /></Suspense>} />
-              <Route path="/exemple" element={<Suspense fallback={<PageLoader />}><QimatakExample /></Suspense>} />
-              <Route path="/example" element={<Navigate to="/exemple" replace />} />
-              <Route path="/preuves/:code" element={<Suspense fallback={<PageLoader />}><EvidencePulsePublic /></Suspense>} />
-              <Route path="/evidence/:code" element={<Suspense fallback={<PageLoader />}><EvidencePulsePublic /></Suspense>} />
-
               
               {/* Protected routes with sidebar */}
               <Route path="/dashboard" element={<ProtectedLayout featureName="Dashboard"><Dashboard /></ProtectedLayout>} />
@@ -184,26 +130,13 @@ const App = () => (
               <Route path="/company-profile" element={<ProtectedLayout featureName="Company Profile"><CompanyProfile /></ProtectedLayout>} />
 
               {/* Workflow Routes - Assess */}
-              <Route path="/workflow/assess/root-cause" element={<ProtectedLayout featureName="Root Cause Diagnostic"><RootCauseDiagnostic /></ProtectedLayout>} />
-              <Route path="/workflow/assess/evidence" element={<ProtectedLayout featureName="Evidence Hub"><EvidenceHub /></ProtectedLayout>} />
-
-              <Route path="/workflow/assess/ai-hr" element={<ProtectedLayout featureName="AI × HR Diagnostic"><AiHrWorkshops /></ProtectedLayout>} />
               <Route path="/workflow/assess/workforce" element={<ProtectedLayout featureName="Workforce & Org"><WorkforceOrg /></ProtectedLayout>} />
               <Route path="/workflow/assess/performance" element={<ProtectedLayout featureName="Performance Evaluation"><PerformanceEvaluation /></ProtectedLayout>} />
               <Route path="/workflow/assess/skills" element={<ProtectedLayout featureName="Skills & Gaps"><SkillsGaps /></ProtectedLayout>} />
               <Route path="/workflow/assess/report" element={<ProtectedLayout featureName="360° Report"><AssessmentReportPage /></ProtectedLayout>} />
-
-              {/* Value chain spine: gap → lever → plan → internal training → updated level */}
-              <Route path="/organisation" element={<ProtectedLayout featureName="Organisation"><OrgIntelligence /></ProtectedLayout>} />
-              <Route path="/rh-transformation" element={<ProtectedLayout featureName="Transformation RH"><HRTransformation /></ProtectedLayout>} />
-              <Route path="/transformation-rh/demo" element={<Suspense fallback={<PageLoader />}><HRWorkspaceDemo /></Suspense>} />
-              <Route path="/transformation-rh" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><HRWorkspacePage /></Suspense></ProtectedRoute>} />
-              <Route path="/transformation" element={<ProtectedLayout featureName="Transformation"><TransformationCockpit /></ProtectedLayout>} />
-              <Route path="/workflow/chain" element={<ProtectedLayout featureName="Value Chain"><ValueChain /></ProtectedLayout>} />
               {/* Legacy assess routes */}
-              <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/root-cause" replace />} />
+              <Route path="/workflow/assess/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
               <Route path="/workflow/assess/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
-              
               
               {/* Workflow Routes - Plan */}
               <Route path="/workflow/plan/ingenierie" element={<ProtectedLayout featureName="Ingénierie de Formation"><GatedPage><IngenieriePage /></GatedPage></ProtectedLayout>} />
@@ -240,9 +173,10 @@ const App = () => (
               <Route path="/career/jobs" element={<ProtectedLayout featureName="Job Board"><JobBoard /></ProtectedLayout>} />
               <Route path="/manage/talent" element={<ProtectedLayout featureName="Talent Pipeline"><TalentPipeline /></ProtectedLayout>} />
               <Route path="/hr-knowledge" element={<ProtectedLayout featureName="HR Knowledge Base"><HRKnowledgeBase /></ProtectedLayout>} />
-              <Route path="/student" element={<Navigate to="/coach" replace />} />
+              <Route path="/student" element={<ProtectedLayout featureName="Student Hub"><StudentHub /></ProtectedLayout>} />
               
               {/* Legacy route redirects */}
+              <Route path="/diagnostic" element={<Navigate to="/workflow/assess/skills" replace />} />
               <Route path="/performance-evaluation" element={<Navigate to="/workflow/assess/performance" replace />} />
               <Route path="/benchmark" element={<Navigate to="/workflow/assess/report" replace />} />
               <Route path="/ai-plan-builder" element={<Navigate to="/workflow/plan/builder" replace />} />

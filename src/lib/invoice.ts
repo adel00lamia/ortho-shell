@@ -74,7 +74,7 @@ export function generateInvoice(data: InvoiceData) {
 <body>
   <div class="header">
     <div>
-      <div class="brand">Qimatak</div>
+      <div class="brand">TrainPro Academy</div>
       <div style="color: #666; font-size: 11px; margin-top: 4px;">Plateforme de gestion de formation</div>
     </div>
     <div>
@@ -154,7 +154,7 @@ export function generateInvoice(data: InvoiceData) {
   </div>
 
   <div class="footer">
-    © ${new Date().getFullYear()} Qimatak — Document généré automatiquement
+    © ${new Date().getFullYear()} TrainPro Academy — Document généré automatiquement
   </div>
 </body>
 </html>`;
