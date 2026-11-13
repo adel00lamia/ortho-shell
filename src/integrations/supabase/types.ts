@@ -779,6 +779,68 @@ export type Database = {
         }
         Relationships: []
       }
+      digivas_missions: {
+        Row: {
+          code_hash: string
+          created_at: string
+          nom: string
+          ouverte: boolean
+          slug: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          nom: string
+          ouverte?: boolean
+          slug: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          nom?: string
+          ouverte?: boolean
+          slug?: string
+        }
+        Relationships: []
+      }
+      digivas_reponses: {
+        Row: {
+          commentaire: string | null
+          created_at: string
+          id: string
+          mission: string
+          nom: string
+          profil: string
+          reponses: string
+        }
+        Insert: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          mission: string
+          nom: string
+          profil: string
+          reponses: string
+        }
+        Update: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          mission?: string
+          nom?: string
+          profil?: string
+          reponses?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digivas_reponses_mission_fkey"
+            columns: ["mission"]
+            isOneToOne: false
+            referencedRelation: "digivas_missions"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       employee_skills: {
         Row: {
           assessed_at: string
@@ -2864,6 +2926,23 @@ export type Database = {
       current_profile_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      digivas_mission_ouverte: { Args: { p_slug: string }; Returns: boolean }
+      digivas_resultats: {
+        Args: { p_code: string; p_mission: string }
+        Returns: {
+          commentaire: string
+          created_at: string
+          id: string
+          mission_nom: string
+          nom: string
+          profil: string
+          reponses: string
+        }[]
+      }
+      digivas_supprimer: {
+        Args: { p_code: string; p_id: string; p_mission: string }
+        Returns: undefined
       }
       evidence_pulse_aggregate: { Args: { _pulse_id: string }; Returns: Json }
       evidence_pulse_get: { Args: { _code: string }; Returns: Json }
