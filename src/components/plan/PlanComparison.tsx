@@ -13,36 +13,10 @@ import {
   BookOpen,
   Target
 } from 'lucide-react';
-
-interface GeneratedPlan {
-  title: string;
-  description: string;
-  modules: any[];
-  timeline: string;
-  budget_breakdown: any;
-  kpis: any[];
-  recommendations: string[];
-  risk_assessment?: any;
-  success_metrics?: string[];
-}
-
-interface PlanRequirements {
-  company: string;
-  industry: string;
-  companySize: string;
-  budget: number;
-  duration: number;
-  objectives: string[];
-  targetSkills: string[];
-  constraints: string[];
-}
+import type { GeneratedPlanSnapshot } from '@/types/trainingPlan';
 
 interface PlanComparisonProps {
-  plans: Array<{
-    plan: GeneratedPlan;
-    requirements: PlanRequirements;
-    generatedAt: Date;
-  }>;
+  plans: GeneratedPlanSnapshot[];
   onSelectPlan?: (index: number) => void;
 }
 

@@ -1,6 +1,6 @@
 {
-  "name": "TrainPro Academy",
-  "short_name": "TrainPro",
+  "name": "Qimatak",
+  "short_name": "Qimatak",
   "description": "Plateforme de gestion de la formation pour les entreprises marocaines",
   "start_url": "/",
   "display": "standalone",

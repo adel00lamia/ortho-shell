@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target, PlusCircle, ArrowLeft } from "lucide-react";
+import { Pencil, Save, X, CheckCircle, Clock, TrendingUp, Target, PlusCircle, ArrowLeft, Landmark } from "lucide-react";
 import MarketplaceIntegration from "@/components/MarketplaceIntegration";
 import { DiscussionThread } from "@/components/collaboration/DiscussionThread";
 
@@ -195,6 +195,10 @@ export default function TrainingPlan() {
             onClick={() => handleStatusUpdate(plan.status === 'active' ? 'completed' : 'active')}
           >
             {plan.status === 'active' ? 'Mark Complete' : 'Activate Plan'}
+          </Button>
+          <Button onClick={() => navigate(`/workflow/plan/ingenierie?plan=${plan.id}`)}>
+            <Landmark className="mr-2 h-4 w-4" />
+            Préparer le dossier OFPPT
           </Button>
         </div>
 

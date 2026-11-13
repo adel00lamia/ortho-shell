@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import { RootErrorBoundary } from "./components/error-boundaries/RootErrorBoundary";
 import { initMonitoring } from "./lib/monitoring";
 import App from "./App.tsx";
@@ -9,6 +10,8 @@ initMonitoring();
 
 createRoot(document.getElementById("root")!).render(
   <RootErrorBoundary>
-    <App />
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
   </RootErrorBoundary>
 );

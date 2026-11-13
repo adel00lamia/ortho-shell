@@ -5,11 +5,19 @@ import React from 'react';
 // ----------------------------------------------------------------
 // Mock Supabase before importing the hook
 // ----------------------------------------------------------------
-const mockGetSession = vi.fn();
-const mockOnAuthStateChange = vi.fn();
-const mockSignInWithPassword = vi.fn();
-const mockSignUp = vi.fn();
-const mockSignOut = vi.fn();
+const {
+  mockGetSession,
+  mockOnAuthStateChange,
+  mockSignInWithPassword,
+  mockSignUp,
+  mockSignOut,
+} = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+  mockOnAuthStateChange: vi.fn(),
+  mockSignInWithPassword: vi.fn(),
+  mockSignUp: vi.fn(),
+  mockSignOut: vi.fn(),
+}));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -22,6 +30,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     },
   },
 }));
+
 
 import { AuthProvider, useAuth } from './useAuth';
 

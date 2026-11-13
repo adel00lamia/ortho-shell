@@ -3,9 +3,6 @@ import { useUserRole, type UserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirror DISCOVERY_MODE used in ProtectedRoute so the dev experience stays consistent.
-const DISCOVERY_MODE = true;
-
 interface RoleProtectedRouteProps {
   children: React.ReactNode;
   /** Roles allowed to view this route. */
@@ -27,10 +24,6 @@ export const RoleProtectedRoute = ({
 }: RoleProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
-
-  if (DISCOVERY_MODE) {
-    return <>{children}</>;
-  }
 
   if (authLoading || roleLoading) {
     return (
