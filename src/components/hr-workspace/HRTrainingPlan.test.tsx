@@ -14,7 +14,7 @@ describe('HR training generation integration', () => {
     m.processes = [{ ...emptyProcess('paie', 'role'), name: 'Contrôle paie', evidence: 'Mesure documentée' }];
     m.scenario.trainingCost = 200000;
     const plan = { title: 'Plan RH test', modules: [{ title: 'Contrôle paie', duration: '7 h', learning_objectives: ['Contrôler les variables'], content_outline: ['Écarts'], assessment_methods: ['Cas pratique'], workplace_transfer: ['Revue'] }], kpis: [], recommendations: [] };
-    const fetchMock = vi.fn(async () => new Response(`: start\n\ndata: ${JSON.stringify({ plan })}\n\n`, { headers: { 'content-type': 'text/event-stream' } }));
+    const fetchMock = vi.fn(async (_url: string, _options: RequestInit) => new Response(`: start\n\ndata: ${JSON.stringify({ plan })}\n\n`, { headers: { 'content-type': 'text/event-stream' } }));
     vi.stubGlobal('fetch', fetchMock);
     render(<HRTrainingPlan m={m} storageKey="test.company.user" />);
     fireEvent.click(screen.getByRole('button', { name: 'Générer le plan RH' }));
