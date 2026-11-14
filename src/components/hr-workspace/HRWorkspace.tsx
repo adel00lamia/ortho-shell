@@ -9,6 +9,7 @@ import type { Setter, ViewId } from './fields';
 import { OrganisationView, SummaryView } from './SummaryOrgViews';
 import { DiagnosticView, ProcessView } from './ProcessDiagnosticViews';
 import { RoadmapView, ScenarioView } from './ScenarioRoadmapViews';
+import { HRTrainingPlan } from './HRTrainingPlan';
 
 const VIEWS: { id: ViewId; label: string; icon: typeof Gauge }[] = [
   { id: 'synthese', label: 'Synthèse', icon: Gauge },
@@ -97,6 +98,7 @@ export function HRWorkspace({ storageKey, initial, demo, resetTo }: { storageKey
         {view === 'diagnostic' && <DiagnosticView {...props} />}
         {view === 'scenarios' && <ScenarioView {...props} />}
         {view === 'feuille' && <RoadmapView {...props} />}
+        {view === 'feuille' && !demo && <HRTrainingPlan m={m} storageKey={storageKey} />}
       </main>
     </div>
   );

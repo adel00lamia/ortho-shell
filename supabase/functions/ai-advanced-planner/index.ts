@@ -4,6 +4,7 @@ import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
 import { ANTHROPIC_MAX_OUTPUT_TOKENS, readAnthropicStream } from './anthropicStream.ts';
+import { PLAN_SECTIONS, parsePlanSection, sectionSchema } from './planContract.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
@@ -524,19 +525,18 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     const selectedModel = 'openai/gpt-6-astra';
     console.log('Using AI model:', selectedModel);
 
-    // The generation is delivered through a streamed response. Keepalive bytes are sent
-    // while the model is still writing so the platform never cuts the connection.
-    const PART_A_KEYS = 'title, description, executive_summary, timeline, training_axes, modules, budget_breakdown, kpis, recommendations';
-    const PART_B_KEYS = 'market_research, swot_analysis, pestel_analysis, risk_assessment, success_metrics, implementation_roadmap, regulatory_framework, evidence_register';
+    // Keepalives prevent idle transport timeouts, not the platform's execution limit.
+    // Bounded parallel sections avoid one oversized answer; every section is required.
 
     const scopeInstruction = `OUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${'{SCOPE}'}. Omit every other key. Be concise. Return valid JSON only.`;
 
     // Provider selection: the user's own Claude key takes priority; otherwise Lovable AI.
-    const callAnthropic = async (scope: string) => {
+    const callAnthropic = async (keys: readonly string[]) => {
+      if (!ANTHROPIC_API_KEY) throw new Error('Claude API key is not configured');
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'x-api-key': ANTHROPIC_API_KEY!,
+          'x-api-key': ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
         },
@@ -545,7 +545,9 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
           max_tokens: ANTHROPIC_MAX_OUTPUT_TOKENS,
           stream: true,
           system: systemPrompt,
-          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }],
+          tools: [{ name: 'submit_plan', description: 'Submit this complete plan section as structured JSON, with the detailed field format specified in the system instructions.', input_schema: sectionSchema(keys) }],
+          tool_choice: { type: 'tool', name: 'submit_plan', disable_parallel_tool_use: true },
+          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', keys.join(', '))}\nUse submit_plan to deliver this section. Complete every requested field. Keep each prose field under 60 words and list entries under 25 words; retain all detailed module fields, 4–6 modules, and the prescribed learning outcomes and content items. Do not generate fields assigned to another section.` }],
         }),
       });
       if (!response.ok) {
@@ -558,7 +560,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       return await readAnthropicStream(response);
     };
 
-    const callGateway = async (scope: string) => {
+    const callGateway = async (keys: readonly string[]) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
@@ -569,7 +571,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       body: JSON.stringify({
         model: selectedModel,
         instructions: systemPrompt,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }] }],
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', keys.join(', '))}` }] }],
         stream: true,
         store: false,
         reasoning: { effort: 'low', summary: 'auto' },
@@ -591,121 +593,12 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     console.log('AI provider:', ANTHROPIC_API_KEY ? 'anthropic (user key)' : 'lovable-gateway');
 
     const planPromise = (async () => {
-    const [content, analysisContent] = await Promise.all([
-      callAi(PART_A_KEYS),
-      callAi(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
-    ]);
-    if (!content) throw new Error('No content in AI response');
+    const sections = await Promise.all(PLAN_SECTIONS.map(async keys => {
+      const content = await callAi(keys);
+      return parsePlanSection(content, keys);
+    }));
+    const rawPlan = Object.assign({}, ...sections) as Record<string, unknown>;
 
-    const extractFirstJsonObject = (text: string): string | null => {
-      const start = text.indexOf('{');
-      if (start < 0) return null;
-      let depth = 0, inStr = false, esc = false;
-      for (let i = start; i < text.length; i++) {
-        const c = text[i];
-        if (inStr) {
-          if (esc) esc = false;
-          else if (c === '\\') esc = true;
-          else if (c === '"') inStr = false;
-          continue;
-        }
-        if (c === '"') inStr = true;
-        else if (c === '{') depth++;
-        else if (c === '}') { depth--; if (depth === 0) return text.slice(start, i + 1); }
-      }
-      return null;
-    };
-
-    let planData;
-    try {
-      let jsonContent = content;
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
-      try {
-        planData = JSON.parse(jsonContent);
-      } catch {
-        const first = extractFirstJsonObject(jsonContent);
-        if (!first) throw new Error('No JSON object found');
-        planData = JSON.parse(first);
-      }
-      const p = planData?.plan;
-      if (!p || !Array.isArray(p.modules) || p.modules.length === 0) throw new Error('Plan without modules');
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
-      throw new Error(language === 'fr'
-        ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
-        : 'The AI response was incomplete. No generic plan was shown: please regenerate.');
-    }
-    if (false) {
-      planData = {
-        plan: {
-          title: language === 'fr' ? `Plan de développement des compétences — ${canonicalCompany}` : `Skills Development Plan — ${canonicalCompany}`,
-          description: language === 'fr'
-            ? 'Trame de secours à compléter et à valider avec les parties prenantes.'
-            : 'Fallback framework to complete and validate with stakeholders.',
-          timeline: language === 'fr' ? 'À planifier' : 'To be scheduled',
-          training_axes: [{
-            name: language === 'fr' ? 'Axe à confirmer' : 'Axis to confirm',
-            rationale: language === 'fr' ? 'À valider à partir du diagnostic des besoins.' : 'To validate from the needs assessment.',
-            observed_difficulties: [language === 'fr' ? 'À confirmer' : 'To confirm'],
-            target_competencies: requirements.targetSkills.length ? requirements.targetSkills : [language === 'fr' ? 'À confirmer' : 'To confirm'],
-            operational_objectives: [language === 'fr' ? 'À valider' : 'To validate'],
-            support_measures: [language === 'fr' ? 'À définir' : 'To define'],
-          }],
-          modules: [{
-            title: language === 'fr' ? 'Action de formation à cadrer' : 'Training action to scope',
-            description: language === 'fr' ? 'Contenu à construire après validation du besoin.' : 'Content to build after validating the need.',
-            duration: language === 'fr' ? 'À planifier' : 'To be scheduled',
-            type: "mixed",
-            skills_covered: requirements.targetSkills.slice(0, 3),
-            prerequisites: [],
-            delivery_method: "hybrid",
-            resources_needed: [],
-            assessment_methods: [language === 'fr' ? 'À définir' : 'To define'],
-            training_axis: language === 'fr' ? 'Axe à confirmer' : 'Axis to confirm',
-            observed_difficulty: language === 'fr' ? 'À confirmer' : 'To confirm',
-            learning_objectives: [language === 'fr' ? 'À préciser' : 'To specify'],
-            content_outline: [language === 'fr' ? 'À concevoir' : 'To design'],
-            support_measures: [language === 'fr' ? 'À définir' : 'To define'],
-            workplace_transfer: [language === 'fr' ? 'À définir' : 'To define'],
-            accountable_owner: language === 'fr' ? 'À confirmer' : 'To confirm',
-            provider: language === 'fr' ? 'À sélectionner' : 'To select',
-            planned_period: language === 'fr' ? 'À planifier' : 'To be scheduled'
-          }],
-          budget_breakdown: {},
-          kpis: [{
-            name: language === 'fr' ? 'Transfert en situation de travail' : 'Workplace transfer',
-            description: language === 'fr' ? 'Indicateur à définir avec le responsable opérationnel.' : 'Indicator to define with the operational owner.',
-            target: language === 'fr' ? 'À valider' : 'To validate',
-            baseline: language === 'fr' ? 'À mesurer' : 'To measure',
-            improvement_expected: language === 'fr' ? 'À valider' : 'To validate',
-            source: language === 'fr' ? 'À confirmer' : 'To confirm',
-            owner: language === 'fr' ? 'À confirmer' : 'To confirm',
-          }],
-          evidence_register: [{
-            evidence: language === 'fr' ? 'Validation documentée du besoin' : 'Documented needs validation',
-            source: language === 'fr' ? 'À confirmer' : 'To confirm',
-            owner: language === 'fr' ? 'À confirmer' : 'To confirm',
-            timing: language === 'fr' ? 'Avant la formation' : 'Before training',
-            status: language === 'fr' ? 'À collecter' : 'To collect',
-          }],
-          recommendations: [language === 'fr' ? 'Valider le diagnostic, les populations et les responsables avant programmation.' : 'Validate the diagnosis, audiences and owners before scheduling.'],
-          risk_assessment: { high_risks: [], medium_risks: [], mitigation_strategies: [], contingency_plans: [] },
-          success_metrics: []
-        }
-      };
-    }
-
-    let analysis: Record<string, unknown> = {};
-    if (analysisContent) {
-      try {
-        let t = analysisContent; const m = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) t = m[1].trim();
-        let parsed; try { parsed = JSON.parse(t); } catch { const f = extractFirstJsonObject(t); parsed = f ? JSON.parse(f) : {}; }
-        analysis = parsed?.plan && typeof parsed.plan === 'object' ? parsed.plan : (parsed || {});
-      } catch (e) { console.error('Analysis parse failed:', e); }
-    }
-    const corePlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
-    const rawPlan = { ...analysis, ...corePlan };
     const normalizedBudget = normalizeBudget(rawPlan, Math.round(requirements.budget));
     const normalizedPlan = {
       ...rawPlan,

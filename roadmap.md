@@ -24,6 +24,7 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Plan Builder fiabilisé avec génération compacte, traçabilité objectif → action et transfert du plan sauvegardé vers l’ingénierie OFPPT
 
 ## Next
+- [x] Claude : sections JSON structurées obligatoires, rejet des réponses partielles, réception complète partagée et plan RH local lié au modèle saisi ; tests de régression et service déployé.
 - [x] Corriger les trois signalements : plafond Claude et détection des réponses partielles, secteur RH, polices locales (95 tests réussis ; génération authentifiée non vérifiable ici)
 - [x] Transformer le cockpit `/transformation` en workflow piloté par un WorkGraph central et un agent de connaissance en lecture seule
 - [x] Relier le WorkGraph aux rôles, compétences, personnes, interventions et mesures d’impact existants sans dupliquer les référentiels
@@ -36,5 +37,6 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [ ] Espace partenaire marque blanche
 
 ## Bloqué (action utilisateur)
+- [ ] Vérifier une génération Claude réelle dans l’espace RH connecté : Supabase externe, session de test indisponible ici.
 - [ ] Activer la protection contre les mots de passe compromis (tableau de bord Supabase)
 - [ ] Fournir un contact réel (email / téléphone) pour les boutons « Demander un devis »
