@@ -11,5 +11,5 @@ export default function HRWorkspacePage() {
   if (!user || !companyId) return <div className="mx-auto max-w-lg p-8 text-center text-sm">Aucune entreprise rattachée à votre compte. Complétez d’abord votre profil entreprise.</div>;
   const c = context?.company;
   const prefill = () => emptyModel({ name: c?.name ?? '', sector: c?.industry ?? '', headcount: c?.employeeCount ?? null, sites: c?.city ?? '' });
-  return <HRWorkspace storageKey={liveKey(user.id, companyId)} initial={prefill} resetTo={prefill} demo={false} />;
+  return <HRWorkspace key={liveKey(user.id, companyId)} storageKey={liveKey(user.id, companyId)} initial={prefill} resetTo={prefill} demo={false} />;
 }

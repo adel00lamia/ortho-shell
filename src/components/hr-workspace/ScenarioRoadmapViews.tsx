@@ -190,7 +190,7 @@ function Report({ m, demo }: { m: ViewProps['m']; demo: boolean }) {
   const th = 'border-b py-1 pr-2 text-left font-medium';
   const td = 'border-b py-1 pr-2 align-top';
   return (
-    <section id="hrw-report" className="hrw-report rounded-lg border bg-card p-5 text-sm">
+    <section id="hrw-report" className="hrw-report min-w-0 overflow-x-auto rounded-lg border bg-card p-5 text-sm print:overflow-visible">
       <p className="hrw-noprint mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Aperçu du rapport imprimable</p>
       <header className="border-b pb-3">
         <h2 className="text-xl font-semibold">Rapport de transformation RH — {m.company.name || 'Entreprise non nommée'}</h2>
