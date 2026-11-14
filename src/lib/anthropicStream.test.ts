@@ -22,4 +22,18 @@ describe('Claude plan stream', () => {
   it('rejects disconnected streams rather than accepting partial JSON', async () => {
     await expect(readAnthropicStream(sse(delta('{"plan":')))).rejects.toThrow('before completion');
   });
+  it('assembles forced-tool JSON instead of commentary', async () => {
+    const events = [
+      delta('Here is the plan'),
+      { type: 'content_block_start', index: 1, content_block: { type: 'tool_use', name: 'submit_plan' } },
+      { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: '{"plan":' } },
+      { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: '{"title":"RH"}}' } },
+      { type: 'message_delta', delta: { stop_reason: 'tool_use' } }, stopped,
+    ];
+    await expect(readAnthropicStream(sse(...events))).resolves.toBe('{"plan":{"title":"RH"}}');
+  });
+  it('rejects refusal or missing stop reason even with message_stop', async () => {
+    await expect(readAnthropicStream(sse(delta('{}'), { type: 'message_delta', delta: { stop_reason: 'refusal' } }, stopped))).rejects.toThrow('refusal');
+    await expect(readAnthropicStream(sse(delta('{}'), stopped))).rejects.toThrow('missing stop reason');
+  });
 });
