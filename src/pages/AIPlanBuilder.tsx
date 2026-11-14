@@ -704,40 +704,7 @@ export default function AIPlanBuilder() {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        let serverMessage = '';
-        try {
-          const body = await response.text();
-          serverMessage = body ? (JSON.parse(body)?.error || '') : '';
-        } catch { /* keep generic message */ }
-        throw new Error(serverMessage || `HTTP ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let raw = '';
-      let data: { plan?: GeneratedPlan; error?: string } | null = null;
-      while (!data) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        raw += decoder.decode(value, { stream: true });
-        const lines = raw.split('\n');
-        for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
-          const payload = line.slice(5).trim();
-          if (!payload) continue;
-          try { data = JSON.parse(payload); } catch { /* frame still incomplete */ }
-        }
-      }
-      // A plain JSON body (non-streamed response) stays supported.
-      if (!data && raw.trim().startsWith('{')) {
-        try { data = JSON.parse(raw); } catch { /* handled below */ }
-      }
-
-      if (data?.error) throw new Error(data.error);
-      if (!data?.plan) throw new Error(language === 'fr' ? 'Réponse incomplète du service de génération.' : 'Incomplete response from the generation service.');
-
-
+      const data = { plan: await readPlanResponse(response) };
 
       const generatedAt = new Date();
       const snapshotRequirements: PlanRequirements = {
