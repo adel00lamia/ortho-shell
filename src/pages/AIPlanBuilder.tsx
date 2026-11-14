@@ -76,6 +76,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { GeneratedPlan, GeneratedPlanSnapshot, PlanRequirements, PreviousPlanFile } from '@/types/trainingPlan';
 import { env } from '@/config/env';
+import { readPlanResponse } from '@/lib/planResponse';
 import { useCompanyFactbase } from '@/hooks/useCompanyFactbase';
 
 import { ContextualActions } from '@/components/ContextualActions';
