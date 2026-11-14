@@ -7,3 +7,4 @@
 - Keep sector inference in a tested pure helper so short technology keywords cannot match unrelated industry names.
 - Keep the planner's Anthropic stream adapter independently testable and reject terminal errors or missing completion before parsing a plan.- Keep the HR Transformation workspace (/transformation-rh, public /transformation-rh/demo) on one pure model in src/lib/hrWorkspace with device-local storage keyed by user+company; the demo must never query company tables.
 - Build WorkGraph people/intervention/impact layers in pure src/lib/workGraphLinks from existing records using exact references only, so links are never guessed.
+- Remount the HR workspace on user/company storage-key changes and keep demo/real backup formats separated to prevent accidental local cross-context writes.

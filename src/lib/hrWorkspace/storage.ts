@@ -55,6 +55,6 @@ export function loadModel(key: string, fallback: () => WorkspaceModel): Workspac
   try { return parseModel(localStorage.getItem(key)) ?? fallback(); } catch { return fallback(); }
 }
 export function saveModel(key: string, m: WorkspaceModel) {
-  try { localStorage.setItem(key, JSON.stringify(m)); } catch { /* quota / private mode: keep in memory */ }
+  try { localStorage.setItem(key, JSON.stringify(m)); return true; } catch { return false; }
 }
 export { emptyModel };
