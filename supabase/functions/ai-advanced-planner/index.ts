@@ -4,6 +4,7 @@ import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
 import { ANTHROPIC_MAX_OUTPUT_TOKENS, readAnthropicStream } from './anthropicStream.ts';
+import { PLAN_SECTIONS, parsePlanSection, sectionSchema } from './planContract.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
@@ -524,19 +525,18 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     const selectedModel = 'openai/gpt-6-astra';
     console.log('Using AI model:', selectedModel);
 
-    // The generation is delivered through a streamed response. Keepalive bytes are sent
-    // while the model is still writing so the platform never cuts the connection.
-    const PART_A_KEYS = 'title, description, executive_summary, timeline, training_axes, modules, budget_breakdown, kpis, recommendations';
-    const PART_B_KEYS = 'market_research, swot_analysis, pestel_analysis, risk_assessment, success_metrics, implementation_roadmap, regulatory_framework, evidence_register';
+    // Keepalives prevent idle transport timeouts, not the platform's execution limit.
+    // Bounded parallel sections avoid one oversized answer; every section is required.
 
     const scopeInstruction = `OUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${'{SCOPE}'}. Omit every other key. Be concise. Return valid JSON only.`;
 
     // Provider selection: the user's own Claude key takes priority; otherwise Lovable AI.
-    const callAnthropic = async (scope: string) => {
+    const callAnthropic = async (keys: readonly string[]) => {
+      if (!ANTHROPIC_API_KEY) throw new Error('Claude API key is not configured');
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'x-api-key': ANTHROPIC_API_KEY!,
+          'x-api-key': ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
         },
@@ -545,7 +545,9 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
           max_tokens: ANTHROPIC_MAX_OUTPUT_TOKENS,
           stream: true,
           system: systemPrompt,
-          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }],
+          tools: [{ name: 'submit_plan', description: 'Submit this complete plan section as structured JSON, with the detailed field format specified in the system instructions.', input_schema: sectionSchema(keys) }],
+          tool_choice: { type: 'tool', name: 'submit_plan', disable_parallel_tool_use: true },
+          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', keys.join(', '))}\nUse submit_plan to deliver this section. Complete every requested field. Keep each prose field under 60 words and list entries under 25 words; retain all detailed module fields, 4–6 modules, and the prescribed learning outcomes and content items. Do not generate fields assigned to another section.` }],
         }),
       });
       if (!response.ok) {
@@ -558,7 +560,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       return await readAnthropicStream(response);
     };
 
-    const callGateway = async (scope: string) => {
+    const callGateway = async (keys: readonly string[]) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
@@ -569,7 +571,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       body: JSON.stringify({
         model: selectedModel,
         instructions: systemPrompt,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', scope)}` }] }],
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', keys.join(', '))}` }] }],
         stream: true,
         store: false,
         reasoning: { effort: 'low', summary: 'auto' },
@@ -591,11 +593,11 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     console.log('AI provider:', ANTHROPIC_API_KEY ? 'anthropic (user key)' : 'lovable-gateway');
 
     const planPromise = (async () => {
-    const [content, analysisContent] = await Promise.all([
-      callAi(PART_A_KEYS),
-      callAi(PART_B_KEYS).catch(err => { console.error('Analysis part failed:', err); return ''; }),
-    ]);
-    if (!content) throw new Error('No content in AI response');
+    const sections = await Promise.all(PLAN_SECTIONS.map(async keys => {
+      const content = await callAi(keys);
+      return parsePlanSection(content, keys);
+    }));
+    const rawPlan = Object.assign({}, ...sections) as Record<string, unknown>;
 
     const extractFirstJsonObject = (text: string): string | null => {
       const start = text.indexOf('{');
@@ -705,7 +707,6 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       } catch (e) { console.error('Analysis parse failed:', e); }
     }
     const corePlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
-    const rawPlan = { ...analysis, ...corePlan };
     const normalizedBudget = normalizeBudget(rawPlan, Math.round(requirements.budget));
     const normalizedPlan = {
       ...rawPlan,

@@ -7,6 +7,9 @@ export const readAnthropicStream = async (response: Response): Promise<string> =
   const decoder = new TextDecoder();
   let buffer = '';
   let output = '';
+  let toolOutput = '';
+  let toolIndex: number | undefined;
+  let stopReason = '';
   let terminalError = '';
   let completed = false;
   const consume = (line: string) => {
@@ -15,9 +18,12 @@ export const readAnthropicStream = async (response: Response): Promise<string> =
     if (!payload) return;
     let event;
     try { event = JSON.parse(payload); } catch { return; }
+    if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use' && event.content_block.name === 'submit_plan') toolIndex = event.index;
     if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta' && typeof event.delta.text === 'string') output += event.delta.text;
+    if (event.type === 'content_block_delta' && event.index === toolIndex && event.delta?.type === 'input_json_delta' && typeof event.delta.partial_json === 'string') toolOutput += event.delta.partial_json;
     if (event.type === 'error') terminalError = event.error?.message || 'Claude generation failed';
     if (event.type === 'message_delta' && event.delta?.stop_reason === 'max_tokens') terminalError = 'Claude response truncated (max_tokens). Please reduce the plan scope and regenerate.';
+    if (event.type === 'message_delta' && event.delta?.stop_reason) stopReason = event.delta.stop_reason;
     if (event.type === 'message_stop') completed = true;
   };
   try {
@@ -37,6 +43,11 @@ export const readAnthropicStream = async (response: Response): Promise<string> =
   // Never pass partial JSON to the plan parser, even when some text arrived.
   if (terminalError) throw new Error(terminalError);
   if (!completed) throw new Error('Claude stream ended before completion. Please regenerate.');
+  if (stopReason !== 'end_turn' && stopReason !== 'tool_use') throw new Error(`Claude did not finish the plan (${stopReason || 'missing stop reason'})`);
+  if (toolIndex !== undefined) {
+    if (!toolOutput || stopReason !== 'tool_use') throw new Error('Claude returned an incomplete structured plan');
+    return toolOutput;
+  }
   if (!output) throw new Error('Claude returned an empty response');
   return output;
 };

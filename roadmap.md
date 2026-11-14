@@ -24,6 +24,7 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Plan Builder fiabilisé avec génération compacte, traçabilité objectif → action et transfert du plan sauvegardé vers l’ingénierie OFPPT
 
 ## Next
+- [ ] Fiabiliser le JSON Claude complet et connecter le plan de formation au modèle RH ; vérifier réception, export et erreurs.
 - [x] Corriger les trois signalements : plafond Claude et détection des réponses partielles, secteur RH, polices locales (95 tests réussis ; génération authentifiée non vérifiable ici)
 - [x] Transformer le cockpit `/transformation` en workflow piloté par un WorkGraph central et un agent de connaissance en lecture seule
 - [x] Relier le WorkGraph aux rôles, compétences, personnes, interventions et mesures d’impact existants sans dupliquer les référentiels
