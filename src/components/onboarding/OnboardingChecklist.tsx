@@ -178,7 +178,7 @@ export const OnboardingChecklist = () => {
       for (const step of steps) {
         try {
           if (await step.checkFn()) completed.push(step.id);
-        } catch {}
+        } catch { /* ignore */ }
       }
       setCompletedSteps(completed);
       if (completed.length === steps.length) setDismissed(true);

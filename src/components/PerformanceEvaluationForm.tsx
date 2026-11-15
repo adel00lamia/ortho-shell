@@ -196,7 +196,7 @@ export default function PerformanceEvaluationForm({
     try {
       const selectedJob = jobDescriptions.find(j => j.id === selectedJobId);
       let requestType = '';
-      let context: any = {
+      const context: any = {
         employeeName: formData.employeeName,
         jobTitle: selectedJob?.title || 'N/A',
         scores: competencyScores

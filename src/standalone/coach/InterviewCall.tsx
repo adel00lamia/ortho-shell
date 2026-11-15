@@ -326,8 +326,8 @@ export function InterviewCall({ open, onClose, chat, chatLoading, streamingAssis
   // Cleanup on close
   useEffect(() => {
     if (!open) {
-      try { window.speechSynthesis.cancel(); } catch {}
-      try { recognitionRef.current?.stop(); } catch {}
+      try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
       setIsListening(false);
       setIsSpeaking(false);
       setTranscript('');
@@ -385,7 +385,7 @@ export function InterviewCall({ open, onClose, chat, chatLoading, streamingAssis
   }, [locale, fr, onUserAnswer, pushLog]);
 
   const stopListening = () => {
-    try { recognitionRef.current?.stop(); } catch {}
+    try { recognitionRef.current?.stop(); } catch { /* ignore */ }
     setIsListening(false);
   };
 
@@ -395,8 +395,8 @@ export function InterviewCall({ open, onClose, chat, chatLoading, streamingAssis
   };
 
   const handleHangup = () => {
-    try { window.speechSynthesis.cancel(); } catch {}
-    try { recognitionRef.current?.stop(); } catch {}
+    try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+    try { recognitionRef.current?.stop(); } catch { /* ignore */ }
     onClose();
   };
 
