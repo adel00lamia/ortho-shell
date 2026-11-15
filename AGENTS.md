@@ -11,3 +11,4 @@
 - Use one complete-frame plan response reader for the planner and HR workspace; keep HR training proposals in user/company-scoped local storage without overwriting the transformation roadmap.
 - Build WorkGraph people/intervention/impact layers in pure src/lib/workGraphLinks from existing records using exact references only, so links are never guessed.
 - Remount the HR workspace on user/company storage-key changes and keep demo/real backup formats separated to prevent accidental local cross-context writes.
+- Import edge-function preflight headers from `_shared/cors.ts`, not Supabase client subpaths, to avoid unavailable package exports.

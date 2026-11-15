@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://esm.sh/zod@3.23.8';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
 import { ANTHROPIC_MAX_OUTPUT_TOKENS, readAnthropicStream } from './anthropicStream.ts';
 import { PLAN_SECTIONS, parsePlanSection, sectionSchema } from './planContract.ts';
@@ -561,6 +561,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     };
 
     const callGateway = async (keys: readonly string[]) => {
+    if (!LOVABLE_API_KEY) throw new Error('Lovable AI key is not configured');
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
