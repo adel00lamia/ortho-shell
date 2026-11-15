@@ -5,7 +5,7 @@
 // - a Training Fit Score computed by THIS code from constrained signals
 // - recommended interventions (most of them NOT training)
 // - suggested KPIs for the before/after impact loop
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import {
   CAUSE_KEYS,
   computeConfidence,

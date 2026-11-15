@@ -1,6 +1,6 @@
 // Student Coach edge function: handles AI mock-interview turns, CV suggestions,
 // post-interview feedback scoring, and soft-skill practice scenarios.
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const MODEL = 'google/gemini-3-flash-preview';
