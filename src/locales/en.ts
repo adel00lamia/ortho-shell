@@ -50,6 +50,8 @@ export const en = {
     skillsGaps: 'Skills & Gaps',
     transformation: 'Transformation',
     orgIntelligence: 'Roles · Tasks · KPIs',
+    hrWorkspace: 'HR Transformation workspace',
+    hrTransformation: 'HR Transformation',
     transformationCockpit: 'Transformation cockpit',
     valueChain: 'Value chain',
     assessmentReport: '360° Report',

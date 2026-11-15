@@ -3,8 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://esm.sh/zod@3.23.8';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { ofpptDomainsPrompt, validateOfpptLink } from './ofpptDomains.ts';
+import { ANTHROPIC_MAX_OUTPUT_TOKENS, readAnthropicStream } from './anthropicStream.ts';
+import { PLAN_SECTIONS, parsePlanSection, sectionSchema } from './planContract.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
 const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -251,8 +254,8 @@ serve(async (req) => {
 
     console.log('Advanced plan generation for user:', userId);
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!LOVABLE_API_KEY && !ANTHROPIC_API_KEY) {
+      throw new Error('No AI provider key configured (LOVABLE_API_KEY or ANTHROPIC_API_KEY)');
     }
 
     const languageInstruction = language === 'fr'
@@ -522,9 +525,42 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
     const selectedModel = 'openai/gpt-6-astra';
     console.log('Using AI model:', selectedModel);
 
-    // The generation is delivered through a streamed response. Keepalive bytes are sent
-    // while the model is still writing so the platform never cuts the connection.
-    const planPromise = (async () => {
+    // Keepalives prevent idle transport timeouts, not the platform's execution limit.
+    // Bounded parallel sections avoid one oversized answer; every section is required.
+
+    const scopeInstruction = `OUTPUT SCOPE: return a JSON object {"plan": {...}} containing ONLY these keys of the schema: ${'{SCOPE}'}. Omit every other key. Be concise. Return valid JSON only.`;
+
+    // Provider selection: the user's own Claude key takes priority; otherwise Lovable AI.
+    const callAnthropic = async (keys: readonly string[]) => {
+      if (!ANTHROPIC_API_KEY) throw new Error('Claude API key is not configured');
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: ANTHROPIC_MAX_OUTPUT_TOKENS,
+          stream: true,
+          system: systemPrompt,
+          tools: [{ name: 'submit_plan', description: 'Submit this complete plan section as structured JSON, with the detailed field format specified in the system instructions.', input_schema: sectionSchema(keys) }],
+          tool_choice: { type: 'tool', name: 'submit_plan', disable_parallel_tool_use: true },
+          messages: [{ role: 'user', content: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', keys.join(', '))}\nUse submit_plan to deliver this section. Complete every requested field. Keep each prose field under 60 words and list entries under 25 words; retain all detailed module fields, 4–6 modules, and the prescribed learning outcomes and content items. Do not generate fields assigned to another section.` }],
+        }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Anthropic API error:', response.status, errorText);
+        let safeMessage = `Anthropic API error: ${response.status}`;
+        try { safeMessage = JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
+        throw new Error(safeMessage);
+      }
+      return await readAnthropicStream(response);
+    };
+
+    const callGateway = async (keys: readonly string[]) => {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
       method: 'POST',
       headers: {
@@ -535,7 +571,7 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       body: JSON.stringify({
         model: selectedModel,
         instructions: systemPrompt,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\nReturn valid JSON only.` }] }],
+        input: [{ role: 'user', content: [{ type: 'input_text', text: `${userPrompt}\n\n${scopeInstruction.replace('{SCOPE}', keys.join(', '))}` }] }],
         stream: true,
         store: false,
         reasoning: { effort: 'low', summary: 'auto' },
@@ -550,50 +586,19 @@ ${historicalPlans.map((p) => `--- PLAN FROM ${p.year} (${p.name}) ---\n${p.conte
       try { safeMessage = JSON.parse(errorText)?.message || JSON.parse(errorText)?.error?.message || safeMessage; } catch { /* preserve safe status */ }
       throw new Error(safeMessage);
     }
-
-    const content = await readResponsesStream(response);
-    if (!content) throw new Error('No content in AI response');
-
-    const extractFirstJsonObject = (text: string): string | null => {
-      const start = text.indexOf('{');
-      if (start < 0) return null;
-      let depth = 0, inStr = false, esc = false;
-      for (let i = start; i < text.length; i++) {
-        const c = text[i];
-        if (inStr) {
-          if (esc) esc = false;
-          else if (c === '\\') esc = true;
-          else if (c === '"') inStr = false;
-          continue;
-        }
-        if (c === '"') inStr = true;
-        else if (c === '{') depth++;
-        else if (c === '}') { depth--; if (depth === 0) return text.slice(start, i + 1); }
-      }
-      return null;
+    return await readResponsesStream(response);
     };
 
-    let planData;
-    try {
-      let jsonContent = content;
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
-      try {
-        planData = JSON.parse(jsonContent);
-      } catch {
-        const first = extractFirstJsonObject(jsonContent);
-        if (!first) throw new Error('No JSON object found');
-        planData = JSON.parse(first);
-      }
-      const p = planData?.plan;
-      if (!p || !Array.isArray(p.modules) || p.modules.length === 0) throw new Error('Plan without modules');
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
-      throw new Error(language === 'fr'
-        ? "La réponse de l'IA était incomplète. Aucun plan générique n'a été affiché : relancez la génération."
-        : 'The AI response was incomplete. No generic plan was shown: please regenerate.');
-    }
-    const rawPlan = planData?.plan && typeof planData.plan === 'object' ? planData.plan : {};
+    const callAi = ANTHROPIC_API_KEY ? callAnthropic : callGateway;
+    console.log('AI provider:', ANTHROPIC_API_KEY ? 'anthropic (user key)' : 'lovable-gateway');
+
+    const planPromise = (async () => {
+    const sections = await Promise.all(PLAN_SECTIONS.map(async keys => {
+      const content = await callAi(keys);
+      return parsePlanSection(content, keys);
+    }));
+    const rawPlan = Object.assign({}, ...sections) as Record<string, unknown>;
+
     const normalizedBudget = normalizeBudget(rawPlan, Math.round(requirements.budget));
     const normalizedPlan = {
       ...rawPlan,

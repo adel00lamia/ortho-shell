@@ -29,6 +29,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
 const WorkforceOrg = lazy(() => import("./pages/WorkforceOrg"));
 const OrgIntelligence = lazy(() => import("./pages/OrgIntelligence"));
+const HRTransformation = lazy(() => import("./pages/HRTransformation"));
 const SkillsGaps = lazy(() => import("./pages/SkillsGaps"));
 const AssessmentReportPage = lazy(() => import("./pages/AssessmentReportPage"));
 const TrainingPlan = lazy(() => import("./pages/TrainingPlan"));
@@ -53,6 +54,8 @@ const RootCauseDiagnostic = lazy(() => import("./pages/RootCauseDiagnostic"));
 const EvidenceHub = lazy(() => import("./pages/EvidenceHub"));
 const ValueChain = lazy(() => import("./pages/ValueChain"));
 const TransformationCockpit = lazy(() => import("./pages/TransformationCockpit"));
+const HRWorkspacePage = lazy(() => import("./pages/HRWorkspacePage"));
+const HRWorkspaceDemo = lazy(() => import("./pages/HRWorkspaceDemo"));
 
 const AiHrDiagnostic = lazy(() => import("./pages/AiHrDiagnostic"));
 const AiHrWorkshops = lazy(() => import("./pages/AiHrWorkshops"));
@@ -192,6 +195,9 @@ const App = () => (
 
               {/* Value chain spine: gap → lever → plan → internal training → updated level */}
               <Route path="/organisation" element={<ProtectedLayout featureName="Organisation"><OrgIntelligence /></ProtectedLayout>} />
+              <Route path="/rh-transformation" element={<ProtectedLayout featureName="Transformation RH"><HRTransformation /></ProtectedLayout>} />
+              <Route path="/transformation-rh/demo" element={<Suspense fallback={<PageLoader />}><HRWorkspaceDemo /></Suspense>} />
+              <Route path="/transformation-rh" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><HRWorkspacePage /></Suspense></ProtectedRoute>} />
               <Route path="/transformation" element={<ProtectedLayout featureName="Transformation"><TransformationCockpit /></ProtectedLayout>} />
               <Route path="/workflow/chain" element={<ProtectedLayout featureName="Value Chain"><ValueChain /></ProtectedLayout>} />
               {/* Legacy assess routes */}

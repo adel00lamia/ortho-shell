@@ -4,6 +4,8 @@
 SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin → assessment → plan de formation IA → exécution (formation interne d'abord) → carrière / upskilling-reskilling → mesure d'impact. Le diagnostic est le portillon de la chaîne, pas le produit entier.
 
 ## Done
+- [x] Sauvegarde JSON et restauration du modèle RH, séparation démo/réel et signalement des erreurs d’enregistrement local.
+- [x] Carte complète de Transformation RH : organigramme, activités Humain + IA, workflow, contrôles, approbations, preuves et business case
 - [x] Démonstration guidée Atlas Industries en 6 étapes dans le cockpit Transformation, avec données, analyse et livrable attendus
 - [x] Refonte premium de la page d’accueil autour du cockpit Transformation, du WorkGraph et des livrables décisionnels
 - [x] Parcours d'entretien guidé : Pitch en 3 étapes, STAR, Passé/Présent/Futur et Pitch impactant, avec entraînement Sarah
@@ -22,8 +24,10 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [x] Plan Builder fiabilisé avec génération compacte, traçabilité objectif → action et transfert du plan sauvegardé vers l’ingénierie OFPPT
 
 ## Next
+- [x] Claude : sections JSON structurées obligatoires, rejet des réponses partielles, réception complète partagée et plan RH local lié au modèle saisi ; tests de régression et service déployé.
+- [x] Corriger les trois signalements : plafond Claude et détection des réponses partielles, secteur RH, polices locales (95 tests réussis ; génération authentifiée non vérifiable ici)
 - [x] Transformer le cockpit `/transformation` en workflow piloté par un WorkGraph central et un agent de connaissance en lecture seule
-- [ ] Relier le WorkGraph aux rôles, compétences, personnes, interventions et mesures d’impact existants sans dupliquer les référentiels
+- [x] Relier le WorkGraph aux rôles, compétences, personnes, interventions et mesures d’impact existants sans dupliquer les référentiels
 - [ ] Alimenter la chaîne depuis le diagnostic de cause racine (créer les lignes de développement à partir des actions formation)
 - [ ] Relier une ligne de développement à un module interne précis (et non seulement au plan)
 - [ ] Vue carrière / succession alimentée par les niveaux réellement acquis
@@ -33,5 +37,6 @@ SaaS B2B couvrant toute la chaîne de valeur formation : détection du besoin �
 - [ ] Espace partenaire marque blanche
 
 ## Bloqué (action utilisateur)
+- [ ] Vérifier une génération Claude réelle dans l’espace RH connecté : Supabase externe, session de test indisponible ici.
 - [ ] Activer la protection contre les mots de passe compromis (tableau de bord Supabase)
 - [ ] Fournir un contact réel (email / téléphone) pour les boutons « Demander un devis »
