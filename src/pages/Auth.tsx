@@ -157,7 +157,7 @@ const Auth = () => {
               ? "La plateforme tout-en-un pour diagnostiquer, planifier, exécuter et suivre vos formations d'entreprise."
               : 'The all-in-one platform to assess, plan, execute and track your corporate training programs.'}
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {features.map((f, i) => (
               <motion.div
                 key={i}
@@ -260,7 +260,7 @@ const Auth = () => {
                   </TabsContent>
                   <TabsContent value="signup">
                     <form onSubmit={handleSignUp} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="firstName">{fr ? 'Prénom' : 'First Name'}</Label>
                           <Input id="firstName" name="firstName" placeholder="John" required />

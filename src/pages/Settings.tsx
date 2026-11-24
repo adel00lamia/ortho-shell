@@ -260,7 +260,7 @@ const Settings = () => {
       case 'active': return 'bg-green-500';
       case 'past_due': return 'bg-orange-500';
       case 'canceled': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      default: return 'bg-muted-foreground';
     }
   };
 

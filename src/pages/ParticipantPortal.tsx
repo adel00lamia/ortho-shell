@@ -320,7 +320,7 @@ function KpisTab({ code, participant }: { code: string; participant: PortalParti
             <Label htmlFor="kpi-name">Nom</Label>
             <Input id="kpi-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Temps de tri des CV" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="kpi-unit">Unité</Label>
               <Input id="kpi-unit" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="h/semaine" />
@@ -573,7 +573,7 @@ function CohortTab({
           <p className="text-xs text-muted-foreground">
             {stats.participants} participants · résultats agrégés et anonymes
           </p>
-          <div className="grid grid-cols-2 gap-3 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-center">
             <div className="rounded-xl bg-primary/10 p-4">
               <p className="text-xs text-muted-foreground">Votre score</p>
               <p className="text-3xl font-bold text-primary">{participant.opportunity_score}</p>

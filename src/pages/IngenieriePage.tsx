@@ -78,7 +78,7 @@ export default function IngenieriePage() {
   if (!dossier) return <Loader />;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-muted/50">
       <WizardHeader
         currentStep={currentStep}
         completedSteps={completedSteps}

@@ -1157,7 +1157,7 @@ const StudentHub = () => {
                   )}
                 </div>
                 <Input placeholder={fr ? 'Poste ciblé (ex: Data Analyst)' : 'Target role (e.g. Data Analyst)'} value={position} onChange={(e) => { setPosition(e.target.value); setDemoKey(null); }} />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1276,7 +1276,7 @@ const StudentHub = () => {
                       <h4 className="font-semibold flex items-center gap-2"><Award className="h-4 w-4 text-primary" />{fr ? 'Évaluation' : 'Evaluation'}</h4>
                       <div className="text-2xl font-bold text-primary">{feedback.overallScore}/100</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       {[
                         { k: 'communication', l: fr ? 'Communication' : 'Communication' },
                         { k: 'technical', l: fr ? 'Technique' : 'Technical' },

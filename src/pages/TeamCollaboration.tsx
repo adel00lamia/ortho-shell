@@ -161,7 +161,7 @@ const TeamCollaboration = () => {
       case 'planning': return 'bg-purple-100 text-purple-800';
       case 'in-progress': return 'bg-blue-100 text-blue-800';
       case 'review': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -170,7 +170,7 @@ const TeamCollaboration = () => {
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -221,7 +221,7 @@ const TeamCollaboration = () => {
                   <Label htmlFor="projectDesc">Description</Label>
                   <Textarea id="projectDesc" placeholder="Describe the project goals and scope" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="team">Team</Label>
                     <Select>

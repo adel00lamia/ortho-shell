@@ -664,7 +664,7 @@ export default function CompanyProfile() {
               <Separator />
               <div>
                 <p className="text-sm font-medium mb-3">{fr ? 'Aperçu du rapport PDF' : 'PDF Report Preview'}</p>
-                <div className="border rounded-lg p-4 bg-white dark:bg-card">
+                <div className="border rounded-lg p-4 bg-card">
                   <div className="h-2 rounded-full mb-4" style={{ backgroundColor: form.primary_color }} />
                   <div className="flex items-center gap-3 mb-3">
                     {form.logo_url ? (

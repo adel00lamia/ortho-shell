@@ -394,7 +394,7 @@ export default function HRTransformation() {
                         {role.tasks.map((task, taskIndex) => {
                           const taskMode = mode(task.ai);
                           return (
-                            <div key={task.name} className="grid grid-cols-12 items-center gap-2 bg-muted/40 p-2 text-sm">
+                            <div key={task.name} className="grid grid-cols-4 md:grid-cols-12 items-center gap-2 bg-muted/40 p-2 text-sm">
                               <div className="col-span-12 md:col-span-5"><p className="text-foreground">{task.name}</p><p className="text-xs text-muted-foreground">{task.tool}</p></div>
                               <label className="col-span-4 flex items-center gap-1 text-xs text-muted-foreground md:col-span-2"><Input type="number" min={0} className="h-8 w-14" value={task.hours} onChange={(event) => edit(teamIndex, roleIndex, (current) => ({ ...current, tasks: current.tasks.map((item, index) => index === taskIndex ? { ...item, hours: Math.max(0, +event.target.value) } : item) }))} />h/sem</label>
                               <div className="col-span-5 md:col-span-3"><Slider value={[task.ai]} max={100} step={5} onValueChange={([value]) => edit(teamIndex, roleIndex, (current) => ({ ...current, tasks: current.tasks.map((item, index) => index === taskIndex ? { ...item, ai: value } : item) }))} /><p className="mt-1 text-[11px] text-muted-foreground">Potentiel IA {task.ai}%</p></div>
