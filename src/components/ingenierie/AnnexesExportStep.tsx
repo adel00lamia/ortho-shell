@@ -87,8 +87,8 @@ export function AnnexesExportStep({ dossier, completedSteps, onSave, onExportPDF
                 <div key={step} className="flex items-center gap-2 text-sm">
                   {done
                     ? <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    : <div className="h-4 w-4 rounded-full border-2 border-gray-300" />}
-                  <span className={cn(done ? 'text-gray-900' : 'text-muted-foreground')}>
+                    : <div className="h-4 w-4 rounded-full border-2 border-border" />}
+                  <span className={cn(done ? 'text-foreground' : 'text-muted-foreground')}>
                     {fr ? lFr : lEn}
                   </span>
                   {!done && <Badge variant="outline" className="text-xs text-orange-600">{fr ? 'Incomplet' : 'Incomplete'}</Badge>}
@@ -112,7 +112,7 @@ export function AnnexesExportStep({ dossier, completedSteps, onSave, onExportPDF
                 <div className="flex items-center gap-2">
                   {uploaded
                     ? <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    : <div className={cn('h-4 w-4 rounded-full border-2', doc.required ? 'border-red-400' : 'border-gray-300')} />}
+                    : <div className={cn('h-4 w-4 rounded-full border-2', doc.required ? 'border-red-400' : 'border-border')} />}
                   <div>
                     <p className="text-sm font-medium">{fr ? doc.labelFr : doc.labelEn}</p>
                     {doc.required && !uploaded && (

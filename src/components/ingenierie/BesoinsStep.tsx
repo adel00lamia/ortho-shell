@@ -30,7 +30,7 @@ interface Props {
 function NeedCard({ need, onUpdate, onDelete, fr }: { need: Need; onUpdate: (n: Need) => void; onDelete: () => void; fr: boolean }) {
   const PRIORITY_COLORS = { high: 'bg-red-100 text-red-700', medium: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' };
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardContent className="pt-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <Input

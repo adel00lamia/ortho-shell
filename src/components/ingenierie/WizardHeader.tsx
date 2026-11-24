@@ -56,7 +56,7 @@ export function WizardHeader({
   const urgentDeadlines = deadlines.filter((d) => d.variant === 'urgent' || d.variant === 'warning');
 
   const statusLabel: Record<string, { fr: string; en: string; color: string }> = {
-    draft: { fr: 'Brouillon', en: 'Draft', color: 'bg-gray-100 text-gray-700' },
+    draft: { fr: 'Brouillon', en: 'Draft', color: 'bg-muted text-foreground' },
     in_progress: { fr: 'En cours', en: 'In Progress', color: 'bg-blue-100 text-blue-700' },
     finalized: { fr: 'Finalisé', en: 'Finalized', color: 'bg-green-100 text-green-700' },
     submitted: { fr: 'Soumis', en: 'Submitted', color: 'bg-purple-100 text-purple-700' },
@@ -65,13 +65,13 @@ export function WizardHeader({
   const currentStatus = statusLabel[status] ?? statusLabel.draft;
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4 space-y-4">
+    <div className="bg-background border-b border-border px-6 py-4 space-y-4">
       {/* Top row */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-foreground">
             {language === 'fr' ? "Ingénierie de Formation" : "Training Engineering"}
-            <span className="ml-2 text-gray-400 font-normal">{exerciseYear}</span>
+            <span className="ml-2 text-muted-foreground font-normal">{exerciseYear}</span>
           </h1>
           {giacSector && (
             <Badge variant="outline" className="text-xs font-medium border-green-600 text-green-700">
@@ -125,8 +125,8 @@ export function WizardHeader({
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap',
                   isCurrent && 'bg-primary text-primary-foreground',
                   isCompleted && !isCurrent && 'bg-green-100 text-green-700 hover:bg-green-200',
-                  !isCurrent && !isCompleted && isAccessible && 'text-gray-600 hover:bg-gray-100',
-                  !isAccessible && 'text-gray-300 cursor-not-allowed'
+                  !isCurrent && !isCompleted && isAccessible && 'text-muted-foreground hover:bg-muted',
+                  !isAccessible && 'text-muted-foreground/50 cursor-not-allowed'
                 )}
               >
                 {isCompleted && !isCurrent ? (
@@ -137,7 +137,7 @@ export function WizardHeader({
                 <span>{language === 'fr' ? step.labelFr : step.labelEn}</span>
               </button>
               {index < STEPS.length - 1 && (
-                <div className={cn('h-px w-4 mx-0.5', isCompleted ? 'bg-green-300' : 'bg-gray-200')} />
+                <div className={cn('h-px w-4 mx-0.5', isCompleted ? 'bg-green-300' : 'bg-border')} />
               )}
             </div>
           );

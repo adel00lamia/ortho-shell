@@ -257,7 +257,7 @@ function RoleCard({ role: r, fr, i, onClick }: { role: OrgRole; fr: boolean; i: 
         <div><p className="font-semibold">{r.title}</p><p className="text-xs text-muted-foreground">{r.dept}{r.holder ? ` · ${r.holder}` : ''}</p></div>
         {r.critical && <Badge variant="destructive" className="text-[10px]">{fr ? 'Critique' : 'Critical'}</Badge>}
       </div>
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-center">
         <Mini label={fr ? 'Tâches' : 'Tasks'} v={r.tasks.length} /><Mini label="h/sem" v={r.hours} /><Mini label={fr ? 'Libérable' : 'Releasable'} v={`${r.capacityGain}h`} />
       </div>
       <div><div className="flex justify-between text-[11px] text-muted-foreground"><span>{fr ? 'Exposition IA' : 'AI exposure'}</span><span>{r.exposure}%</span></div><Progress value={r.exposure} className="h-1.5" /></div>

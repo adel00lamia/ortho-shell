@@ -83,7 +83,7 @@ export default function AiHrWorkshops() {
                   placeholder="AI × HR – Casablanca – Septembre 2026"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Ville</Label>
                   <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
@@ -146,7 +146,7 @@ export default function AiHrWorkshops() {
                   </Badge>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center gap-6">
-                  <div className="rounded-xl bg-white p-3">
+                  <div className="rounded-xl bg-card p-3">
                     <QRCodeSVG value={participantUrl} size={132} />
                   </div>
                   <div className="min-w-[220px] flex-1 space-y-3">

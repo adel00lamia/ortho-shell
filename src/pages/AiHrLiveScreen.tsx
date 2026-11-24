@@ -32,7 +32,7 @@ export default function AiHrLiveScreen() {
           <p className="text-sm text-muted-foreground">Résultats agrégés et anonymes — mise à jour automatique</p>
         </div>
         <div className="flex items-center gap-4 rounded-2xl border border-border/60 bg-card/60 p-4">
-          <div className="rounded-xl bg-white p-2"><QRCodeSVG value={url} size={92} /></div>
+          <div className="rounded-xl bg-card p-2"><QRCodeSVG value={url} size={92} /></div>
           <div className="text-xs">
             <p className="font-bold text-foreground">Scannez pour participer</p>
             <p className="font-mono text-muted-foreground">{code}</p>

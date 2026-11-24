@@ -328,7 +328,7 @@ export default function OFPPTReimbursement() {
                   <Calculator className="h-4 w-4" />{r.calculator}
                 </h4>
                 <p className="text-xs text-muted-foreground">{r.calculatorDesc}</p>
-                <div className="grid gap-3 grid-cols-3">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                   <div>
                     <Label className="text-xs">{r.totalHours}</Label>
                     <Input type="number" value={newHours} onChange={e => setNewHours(e.target.value)} placeholder="0" />

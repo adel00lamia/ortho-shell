@@ -50,7 +50,7 @@ function ActionCard({ action, onUpdate, onDelete, fr }: {
   const update = (field: string, value: any) => onUpdate({ id: action.id, [field]: value });
 
   return (
-    <Card className={`border ${exceedsHourlyCap ? 'border-orange-300' : 'border-gray-200'}`}>
+    <Card className={`border ${exceedsHourlyCap ? 'border-orange-300' : 'border-border'}`}>
       <CardHeader className="pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">

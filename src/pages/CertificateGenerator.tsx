@@ -178,7 +178,7 @@ export default function CertificateGenerator() {
                   <Label htmlFor="completionDate">{c.completionDate}</Label>
                   <Input id="completionDate" type="date" value={certificateData.completionDate} onChange={(e) => setCertificateData(prev => ({ ...prev, completionDate: e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="issuerName">{c.issuerName}</Label>
                     <Input id="issuerName" value={certificateData.issuerName} onChange={(e) => setCertificateData(prev => ({ ...prev, issuerName: e.target.value }))} placeholder="Dr. Jane Smith" />
@@ -270,7 +270,7 @@ export default function CertificateGenerator() {
                 <CardTitle>{c.verificationCompliance}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
                     <Label className="font-medium">{c.blockchainVerification}</Label>
                     <p className="text-muted-foreground">{c.blockchainDesc}</p>
